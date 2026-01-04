@@ -1,5 +1,5 @@
 <!--
-Spotter_5.0.92_v7.54 - BASIC/PRO + idle 20s + pilot cookie + panel compact
+Spotter_5.0.96 - BASIC/PRO + idle 20s + pilot cookie + panel compact
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
@@ -19,7 +19,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Spotter_5.0.84_v7.53</title>
+  <title>Spotter_5.0.96</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -3874,7 +3874,7 @@ body, .app, .main, .pilot-card, .extras-section{
   <div class="app">
     <header class="app-header">
       <div class="header-left">
-        <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">Spotter_5.0.49</span><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
+        <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">Spotter_5.0.96</span><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
         <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
         <div class="header-subline" id="raceInfo">Esperando datos en vivo</div>
         <div class="header-subline rescue-banner" id="rescueBanner"></div>
@@ -3886,7 +3886,7 @@ body, .app, .main, .pilot-card, .extras-section{
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">Spotter_5.0.84_v7.53</div>
+<div class="header-version" id="appVersion">Spotter_5.0.96</div>
       </div>
     </header>
 
@@ -3943,7 +3943,16 @@ body, .app, .main, .pilot-card, .extras-section{
             <div class="timing-label">Std Dev</div>
             <div class="timing-value" id="sigmaVal">-.---</div>
           </div>
-          <div class="timing-item timer-only" id="mangaClockItem">
+          
+          <div class="timing-item mode-pro-only">
+            <div class="timing-label">Pace 3</div>
+            <div class="timing-value" id="pace3Val">-:--.---</div>
+          </div>
+          <div class="timing-item mode-pro-only">
+            <div class="timing-label">Racha</div>
+            <div class="timing-value" id="streakVal">--</div>
+          </div>
+<div class="timing-item timer-only" id="mangaClockItem">
             <div class="timing-label">Reloj</div>
             <div class="timing-value manga-clock" id="mangaClock">3:00.000</div>
           </div>
@@ -4172,10 +4181,10 @@ body, .app, .main, .pilot-card, .extras-section{
     <div class="spotter-cat-head"><span class="cat-dot"></span>Esenciales</div>
     <div class="spotter-grid">
       <div class="spotter-btn active lock" data-flag="laps"><span>⏱</span>Laps</div>
-      <div class="spotter-btn" data-flag="saylaps" title="Decir o no decir la palabra vueltas al leer Laps"><span>🔢</span>Vueltas</div>
-      <div class="spotter-btn active" data-flag="blueflag" title="Azul: avisa lapeos/trafico (bandera azul)"><span>🟦</span>Azul</div>
+<div class="spotter-btn active" data-flag="blueflag" title="Azul: avisa lapeos/trafico (bandera azul)"><span>🟦</span>Azul</div>
       <div class="spotter-btn active" data-flag="ritmo" title="Ritmo: avisa si vienes mejorando o si te caes (comparado con tu promedio reciente)"><span>📉</span>Ritmo +/-</div>
-      <div class="spotter-btn" data-flag="estlap" title="Est: tiempo estimado al final (si el feed lo trae)"><span>🧮</span>Est</div>
+<div class="spotter-btn" data-flag="streak" title="Racha: avisa cuando haces una racha consistente dentro de +0.2/+0.5s de tu best"><span>🎯</span>Racha</div>
+<div class="spotter-btn" data-flag="estlap" title="Est: tiempo estimado al final (si el feed lo trae)"><span>🧮</span>Est</div>
       <div class="spotter-btn" data-flag="leadergap" title="Lider: gap al lider, cambios de lider y contexto de punta"><span>👑</span>Lider</div>
       <div class="spotter-btn" data-flag="podium" title="Podio: llamadas enfocadas al Top 3 (en Finales, suele ser lo mas caliente)"><span>🏅</span>Podio</div>
     </div>
@@ -4186,9 +4195,7 @@ body, .app, .main, .pilot-card, .extras-section{
     <div class="spotter-grid">
       <div class="spotter-btn" data-flag="pos" title="Pos: cambios de posicion (ganas/pierdes), y pases importantes en Auto"><span>🏁</span>Pos</div>
       <div class="spotter-btn" data-flag="gaps" title="Diferencia: gap con el de adelante y con el de atras (segundos o vueltas)"><span>📏</span>Gap</div>
-      <div class="spotter-btn" data-flag="front06" title="Adel <0.6: tienes a alguien adelante a menos de 0.6s (huele a pase)"><span>⚔️</span>Adel &lt;0.6</div>
-      <div class="spotter-btn" data-flag="back06" title="Atras <0.6: te vienen atacando a menos de 0.6s (defiende)"><span>🚨</span>Atras &lt;0.6</div>
-      <div class="spotter-btn" data-flag="attack" title="Ataque: narrativa cuando tu gap al de adelante cae y estas para intentarlo"><span>🔥</span>Ataque</div>
+<div class="spotter-btn" data-flag="attack" title="Ataque: narrativa cuando tu gap al de adelante cae y estas para intentarlo"><span>🔥</span>Ataque</div>
       <div class="spotter-btn" data-flag="defense" title="Defensa: narrativa cuando te vienen recortando y toca aguantar"><span>🛡️</span>Defensa</div>
     </div>
   </div>
@@ -4197,12 +4204,10 @@ body, .app, .main, .pilot-card, .extras-section{
     <div class="spotter-cat-head"><span class="cat-dot"></span>Resumen</div>
     <div class="spotter-grid">
       <div class="spotter-btn" data-flag="total"><span>⏳</span>Total</div>
-      <div class="spotter-btn" data-flag="cons10"><span>📈</span>Cons 10</div>
-      <div class="spotter-btn" data-flag="bestlap"><span>🏆</span>Best</div>
+<div class="spotter-btn" data-flag="bestlap"><span>🏆</span>Best</div>
       <div class="spotter-btn" data-flag="box"><span>🧾</span>Box</div>
       <div class="spotter-btn" data-flag="pelea"><span>🤼</span>Pelea</div>
-      <div class="spotter-btn" data-flag="netgain"><span>📊</span>NetGain</div>
-    </div>
+</div>
   </div>
 
   <div style="display:none;">
@@ -4230,7 +4235,7 @@ body, .app, .main, .pilot-card, .extras-section{
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - Spotter_5.0.84_v7.53</div>
+          <div class="manual-title">Manual - Spotter_5.0.96</div>
           <div class="manual-sub">BASIC por default (cero ruido). PRO solo si quieres jugar a ingeniero de pits.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -4414,7 +4419,7 @@ body, .app, .main, .pilot-card, .extras-section{
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "Spotter_5.0.87_v7.56";
+    const APP_NAME = "Spotter_5.0.96";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -4660,9 +4665,9 @@ body, .app, .main, .pilot-card, .extras-section{
       // Esenciales
       if (['laps','blueflag','ritmo_up','ritmo_down','estlap','leader','podium','bestlap'].includes(id)) return 'ess';
       // Batalla
-      if (['pos','gaps','front06','back06','attack','defense','fight'].includes(id)) return 'bat';
+      if (['pos','gaps','attack','defense','fight'].includes(id)) return 'bat';
       // Resumen
-      if (['total','cons10','box','netgain'].includes(id)) return 'sum';
+      if (['total','box'].includes(id)) return 'sum';
       return 'misc';
     }
 
@@ -4770,6 +4775,8 @@ body, .app, .main, .pilot-card, .extras-section{
     const meanLapEl       = document.getElementById('meanLap');
     const consistencyValEl = document.getElementById('consistencyVal');
     const sigmaValEl       = document.getElementById('sigmaVal');
+    const pace3ValEl      = document.getElementById('pace3Val');
+    const streakValEl     = document.getElementById('streakVal');
     const lapChartEl      = document.getElementById('lapChart');
     const top3MiniGridEl  = document.getElementById('top3MiniGrid');
     const lapChartMetaEl  = document.getElementById('lapChartMeta');
@@ -5319,11 +5326,11 @@ try{
 
     const DEFAULT_VOICE_SETTINGS = {
       laps: true,       // siempre activo (no se apaga)
-      saylaps: false,   // decir 'vueltas' en el prefijo de LAPS
 
       // Esenciales (default)
       blueflag: true,
       ritmo: true,
+      streak: false,
 
       // Todo lo demas OFF por default (para no abrumar)
       pos: false,
@@ -5333,11 +5340,7 @@ try{
       attack: false,
       defense: false,
       pelea: false,
-      netgain: false,
-      front06: false,
-      back06: false,
       total: false,
-      cons10: false,
       estlap: false,
       bestlap: false,
       box: false
@@ -5345,7 +5348,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.0.84_v7.53_BASIC';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.0.96_BASIC';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -5395,25 +5398,21 @@ try{
       const keepBlue = (typeof voiceSettings.blueflag === 'boolean') ? voiceSettings.blueflag : true;
       const keepPos  = (typeof voiceSettings.pos === 'boolean') ? voiceSettings.pos : true;
 
-      voiceSettings = { ...voiceSettings,
+            voiceSettings = { ...voiceSettings,
         laps: true,
-        saylaps: false,
         blueflag: keepBlue,
         pos: keepPos,
 
         // Todo lo demas OFF
         ritmo: false,
+        streak: false,
         gaps: false,
         leadergap: false,
         podium: false,
         attack: false,
         defense: false,
         pelea: false,
-        netgain: false,
-        front06: false,
-        back06: false,
         total: false,
-        cons10: false,
         estlap: false,
         bestlap: false,
         box: false
@@ -7074,10 +7073,14 @@ function loadVoiceSettings() {
         voiceSettings = { ...DEFAULT_VOICE_SETTINGS, laps: true };
       }
 
-      // Enforce: Laps siempre activo
+            // Enforce: Laps siempre activo
       voiceSettings.laps = true;
-      // Enforce: prefijo de vueltas por default
-      if (voiceSettings.saylaps == null) voiceSettings.saylaps = false;
+      // Limpieza: toggles retirados (5.0.95)
+      try {
+        ['saylaps','pacedown','front06','back06','netgain','cons10'].forEach(k=>{
+          if (k in voiceSettings) delete voiceSettings[k];
+        });
+      } catch(e) {}
 
       // Refresca UI si ya existe la función (hoisting en function decl)
       try {
@@ -7182,10 +7185,7 @@ function loadVoiceSettings() {
         autoMode: 'engineer',
         precision: 2,
         voice: {
-          laps:true, blueflag:true, ritmo:true, estlap:true, bestlap:true,
           pos:false, gaps:false, leadergap:false, podium:false,
-          front06:false, back06:false, attack:false, defense:false, pelea:false,
-          total:false, cons10:false, box:false, netgain:false, saylaps:false
         }
       },
       MANGA: {
@@ -7194,10 +7194,7 @@ function loadVoiceSettings() {
         autoMode: 'pro',
         precision: 2,
         voice: {
-          laps:true, blueflag:true, ritmo:true, estlap:true, bestlap:true, leadergap:true,
           pos:false, gaps:false, podium:false,
-          front06:false, back06:false, attack:false, defense:false, pelea:false,
-          total:false, cons10:false, box:false, netgain:false, saylaps:false
         }
       },
       FINAL: {
@@ -7206,10 +7203,7 @@ function loadVoiceSettings() {
         autoMode: 'pro',
         precision: 2,
         voice: {
-          laps:true, blueflag:true, ritmo:true, pos:true, gaps:true, leadergap:true, podium:true,
-          front06:true, back06:true, attack:true, defense:true,
           bestlap:true, estlap:false,
-          pelea:false, total:false, cons10:false, box:false, netgain:false, saylaps:false
         }
       }
     };
@@ -7226,7 +7220,7 @@ function loadVoiceSettings() {
       try{
         Object.keys(DEFAULT_VOICE_SETTINGS).forEach(k => out[k] = !!voiceSettings[k]);
         // asegurar llaves nuevas si faltan
-        ['front06','back06','leadergap','podium','pelea','netgain','bestlap','estlap','cons10','box','total','gaps','pos','attack','defense','blueflag','ritmo','saylaps'].forEach(k=>{
+        ['leadergap','podium','pelea','bestlap','estlap','box','total','gaps','pos','attack','defense','blueflag','ritmo','streak'].forEach(k=>{
           if (typeof out[k] === 'undefined') out[k] = !!voiceSettings[k];
         });
         out.laps = true;
@@ -7243,11 +7237,11 @@ function loadVoiceSettings() {
       ];
 
       // Nombres cortos para la lista (UI)
-      const ORDER = ['laps','blueflag','ritmo','estlap','leadergap','podium','pos','gaps','front06','back06','attack','defense','pelea','bestlap','total','cons10','box','netgain','saylaps'];
+      const ORDER = ['laps','blueflag','ritmo','streak','estlap','leadergap','podium','pos','gaps','attack','defense','pelea','bestlap','total','box'];
       const NICE = {
-        laps:'LAPS', blueflag:'AZUL', ritmo:'RITMO', estlap:'EST', leadergap:'LÍDER', podium:'PODIO',
-        pos:'POS', gaps:'GAP', front06:'ADEL<0.6', back06:'ATRAS<0.6', attack:'ATK', defense:'DEF', pelea:'PELEA',
-        bestlap:'BEST', total:'TOTAL', cons10:'CONS10', box:'BOX', netgain:'NET', saylaps:'VUELTAS'
+        laps:'LAPS', blueflag:'AZUL', ritmo:'RITMO', streak:'RACHA', estlap:'EST', leadergap:'LÍDER', podium:'PODIO',
+        pos:'POS', gaps:'GAP', attack:'ATK', defense:'DEF', pelea:'PELEA',
+        bestlap:'BEST', total:'TOTAL', box:'BOX'
       };
 
       function buildOnOffText(map){
@@ -7904,7 +7898,7 @@ function enqueueSpeech(text, opts = {}) {
 function speakWithLaps(_laps, message, opts) {
       // Prefijo de LAPS (opcional): si "Vueltas" está apagado, no digas "10 vueltas..."
       const msg = String(message || '').trim();
-      const allowPrefix = !!(voiceSettings && voiceSettings.saylaps);
+      const allowPrefix = false;
 
       if (!allowPrefix) {
         if (msg) speakText(msg, opts || {});
@@ -8744,6 +8738,45 @@ function findWorstLap(times) {
     return { idx, ms: worst };
   } catch (e) { return null; }
 }
+
+
+// Promedio de las ultimas N vueltas (ms). times debe venir ya filtrado a plausibles.
+function rollingAvgLast(times, n=3){
+  try{
+    if (!Array.isArray(times) || times.length < n) return 0;
+    const last = times.slice(-n);
+    if (last.length < n) return 0;
+    const sum = last.reduce((a,b)=>a + (Number(b)||0), 0);
+    const avg = sum / n;
+    return (avg && isFinite(avg)) ? avg : 0;
+  }catch(e){ return 0; }
+}
+
+// Cuenta cuantas vueltas consecutivas (desde la ultima hacia atras) estan por debajo de un umbral (ms).
+function countConsecutiveWithin(times, thresholdMs){
+  try{
+    if (!Array.isArray(times) || !times.length || !thresholdMs) return 0;
+    let c = 0;
+    for (let i = times.length - 1; i >= 0; i--){
+      const v = Number(times[i]) || 0;
+      if (!isLapPlausible(v)) continue;
+      if (v <= thresholdMs) c++;
+      else break;
+    }
+    return c;
+  }catch(e){ return 0; }
+}
+
+// Devuelve el milestone actual para racha (se anuncia solo cuando sube).
+function streakMilestone(n){
+  const ms = [3,5,8,10,12,15,20];
+  let out = 0;
+  for (const v of ms){
+    if (n >= v) out = v;
+  }
+  return out;
+}
+
     function ensureCanvasHiDpi(canvas) {
       if (!canvas) return;
       const dpr = window.devicePixelRatio || 1;
@@ -9819,6 +9852,26 @@ const meanMsFinal = isLapPlausible(pMean) ? pMean : computedMean;
       const bestStr = bestMsFinal ? msToMinSec(bestMsFinal) : '-:--.---';
       const meanStrFinal = meanMsFinal ? msToMinSec(meanMsFinal) : meanStr;
 
+
+      // Pace 3 (promedio ultimas 3) y racha de consistencia (PRO)
+      try{
+        if (pace3ValEl){
+          const pace3 = rollingAvgLast(timesRaw, 3);
+          pace3ValEl.textContent = pace3 ? msToMinSec(pace3) : '-:--.---';
+        }
+      }catch(e){}
+      try{
+        if (streakValEl){
+          const bestRef = (bestMsFinal && bestMsFinal > 0) ? bestMsFinal : (computedBest || 0);
+          if (bestRef){
+            const s02 = countConsecutiveWithin(timesRaw, bestRef + 200);
+            const s05 = countConsecutiveWithin(timesRaw, bestRef + 500);
+            streakValEl.textContent = `0.2:${s02} 0.5:${s05}`;
+          } else {
+            streakValEl.textContent = '--';
+          }
+        }
+      }catch(e){}
       lastLapEl.textContent = lastStr;
       bestLapEl.textContent = bestStr;
       meanLapEl.textContent = meanStrFinal;
@@ -11796,7 +11849,7 @@ function autoDecorate(text, type, style) {
 
         const vs = (typeof voiceSettings !== 'undefined' && voiceSettings) ? voiceSettings : {};
         // Si el usuario apaga TODO menos laps, no inventamos
-        const autoOn = !!(vs.pos || vs.podium || vs.pelea || vs.gaps || vs.leadergap || vs.bestlap || vs.estlap || vs.attack || vs.defense || vs.front06 || vs.back06 || vs.ritmo || vs.total || vs.blueflag || vs.cons10 || vs.netgain);
+        const autoOn = !!(vs.pos || vs.podium || vs.pelea || vs.gaps || vs.leadergap || vs.bestlap || vs.estlap || vs.attack || vs.defense || vs.ritmo || vs.total || vs.blueflag);
         if (!autoOn) return;
 
         const arr = raceData.classification.slice().filter(r => r && (r.pos != null));
@@ -12054,7 +12107,7 @@ if (secNum <= 1.25) {
 
         // ====== se cierra (0.5 a 1.6, baja gap fuerte)
         // Nota: POS ya no dispara cierres (para evitar duplicados). Cierres=ATAQUE/DEFENSA, gaps=números.
-        if (vs.attack || vs.defense || vs.front06 || vs.back06 || vs.gaps) {
+        if (vs.attack || vs.defense || vs.gaps) {
           for (let i = 0; i < arr.length - 1; i++) {
             const ahead = arr[i];
             const behind = arr[i + 1];
@@ -12160,7 +12213,7 @@ try {
             }
 
             // DEFENSA: presión real (<=0.6) para el de adelante
-            if ((vs.defense || vs.back06) && posFight <= 8 && sec <= 0.60) {
+            if (vs.defense && posFight <= 8 && sec <= 0.60) {
               const text = autoBuildMessage('pressure', { pos: posFight, attacker, defender, sec: autoFmtSec(sec) });
               addCand({
                 type:'pressure',
@@ -12526,7 +12579,7 @@ function handleVoiceAndBeeps() {
       }
 
       // NetGain (evento)
-      if (voiceSettings.netgain && p.pos && p.pos > 0) {
+      if (voiceSettings.pos && p.pos && p.pos > 0) {
         if (startPosForSelected == null) startPosForSelected = p.pos;
         const net = startPosForSelected - p.pos;
         if (lastNetGainValue == null) lastNetGainValue = net;
@@ -12539,7 +12592,7 @@ function handleVoiceAndBeeps() {
 
           pendingNetGain = {
             text: t,
-            opts: { key: 'netgain_' + lapsNow, priority: 35, cooldownMs: 2500, dedupe: true },
+            opts: { key: 'posNet_' + lapsNow, priority: 35, cooldownMs: 2500, dedupe: true },
             expLap: lapsNow + 3,
             value: net
           };
@@ -12715,8 +12768,8 @@ try {
         );
       }
 
-      if (voiceSettings.netgain && pendingNetGain) {
-        pushCand('netgain', isFinal ? 45 : 25, pendingNetGain.text, pendingNetGain.opts, () => {
+      if (voiceSettings.pos && pendingNetGain) {
+        pushCand('pos', isFinal ? 45 : 25, pendingNetGain.text, pendingNetGain.opts, () => {
           pendingNetGain = null;
           lastNetGainSpokenLap = lapsNow;
         });
@@ -12730,56 +12783,9 @@ try {
         });
       }
 
-      // Adelante y atras < 0.6 (con latch)
-      if (ctx && voiceSettings.front06 && ctx.sameFrontLap && ctx.frontSec != null) {
-        const sec = ctx.frontSec;
-        const otherKey = ctx.frontKey || 'front';
-        if (ahead06Latch.active) {
-          if (ahead06Latch.otherKey !== otherKey || sec >= 0.80 || !ctx.sameFrontLap) {
-            ahead06Latch.active = false;
-          }
-        }
-        if (!ahead06Latch.active && sec < 0.6) {
-          const secStr = toFixedFloor(sec, decimalPrecision);
-          const nm = safeRacerName(ctx.frontName || '');
-          const txt = nm ? ('Adelante a tiro. ' + nm + ' a ' + secStr + ' segundos') : ('Adelante a tiro. A ' + secStr + ' segundos');
-          pushCand('front06', isFinal ? 70 : 18, txt,
-            { key: 'front06_' + otherKey, priority: 55, cooldownMs: 2500, dedupe: true },
-            () => {
-              ahead06Latch.active = true;
-              ahead06Latch.otherKey = otherKey;
-              ahead06Latch.lap = lapsNow;
-              lastAheadAlertMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-            }
-          );
-        }
-      }
+      // (Eliminado) Adelante/Atras <0.6: redundante con GAP/PELEA/ATK/DEF
 
-      if (ctx && voiceSettings.back06 && ctx.sameBackLap && ctx.backSec != null) {
-        const sec = ctx.backSec;
-        const otherKey = ctx.backKey || 'back';
-        if (behind06Latch.active) {
-          if (behind06Latch.otherKey !== otherKey || sec >= 0.80 || !ctx.sameBackLap) {
-            behind06Latch.active = false;
-          }
-        }
-        if (!behind06Latch.active && sec < 0.6) {
-          const secStr = toFixedFloor(sec, decimalPrecision);
-          const nm = safeRacerName(ctx.backName || '');
-          const txt = nm ? ('Atras presión. ' + nm + ' a ' + secStr + ' segundos') : ('Atras presión. A ' + secStr + ' segundos');
-          pushCand('back06', isFinal ? 70 : 18, txt,
-            { key: 'back06_' + otherKey, priority: 55, cooldownMs: 2500, dedupe: true },
-            () => {
-              behind06Latch.active = true;
-              behind06Latch.otherKey = otherKey;
-              behind06Latch.lap = lapsNow;
-              lastBehindAlertMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-            }
-          );
-        }
-      }
-
-      // Ataque / Defensa (con latch)
+// Ataque / Defensa (con latch)
       if (ctx && voiceSettings.attack && ctx.sameFrontLap && ctx.frontSec != null) {
         const sec = ctx.frontSec;
         const otherKey = ctx.frontKey || 'front';
@@ -12959,16 +12965,51 @@ try {
         }
       }
 
-      // Consistencia (cada 10 vueltas)
-      if (voiceSettings.cons10 && lapsNow >= 10 && (lapsNow % 10 === 0) && (lapsNow !== lastConsistencySpokenLap)) {
-        const pct = getConsistencyFromFirebase(p);
-        if (pct) {
-          pushCand('cons10', isManga ? 60 : 24, 'Consistencia ' + pct + ' por ciento',
-            { key: 'cons10_' + lapsNow, priority: 28, cooldownMs: 2500, dedupe: true },
-            () => { lastConsistencySpokenLap = lapsNow; }
-          );
+      // PRO metrics: pace (ultimas 3) + racha (milestones)
+      if (!basicModeEnabled) {
+        const tAll = (hist.times || []).filter(isLapPlausible);
+        const pace3 = rollingAvgLast(tAll, 3);
+
+        // Caida de ritmo: empeoras fuerte 2 veces seguidas (comparado con tu pace3 anterior)
+        if (voiceSettings.ritmo && pace3 && tAll.length >= 6) {
+          const prev = Number(hist._pace3Prev) || 0;
+          if (prev) {
+            const delta = pace3 - prev; // positivo = peor
+            if (delta > 150) hist._paceDropCount = (hist._paceDropCount || 0) + 1;
+            else hist._paceDropCount = 0;
+
+            if ((hist._paceDropCount || 0) >= 2 && (lapsNow - (hist._paceDropSpokenLap || 0)) >= 6) {
+              const dsec = delta / 1000;
+              const dStr = toFixedFloor(dsec, decimalPrecision);
+              pushCand('ritmo_down', isFinal ? 58 : 22, `Ojo, caida de ritmo +${dStr}`,
+                { key: 'ritmoDown_' + Math.floor(lapsNow/2), priority: 35, cooldownMs: 6000, dedupe: true },
+                () => { hist._paceDropSpokenLap = lapsNow; hist._paceDropCount = 0; }
+              );
+            }
+          }
+          hist._pace3Prev = pace3;
+        } else {
+          if (pace3) hist._pace3Prev = pace3;
+        }
+
+        // Racha: anuncia milestones de vueltas dentro de +0.2s de tu best
+        if (voiceSettings.streak && tAll.length >= 3) {
+          const comp = ensureHistComputed(hist);
+          const bestRef = (comp && comp.best) ? comp.best : 0;
+          if (bestRef) {
+            const s02 = countConsecutiveWithin(tAll, bestRef + 200);
+            const mile = streakMilestone(s02);
+            const lastM = Number(hist._streak02Milestone) || 0;
+            if (mile && mile > lastM && (lapsNow - (hist._streakSpokenLap || 0)) >= 3) {
+              pushCand('streak', isFinal ? 42 : 18, `Racha. ${mile} dentro de 0.2`,
+                { key: 'streak_' + mile + '_' + Math.floor(lapsNow/2), priority: 30, cooldownMs: 7000, dedupe: true },
+                () => { hist._streak02Milestone = mile; hist._streakSpokenLap = lapsNow; }
+              );
+            }
+          }
         }
       }
+
 
       // Box (cada 20 vueltas o cada 2 min, lo que llegue primero)
       if (voiceSettings.box) {
@@ -13004,7 +13045,7 @@ try {
       const ttlTxt = (rdModeLocal === 'minimal') ? 4 : 3;
       const criticalIds = isManga
         ? new Set(['blueflag','podium'])
-        : new Set(['blueflag','pos','back06','front06','fight','attack','defense','podium','leader']);
+        : new Set(['blueflag','pos','fight','attack','defense','podium','leader']);
       for (const c of candidates) {
         if (!c) continue;
         if (!criticalIds.has(c.id)) {
