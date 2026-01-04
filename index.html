@@ -4462,7 +4462,7 @@ body, .app, .main, .pilot-card, .extras-section{
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "Spotter_5.1.8";
+    const APP_NAME = "Spotter_5.1.11";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -8012,7 +8012,9 @@ function clampNum(v, lo, hi){
 function enqueueSpeech(text, opts = {}) {
       try {
         if (!voiceMasterEnabled) return;
-        const clean = String(text || '').trim();
+        let clean = String(text || '').trim();
+        // Safety net: evita que TTS diga literalmente 'undefined'/'null'
+        clean = clean.replace(/\b(undefined|null|nan)\b/ig,'').replace(/\s{2,}/g,' ').trim();
         if (!clean) return;
         if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
         if (applyIdleSilenceIfNeeded()) return;
@@ -10702,7 +10704,7 @@ pilotSelect.addEventListener('change', () => {
           }
         }
         frontKey = getPilotKey(ahead) || ahead._id || ahead.racerName || String(idx - 1);
-        frontName = ahead.racerName || '';
+        frontName = safeRacerName(ahead.racerName) || '';
       }
 
       if (behind && me) {
@@ -10724,7 +10726,7 @@ pilotSelect.addEventListener('change', () => {
           }
         }
         backKey = getPilotKey(behind) || behind._id || behind.racerName || String(idx + 1);
-        backName = behind.racerName || '';
+        backName = safeRacerName(behind.racerName) || '';
       }
 
       return {
@@ -10864,7 +10866,7 @@ function updateBlueFlagFromPassEvents() {
         if (lapDiff < 0) return;
 
         const sec = toFixedFloor((delta / 1000), decimalPrecision);
-        const leaderName = leader.racerName || 'el líder';
+        const leaderName = safeRacerName(leader.racerName) || 'el líder';
 
         if (lapDiff >= 1) {
           // bandera azul real: el líder ya va al menos una vuelta adelante
@@ -11028,27 +11030,39 @@ function updateBlueFlagFromPassEvents() {
 
                 if (s === 'narrativo'){
           // TV (legacy): consistente, con ritmo, sin metralleta
-          base.minIntervalMs = 6500;
-          base.windowMs = 24000;
-          base.maxMsgsInWindow = 4;
-          base.sigDefaultCooldownMs = 15000;
-          base.baseThresholdScore = 2.85;
-          base.top3CooldownMs = 34000;
-          base.top3ChapterCooldownMs = 42000;
-          base.focusMinSpeakMs = 8200;
-          base.focusMinDeltaSpeakSec = 0.055;
+          base.minIntervalMs = 9200;
+          base.windowMs = 60000;
+          base.maxMsgsInWindow = 5;
+          base.sigDefaultCooldownMs = 17500;
+          base.baseThresholdScore = 2.95;
+          base.top3CooldownMs = 46000;
+          base.top3ChapterCooldownMs = 52000;
+          base.focusMinSpeakMs = 11500;
+          base.focusMinDeltaSpeakSec = 0.080;
+
         } else if (s === 'tv'){
-          // TV: narración continua sin ser metralleta
-          base.minIntervalMs = 6000;
-          base.windowMs = 22000;
-          base.maxMsgsInWindow = 4;
-          base.sigDefaultCooldownMs = 13500;
-          base.baseThresholdScore = 2.70;
-          base.top3CooldownMs = 28000;
-          base.top3ChapterCooldownMs = 36000;
-          base.focusMinSpeakMs = 7600;
-          base.focusMinDeltaSpeakSec = 0.050;
-        } else if (s === 'engineer'){
+          // TV: ritmo tipo transmisión, pero con aire (sin metralleta)
+          const stype = (typeof currentSessionInfo !== 'undefined' && currentSessionInfo && currentSessionInfo.type) ? String(currentSessionInfo.type) : '';
+          if (stype === 'MANGA') {
+            base.minIntervalMs = 10500;
+            base.windowMs = 42000;
+            base.maxMsgsInWindow = 2;
+          } else if (stype === 'FINAL') {
+            base.minIntervalMs = 12000;
+            base.windowMs = 52000;
+            base.maxMsgsInWindow = 2;
+          } else {
+            base.minIntervalMs = 14000;
+            base.windowMs = 60000;
+            base.maxMsgsInWindow = 2;
+          }
+          base.sigDefaultCooldownMs = 22000;
+          base.top3CooldownMs = 65000;
+          base.allowUrgentOverLimitScore = 9.2;
+          base.baseThresholdScore = 3.8;
+          base.focusMinSpeakMs = 16000;
+          base.focusHoldMs = 28000;
+} else if (s === 'engineer'){
           base.minIntervalMs = 9000;
           base.windowMs = 28000;
           base.maxMsgsInWindow = 3;
@@ -11366,7 +11380,7 @@ function autoFocusMsg(stage, c, style) {
     ]
   };
 
-  const s = (style === 'picante' || style === 'engineer' || style === 'narrativo') ? style : 'pro';
+  const s = (style === 'picante' || style === 'engineer' || style === 'narrativo' || style === 'tv') ? (style === 'tv' ? 'narrativo' : style) : 'pro';
   const c0 = autoRandPick(connectors[s] || connectors.pro, 'auto:conn:' + s);
 
   const BANK = {
@@ -12179,11 +12193,116 @@ function autoBuildStoryCandidate(args) {
       ]
     });
 
-    const AUTO_PHRASES_BY_STYLE = {
+    
+    // ===== Auto Locutor TV (bancos dedicados por tipo de sesión) =====
+    // - FINAL: narrativa tipo TV, batallas reales, pases confirmados, líder/podio, best lap
+    // - MANGA: pelea por la pole contra reloj, ranking estable, best lap y cierres por décimas (sin "rebases" falsos)
+    const AUTO_PHRASES_TV_FINAL = Object.assign({}, AUTO_PHRASES_NARRATIVO, {
+      leaderChange: [
+        (c) => `Cambio de líder. ${c.winner} se pone al frente. ${c.loser} cae a P2.`,
+        (c) => `Nuevo líder. ${c.winner} manda. ${c.loser} ahora persigue.`,
+        (c) => `Se mueve la punta. P1 ${c.winner}. P2 ${c.loser}.`
+      ],
+      pass: [
+        (c) => `Rebase confirmado. ${c.winner} pasa a ${c.loser} por P${c.pos}.`,
+        (c) => `Movimiento claro. ${c.winner} se queda con P${c.pos}, ${c.loser} pierde la posición.`,
+        (c) => `Cambio de orden. ${c.winner} adelante de ${c.loser} en P${c.pos}.`
+      ],
+      battle: [
+        (c) => `Duelo directo. ${c.a} y ${c.b}, a ${c.gap}.`,
+        (c) => `Batalla cerrada. ${c.a} contra ${c.b}, separados por ${c.gap}.`,
+        (c) => `Ojo en pista. ${c.a} y ${c.b} están pegados, ${c.gap}.`
+      ],
+      battlePodium: [
+        (c) => `Podio en juego. ${c.a} defiende de ${c.b}, a ${c.gap}.`,
+        (c) => `Se calienta el podio. ${c.b} aprieta a ${c.a}, ${c.gap}.`,
+        (c) => `Último escalón. ${c.a} y ${c.b} por el podio, ${c.gap}.`
+      ],
+      closing: [
+        (c) => `Atención. ${c.chaser} ya está a ${c.gap} de ${c.target}.`,
+        (c) => `Se viene el ataque. ${c.chaser} recorta, ${c.gap} a ${c.target}.`,
+        (c) => `Presión real. ${c.chaser} se acerca a ${c.target}, ${c.gap}.`
+      ],
+      pressure: [
+        (c) => `Presión. ${c.chaser} encima de ${c.target}, ${c.gap}.`,
+        (c) => `Sin respiro. ${c.target} tiene a ${c.chaser} a ${c.gap}.`,
+        (c) => `Casi lo tiene. ${c.chaser} a ${c.gap} de ${c.target}.`
+      ],
+      train: [
+        (c) => `Trenecito. De P${c.from} a P${c.to}, todos en fila, sin margen.`,
+        (c) => `Grupo compacto. P${c.from} a P${c.to}, nadie se despega.`,
+        (c) => `Paquete apretado. Del P${c.from} al P${c.to}, cuidado con el error.`
+      ],
+      top3: [
+        (c) => `Top 3. P1 ${c.p1}. P2 ${c.p2}. P3 ${c.p3}.`,
+        (c) => `Arriba. ${c.p1} lidera, ${c.p2} segundo, ${c.p3} tercero.`,
+        (c) => `Podio provisional. ${c.p1}, ${c.p2}, ${c.p3}.`
+      ],
+      story: [
+        (c) => `Foco en ${c.a} contra ${c.b}. ${c.gap}.`,
+        (c) => `Cámara al duelo. ${c.a} y ${c.b}, ${c.gap}.`,
+        (c) => `Seguimos esta pelea. ${c.a} vs ${c.b}, ${c.gap}.`
+      ],
+      qualiBest: [
+        (c) => `Vuelta rápida. ${c.pilot} marca ${c.best}.`,
+        (c) => `Best lap. ${c.pilot}, ${c.best}.`,
+        (c) => `Ojo. ${c.pilot} baja el tiempo, ${c.best}.`
+      ],
+      qualiPole: [
+        (c) => `Pelea por la punta. ${c.a} y ${c.b}, ${c.gap}.`,
+        (c) => `P1 bajo presión. ${c.a} y ${c.b} a ${c.gap}.`,
+        (c) => `Diferencia mínima. ${c.a} contra ${c.b}, ${c.gap}.`
+      ]
+    });
+
+    const AUTO_PHRASES_TV_MANGA = Object.assign({}, AUTO_PHRASES_TV_FINAL, {
+      // En MANGA hablamos de tabla y pole provisional (contra reloj)
+      pass: [
+        (c) => `La tabla se mueve. ${c.winner} sube a P${c.pos}, ${c.loser} baja.`,
+        (c) => `Ranking provisional. ${c.winner} gana P${c.pos}, ${c.loser} cede.`,
+        (c) => `Cambio en la tabla. ${c.winner} por delante de ${c.loser} en P${c.pos}.`
+      ],
+      top3: [
+        (c) => `Tabla provisional. P1 ${c.p1}. P2 ${c.p2}. P3 ${c.p3}.`,
+        (c) => `Pole provisional. ${c.p1}. Segundo ${c.p2}. Tercero ${c.p3}.`,
+        (c) => `Arriba en la tabla. ${c.p1}, ${c.p2}, ${c.p3}.`
+      ],
+      battle: [
+        (c) => `Pelea por la pole. ${c.a} y ${c.b}, ${c.gap}.`,
+        (c) => `Clasificación apretada. ${c.a} contra ${c.b}, ${c.gap}.`,
+        (c) => `Diferencias por décimas. ${c.a} y ${c.b}, ${c.gap}.`
+      ],
+      closing: [
+        (c) => `${c.chaser} viene recortando. ${c.gap} a la pole de ${c.target}.`,
+        (c) => `Atención en la tabla. ${c.chaser} a ${c.gap} de ${c.target}.`,
+        (c) => `Pole fight. ${c.chaser} se acerca a ${c.target}, ${c.gap}.`
+      ],
+      pressure: [
+        (c) => `Presión por la pole. ${c.chaser} a ${c.gap} de ${c.target}.`,
+        (c) => `Clasificación en fuego. ${c.target} con ${c.chaser} a ${c.gap}.`,
+        (c) => `Nada decidido. ${c.chaser} a ${c.gap} de ${c.target}.`
+      ],
+      qualiPole: [
+        (c) => `Pole fight. ${c.a} y ${c.b} separados por ${c.gap}.`,
+        (c) => `Por la pole. ${c.a} contra ${c.b}, ${c.gap}.`,
+        (c) => `Cierre por décimas. ${c.a} y ${c.b}, ${c.gap}.`
+      ],
+      qualiBest: [
+        (c) => `Mejor vuelta. ${c.pilot} marca ${c.best}.`,
+        (c) => `Vuelta rápida en clasificación. ${c.pilot}, ${c.best}.`,
+        (c) => `Se baja el tiempo. ${c.pilot} con ${c.best}.`
+      ]
+    });
+
+const AUTO_PHRASES_BY_STYLE = {
       pro: AUTO_PHRASES_PRO,
       picante: AUTO_PHRASES_PICANTE,
       engineer: AUTO_PHRASES_ENGINEER,
-      narrativo: AUTO_PHRASES_NARRATIVO
+      narrativo: AUTO_PHRASES_NARRATIVO,
+      // alias de UI (modo TV/Coach/Min)
+      tv: AUTO_PHRASES_TV_FINAL,
+      coach: AUTO_PHRASES_PRO,
+      min: AUTO_PHRASES_PRO
     };
 
 function autoDecorate(text, type, style) {
@@ -12227,7 +12346,14 @@ function autoDecorate(text, type, style) {
 
     function autoBuildMessage(type, ctx) {
       const style = (autoCommentatorMode === 'tv' || autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || (autoCommentatorMode === 'tv' || autoCommentatorMode === 'narrativo')) ? autoCommentatorMode : 'pro';
-      const dict = (AUTO_PHRASES_BY_STYLE && AUTO_PHRASES_BY_STYLE[style]) ? AUTO_PHRASES_BY_STYLE[style] : AUTO_PHRASES_PRO;
+      const sessType = (typeof currentSessionInfo !== 'undefined' && currentSessionInfo && currentSessionInfo.type) ? String(currentSessionInfo.type) : '';
+      const isManga = (sessType === 'MANGA');
+      const isFinal = (sessType === 'FINAL');
+      let dict = (AUTO_PHRASES_BY_STYLE && AUTO_PHRASES_BY_STYLE[style]) ? AUTO_PHRASES_BY_STYLE[style] : AUTO_PHRASES_PRO;
+      if (style === 'tv' || style === 'narrativo') {
+        dict = isManga ? AUTO_PHRASES_TV_MANGA : AUTO_PHRASES_TV_FINAL;
+      }
+      if (ctx && typeof ctx === 'object') { try { ctx.sessionType = sessType; ctx.isFinal = isFinal; ctx.isManga = isManga; } catch(e) {} }
       const bank = (dict && dict[type]) ? dict[type] : (AUTO_PHRASES_PRO[type] || []);
       const fn = autoRandPick(bank, style + ':' + type);
       if (typeof fn === 'function') {
@@ -12253,14 +12379,14 @@ function autoDecorate(text, type, style) {
           if (__style === 'tv' || __style === 'narrativo'){
             vs = Object.assign({}, vs, {
               pos:true, podium:true, leadergap:true, total:true,
-              pelea:true, bestlap:true, attack:true, defense:true,
+              pelea:true, bestlap:true, attack:false, defense:false,
               blueflag:true,
               gaps:false, estlap:false, ritmo:false, streak:false, box:false
             });
           } else if (__style === 'pro' || __style === 'picante'){
             vs = Object.assign({}, vs, {
               pos:true, podium:true, leadergap:true, total:true,
-              pelea:true, bestlap:true, attack:true, defense:true,
+              pelea:true, bestlap:true, attack:false, defense:false,
               blueflag:true,
               gaps:false
             });
@@ -12296,6 +12422,54 @@ function autoDecorate(text, type, style) {
         let candidates = [];
         const battles = [];
         const addCand = (c) => { if (c && c.text && isFinite(c.score)) candidates.push(c); };
+        // ====== confirmación de movimientos (FINAL) para evitar anuncios "fantasma"
+        // Idea: cuando detectamos un swap de posiciones, primero lo ponemos en espera y lo anunciamos
+        // solo si se mantiene en el siguiente tick (o tras ~800ms). En MANGA seguimos siendo conservadores.
+        const __pendingMoves = commentatorAutoState.pendingMoves || (commentatorAutoState.pendingMoves = new Map());
+
+        const __queueMove = (k, payload) => {
+          try{
+            const prev = __pendingMoves.get(k);
+            if (!prev) __pendingMoves.set(k, Object.assign({ seen: 1, ts: now }, payload));
+            else {
+              prev.seen = (prev.seen || 0) + 1;
+              prev.ts = prev.ts || now;
+              // refrescar datos por si cambian nombres
+              Object.assign(prev, payload);
+            }
+          } catch(e) {}
+        };
+
+        const __flushMoves = () => {
+          try{
+            const isFinalSess = (currentSessionInfo && currentSessionInfo.type === 'FINAL');
+            const maxAge = 4200; // ms
+            for (const [k, mv] of Array.from(__pendingMoves.entries())) {
+              if (!mv) { __pendingMoves.delete(k); continue; }
+              if ((now - (mv.ts || 0)) > maxAge) { __pendingMoves.delete(k); continue; }
+
+              // confirmación: 2 ticks o 800ms, y la posición sigue igual
+              const okByTime = (now - (mv.ts || 0)) >= 800;
+              const okBySeen = (mv.seen || 0) >= 2;
+
+              if (!(okByTime || okBySeen)) continue;
+
+              const rowNow = arr.find(x => getPilotKey(x) === mv.winnerKey);
+              const posNow = rowNow ? (Number(rowNow.pos) || null) : null;
+              if (!posNow || posNow !== mv.currPos) { __pendingMoves.delete(k); continue; }
+
+              // En FINAL, confirmamos y anunciamos. En MANGA solo si aporta (top3 o >=2 puestos)
+              if (!isFinalSess) {
+                const deltaPos = (mv.prevPos ? (mv.prevPos - mv.currPos) : 0);
+                if (!(mv.currPos <= 3 || deltaPos >= 2)) { __pendingMoves.delete(k); continue; }
+              }
+
+              addCand(mv.cand);
+              __pendingMoves.delete(k);
+            }
+          } catch(e) {}
+        };
+
 
         // ====== cambios de líder / posiciones
         const leaderKey = getPilotKey(leader);
@@ -12369,7 +12543,10 @@ function autoDecorate(text, type, style) {
                     if (progress > 0.75 && currPos <= 5) s += 0.6;
                   }
 
-                  addCand({
+                  // En FINAL, confirmamos el movimiento antes de anunciar (anti jitter y anti atraso)
+                  const __isFinal = (currentSessionInfo && currentSessionInfo.type === 'FINAL');
+                  const __moveKey = (type === 'rankMove' ? ('rm:' + currKey + ':' + currPos) : ('ps:' + currKey + ':' + currPos));
+                  const __cand = {
                     type,
                     score: s,
                     text,
@@ -12377,14 +12554,28 @@ function autoDecorate(text, type, style) {
                     sig,
                     sigCooldownMs,
                     priority
-                  });
+                  };
+
+                  if (__isFinal) {
+                    __queueMove(__moveKey, {
+                      winnerKey: currKey,
+                      currPos,
+                      prevPos,
+                      cand: __cand
+                    });
+                  } else {
+                    addCand(__cand);
+                  }
                 }
 }
             }
           }
         }
 
-        // ====== top 3 (resumen inteligente: solo cuando aporta)
+                // confirmar y soltar movimientos pendientes (FINAL)
+        __flushMoves();
+
+// ====== top 3 (resumen inteligente: solo cuando aporta)
         if (vs.pos || vs.podium || vs.leadergap) {
           if (arr.length >= 3) {
             const p1 = safeRacerName(arr[0].racerName) || 'P1';
@@ -12724,7 +12915,7 @@ if (isMangaSess) {
 
         if (improved && since > 8000) {
           const t = msToVoiceTime(bestMs); // ya aplica regla flat/precision
-          const txt = bestName ? (`Vuelta rápida. ${bestName} marca ${t}`) : (`Vuelta rápida. ${t}`);
+          const txt = autoBuildMessage('qualiBest', { pilot: bestName || 'alguien', best: t });
           addCand({
             type: 'qualiBest',
             score: 6.8,
@@ -12756,7 +12947,7 @@ if (isMangaSess) {
           const sincePF = now - (autoQualiState.lastPoleFightSpeakMs || 0);
           if (((gap <= 0.08) && sincePF > 8000) || ((gap <= 0.16) && sincePF > 12000)) {
             const g = autoFmtSec(gap);
-            const txt = `Pelea por la pole. ${n1} y ${n2} separados por ${g}.`;
+            const txt = autoBuildMessage('qualiPole', { a: n1, b: n2, gap: g });
             addCand({
               type: 'qualiPole',
               score: 6.1,
@@ -12779,12 +12970,12 @@ if (isMangaSess) {
           let maxScore = 0;
           for (const c of candidates) maxScore = Math.max(maxScore, Number(c && c.score) || 0);
 
-          const quietCooldownMs = (autoCommentatorMode === 'tv') ? 12000 : ((autoCommentatorMode === 'narrativo') ? 13500 : 22000);
+          const quietCooldownMs = (autoCommentatorMode === 'tv') ? (isMangaSess ? 20000 : 28000) : ((autoCommentatorMode === 'narrativo') ? 20000 : 24000);
           const sinceQuiet = now - (commentatorAutoState.lastQuietMs || 0);
 
           const allowQuiet = !!(vs.total || vs.leadergap);
 
-          if (allowQuiet && sinceQuiet > quietCooldownMs && maxScore < 3.6) {
+          if (allowQuiet && sinceQuiet > quietCooldownMs && maxScore < 4.6) {
             const leaderName = safeRacerName(leader && leader.racerName) || 'P1';
             const p2 = (arr.length >= 2) ? arr[1] : null;
             const p2Name = p2 ? (safeRacerName(p2.racerName) || 'P2') : 'P2';
