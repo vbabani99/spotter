@@ -4445,7 +4445,7 @@ body, .app, .main, .pilot-card, .extras-section{
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "Spotter_5.1.6";
+    const APP_NAME = "Spotter_5.1.7";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -7890,7 +7890,7 @@ function enqueueSpeech(text, opts = {}) {
         const rate = clampNum((opts.rate != null ? opts.rate : (baseRate * (pr.rateMul || 1.0))), 0.6, 2.2);
         const pitch = clampNum((opts.pitch != null ? opts.pitch : (pr.pitch != null ? pr.pitch : 1.0)), 0.5, 2.0);
         const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
-        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, cat, validatePos: (opts && opts.validatePos) ? opts.validatePos : null });
+        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, cat, validatePos: (opts && opts.validatePos) ? opts.validatePos : null, validateLap: (opts && opts.validateLap) ? opts.validateLap : null });
 // prioridad desc, FIFO por tiempo
         speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
 
@@ -7923,6 +7923,21 @@ function enqueueSpeech(text, opts = {}) {
                 if (i >= 0) {
                   const cp = Math.floor(Number((raceData.classification[i] && raceData.classification[i].pos) || 0));
                   if (cp && cp !== wanted) continue; // descarta mensaje viejo
+                }
+              }
+            } catch (e) {}
+          }
+
+          // Stale-guard adicional: si la vuelta ya cambió, descarta este mensaje (evita datos viejos)
+          if (next.validateLap) {
+            try {
+              const pk = next.validateLap.pilotKey || selectedPilotKey;
+              const wantedLap = Math.floor(Number(next.validateLap.lapcount) || 0);
+              if (pk && wantedLap > 0 && raceData && Array.isArray(raceData.classification)) {
+                const i = findPilotIndexByKey(pk);
+                if (i >= 0) {
+                  const cl = Math.floor(Number((raceData.classification[i] && raceData.classification[i].lapcount) || 0));
+                  if (cl && cl !== wantedLap) continue;
                 }
               }
             } catch (e) {}
@@ -13232,7 +13247,7 @@ try {
               const v = Math.abs(lapDiff);
               const palabra = (v === 1) ? 'una vuelta' : (v + ' vueltas');
               pushCand('podium', 55, 'Podio mas ' + palabra,
-                { key: 'podio_laps_' + lapsNow, priority: 60, cooldownMs: 2500, dedupe: true },
+                { key: 'podio_laps_' + lapsNow, priority: 60, cooldownMs: 2500, dedupe: true, validateLap: { pilotKey: selectedPilotKey, lapcount: lapsNow } },
                 () => { lastPodiumSpokenLap = lapsNow; }
               );
             } else {
@@ -13242,7 +13257,7 @@ try {
                 if (sec <= 3.0) {
                   const secStr = toFixedFloor(sec, decimalPrecision);
                   pushCand('podium', 65, 'Podio a ' + secStr + ' segundos',
-                    { key: 'podio_' + Math.floor(lapsNow/3), priority: 60, cooldownMs: 2500, dedupe: true },
+                    { key: 'podio_' + Math.floor(lapsNow/3), priority: 60, cooldownMs: 2500, dedupe: true, validateLap: { pilotKey: selectedPilotKey, lapcount: lapsNow } },
                     () => { lastPodiumSpokenLap = lapsNow; }
                   );
                 }
@@ -13257,7 +13272,7 @@ try {
         const msg = buildGapSummaryForPilotIndex(idx);
         if (msg) {
           pushCand('gaps', isFinal ? 40 : 15, msg,
-            { key: 'gaps_' + Math.floor(lapsNow/3), priority: 40, cooldownMs: 1800, dedupe: true },
+            { key: 'gaps_' + Math.floor(lapsNow/3), priority: 40, cooldownMs: 1800, dedupe: true, validateLap: { pilotKey: selectedPilotKey, lapcount: lapsNow } },
             () => { lastGapInfoLap = lapsNow; }
           );
         }
@@ -13285,7 +13300,7 @@ try {
           }
           if (msg) {
             pushCand('leader', isFinal ? 38 : 12, msg,
-              { dedupe: true },
+              { dedupe: true, validateLap: { pilotKey: selectedPilotKey, lapcount: lapsNow } },
               () => { lastLeaderGapSpokenLap = lapsNow; }
             );
           }
