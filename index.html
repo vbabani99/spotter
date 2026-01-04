@@ -1,5 +1,5 @@
 <!--
-Spotter_5.0.75_v7.47 - BASIC/PRO + idle 20s + pilot cookie + panel compact
+Spotter_5.0.77_v7.49 - BASIC/PRO + idle 20s + pilot cookie + panel compact
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
@@ -18,7 +18,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Spotter_5.0.75_v7.47</title>
+  <title>Spotter_5.0.77_v7.49</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -3477,7 +3477,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">Spotter_5.0.75_v7.47</div>
+<div class="header-version" id="appVersion">Spotter_5.0.77_v7.49</div>
       </div>
     </header>
 
@@ -3795,7 +3795,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - Spotter_5.0.75_v7.47</div>
+          <div class="manual-title">Manual - Spotter_5.0.77_v7.49</div>
           <div class="manual-sub">BASIC por default (cero ruido). PRO solo si quieres jugar a ingeniero de pits.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -3948,7 +3948,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "Spotter_5.0.75_v7.47";
+    const APP_NAME = "Spotter_5.0.77_v7.49";
     const APP_LABEL = APP_NAME;
 
 
@@ -4486,7 +4486,8 @@ try{
       try { if (uiModeProBtn)   uiModeProBtn.classList.toggle('mode-active', !isBasic); } catch(e) {}
 
       // Persist
-      try { prefSet('basicModeEnabled', isBasic ? '1' : '0'); } catch(e) {}
+      try {
+} catch(e) {}
 
       // Recargar settings del modo (PRO/BASIC) y aplicar BASIC si toca
       try { loadVoiceSettings(); } catch(e) {}
@@ -4550,7 +4551,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.0.75_v7.47_BASIC';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.0.77_v7.49_BASIC';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -4591,12 +4592,7 @@ try{
     // ===== BASIC mode (modo simple para pilotos) =====
     // Objetivo: util y NO abrumador.
     // En BASIC: solo voz de LAPS + AZUL + POSICION (confirmada), todo lo demas en OFF.
-    let basicModeEnabled = true;
-    try {
-      const bm = prefGet('basicModeEnabled', null);
-      if (bm !== null) basicModeEnabled = (bm === '1');
-      else { basicModeEnabled = true; try { prefSet('basicModeEnabled','1'); } catch(e) {} }
-    } catch(e) {}
+    let basicModeEnabled = true; // Siempre inicia en BASIC (modo simple)
 
     function applyBasicMode() {
       if (!basicModeEnabled) return;
@@ -6266,10 +6262,19 @@ function loadVoiceSettings() {
         if (raw) {
           const parsed = JSON.parse(raw);
           voiceSettings = { ...DEFAULT_VOICE_SETTINGS, ...parsed, laps: true };
+          if (basicModeEnabled) {
+            // Si no existia la preferencia en el JSON, en BASIC lo prendemos por default
+            if (!( 'pos' in parsed )) voiceSettings.pos = true;
+            if (!( 'blueflag' in parsed )) voiceSettings.blueflag = true;
+          }
           // Si venimos de legacy y el key no existia, lo copiamos para este modo
           try { if (!prefGet(key, null)) prefSet(key, raw); } catch(e) {}
         } else {
-          voiceSettings = { ...DEFAULT_VOICE_SETTINGS, laps: true };
+          if (basicModeEnabled) {
+            voiceSettings = { ...DEFAULT_VOICE_SETTINGS, laps: true, blueflag: true, pos: true };
+          } else {
+            voiceSettings = { ...DEFAULT_VOICE_SETTINGS, laps: true };
+          }
         }
       } catch (e) {
         voiceSettings = { ...DEFAULT_VOICE_SETTINGS, laps: true };
@@ -6549,13 +6554,18 @@ function loadVoiceSettings() {
 
       // Ajustes de mensajes por sesión: dejar claro ON/OFF
       try{
-        Object.keys(DEFAULT_VOICE_SETTINGS).forEach(k => {
-          if (k === 'laps'){ voiceSettings.laps = true; return; }
-          voiceSettings[k] = !!prof.voice[k];
-        });
-        voiceSettings.laps = true;
-        applyVoiceSettingsToButtons();
-        saveVoiceSettings();
+        if (!basicModeEnabled) {
+          Object.keys(DEFAULT_VOICE_SETTINGS).forEach(k => {
+            if (k === 'laps'){ voiceSettings.laps = true; return; }
+            voiceSettings[k] = !!prof.voice[k];
+          });
+          voiceSettings.laps = true;
+          applyVoiceSettingsToButtons();
+          saveVoiceSettings();
+        } else {
+          // BASIC: no dejamos que el preset prenda botones extra
+          try { applyBasicMode(); } catch(e) {}
+        }
         try { if (typeof updateToggleAllMsgsBtn === 'function') updateToggleAllMsgsBtn(); } catch(e) {}
       }catch(e){}
 
@@ -11650,7 +11660,7 @@ function handleVoiceAndBeeps() {
         const isNewBest = (lastBestAnnouncedMs == null) ? true : (lapMsNow < (lastBestAnnouncedMs - 30));
         if (isNewBest) {
           pendingBestLap = {
-            text: 'Best lap ' + tiempoATexto(lapMsNow),
+            text: 'Best lap',
             opts: { key: 'bestlap_' + lapsNow, priority: 75, cooldownMs: 1500, dedupe: true },
             expLap: lapsNow + 2,
             ms: lapMsNow
@@ -12296,7 +12306,7 @@ speakBtn.addEventListener('click', () => {
       else if (m2 && m2[1]) main = m2[1];
       else if (m3 && m3[1]) main = m3[1];
 
-      let type = 'UNKNOWN';
+      let type = 'TRAIN';
       if (isManga && !isFinal) type = 'MANGA';
       else if (isFinal && !isManga) type = 'FINAL';
       else if (isFinal && isManga) type = 'FINAL'; // preferimos FINAL si viene mezclado
@@ -12310,7 +12320,7 @@ speakBtn.addEventListener('click', () => {
         durationMs = (m === 'A') ? (6 * 60 * 1000) : (4 * 60 * 1000);
       }
 
-let label = 'MODO -';
+let label = 'MODO TRAIN';
       if (type === 'MANGA') label = 'MODO MANGA 3:00';
       if (type === 'FINAL') {
         const m = String(main || '').toUpperCase();
