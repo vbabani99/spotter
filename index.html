@@ -1,5 +1,5 @@
 <!--
-Spotter_5.1.4 - BASIC/PRO + idle 20s + pilot cookie + panel compact
+Spotter_5.1.5 - BASIC/PRO + idle 20s + pilot cookie + panel compact
 Fecha: 2026-01-04
 Origen: Spotter_5.0.1.html
 
@@ -20,7 +20,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Spotter_5.1.4</title>
+  <title>Spotter_5.1.5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -3910,7 +3910,7 @@ body, .app, .main, .pilot-card, .extras-section{
   <div class="app">
     <header class="app-header">
       <div class="header-left">
-        <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">Spotter_5.1.4</span><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
+        <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">Spotter_5.1.5</span><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
         <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
         <div class="header-subline" id="raceInfo">Esperando datos en vivo</div>
         <div class="header-subline rescue-banner" id="rescueBanner"></div>
@@ -3922,7 +3922,7 @@ body, .app, .main, .pilot-card, .extras-section{
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">Spotter_5.1.4</div>
+<div class="header-version" id="appVersion">Spotter_5.1.5</div>
       </div>
     </header>
 
@@ -4261,7 +4261,7 @@ body, .app, .main, .pilot-card, .extras-section{
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - Spotter_5.1.4</div>
+          <div class="manual-title">Manual - Spotter_5.1.5</div>
           <div class="manual-sub">BASIC por default (cero ruido). PRO solo si quieres jugar a ingeniero de pits.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -4445,7 +4445,7 @@ body, .app, .main, .pilot-card, .extras-section{
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "Spotter_5.1.4";
+    const APP_NAME = "Spotter_5.1.6";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -5415,7 +5415,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.1.4_BASIC';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.1.5_BASIC';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -7890,8 +7890,8 @@ function enqueueSpeech(text, opts = {}) {
         const rate = clampNum((opts.rate != null ? opts.rate : (baseRate * (pr.rateMul || 1.0))), 0.6, 2.2);
         const pitch = clampNum((opts.pitch != null ? opts.pitch : (pr.pitch != null ? pr.pitch : 1.0)), 0.5, 2.0);
         const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
-        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, cat });
-        // prioridad desc, FIFO por tiempo
+        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, cat, validatePos: (opts && opts.validatePos) ? opts.validatePos : null });
+// prioridad desc, FIFO por tiempo
         speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
 
         pumpSpeechQueue();
@@ -7908,7 +7908,28 @@ function enqueueSpeech(text, opts = {}) {
         if (speechSpeaking || window.speechSynthesis.speaking) return;
         if (applyIdleSilenceIfNeeded()) return;
 
-        const next = speechQueue.shift();
+        let next = null;
+        while (true) {
+          next = speechQueue.shift();
+          if (!next) return;
+
+          // Stale-guard: si la condición ya no se cumple (ej. POS cambió), descarta este mensaje
+          if (next.validatePos) {
+            try {
+              const pk = next.validatePos.pilotKey || selectedPilotKey;
+              const wanted = Math.floor(Number(next.validatePos.pos) || 0);
+              if (pk && wanted > 0 && raceData && Array.isArray(raceData.classification)) {
+                const i = findPilotIndexByKey(pk);
+                if (i >= 0) {
+                  const cp = Math.floor(Number((raceData.classification[i] && raceData.classification[i].pos) || 0));
+                  if (cp && cp !== wanted) continue; // descarta mensaje viejo
+                }
+              }
+            } catch (e) {}
+          }
+
+          break;
+        }
         if (!next) return;
 
         const u = new SpeechSynthesisUtterance(normalizeTtsText(next.text));
@@ -10836,24 +10857,27 @@ function updateBlueFlagFromPassEvents() {
         if ('__dyn' in base) delete base.__dyn;
 
                 if (s === 'narrativo'){
-          // TV: consistente, con ritmo, sin metralleta
-          base.minIntervalMs = 7500;
+          // TV (legacy): consistente, con ritmo, sin metralleta
+          base.minIntervalMs = 6500;
           base.windowMs = 24000;
           base.maxMsgsInWindow = 4;
-          base.sigDefaultCooldownMs = 17000;
-          base.baseThresholdScore = 3.05;
-          base.top3CooldownMs = 42000;
-          base.focusMinSpeakMs = 9500;
-          base.focusMinDeltaSpeakSec = 0.07;
+          base.sigDefaultCooldownMs = 15000;
+          base.baseThresholdScore = 2.85;
+          base.top3CooldownMs = 34000;
+          base.top3ChapterCooldownMs = 42000;
+          base.focusMinSpeakMs = 8200;
+          base.focusMinDeltaSpeakSec = 0.055;
         } else if (s === 'tv'){
-          base.minIntervalMs = 7200;
+          // TV: narración continua sin ser metralleta
+          base.minIntervalMs = 6000;
           base.windowMs = 22000;
           base.maxMsgsInWindow = 4;
-          base.sigDefaultCooldownMs = 16000;
-          base.baseThresholdScore = 2.95;
-          base.top3CooldownMs = 38000;
-          base.focusMinSpeakMs = 9000;
-          base.focusMinDeltaSpeakSec = 0.06;
+          base.sigDefaultCooldownMs = 13500;
+          base.baseThresholdScore = 2.70;
+          base.top3CooldownMs = 28000;
+          base.top3ChapterCooldownMs = 36000;
+          base.focusMinSpeakMs = 7600;
+          base.focusMinDeltaSpeakSec = 0.050;
         } else if (s === 'engineer'){
           base.minIntervalMs = 9000;
           base.windowMs = 28000;
@@ -12142,23 +12166,50 @@ function autoDecorate(text, type, style) {
                 const loserPrevPos = commentatorAutoState.prevPosByKey.get(loserKey) || (currPos + 1);
                 const winner = safeRacerName(curr.racerName) || 'un piloto';
                 const loser = safeRacerName((arr.find(x => getPilotKey(x)===loserKey)||{}).racerName) || 'otro piloto';
-                const text = autoBuildMessage('pass', { winner, loser, newPos: currPos, oldPos: loserPrevPos });
+                const _isManga = (currentSessionInfo && currentSessionInfo.type === 'MANGA');
+                const deltaPos = (prevPos ? (prevPos - currPos) : 0);
 
-                let s = 8.8;
-                if (currPos <= 3) s += 0.9;
-                if (currPos === 1) s += 0.6;
-                if (progress > 0.75 && currPos <= 5) s += 0.6;
+                // En MANGA (contra reloj), micro swaps suelen ser jitter - solo anunciamos si aporta
+                if (_isManga && !(currPos <= 3 || deltaPos >= 2)) {
+                  // skip
+                } else {
+                  let s = 8.8;
+                  let type = 'pass';
+                  let sig = 'auto:pass:' + currKey + ':' + currPos;
+                  let sigCooldownMs = 20000;
+                  let priority = 8;
+                  let text = '';
 
-                addCand({
-                  type:'pass',
-                  score: s,
-                  text,
-                  key: 'auto_pass_' + currKey + '_' + currPos,
-                  sig: 'auto:pass:' + currKey + ':' + currPos,
-                  sigCooldownMs: 20000,
-                  priority: 8
-                });
-              }
+                  if (_isManga) {
+                    // Ranking provisional (no "rebase")
+                    type = 'rankMove';
+                    sig = 'auto:rankMove:' + currKey + ':' + currPos;
+                    sigCooldownMs = 16000;
+                    priority = 6;
+                    s = 6.4;
+                    if (currPos <= 3) s += 0.9;
+                    if (deltaPos >= 3) s += 0.6;
+                    text = (prevPos && prevPos > currPos)
+                      ? `Tabla viva. ${winner} sube a P${currPos} desde P${prevPos}.`
+                      : `Tabla viva. ${winner} se mete en P${currPos}.`;
+                  } else {
+                    text = autoBuildMessage('pass', { winner, loser, newPos: currPos, oldPos: loserPrevPos });
+                    if (currPos <= 3) s += 0.9;
+                    if (currPos === 1) s += 0.6;
+                    if (progress > 0.75 && currPos <= 5) s += 0.6;
+                  }
+
+                  addCand({
+                    type,
+                    score: s,
+                    text,
+                    key: (_isManga ? ('auto_rank_' + currKey + '_' + currPos) : ('auto_pass_' + currKey + '_' + currPos)),
+                    sig,
+                    sigCooldownMs,
+                    priority
+                  });
+                }
+}
             }
           }
         }
@@ -12498,10 +12549,10 @@ if (isMangaSess) {
       }
 
       if (bestMs != null && isFinite(bestMs) && bestMs > 0) {
-        const improved = (autoQualiState.bestOverallMs == null) ? true : (bestMs < (autoQualiState.bestOverallMs - 20));
+        const improved = (autoQualiState.bestOverallMs == null) ? true : (bestMs < (autoQualiState.bestOverallMs - 5));
         const since = now - (autoQualiState.lastBestSpeakMs || 0);
 
-        if (improved && since > 10000) {
+        if (improved && since > 8000) {
           const t = msToVoiceTime(bestMs); // ya aplica regla flat/precision
           const txt = bestName ? (`Vuelta rápida. ${bestName} marca ${t}`) : (`Vuelta rápida. ${t}`);
           addCand({
@@ -12533,7 +12584,7 @@ if (isMangaSess) {
         if (b1 > 0 && b2 > 0 && isFinite(b1) && isFinite(b2)) {
           const gap = Math.abs(b2 - b1) / 1000;
           const sincePF = now - (autoQualiState.lastPoleFightSpeakMs || 0);
-          if (gap <= 0.10 && sincePF > 14000) {
+          if (((gap <= 0.08) && sincePF > 8000) || ((gap <= 0.16) && sincePF > 12000)) {
             const g = autoFmtSec(gap);
             const txt = `Pelea por la pole. ${n1} y ${n2} separados por ${g}.`;
             addCand({
@@ -12558,7 +12609,7 @@ if (isMangaSess) {
           let maxScore = 0;
           for (const c of candidates) maxScore = Math.max(maxScore, Number(c && c.score) || 0);
 
-          const quietCooldownMs = (autoCommentatorMode === 'tv') ? 16000 : ((autoCommentatorMode === 'tv' || autoCommentatorMode === 'narrativo') ? 17000 : 22000);
+          const quietCooldownMs = (autoCommentatorMode === 'tv') ? 12000 : ((autoCommentatorMode === 'narrativo') ? 13500 : 22000);
           const sinceQuiet = now - (commentatorAutoState.lastQuietMs || 0);
 
           const allowQuiet = !!(vs.total || vs.leadergap);
@@ -12635,7 +12686,7 @@ if (isMangaSess) {
 // MANGA: reduce ruido (menos swaps, más info útil)
 if (isMangaSess && candidates && candidates.length) {
   // Top3 + cierres + trenes. Lo demás en manga suele ser "ruido" por salida escalonada.
-  const allow = new Set(['top3','closing','train','story','qualiBest','qualiPole','quiet','leaderChange']);
+  const allow = new Set(['top3','closing','train','story','qualiBest','qualiPole','quiet','leaderChange','rankMove']);
   const filtered = [];
   for (const c of candidates) {
     if (c && c.type && allow.has(c.type)) filtered.push(c);
@@ -13061,8 +13112,10 @@ try {
             text = pendingPosChange.text || '';
           }
 
+          const __posOpts = Object.assign({}, (pendingPosChange.opts || { key: 'pos_' + lapsNow, priority: 75, cooldownMs: 1500, dedupe: true }), { validatePos: { pilotKey: selectedPilotKey, pos: ppos } });
+
           pushCand('pos', isFinal ? 92 : 55, text,
-            (pendingPosChange.opts || { key: 'pos_' + lapsNow, priority: 75, cooldownMs: 1500, dedupe: true }),
+            __posOpts,
             () => {
               try { posStability.lastAnnounceAt = Date.now(); } catch(e) {}
               try {
