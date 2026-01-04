@@ -2854,7 +2854,20 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       min-height: 38px;
       min-width: 92px;
     }
-    .basic-toggle.active{
+    
+    /* BASIC panel: show/hide toggles by narration mode */
+    body[data-ui-mode="BASIC"] .basic-toggle.mode-tv,
+    body[data-ui-mode="BASIC"] .basic-toggle.mode-coach{
+      display:none;
+    }
+    body[data-narr-mode="TV"] .basic-toggle.mode-tv{
+      display:inline-flex;
+    }
+    body[data-narr-mode="COACH"] .basic-toggle.mode-tv,
+    body[data-narr-mode="COACH"] .basic-toggle.mode-coach{
+      display:inline-flex;
+    }
+.basic-toggle.active{
       border-color: rgba(0, 255, 163, 0.45);
       background: rgba(0, 255, 163, 0.12);
     }
@@ -3396,7 +3409,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       border-color: rgba(0,255,163,0.35);
     }
 
-    .cbtn-basic, .cbtn-pro, .cbtn-rd, .cbtn-speak{
+    .cbtn-basic, .cbtn-pro, .cbtn-mode, .cbtn-rd, .cbtn-speak{
       justify-content: center;
       text-align: center;
       white-space: nowrap;
@@ -4065,8 +4078,7 @@ body, .app, .main, .pilot-card, .extras-section{
             <span class="cbtn-sub" id="voiceStripState">OFF</span>
           </button>
 
-          <button id="uiModeBasicBtn" class="cbtn cbtn-basic" type="button" title="Modo básico">BASIC</button>
-          <button id="uiModeProBtn" class="cbtn cbtn-pro" type="button" title="Modo avanzado">PRO</button>
+          <button id="uiModeBtn" class="cbtn cbtn-mode" type="button" title="Modo de narración">TV</button>
 
 <button class="cbtn cbtn-rd mode-pro-only" id="rdToggleBtn" type="button" title="Race Director">
             🤖 RD
@@ -4088,8 +4100,13 @@ body, .app, .main, .pilot-card, .extras-section{
           <div class="basic-toggles">
             <button class="basic-toggle active lock" data-flag="laps" type="button">⏱ LAPS</button>
             <button class="basic-toggle" data-flag="blueflag" type="button">🟦 AZUL</button>
-            <button class="basic-toggle" data-flag="pos" type="button">🏁 POS</button>
-          </div>
+            <button class="basic-toggle" data-flag="pos" type="button">🏁 POS/RANK</button>
+            <button class="basic-toggle mode-tv mode-coach" data-flag="gaps" type="button">⏱ GAP</button>
+            <button class="basic-toggle mode-tv mode-coach" data-flag="pelea" type="button">⚔️ PELEA</button>
+            <button class="basic-toggle mode-tv mode-coach" data-flag="bestlap" type="button">🏆 BEST</button>
+            <button class="basic-toggle mode-coach" data-flag="ritmo" type="button">📉 RITMO</button>
+            <button class="basic-toggle mode-coach" data-flag="streak" type="button">🔥 RACHA</button>
+</div>
         </div>
 
 <div class="config-status-card hud" id="configStatusCard" aria-label="Configuración activa">
@@ -4445,7 +4462,7 @@ body, .app, .main, .pilot-card, .extras-section{
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "Spotter_5.1.7";
+    const APP_NAME = "Spotter_5.1.8";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -5225,6 +5242,117 @@ try{
     const uiModeBasicBtn = document.getElementById('uiModeBasicBtn');
     const uiModeProBtn   = document.getElementById('uiModeProBtn');
 
+    const uiModeBtn      = document.getElementById('uiModeBtn');
+
+    // ===== Narration Modes (UI simple) =====
+    // TV: narrativa tipo transmisión
+    // COACH: balance datos + guía
+    // MIN: mínimo ruido (equivale a BASIC clásico)
+    // ENG: ingeniero (equivale a PRO)
+    const NARR_MODE_ORDER = ['TV','COACH','MIN','ENG'];
+    let uiNarrationMode = (function(){
+      try{
+        const v = (lsGet('spotterNarrMode') || 'TV').toUpperCase();
+        return NARR_MODE_ORDER.includes(v) ? v : 'TV';
+      }catch(e){ return 'TV'; }
+    })();
+
+    function _isEngineerMode(){ return uiNarrationMode === 'ENG'; }
+    function _uiModeToCore(){ return _isEngineerMode() ? 'PRO' : 'BASIC'; }
+
+    function _setModeBtnLabel(){
+      try{
+        if (!uiModeBtn) return;
+        const map = { TV:'TV', COACH:'COACH', MIN:'MIN', ENG:'ENG' };
+        uiModeBtn.textContent = map[uiNarrationMode] || 'TV';
+        uiModeBtn.setAttribute('data-mode', uiNarrationMode);
+      }catch(e){}
+    }
+
+    const MODE_ALLOWED_FLAGS = {
+      MIN:   new Set(['laps','blueflag','pos']),
+      COACH: new Set(['laps','blueflag','pos','gaps','pelea','bestlap','ritmo','streak','podium','leadergap']),
+      TV:    new Set(['laps','blueflag','pos','gaps','pelea','bestlap','podium','leadergap']),
+      ENG:   null // all
+    };
+
+    function applyNarrationModePreset(sessionInfo, source){
+      const st = String((sessionInfo && sessionInfo.type) ? sessionInfo.type : 'TRAIN').toUpperCase();
+      const allowed = MODE_ALLOWED_FLAGS[uiNarrationMode] || MODE_ALLOWED_FLAGS.TV;
+
+      // Base defaults por modo
+      const base = {};
+      Object.keys(DEFAULT_VOICE_SETTINGS).forEach(k=>{ base[k]=false; });
+      base.laps = true;
+
+      if (uiNarrationMode === 'MIN'){
+        base.blueflag = true;
+        base.pos = true;
+      } else if (uiNarrationMode === 'COACH'){
+        base.blueflag = true; base.pos = true;
+        base.gaps = true; base.ritmo = true; base.streak = true;
+        base.bestlap = (st !== 'TRAIN'); // en carrera/clasi sí importa
+        base.pelea = (st === 'FINAL');
+        base.podium = (st !== 'TRAIN');
+        base.leadergap = (st !== 'TRAIN');
+      } else if (uiNarrationMode === 'TV'){
+        base.blueflag = true; base.pos = true;
+        base.gaps = (st === 'FINAL'); // en MANGA el gap numérico se usa menos
+        base.pelea = (st === 'FINAL');
+        base.bestlap = (st !== 'TRAIN');
+        base.podium = (st !== 'TRAIN');
+        base.leadergap = (st !== 'TRAIN'); // en MANGA = pelea por pole
+      } else {
+        // ENG no pisa nada
+        return;
+      }
+
+      // Aplicar allowed (si hay)
+      try{
+        Object.keys(base).forEach(k=>{
+          if (k === 'laps'){ voiceSettings.laps = true; return; }
+          if (allowed && !allowed.has(k)) return;
+          voiceSettings[k] = !!base[k];
+        });
+        voiceSettings.laps = true;
+      }catch(e){}
+
+      try{ applyVoiceSettingsToButtons(); }catch(e){}
+      try{ saveVoiceSettings(); }catch(e){}
+    }
+
+    function setNarrationMode(mode, opts = {}){
+      const m = String(mode || 'TV').toUpperCase();
+      uiNarrationMode = NARR_MODE_ORDER.includes(m) ? m : 'TV';
+      try { document.body.setAttribute('data-narr-mode', uiNarrationMode); } catch(e) {}
+      try{ lsSet('spotterNarrMode', uiNarrationMode); }catch(e){}
+      _setModeBtnLabel();
+
+      // Core UI mode: BASIC para TV/COACH/MIN, PRO para ENG
+      try{ setUIMode(_uiModeToCore(), {silent:true}); }catch(e){}
+
+      // Align auto-locutor + RD to narration mode
+      try{
+        const am = (uiNarrationMode === "TV") ? "tv" : (uiNarrationMode === "COACH") ? "coach" : (uiNarrationMode === "MIN") ? "minimal" : "engineer";
+        setAutoCommentatorMode(am);
+      }catch(e){}
+      try{
+        const rm = (uiNarrationMode === "ENG") ? "engineer" : (uiNarrationMode === "COACH") ? "coach" : "minimal";
+        setRaceDirectorMode(rm);
+      }catch(e){}
+
+
+
+      // En ENG mostramos todo; en otros, aplicamos preset de modo + sesión
+      try{
+        if (!_isEngineerMode()){
+          autoSessionPresetsEnabled = true; // ahora sí funcionan presets en modos simples
+          applyNarrationModePreset(currentSessionInfo || {type:'TRAIN'}, 'mode');
+        }
+      }catch(e){}
+    }
+
+
     function setUIMode(mode, opts = {}) {
       const m = (mode === 'PRO') ? 'PRO' : 'BASIC';
       const isBasic = (m === 'BASIC');
@@ -5246,9 +5374,17 @@ try{
       try { if (typeof updateToggleAllMsgsBtn === 'function') updateToggleAllMsgsBtn(); } catch(e) {}
       try { if (typeof updateConfigStatusUI === 'function') updateConfigStatusUI(); } catch(e) {}
     }
+    function cycleNarrationMode(){
+      const i = NARR_MODE_ORDER.indexOf(uiNarrationMode);
+      const next = NARR_MODE_ORDER[(i + 1) % NARR_MODE_ORDER.length];
+      setNarrationMode(next);
+    }
+    if (uiModeBtn) uiModeBtn.addEventListener('click', cycleNarrationMode);
 
-    if (uiModeBasicBtn) uiModeBasicBtn.addEventListener('click', ()=> setUIMode('BASIC'));
-    if (uiModeProBtn)   uiModeProBtn.addEventListener('click', ()=> setUIMode('PRO'));
+    // Init mode at startup
+    try { _setModeBtnLabel(); } catch(e) {}
+    try { setNarrationMode(uiNarrationMode, {silent:true}); } catch(e) {}
+
 
     // ===== Tema (BLOQUE 3.1) =====
     const THEME_LIST = [
@@ -5459,7 +5595,7 @@ try{
     let basicModeEnabled = true; // Siempre inicia en BASIC (modo simple)
 
     function applyBasicMode() {
-      if (!basicModeEnabled) return;
+      if (!basicModeEnabled || (typeof uiNarrationMode !== "undefined" && uiNarrationMode !== "MIN")) return;
 
       // En BASIC solo apagamos ruido. Azul/Pos los puede prender/apagar el usuario.
       const keepBlue = (typeof voiceSettings.blueflag === 'boolean') ? voiceSettings.blueflag : true;
@@ -7430,8 +7566,27 @@ function loadVoiceSettings() {
           applyVoiceSettingsToButtons();
           saveVoiceSettings();
         } else {
-          // BASIC: no dejamos que el preset prenda botones extra
-          try { applyBasicMode(); } catch(e) {}
+          // BASIC:
+          // - MIN: mantiene el BASIC clásico (cero ruido)
+          // - TV/COACH: permite presets por sesión, pero LIMITADOS al modo (UI simple)
+          try {
+            if (typeof uiNarrationMode !== 'undefined' && uiNarrationMode === 'MIN') {
+              applyBasicMode();
+            } else {
+              const allowed = (typeof MODE_ALLOWED_FLAGS !== 'undefined') ? MODE_ALLOWED_FLAGS[uiNarrationMode] : null;
+              Object.keys(DEFAULT_VOICE_SETTINGS).forEach(k => {
+                if (k === 'laps'){ voiceSettings.laps = true; return; }
+                if (allowed && !allowed.has(k)) return;
+                if (typeof prof.voice[k] === 'undefined') return;
+                voiceSettings[k] = !!prof.voice[k];
+              });
+              voiceSettings.laps = true;
+              applyVoiceSettingsToButtons();
+              saveVoiceSettings();
+            }
+          } catch(e) {
+            try { applyBasicMode(); } catch(e2) {}
+          }
         }
         try { if (typeof updateToggleAllMsgsBtn === 'function') updateToggleAllMsgsBtn(); } catch(e) {}
       }catch(e){}
