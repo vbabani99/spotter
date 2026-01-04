@@ -1,9 +1,10 @@
 <!--
-Spotter_5.0.77_v7.49 - BASIC/PRO + idle 20s + pilot cookie + panel compact
+Spotter_5.0.92_v7.54 - BASIC/PRO + idle 20s + pilot cookie + panel compact
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v7.50: Polling adaptativo | v7.51: Cache métricas por piloto (BLOQUE 2.1) - menos CPU (250ms activo, 0.9-1.2s idle, y backoff en errores) para bajar costo/batería sin perder 'en vivo'.
 - v7.5: Fix Auto Locutor: ya no depende de RD, usa POS para top3/peleas por defecto, umbral ajustado para evitar silencio, y no resetea tus voiceSettings.
 - v7.4: Auto Locutor PRO narrativo: seguimiento de pelea (focus) con contexto, tendencia de gap, y modo MANGA mejorado (pole/best lap) con menos 'robot'.
 - v7.3: Locutor mejorado: frases tipo shuffle-bag (anti repetición real), manga batalla con nombres+gaps, y micro-variación en Auto Locutor.
@@ -18,7 +19,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Spotter_5.0.77_v7.49</title>
+  <title>Spotter_5.0.84_v7.53</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -3460,6 +3461,413 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
 /* Hide VOZ ON/OFF text: status indicated by color only */
 #voiceStripState{display:none!important;}
+
+    /* DIAG panel (PRO) */
+    .cbtn-diag{
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,.92);
+    }
+    .cbtn-diag.active{
+      background: linear-gradient(135deg, rgba(0,229,255,.95), rgba(0,140,255,.70));
+      color:#071018;
+      box-shadow: var(--shadow-strong);
+    }
+    .diag-panel{
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      width: min(360px, calc(100vw - 20px));
+      max-height: 55vh;
+      overflow: auto;
+      padding: 10px 10px 8px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.78);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+      z-index: 9999;
+      display: none;
+      backdrop-filter: blur(6px);
+    }
+    .diag-panel.on{ display:block; }
+    .diag-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-weight: 950;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.92);
+      margin-bottom: 8px;
+    }
+    .diag-sub{
+      font-size: 10px;
+      color: rgba(255,255,255,0.70);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      margin-top: -4px;
+      margin-bottom: 8px;
+    }
+    .diag-grid{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 10px;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+    .diag-k{
+      color: rgba(255,255,255,0.70);
+      font-weight: 800;
+    }
+    .diag-v{
+      color: rgba(255,255,255,0.94);
+      font-weight: 900;
+      text-align:right;
+      white-space:nowrap;
+    }
+    .diag-log{
+      margin-top: 8px;
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 10px;
+      line-height: 1.25;
+      color: rgba(255,255,255,0.88);
+      white-space: pre-wrap;
+    }
+    .rescue-banner{
+      margin-top: 6px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,120,0,0.35);
+      background: rgba(255,120,0,0.12);
+      color: rgba(255,210,170,0.95);
+      font-weight: 900;
+      font-size: 12px;
+      display: none;
+    }
+    .rescue-banner.on{ display: inline-block; }
+
+    .diag-badge{
+      display:inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06);
+      font-size: 10px;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+    }
+
+  
+
+    /* ===== Temas (BLOQUE 3.1) ===== */
+    .hud-theme{
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.10);
+    }
+    .hud-theme-head{
+      display:flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .hud-theme-title{
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      color: rgba(255,255,255,0.92);
+    }
+    .hud-theme-note{
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      white-space: nowrap;
+    }
+    .hud-theme-row{
+      display:flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .hud-select{
+      flex: 1;
+      min-width: 220px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.35);
+      color: rgba(255,255,255,0.92);
+      outline: none;
+    }
+    .hud-select:focus{
+      border-color: rgba(45,107,255,0.55);
+      box-shadow: 0 0 0 2px rgba(45,107,255,0.18);
+    }
+    .hud-mini-btn{
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.35);
+      color: rgba(255,255,255,0.90);
+      cursor: pointer;
+    }
+    .hud-mini-btn:hover{
+      border-color: rgba(255,122,24,0.55);
+      box-shadow: 0 0 14px rgba(255,122,24,0.18);
+    }
+
+    /* Tema base: Pitlane Red (default) */
+    body[data-theme="pitlane-red"]{
+      --bg-dark: #040406;
+      --card-dark: #080a0f;
+      --card-dark-2: #05070c;
+      --accent-red: #ff2b2b;
+      --accent-red-soft: rgba(255,43,43,0.55);
+      --accent-orange: #ff7a18;
+      --accent-orange-soft: rgba(255,122,24,0.55);
+      --accent-blue: #2d6bff;
+      --accent-blue-soft: rgba(45,107,255,0.55);
+      --accent-cyan: #2d6bff;
+      --shadow-strong: 0 0 16px rgba(255,43,43,0.42);
+      --shadow-soft: 0 0 12px rgba(255,122,24,0.26);
+      --hdr-grad-a: rgba(255,40,40,0.14);
+      --hdr-grad-b: rgba(255,140,0,0.16);
+    }
+
+    /* Final A Gold */
+    body[data-theme="final-gold"]{
+      --bg-dark: #040406;
+      --card-dark: #080a0f;
+      --card-dark-2: #05070c;
+      --accent-red: #ff3b3b;
+      --accent-red-soft: rgba(255,59,59,0.45);
+      --accent-orange: #ffd166;
+      --accent-orange-soft: rgba(255,209,102,0.55);
+      --accent-blue: #2d6bff;
+      --accent-blue-soft: rgba(45,107,255,0.50);
+      --accent-cyan: #ffd166;
+      --shadow-strong: 0 0 18px rgba(255,209,102,0.28);
+      --shadow-soft: 0 0 12px rgba(255,122,24,0.18);
+      --hdr-grad-a: rgba(255,209,102,0.14);
+      --hdr-grad-b: rgba(255,43,43,0.10);
+    }
+
+
+    body[data-theme="carbon-neon"]{
+      --bg-dark: #030307;
+      --card-dark: #070a12;
+      --card-dark-2: #050611;
+      --accent-red: #ff3b6b;
+      --accent-red-soft: rgba(255,59,107,0.48);
+      --accent-orange: #ffa31a;
+      --accent-orange-soft: rgba(255,163,26,0.42);
+      --accent-blue: #00e5ff;
+      --accent-blue-soft: rgba(0,229,255,0.38);
+      --accent-cyan: #00e5ff;
+      --shadow-strong: 0 0 16px rgba(0,229,255,0.22);
+      --shadow-soft: 0 0 12px rgba(255,163,26,0.18);
+      --hdr-grad-a: rgba(0,229,255,0.12);
+      --hdr-grad-b: rgba(255,163,26,0.14);
+    }
+
+    body[data-theme="oled-black"]{
+      --bg-dark: #000000;
+      --card-dark: #050505;
+      --card-dark-2: #020202;
+      --accent-red: #ff2b2b;
+      --accent-red-soft: rgba(255,43,43,0.45);
+      --accent-orange: #ff7a18;
+      --accent-orange-soft: rgba(255,122,24,0.40);
+      --accent-blue: #2d6bff;
+      --accent-blue-soft: rgba(45,107,255,0.45);
+      --accent-cyan: #2d6bff;
+      --shadow-strong: 0 0 14px rgba(255,43,43,0.30);
+      --shadow-soft: 0 0 10px rgba(255,122,24,0.20);
+      --hdr-grad-a: rgba(255,40,40,0.10);
+      --hdr-grad-b: rgba(255,140,0,0.12);
+    }
+
+    body[data-theme="toreo-blue"]{
+      --bg-dark: #04060b;
+      --card-dark: #07101c;
+      --card-dark-2: #050a12;
+      --accent-blue: #2d6bff;
+      --accent-blue-soft: rgba(45,107,255,0.58);
+      --accent-cyan: #2d6bff;
+      --accent-red: #ff3b3b;
+      --accent-red-soft: rgba(255,59,59,0.42);
+      --accent-orange: #ffb020;
+      --accent-orange-soft: rgba(255,176,32,0.38);
+      --shadow-strong: 0 0 16px rgba(45,107,255,0.26);
+      --shadow-soft: 0 0 12px rgba(255,176,32,0.18);
+      --hdr-grad-a: rgba(45,107,255,0.16);
+      --hdr-grad-b: rgba(255,176,32,0.12);
+    }
+
+    body[data-theme="cotorritos-crimson"]{
+      --bg-dark: #060205;
+      --card-dark: #12060b;
+      --card-dark-2: #0b0407;
+      --accent-red: #ff2b2b;
+      --accent-red-soft: rgba(255,43,43,0.62);
+      --accent-orange: #ff7a18;
+      --accent-orange-soft: rgba(255,122,24,0.46);
+      --accent-blue: #7c4dff;
+      --accent-blue-soft: rgba(124,77,255,0.40);
+      --accent-cyan: #7c4dff;
+      --shadow-strong: 0 0 16px rgba(255,43,43,0.36);
+      --shadow-soft: 0 0 12px rgba(255,122,24,0.22);
+      --hdr-grad-a: rgba(255,43,43,0.16);
+      --hdr-grad-b: rgba(124,77,255,0.12);
+    }
+
+    body[data-theme="streamer-purple"]{
+      --bg-dark: #03020a;
+      --card-dark: #0b0618;
+      --card-dark-2: #060311;
+      --accent-blue: #a855f7;
+      --accent-blue-soft: rgba(168,85,247,0.44);
+      --accent-cyan: #a855f7;
+      --accent-red: #ff2b2b;
+      --accent-red-soft: rgba(255,43,43,0.38);
+      --accent-orange: #ffcc33;
+      --accent-orange-soft: rgba(255,204,51,0.30);
+      --shadow-strong: 0 0 16px rgba(168,85,247,0.22);
+      --shadow-soft: 0 0 12px rgba(255,204,51,0.16);
+      --hdr-grad-a: rgba(168,85,247,0.14);
+      --hdr-grad-b: rgba(255,204,51,0.10);
+    }
+
+    body[data-theme="high-contrast"]{
+      --bg-dark: #000000;
+      --card-dark: #0a0a0a;
+      --card-dark-2: #050505;
+      --text-main: #ffffff;
+      --text-muted: rgba(255,255,255,0.75);
+      --border-soft: rgba(255,255,255,0.38);
+      --accent-red: #ff2b2b;
+      --accent-red-soft: rgba(255,43,43,0.62);
+      --accent-orange: #ffb020;
+      --accent-orange-soft: rgba(255,176,32,0.52);
+      --accent-blue: #2d6bff;
+      --accent-blue-soft: rgba(45,107,255,0.62);
+      --accent-cyan: #2d6bff;
+      --shadow-strong: 0 0 18px rgba(255,43,43,0.34);
+      --shadow-soft: 0 0 14px rgba(255,176,32,0.22);
+      --hdr-grad-a: rgba(255,255,255,0.12);
+      --hdr-grad-b: rgba(255,176,32,0.10);
+    }
+
+    body[data-theme="retro-90s"]{
+      --bg-dark: #07120a;
+      --card-dark: #0b1f12;
+      --card-dark-2: #06150c;
+      --accent-blue: #00ff6a;
+      --accent-blue-soft: rgba(0,255,106,0.34);
+      --accent-cyan: #00ff6a;
+      --accent-red: #ff2b9d;
+      --accent-red-soft: rgba(255,43,157,0.40);
+      --accent-orange: #ffee33;
+      --accent-orange-soft: rgba(255,238,51,0.28);
+      --shadow-strong: 0 0 16px rgba(0,255,106,0.16);
+      --shadow-soft: 0 0 12px rgba(255,238,51,0.16);
+      --hdr-grad-a: rgba(0,255,106,0.12);
+      --hdr-grad-b: rgba(255,43,157,0.10);
+    }
+
+  
+
+/* =========================
+   THEME LINK PATCH (v5.0.92)
+   - Conecta los temas a la UI real (cards, header, botones)
+   - Sin dependencias raras, puro CSS vars
+   ========================= */
+
+body{
+  background-color: var(--bg-dark);
+  background-image:
+    radial-gradient(circle at 20% 10%, var(--accent-blue-soft), transparent 58%),
+    radial-gradient(circle at 80% 0%, var(--accent-orange-soft), transparent 60%),
+    radial-gradient(circle at 70% 95%, var(--accent-red-soft), transparent 62%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.018), rgba(255,255,255,0.018) 7px, transparent 7px, transparent 14px);
+}
+
+.app-header{
+  background-color: var(--card-dark);
+  background-image:
+    linear-gradient(135deg, var(--hdr-grad-a), var(--hdr-grad-b)),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.028), rgba(255,255,255,0.028) 8px, transparent 8px, transparent 16px);
+  border-color: var(--hdr-border);
+}
+
+/* Cards principales */
+.pilot-card{
+  background-color: var(--card-dark);
+  background-image: linear-gradient(145deg, var(--card-dark), var(--card-dark-2));
+  border-color: var(--accent-orange-soft);
+}
+
+.extras-section{
+  background: radial-gradient(circle at top, var(--card-dark), var(--card-dark-2));
+  border-color: var(--border-soft);
+}
+
+/* Contenedores de categorias */
+.spotter-cat{
+  border-color: var(--border-soft);
+  background: rgba(0,0,0,0.22);
+}
+
+/* Botones (base) */
+.spotter-btn,
+.spotter-master-btn,
+.cbtn,
+.seg-btn,
+.ui-mode-btn,
+.hud-mini-btn,
+.hud-select{
+  background: rgba(0,0,0,0.26);
+  border-color: var(--border-soft);
+  color: var(--text-muted);
+}
+
+.spotter-btn:hover,
+.spotter-master-btn:hover,
+.cbtn:hover,
+.seg-btn:hover,
+.ui-mode-btn:hover,
+.hud-mini-btn:hover{
+  background: rgba(0,0,0,0.34);
+  color: var(--text-main);
+}
+
+/* Botones activos */
+.cbtn.on,
+.seg-btn.active,
+.ui-mode-btn.active{
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  border-color: rgba(255,255,255,0.16);
+  color: var(--text-main);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Voz ON destacado */
+.cbtn-voice.on{
+  background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+  border-color: rgba(255,255,255,0.18);
+  color: var(--text-main);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Texto general */
+body, .app, .main, .pilot-card, .extras-section{
+  color: var(--text-main);
+}
+
 </style>
 </head>
 <body>
@@ -3469,6 +3877,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
         <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">Spotter_5.0.49</span><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
         <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
         <div class="header-subline" id="raceInfo">Esperando datos en vivo</div>
+        <div class="header-subline rescue-banner" id="rescueBanner"></div>
         <div class="header-mini" id="lastUpdateInfo"></div>
       </div>
       <div class="header-right">
@@ -3477,7 +3886,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">Spotter_5.0.77_v7.49</div>
+<div class="header-version" id="appVersion">Spotter_5.0.84_v7.53</div>
       </div>
     </header>
 
@@ -3620,6 +4029,9 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           <button class="cbtn cbtn-speak mode-pro-only" id="speakBtn" type="button">
             📣 RES
           </button>
+          <button class="cbtn cbtn-diag mode-pro-only" id="diagToggleBtn" type="button" title="Diagnóstico">
+            🛠 DIAG
+          </button>
         </div>
 
         <div class="strip-hint" id="uiModeHintLine">
@@ -3650,6 +4062,29 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
             <div class="hud-kpi"><span>Locutor</span><b id="cfgAutoMode">-</b></div>
             <div class="hud-kpi"><span>Prec</span><b id="cfgPrec">-</b></div>
             <div class="hud-kpi"><span>Voz</span><b id="cfgVoices">ES</b></div>
+                      <div class="hud-kpi"><span>Tema</span><b id="cfgTheme">-</b></div>
+</div>
+
+          <div class="hud-theme" aria-label="Tema">
+            <div class="hud-theme-head">
+              <div class="hud-theme-title">🎨 Tema</div>
+              <div class="hud-theme-note">Se guarda en este dispositivo</div>
+            </div>
+            <div class="hud-theme-row">
+              <select id="themeSelect" class="hud-select" aria-label="Seleccionar tema">
+                <option value="auto">Auto (por sesión)</option>
+                <option value="carbon-neon">Carbon Neon</option>
+                <option value="oled-black">OLED Black</option>
+                <option value="pitlane-red">Pitlane Red</option>
+                <option value="final-gold">Final A Gold</option>
+                <option value="toreo-blue">Toreo Blue</option>
+                <option value="cotorritos-crimson">Cotorritos Crimson</option>
+                <option value="streamer-purple">Streamer Purple</option>
+                <option value="high-contrast">High Contrast</option>
+                <option value="retro-90s">Retro 90s</option>
+              </select>
+              <button class="hud-mini-btn" id="themeCycleBtn" type="button" title="Cambiar tema">⟳</button>
+            </div>
           </div>
 
           <div class="hud-presets">
@@ -3795,7 +4230,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - Spotter_5.0.77_v7.49</div>
+          <div class="manual-title">Manual - Spotter_5.0.84_v7.53</div>
           <div class="manual-sub">BASIC por default (cero ruido). PRO solo si quieres jugar a ingeniero de pits.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -3943,13 +4378,246 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     </div>
   </div>
 
+  
+  <!-- DIAG panel (PRO) -->
+  <div class="diag-panel" id="diagPanel" aria-label="Diagnóstico">
+    <div class="diag-title">
+      <div>🛠 DIAG</div>
+      <div class="diag-badge" id="diagModeBadge">PRO</div>
+    </div>
+    <div class="diag-sub" id="diagSubLine">Estado en vivo</div>
+    <div class="diag-grid">
+      <div class="diag-k">Live</div><div class="diag-v" id="diagLive">-</div>
+      <div class="diag-k">Firebase</div><div class="diag-v" id="diagFirebase">-</div>
+            <div class="diag-k">HTTPS</div><div class="diag-v" id="diagHttps">-</div>
+      <div class="diag-k">Host</div><div class="diag-v" id="diagHost">-</div>
+      <div class="diag-k">Event Key</div><div class="diag-v" id="diagKey">-</div>
+<div class="diag-k">Última lectura</div><div class="diag-v" id="diagFetch">-</div>
+      <div class="diag-k">Intervalo</div><div class="diag-v" id="diagInterval">-</div>
+      <div class="diag-k">Errores seguidos</div><div class="diag-v" id="diagErr">-</div>
+      <div class="diag-k">Rescate</div><div class="diag-v" id="diagRescue">-</div>
+      <div class="diag-k">Último error</div><div class="diag-v" id="diagLastErr">-</div>
+      <div class="diag-k">Hidden</div><div class="diag-v" id="diagHidden">-</div>
+      <div class="diag-k">Wake Lock</div><div class="diag-v" id="diagWake">-</div>
+      <div class="diag-k">TTS</div><div class="diag-v" id="diagTTS">-</div>
+      <div class="diag-k">Voz</div><div class="diag-v" id="diagVoice">-</div>
+      <div class="diag-k">Ticks/min</div><div class="diag-v" id="diagTicks">-</div>
+      <div class="diag-k">Último cambio</div><div class="diag-v" id="diagChange">-</div>
+      <div class="diag-k">Sesión</div><div class="diag-v" id="diagSession">-</div>
+    </div>
+    <pre class="diag-log" id="diagLog" aria-label="Log"></pre>
+  </div>
+
+
   <script type="module">
 
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "Spotter_5.0.77_v7.49";
+    const APP_NAME = "Spotter_5.0.87_v7.56";
     const APP_LABEL = APP_NAME;
+
+    // =========================
+    // SECURITY (operativo)
+    // =========================
+    // Nota: la seguridad real se define en Firestore Rules + App Check.
+    // Esto solo agrega "guardrails" y visibilidad (DIAG) del lado cliente.
+    const SECURITY_CFG = {
+      requireEventKey: false,          // default OFF (no rompe tu flujo actual)
+      eventKeyParam: 'k',              // ejemplo: ?k=ABC123
+      eventKeyStorage: 'trm_event_key',
+      appCheckClientConfigured: false  // placeholder informativo
+    };
+
+    function getEventKey(){
+      try {
+        const url = new URL(location.href);
+        const k = url.searchParams.get(SECURITY_CFG.eventKeyParam);
+        if (k && k.trim()) {
+          try { localStorage.setItem(SECURITY_CFG.eventKeyStorage, k.trim()); } catch(e) {}
+          return k.trim();
+        }
+      } catch(e) {}
+      try {
+        const k2 = localStorage.getItem(SECURITY_CFG.eventKeyStorage);
+        return (k2 && k2.trim()) ? k2.trim() : '';
+      } catch(e) {}
+      return '';
+    }
+
+
+
+
+    // =========================
+    // DIAG (PRO)
+    // =========================
+    let diagEnabled = false;
+    let diagLastFetchMs = 0;
+    let diagLastFetchAt = 0;
+    let diagTickCount = 0;
+    let diagTickWindowStart = Date.now();
+    let diagTicksPerMin = 0;
+    let diagLastRaceChangeAt = 0;
+
+    let diagLastErrorStr = '';
+    let diagLastErrorAt = 0;
+    let diagLogRing = [];
+    const DIAG_LOG_MAX = 50;
+
+    function diagLogPush(msg){
+      try {
+        const t = new Date();
+        const hh = String(t.getHours()).padStart(2,'0');
+        const mm = String(t.getMinutes()).padStart(2,'0');
+        const ss = String(t.getSeconds()).padStart(2,'0');
+        const line = `${hh}:${mm}:${ss} ${msg}`;
+        diagLogRing.push(line);
+        if (diagLogRing.length > DIAG_LOG_MAX) diagLogRing = diagLogRing.slice(-DIAG_LOG_MAX);
+      } catch(e) {}
+    }
+
+    function setDiagError(msg){
+      try {
+        const m = msg || '';
+        if (m === diagLastErrorStr) return;
+        diagLastErrorStr = m;
+        diagLastErrorAt = m ? Date.now() : 0;
+        if (m) diagLogPush('ERR ' + m);
+      } catch(e) {}
+    }
+
+
+    function fmtAgo(msAgo){
+      if (msAgo == null || !isFinite(msAgo)) return '-';
+      const s = Math.max(0, Math.round(msAgo/1000));
+      if (s < 60) return s + 's';
+      const m = Math.floor(s/60);
+      const r = s%60;
+      return m + 'm ' + r + 's';
+    }
+
+    function setDiagEnabled(on){
+      diagEnabled = !!on;
+      try { localStorage.setItem('spotter_diag_enabled', diagEnabled ? '1' : '0'); } catch(e) {}
+      const p = document.getElementById('diagPanel');
+      const b = document.getElementById('diagToggleBtn');
+      if (p) p.classList.toggle('on', diagEnabled);
+      if (b) b.classList.toggle('active', diagEnabled);
+      if (diagEnabled) { try { updateDiagPanel(); } catch(e) {} }
+    }
+
+    function loadDiagPref(){
+      try {
+        const v = localStorage.getItem('spotter_diag_enabled');
+        setDiagEnabled(v === '1');
+      } catch(e) {
+        setDiagEnabled(false);
+      }
+    }
+
+    function updateDiagPanel(){
+      if (!diagEnabled) return;
+      const now = Date.now();
+
+      const elLive = document.getElementById('diagLive');
+      const elFb   = document.getElementById('diagFirebase');
+      const elHttps= document.getElementById('diagHttps');
+      const elHost = document.getElementById('diagHost');
+      const elKey  = document.getElementById('diagKey');
+      const elFetch= document.getElementById('diagFetch');
+      const elInt  = document.getElementById('diagInterval');
+      const elErr  = document.getElementById('diagErr');
+      const elHid  = document.getElementById('diagHidden');
+      const elWake = document.getElementById('diagWake');
+      const elTTS  = document.getElementById('diagTTS');
+      const elVoice= document.getElementById('diagVoice');
+      const elTicks= document.getElementById('diagTicks');
+      const elChg  = document.getElementById('diagChange');
+      const elSes  = document.getElementById('diagSession');
+      const elRes  = document.getElementById('diagRescue');
+      const elLErr = document.getElementById('diagLastErr');
+      const elLog  = document.getElementById('diagLog');
+
+      try { if (elLive) elLive.textContent = (typeof liveDot !== 'undefined' && liveDot && liveDot.classList.contains('on')) ? 'ON' : 'OFF'; } catch(e) {}
+      try { if (elFb) elFb.textContent = (__firebaseOk && db) ? 'OK' : 'OFF'; } catch(e) {}
+
+      try { if (elHttps) elHttps.textContent = (location.protocol === 'https:') ? 'YES' : 'NO'; } catch(e) {}
+      try {
+        if (elHost) {
+          const h = location.host || '(file)';
+          elHost.textContent = (h.length > 18) ? (h.slice(0,18) + '…') : h;
+        }
+      } catch(e) {}
+      try {
+        if (elKey) {
+          const k = getEventKey();
+          elKey.textContent = k ? 'SET' : '-';
+        }
+      } catch(e) {}
+
+
+      const fetchAgo = diagLastFetchAt ? (now - diagLastFetchAt) : null;
+      if (elFetch) elFetch.textContent = (diagLastFetchMs ? (diagLastFetchMs + 'ms') : '-') + ' · hace ' + fmtAgo(fetchAgo);
+
+      try { if (elInt) elInt.textContent = (typeof pollLastIntervalMs !== 'undefined' ? (pollLastIntervalMs + 'ms') : '-'); } catch(e) {}
+      try { if (elErr) elErr.textContent = (typeof pollConsecutiveErrors !== 'undefined' ? String(pollConsecutiveErrors) : '-'); } catch(e) {}
+      if (elHid) elHid.textContent = document.hidden ? 'YES' : 'NO';
+      try { if (elWake) elWake.textContent = (wakeLockSentinel ? 'ON' : 'OFF'); } catch(e) {}
+
+      const hasTTS = !!(window.speechSynthesis && typeof window.speechSynthesis.speak === 'function');
+      if (elTTS) elTTS.textContent = hasTTS ? 'OK' : 'NO';
+
+      try {
+        const st = (typeof voiceEnabled !== 'undefined' && voiceEnabled) ? 'ON' : 'OFF';
+        if (elVoice) elVoice.textContent = st;
+      } catch(e) {}
+
+      if (elTicks) elTicks.textContent = (diagTicksPerMin ? (diagTicksPerMin + '/min') : '-');
+
+      const chgAgo = diagLastRaceChangeAt ? (now - diagLastRaceChangeAt) : null;
+      if (elChg) elChg.textContent = diagLastRaceChangeAt ? ('hace ' + fmtAgo(chgAgo)) : '-';
+
+      try {
+        if (elSes) {
+          const nm = (raceData && raceData.raceName) ? raceData.raceName : '';
+          elSes.textContent = nm ? nm.slice(0, 24) : '-';
+        }
+      } catch(e) {}
+      try {
+        if (elRes) {
+          if (typeof rescueMode !== 'undefined' && rescueMode) {
+            const ago = rescueSince ? (now - rescueSince) : 0;
+            elRes.textContent = 'ON ' + fmtAgo(ago);
+          } else {
+            elRes.textContent = 'OFF';
+          }
+        }
+      } catch(e) {}
+
+      try {
+        if (elLErr) {
+          if (typeof diagLastErrorStr !== 'undefined' && diagLastErrorStr) {
+            const ago = diagLastErrorAt ? (now - diagLastErrorAt) : null;
+            elLErr.textContent = diagLastErrorStr + (ago!=null ? (' (hace ' + fmtAgo(ago) + ')') : '');
+          } else {
+            elLErr.textContent = '-';
+          }
+        }
+      } catch(e) {}
+
+      try {
+        if (elLog) {
+          if (typeof diagLogRing !== 'undefined' && diagLogRing && diagLogRing.length) {
+            const tail = diagLogRing.slice(-10);
+            elLog.textContent = tail.join('\n');
+          } else {
+            elLog.textContent = '';
+          }
+        }
+      } catch(e) {}
+
+    }
+
 
 
     // Pintar versión en UI
@@ -3958,6 +4626,13 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       if (el) el.textContent = APP_LABEL;
       // también alinear title del documento
       try { document.title = APP_LABEL; } catch(e) {}
+      // DIAG toggle
+      try {
+        loadDiagPref();
+        const diagBtn = document.getElementById('diagToggleBtn');
+        if (diagBtn) diagBtn.addEventListener('click', () => setDiagEnabled(!diagEnabled));
+      } catch(e) {}
+
     });
 
 
@@ -4501,6 +5176,125 @@ try{
     if (uiModeBasicBtn) uiModeBasicBtn.addEventListener('click', ()=> setUIMode('BASIC'));
     if (uiModeProBtn)   uiModeProBtn.addEventListener('click', ()=> setUIMode('PRO'));
 
+    // ===== Tema (BLOQUE 3.1) =====
+    const THEME_LIST = [
+      { id:'carbon-neon',        label:'Carbon Neon' },
+      { id:'oled-black',         label:'OLED Black' },
+      { id:'pitlane-red',        label:'Pitlane Red' },
+      { id:'final-gold',         label:'Final A Gold' },
+      { id:'toreo-blue',         label:'Toreo Blue' },
+      { id:'cotorritos-crimson', label:'Cotorritos Crimson' },
+      { id:'streamer-purple',    label:'Streamer Purple' },
+      { id:'high-contrast',      label:'High Contrast' },
+      { id:'retro-90s',          label:'Retro 90s' },
+    ];
+    const THEME_LABELS = (function(){
+      const o = {};
+      THEME_LIST.forEach(t=>{ o[t.id] = t.label; });
+      return o;
+    })();
+
+    const themeSelect   = document.getElementById('themeSelect');
+    const themeCycleBtn = document.getElementById('themeCycleBtn');
+    let currentThemeChoice = 'pitlane-red';
+
+    function computeAutoThemeFromSession(sess){
+      // Auto tema pro: FINAL A = Gold, FINAL B/C = Red, MANGA = Blue, TRAIN = Carbon/OLED (noche)
+      let type = 'TRAIN';
+      let main = '';
+
+      try{
+        if (sess && typeof sess === 'object'){
+          type = String(sess.type || 'TRAIN').toUpperCase();
+          main = String(sess.main || '').toUpperCase();
+        } else {
+          const s = String(sess || 'TRAIN').toUpperCase();
+          type = s;
+        }
+      }catch(e){}
+
+      // Stream/OBS: fuerza tema streamer-purple si viene por URL o storage
+      try{
+        const qs = new URLSearchParams(location.search || '');
+        const qStream = (qs.get('stream') === '1') || (qs.get('obs') === '1');
+        let lsStream = false;
+        try{ lsStream = (localStorage.getItem('tr_stream') === '1'); }catch(e){}
+        if (qStream || lsStream) return 'streamer-purple';
+      }catch(e){}
+
+      const h = (new Date()).getHours();
+      const isNight = (h >= 20 || h < 6);
+
+      const t = String(type || 'TRAIN').toUpperCase();
+      if (t.includes('FINAL')){
+        if (main === 'A') return 'final-gold';
+        return 'pitlane-red';
+      }
+      if (t.includes('MANGA') || t.includes('QUALI') || t === 'Q') return 'toreo-blue';
+      // TRAIN / unknown
+      return isNight ? 'oled-black' : 'carbon-neon';
+    }
+
+    function applyThemeChoice(choice, opts = {}){
+      const ch = String(choice || 'pitlane-red');
+      currentThemeChoice = ch;
+
+      let actual = ch;
+      if (ch === 'auto'){
+        const autoInfo = (typeof currentSessionInfo !== 'undefined' && currentSessionInfo && currentSessionInfo.type) ? currentSessionInfo : ((typeof __lastAutoPresetType !== 'undefined' ? __lastAutoPresetType : 'TRAIN'));
+        actual = computeAutoThemeFromSession(autoInfo);
+      }
+
+      try{
+        const prev = document.body.getAttribute('data-theme') || '';
+        if (prev !== actual) document.body.setAttribute('data-theme', actual);
+      }catch(e){}
+
+      try{
+        if (themeSelect && themeSelect.value !== ch) themeSelect.value = ch;
+      }catch(e){}
+
+      try{
+        const cfgTheme = document.getElementById('cfgTheme');
+        if (cfgTheme){
+          const actualLabel = THEME_LABELS[actual] || actual;
+          cfgTheme.textContent = (ch === 'auto') ? (`Auto - ${actualLabel}`) : actualLabel;
+        }
+      }catch(e){}
+
+      if (!opts.noPersist){
+        try{ localStorage.setItem('tr_theme', ch); }catch(e){}
+      }
+    }
+
+    (function initTheme(){
+      let saved = '';
+      try{ saved = localStorage.getItem('tr_theme') || ''; }catch(e){}
+      const choice = saved || 'pitlane-red';
+      applyThemeChoice(choice, { noPersist:true });
+
+      if (themeSelect){
+        try{ themeSelect.value = choice; }catch(e){}
+        themeSelect.addEventListener('change', ()=> applyThemeChoice(themeSelect.value));
+      }
+
+      if (themeCycleBtn){
+        themeCycleBtn.addEventListener('click', ()=>{
+          // Si estas en Auto, cicla sobre el tema actual (no sobre Auto)
+          const base = (currentThemeChoice === 'auto')
+            ? computeAutoThemeFromSession((typeof currentSessionInfo !== 'undefined' && currentSessionInfo && currentSessionInfo.type) ? currentSessionInfo : ((typeof __lastAutoPresetType !== 'undefined' ? __lastAutoPresetType : 'TRAIN')))
+            : (document.body.getAttribute('data-theme') || 'pitlane-red');
+
+          const ids = THEME_LIST.map(t=>t.id);
+          let i = ids.indexOf(base);
+          if (i < 0) i = 0;
+          const next = ids[(i + 1) % ids.length];
+          applyThemeChoice(next);
+        });
+      }
+    })();
+
+
 
     // BASIC toggles (solo Azul/Pos - Laps es lock)
     basicToggleButtons.forEach(btn=>{
@@ -4551,7 +5345,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.0.77_v7.49_BASIC';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.0.84_v7.53_BASIC';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -6356,7 +7150,7 @@ function loadVoiceSettings() {
 
     // ===== Auto presets por sesión (TRAIN/MANGA/FINAL) =====
     let autoSessionPresetsEnabled = true;   // ON por default
-    let __lastAutoPresetType = '';
+    var __lastAutoPresetType = '';
     
     function applyDecimalPrecision(val){
       const v = Math.max(1, Math.min(3, parseInt(val,10) || 2));
@@ -6476,7 +7270,13 @@ function loadVoiceSettings() {
       });
 
       // Preset activo: lo que detectó el sistema (o el último aplicado)
-      const sess = String(__lastAutoPresetType || 'TRAIN').toUpperCase();
+              const sess = String((typeof __lastAutoPresetType !== 'undefined' ? __lastAutoPresetType : 'TRAIN')).toUpperCase();
+        try{
+          if (typeof applyThemeChoice === 'function' && String(currentThemeChoice) === 'auto'){
+            applyThemeChoice('auto', { noPersist:true });
+          }
+        }catch(e){}
+
       const prof = SESSION_PRESET_PROFILES[sess] || SESSION_PRESET_PROFILES.TRAIN;
 
       // Texto del preset (ON/OFF)
@@ -6501,7 +7301,7 @@ function loadVoiceSettings() {
 
     function updateConfigStatusUI(){
       try{
-        const sess = String(__lastAutoPresetType || 'TRAIN').toUpperCase();
+        const sess = String((typeof __lastAutoPresetType !== 'undefined' ? __lastAutoPresetType : 'TRAIN')).toUpperCase();
         const prof = SESSION_PRESET_PROFILES[sess] || SESSION_PRESET_PROFILES.TRAIN;
 
         const sessionPill = document.getElementById('cfgSessionPill');
@@ -6966,6 +7766,7 @@ function clampNum(v, lo, hi){
 
     function markMovement(reason) {
       lastMovementAt = Date.now();
+      try { diagLastRaceChangeAt = lastMovementAt; } catch(e) {}
       if (idleSilenceActive) {
         idleSilenceActive = false;
       }
@@ -7879,6 +8680,33 @@ function statsFromTimes(arr) {
       return { n, best: isFinite(best) ? best : 0, mean, sigma, last };
     }
 
+// Cache de métricas por piloto (BLOQUE 2.1)
+// Evita recalcular stats (best/mean/sigma/last) en cada tick.
+// Se recalcula solo cuando cambian las vueltas registradas del piloto.
+function ensureHistComputed(hist) {
+  try {
+    if (!hist) return { n: 0, best: 0, mean: 0, sigma: 0, last: 0 };
+    if (!Array.isArray(hist.times)) hist.times = [];
+
+    const len = hist.times.length || 0;
+    const lapc = Number(hist.lastLapcount) || 0;
+
+    // Firma simple: (len + lapcount). Si no cambia, reutiliza.
+    if (hist._computed && hist._computedLen === len && hist._computedLapcount === lapc) {
+      return hist._computed;
+    }
+
+    // Nota: hist.times ya viene normalizado y plausible en updateLapHistoryAll (pushLap).
+    const computed = statsFromTimes(hist.times);
+    hist._computed = computed;
+    hist._computedLen = len;
+    hist._computedLapcount = lapc;
+    return computed;
+  } catch (e) {
+    return { n: 0, best: 0, mean: 0, sigma: 0, last: 0 };
+  }
+}
+
 
 // Devuelve el mejor "stint" consecutivo de tamaño window (por promedio), y la peor vuelta.
 // times debe venir en ms, ya filtrado a vueltas plausibles.
@@ -7940,10 +8768,35 @@ function findWorstLap(times) {
       ctx.closePath();
     }
 
-function drawLapChartForKey(pilotKey) {
+
+// Lap Chart - cache de render (2.2) para no redibujar si no cambió la data
+const lapChartRenderSigByKey = new Map();
+let lastLapChartRenderedKey = null;
+
+// Cache para Lap Chart Top3 Auto (2.2)
+let lapChartAutoRenderCache = { sig: '', w: 0, h: 0 };
+
+function buildLapChartSig(pilotKey, hist, timesAllRaw, marksAll, pNow){
+  try {
+    const len = (timesAllRaw && timesAllRaw.length) ? timesAllRaw.length : 0;
+    const last = len ? (Number(timesAllRaw[len - 1]) || 0) : 0;
+    const best = (hist && hist.bestMs) ? normalizeLapMs(hist.bestMs) : 0;
+    const mlen = (marksAll && marksAll.length) ? marksAll.length : 0;
+    const mlast = mlen ? String(marksAll[mlen - 1] || '') : '';
+    const lapsNow = pNow ? (Number(pNow.lapcount) || 0) : 0;
+    return `${pilotKey}|${lapsNow}|${len}|${last}|${best}|${mlen}|${mlast}`;
+  } catch(e) {
+    return `${pilotKey}|0|0|0|0|0|`;
+  }
+}
+function drawLapChartForKey(pilotKey, force) {
+      force = !!force;
       if (!lapChartEl || !lapChartMetaEl) return;
       if (!pilotKey) {
+        lastLapChartRenderedKey = null;
         lapChartMetaEl.textContent = 'Sin datos';
+        if (pilotKey) lapChartRenderSigByKey.delete(pilotKey);
+        if (lastLapChartRenderedKey === pilotKey) lastLapChartRenderedKey = null;
         const ctx = lapChartEl.getContext('2d');
         if (ctx) ctx.clearRect(0, 0, lapChartEl.width, lapChartEl.height);
         return;
@@ -7954,6 +8807,8 @@ function drawLapChartForKey(pilotKey) {
       const timesAll = timesAllRaw.filter(isLapPlausible);
       if (!timesAll.length) {
         lapChartMetaEl.textContent = 'Sin datos';
+        if (pilotKey) lapChartRenderSigByKey.delete(pilotKey);
+        if (lastLapChartRenderedKey === pilotKey) lastLapChartRenderedKey = null;
         const ctx = lapChartEl.getContext('2d');
         if (ctx) ctx.clearRect(0, 0, lapChartEl.width, lapChartEl.height);
         return;
@@ -7991,12 +8846,21 @@ function drawLapChartForKey(pilotKey) {
       lapChartMetaEl.textContent =
         `${lapsLabel} vueltas · Hist ${timesAll.length} · Best ${bestTxt} · Fast5 ${fastTxt} · Worst ${worstTxt} · Last ${last ? msToMinSec(last) : '-:--.---'} · Cons ${consFb ? (consFb + '%') : '-'}`;
 
+      const sig = buildLapChartSig(pilotKey, hist, timesAllRaw, marksAll, pNow);
+
 ensureCanvasHiDpi(lapChartEl);
       const ctx = lapChartEl.getContext('2d');
       if (!ctx) return;
 
       const w = lapChartEl.width;
       const h = lapChartEl.height;
+
+      const prev = lapChartRenderSigByKey.get(pilotKey);
+      if (!force && lastLapChartRenderedKey === pilotKey && prev && prev.sig === sig && prev.w === w && prev.h === h) {
+        return;
+      }
+      lapChartRenderSigByKey.set(pilotKey, { sig, w, h });
+      lastLapChartRenderedKey = pilotKey;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -8302,7 +9166,8 @@ try {
 
 
 
-function drawLapChartTop3Auto(){
+function drawLapChartTop3Auto(force){
+      force = !!force;
       if (!lapChartEl || !lapChartMetaEl) return;
 
       const top = getTop3Rows();
@@ -8362,12 +9227,26 @@ function drawLapChartTop3Auto(){
 
       updateLapRangeFromHistory(allVals);
 
+      // Firma para evitar redibujar Lap Chart Top3 si no cambió la data
+      const focusKeySig = getAutoLapChartKey ? getAutoLapChartKey() : '';
+      const sigTop3 = `${keys.join(',')}|${focusKeySig}|` + series.map(s => {
+        const v = (s.vals && s.vals.length) ? s.vals[s.vals.length - 1] : 0;
+        const l = (s.vals && s.vals.length) ? s.vals.length : 0;
+        return `${s.key}:${l}:${v}`;
+      }).join('|');
+
       ensureCanvasHiDpi(lapChartEl);
       const ctx = lapChartEl.getContext('2d');
       if (!ctx) return;
 
       const w = lapChartEl.width;
       const h = lapChartEl.height;
+
+      if (!force && lapChartAutoRenderCache && lapChartAutoRenderCache.sig === sigTop3 && lapChartAutoRenderCache.w === w && lapChartAutoRenderCache.h === h) {
+        return;
+      }
+      lapChartAutoRenderCache = { sig: sigTop3, w, h };
+
       ctx.clearRect(0,0,w,h);
 
       // fondo
@@ -8450,8 +9329,8 @@ function drawLapChartTop3Auto(){
 
 
     window.addEventListener('resize', () => {
-      if (selectedPilotKey) drawLapChartForKey(selectedPilotKey);
-      else { try { drawLapChartTop3Auto(); } catch(e) {} }
+      if (selectedPilotKey) drawLapChartForKey(selectedPilotKey, true);
+      else { try { drawLapChartTop3Auto(true); } catch(e) {} }
     });
 
 
@@ -8889,12 +9768,15 @@ function resetAutoNarratorState() {
       gapInfoEl.textContent = partes.join(' · ') || 'Diferencia líder · vueltas · estado';
 
       const key = getPilotKey(p);
-      const hist = lapHistory.get(key) || { lastLapcount: 0, times: [] };
+      let hist = lapHistory.get(key);
+      if (!hist) {
+        hist = { lastLapcount: Number(p.lapcount) || 0, lastTotalLapMs: 0, times: [], marks: [], bestMs: 0 };
+        lapHistory.set(key, hist);
+      }
       const timesRaw = (hist.times || []).filter(v => typeof v === 'number' && isFinite(v) && v > 0);
       updateLapRangeFromHistory(timesRaw);
-      const times = timesRaw.filter(isLapPlausible);
 
-      const computed = statsFromTimes(times);
+      const computed = ensureHistComputed(hist);
 
       const consPct = getConsistencyFromFirebase(p);
 
@@ -8922,7 +9804,7 @@ function resetAutoNarratorState() {
         if (!bestMsFinal || bestMsFinal <= 0) {
           bestMsFinal = computedBest;
         } else {
-          const lapsSeen = times.length || 0;
+          const lapsSeen = (hist.times && hist.times.length) ? hist.times.length : 0;
           // Si el best del feed es demasiado mas rapido que lo visto, es casi seguro basura
           if (lapsSeen >= 3 && bestMsFinal < (computedBest * 0.80)) {
             bestMsFinal = computedBest;
@@ -9261,7 +10143,6 @@ function computeSessionBestMs() {
           if (!raceData || !k) {
             renderPilotCard(null);
         try { renderAutoTop3MiniGrid(); } catch(e) {}
-        try { checkSessionFinishOnLap(); } catch(e) {}
             return;
           }
           const p = raceData.classification.find(r => getPilotKey(r) === k);
@@ -9708,6 +10589,8 @@ function updateBlueFlagFromPassEvents() {
           let hist = lapHistory.get(key);
           if (!hist) hist = { lastLapcount: 0, lastTotalLapMs: 0, times: [], marks: [], bestMs: 0 };
 
+          let didChange = false;
+
           // Reset por re-arranque / cambio de heat sin cambiar raceName (o data rara)
           if (lapsNow < (hist.lastLapcount || 0)) {
             hist.lastLapcount = lapsNow;
@@ -9715,6 +10598,10 @@ function updateBlueFlagFromPassEvents() {
             hist.times = [];
             hist.marks = [];
             hist.bestMs = 0;
+            hist._computed = null;
+            hist._computedLen = 0;
+            hist._computedLapcount = lapsNow;
+            didChange = true;
             lapHistory.set(key, hist);
             continue;
           }
@@ -9760,7 +10647,17 @@ function updateBlueFlagFromPassEvents() {
             }
 
             hist.lastLapcount = lapsNow;
+            didChange = true;
+            // invalidar cache de métricas para este piloto
+            hist._computed = null;
+            hist._computedLen = (hist.times && hist.times.length) ? hist.times.length : 0;
+            hist._computedLapcount = lapsNow;
           }
+          // Recalcular métricas SOLO si cambió algo (BLOQUE 2.1)
+          if (didChange || !hist._computed) {
+            try { ensureHistComputed(hist); } catch(e) {}
+          }
+
 
           // Siempre actualiza el total para el siguiente delta (aunque no haya nueva vuelta)
           if (typeof totalNowMs === 'number' && isFinite(totalNowMs) && totalNowMs > 0) {
@@ -12257,9 +13154,12 @@ speakBtn.addEventListener('click', () => {
       const pos = p.pos || '-';
       const laps = p.lapcount != null ? p.lapcount : 0;
       const key = getPilotKey(p);
-      const hist = lapHistory.get(key) || { lastLapcount: 0, times: [] };
-      const times = (hist.times || []).filter(isLapPlausible);
-      const computed = statsFromTimes(times);
+      let hist = lapHistory.get(key);
+      if (!hist) {
+        hist = { lastLapcount: Number(p.lapcount) || 0, lastTotalLapMs: 0, times: [], marks: [], bestMs: 0 };
+        lapHistory.set(key, hist);
+      }
+      const computed = ensureHistComputed(hist);
       const consPct = getConsistencyFromFirebase(p);
 
       // Mostrar consistencia (feed) y σ (historial lap chart)
@@ -12290,7 +13190,7 @@ speakBtn.addEventListener('click', () => {
         // =========================
     // Modo de sesión (AUTO desde raceName)
     // =========================
-    let currentSessionInfo = { type: 'UNKNOWN', main: '', durationMs: 0, label: 'MODO -' };
+    var currentSessionInfo = { type: 'UNKNOWN', main: '', durationMs: 0, label: 'MODO -' };
 
     function parseSessionFromRaceName(raceName) {
       const name = String(raceName || '').toUpperCase();
@@ -12507,123 +13407,328 @@ function checkSessionFinishOnLap() {
       }
     }
 
-    async function loadRaceFromFirebase() {
-      if (document.hidden && !backgroundModeEnabled) return;
-      if (!__firebaseOk || !db) { setLiveStatus(false); return; }
+    // =========================
+    // BLOQUE 2.3: UI batching con requestAnimationFrame (menos micro-lag / menos layout thrash)
+    // =========================
+    let __uiRafScheduled = false;
+    let __uiPending = null;
 
-      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-      if (isLoading) {
-        // Si una lectura se colgó por red, no dejes el spotter muerto.
-        if (now - loadingSince < 4500) return;
-        console.warn('Lectura anterior tardó demasiado, reseteando isLoading');
-        isLoading = false;
+    function scheduleUIUpdate(payload) {
+      // Coalesce: si llegan varios ticks seguidos, solo pintamos el último
+      __uiPending = payload || __uiPending;
+      if (__uiRafScheduled) return;
+      __uiRafScheduled = true;
+      requestAnimationFrame(() => {
+        __uiRafScheduled = false;
+        const pl = __uiPending;
+        __uiPending = null;
+        if (!pl) return;
+        try {
+          applyUIUpdate(pl);
+        } catch (e) {
+          console.error('applyUIUpdate error', e);
+        }
+      });
+    }
+
+    function applyUIUpdate(pl) {
+      // pl: { raceData, selectedPilotKey, isSelectingPilot }
+      try { updateRecordCarreraUI(); } catch(e) {}
+      try { updateHeaderFromRace(pl.raceData); } catch(e) {}
+      try { setLastUpdateNow(); } catch(e) {}
+
+      if (!pl.isSelectingPilot) {
+        try { updatePilotOptions(); } catch(e) {}
       }
 
-      isLoading = true;
-      loadingSince = now;
+      if (pl.selectedPilotKey) {
+        const p = (pl.raceData && pl.raceData.classification)
+          ? pl.raceData.classification.find(r => getPilotKey(r) === pl.selectedPilotKey)
+          : null;
 
-      try {
-        const ref = doc(db, 'races', 'currentRace');
-
-        // Timeout duro para que getDoc no congele el loop (iOS/red chueca)
-        const snap = await Promise.race([
-          getDoc(ref),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout getDoc')), 3500))
-        ]);
-        if (!snap.exists()) {
-          setLiveStatus(false);
-          isLoading = false;
-          return;
-        }
-        const data = snap.data() || {};
-        setLiveStatus(true);
-
-        let rawRace = null;
-        if (data.parsed && Array.isArray(data.parsed.classification)) {
-          rawRace = data.parsed;
-        } else if (data.rawJson) {
-          try {
-            rawRace = JSON.parse(data.rawJson);
-          } catch (e) {
-            console.error('Error parseando rawJson', e);
-          }
-        }
-
-        if (!rawRace || !Array.isArray(rawRace.classification)) {
-          isLoading = false;
-          return;
-        }
-
-        const newRaceName = rawRace.raceName || '';
-        if (newRaceName !== lastRaceName) {
-          try { markMovement('raceName'); } catch(e) {}
-          previousClassification = null;
-          lastSpokenLastTime = null; 
-      lastAnnouncedLapcount = 0;
-          lastKnownPos = null;
-          lastTotalTimeAnnouncedSeconds = 0;
-          lastBestAnnouncedMs = null;
-          lastBestAnnouncedLap = 0;
-          lastTrendSpokenLap = 0;
-          lastAheadAlertMs = 0;
-          behind06Latch = { active:false, otherKey:'', lap:-1 };
-          ahead06Latch  = { active:false, otherKey:'', lap:-1 };
-
-          attackLatch  = { active:false, otherKey:'', lap:-1 };
-          defenseLatch = { active:false, otherKey:'', lap:-1 };
-          fightLatch   = { active:false, lap:-1 };
-          startPosForSelected = null;
-          lastNetGainValue = null;
-          lastNetGainSpokenLap = 0;
-          lastLeaderGapSpokenLap = 0;
-          lastPodiumSpokenLap = 0;
-          lastAutoSummaryAnnouncedSeconds = 0;
-          resetAutoCommentatorState();
-          // Reset fin de sesión
-          sessionFinishSig = newRaceName;
-          sessionFinishAnnounced = false;
-          sessionFinishPrevByKey = new Map();
-          lastRaceName = newRaceName;
-
-          stopMangaClock();
-          if (lastPassEvents && typeof lastPassEvents.clear === 'function') {
-            lastPassEvents.clear();
-          }
-          if (lapHistory && typeof lapHistory.clear === 'function') { lapHistory.clear(); }
-          pendingBlueFlagForPilotKey = '';
-          pendingBlueFlagMessage = '';
-          lastBlueFlagPilotLap = 0;
-        }
-
-        raceData = normalizeRaceData(rawRace);
-        updateLapHistoryAll();
-        refreshSessionBestCache();
-        updateRecordCarreraUI();
-        updateHeaderFromRace(raceData);
-        setLastUpdateNow();
-        if (!isSelectingPilot) {
-          updatePilotOptions();
-        }
-        if (selectedPilotKey) {
-          const p = raceData.classification.find(r => getPilotKey(r) === selectedPilotKey);
-          renderPilotCard(p || null);
-          try { renderAutoTop3MiniGrid(); } catch(e) {}
-          try { checkSessionFinishOnLap(); } catch(e) {}
-      if (p && p.pos && p.pos > 0 && (startPosForSelected == null)) { startPosForSelected = p.pos; lastNetGainValue = 0; }
-        } else {
-          renderPilotCard(null);
+        renderPilotCard(p || null);
         try { renderAutoTop3MiniGrid(); } catch(e) {}
-        try { checkSessionFinishOnLap(); } catch(e) {}
-        }
-handleVoiceAndBeeps();
-        handleAutoCommentator();
+      } else {
+        renderPilotCard(null);
+        try { renderAutoTop3MiniGrid(); } catch(e) {}
+      }
+      try { updateDiagPanel(); } catch(e) {}
+    }
+
+
+    
+async function loadRaceFromFirebase() {
+  // Background best-effort: seguimos intentando aunque esté oculta (el navegador puede throttlear o congelar)
+  if (!__firebaseOk || !db) { setLiveStatus(false); try { setDiagError('Firebase OFF'); } catch(e) {} return false; }
+
+  const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  if (isLoading) {
+    // Si una lectura se colgó por red, no dejes el spotter muerto.
+    if (now - loadingSince < 4500) return true;
+    console.warn('Lectura anterior tardó demasiado, reseteando isLoading');
+    isLoading = false;
+  }
+
+  isLoading = true;
+  loadingSince = now;
+
+  try {
+    const ref = doc(db, 'races', 'currentRace');
+
+    // Timeout duro para que getDoc no congele el loop (iOS/red chueca)
+    const snap = await Promise.race([
+      getDoc(ref),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout getDoc')), 3500))
+    ]);
+    try {
+      const end = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      diagLastFetchMs = Math.max(0, Math.round(end - now));
+      diagLastFetchAt = Date.now();
+    } catch(e) {}
+    if (!snap.exists()) {
+      setLiveStatus(false);
+      return true; // no es "error", solo no hay carrera
+    }
+    const data = snap.data() || {};
+    setLiveStatus(true);
+
+    let rawRace = null;
+    if (data.parsed && Array.isArray(data.parsed.classification)) {
+      rawRace = data.parsed;
+    } else if (data.rawJson) {
+      try {
+        rawRace = JSON.parse(data.rawJson);
       } catch (e) {
-        console.error('Error leyendo Firebase', e);
-        setLiveStatus(false);
-      } finally {
-        isLoading = false;
+        console.error('Error parseando rawJson', e);
       }
     }
+
+    if (!rawRace || !Array.isArray(rawRace.classification)) {
+      return true; // dato incompleto, pero lectura OK
+    }
+
+    const newRaceName = rawRace.raceName || '';
+    if (newRaceName !== lastRaceName) {
+      try { markMovement('raceName'); } catch(e) {}
+      previousClassification = null;
+      lastSpokenLastTime = null;
+      lastAnnouncedLapcount = 0;
+      lastKnownPos = null;
+      lastTotalTimeAnnouncedSeconds = 0;
+      lastBestAnnouncedMs = null;
+      lastBestAnnouncedLap = 0;
+      lastTrendSpokenLap = 0;
+      lastAheadAlertMs = 0;
+      behind06Latch = { active:false, otherKey:'', lap:-1 };
+      ahead06Latch  = { active:false, otherKey:'', lap:-1 };
+
+      attackLatch  = { active:false, otherKey:'', lap:-1 };
+      defenseLatch = { active:false, otherKey:'', lap:-1 };
+      fightLatch   = { active:false, lap:-1 };
+      startPosForSelected = null;
+      lastNetGainValue = null;
+      lastNetGainSpokenLap = 0;
+      lastLeaderGapSpokenLap = 0;
+      lastPodiumSpokenLap = 0;
+      lastAutoSummaryAnnouncedSeconds = 0;
+      resetAutoCommentatorState();
+      // Reset fin de sesión
+      sessionFinishSig = newRaceName;
+      sessionFinishAnnounced = false;
+      sessionFinishPrevByKey = new Map();
+      lastRaceName = newRaceName;
+
+      stopMangaClock();
+      if (lastPassEvents && typeof lastPassEvents.clear === 'function') {
+        lastPassEvents.clear();
+      }
+      if (lapHistory && typeof lapHistory.clear === 'function') { lapHistory.clear(); }
+      pendingBlueFlagForPilotKey = '';
+      pendingBlueFlagMessage = '';
+      lastBlueFlagPilotLap = 0;
+    }
+
+    raceData = normalizeRaceData(rawRace);
+    updateLapHistoryAll();
+    refreshSessionBestCache();
+
+    // Pre-cálculos que deben ocurrir antes de voz (netgain/finish)
+    let __selRow = null;
+    if (selectedPilotKey && raceData && Array.isArray(raceData.classification)) {
+      __selRow = raceData.classification.find(r => getPilotKey(r) === selectedPilotKey) || null;
+    }
+    if (__selRow && __selRow.pos && __selRow.pos > 0 && (startPosForSelected == null)) {
+      startPosForSelected = __selRow.pos;
+      lastNetGainValue = 0;
+    }
+    try { checkSessionFinishOnLap(); } catch(e) {}
+
+    // UI: batching en un solo frame para evitar layout thrash
+    scheduleUIUpdate({ raceData, selectedPilotKey, isSelectingPilot });
+    handleVoiceAndBeeps();
+    handleAutoCommentator();
+    return true;
+  } catch (e) {
+    console.error('Error leyendo Firebase', e);
+    try { setDiagError((e && e.message) ? e.message : 'Error leyendo Firebase'); } catch(_) {}
+    setLiveStatus(false);
+    return false;
+  } finally {
+    isLoading = false;
+  }
+}
+
+// =========================
+// Polling adaptativo (costo/batería) + background best-effort - v7.51
+// =========================
+const POLL_FAST_MS = 250;        // carrera viva (movimiento reciente)
+const POLL_IDLE_MIN_MS = 900;    // sin movimiento
+const POLL_IDLE_MAX_MS = 1200;
+const POLL_BG_MIN_MS = 1500;   // pestaña oculta (background best-effort)
+const POLL_BG_MAX_MS = 2500;
+const POLL_ERR_MIN_MS = 2000;    // Firebase error / sin init
+const POLL_ERR_MAX_MS = 3200;
+const POLL_ACTIVE_WINDOW_MS = 3500;
+const POLL_MAX_BACKOFF_MS = 6000;
+const RESCUE_ENTER_ERRORS = 3;
+const RESCUE_RECOVER_SUCCESSES = 2;
+const RESCUE_MIN_MS = 3000;
+const RESCUE_MAX_MS = 6000;
+
+let rescueMode = false;
+let rescueSince = 0;
+let rescueSuccessStreak = 0;
+let rescueReason = '';
+
+function setRescueBanner(on, text){
+  const el = document.getElementById('rescueBanner');
+  if (!el) return;
+  if (on) {
+    el.textContent = text || 'Red inestable - modo rescate';
+    el.classList.add('on');
+  } else {
+    el.textContent = '';
+    el.classList.remove('on');
+  }
+}
+
+function enterRescue(reason){
+  if (rescueMode) return;
+  rescueMode = true;
+  rescueSince = Date.now();
+  rescueSuccessStreak = 0;
+  rescueReason = reason || 'Red inestable';
+  setRescueBanner(true, 'Red inestable - modo rescate');
+  try { diagLogPush('ENTER RESCATE ' + rescueReason); } catch(e) {}
+}
+
+function exitRescue(){
+  if (!rescueMode) return;
+  rescueMode = false;
+  rescueSince = 0;
+  rescueSuccessStreak = 0;
+  rescueReason = '';
+  setRescueBanner(false, '');
+  try { diagLogPush('EXIT RESCATE recuperado'); } catch(e) {}
+}
+
+
+let pollTimer = null;
+let pollConsecutiveErrors = 0;
+let pollLastIntervalMs = POLL_FAST_MS;
+
+function randInt(min, max) {
+  const lo = Math.floor(min);
+  const hi = Math.floor(max);
+  if (hi <= lo) return lo;
+  return lo + Math.floor(Math.random() * (hi - lo + 1));
+}
+
+function computeNextPollMs() {
+  const now = Date.now();
+
+  if (rescueMode) return randInt(RESCUE_MIN_MS, RESCUE_MAX_MS);
+
+  // En background/oculto: best-effort (los navegadores pueden throttlear o pausar)
+  // pero nosotros seguimos intentando a un ritmo más lento para cuidar batería/costo.
+  if (document.hidden) {
+    // si Firebase no está listo, no martilles
+    if (!__firebaseOk || !db) return randInt(POLL_ERR_MIN_MS, POLL_ERR_MAX_MS);
+
+    if (pollConsecutiveErrors >= 2) {
+      const base = randInt(POLL_ERR_MIN_MS, POLL_ERR_MAX_MS);
+      const mult = Math.min(4, Math.pow(2, pollConsecutiveErrors - 2)); // 1,2,4,4...
+      return Math.min(POLL_MAX_BACKOFF_MS, base * mult);
+    }
+    return randInt(POLL_BG_MIN_MS, POLL_BG_MAX_MS);
+  }
+
+  const movementAgo = now - (lastMovementAt || now);
+  const recentlyActive = movementAgo <= POLL_ACTIVE_WINDOW_MS;
+
+  // si Firebase no está listo, no martilles
+  if (!__firebaseOk || !db) return randInt(POLL_ERR_MIN_MS, POLL_ERR_MAX_MS);
+
+  if (pollConsecutiveErrors >= 2) {
+    const base = randInt(POLL_ERR_MIN_MS, POLL_ERR_MAX_MS);
+    const mult = Math.min(4, Math.pow(2, pollConsecutiveErrors - 2)); // 1,2,4,4...
+    return Math.min(POLL_MAX_BACKOFF_MS, base * mult);
+  }
+
+  if (recentlyActive) return POLL_FAST_MS;
+  return randInt(POLL_IDLE_MIN_MS, POLL_IDLE_MAX_MS);
+}
+
+function stopAdaptivePolling() {
+  if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+}
+
+async function adaptivePollTick() {
+  // DIAG: ticks por minuto
+  try {
+    diagTickCount++;
+    const _now = Date.now();
+    const _dt = _now - (diagTickWindowStart || _now);
+    if (_dt >= 60000) {
+      diagTicksPerMin = Math.max(1, Math.round((diagTickCount * 60000) / _dt));
+      diagTickCount = 0;
+      diagTickWindowStart = _now;
+    }
+  } catch(e) {}
+
+
+  stopAdaptivePolling();
+
+  const ok = await loadRaceFromFirebase().catch((e) => {
+    try { setDiagError((e && e.message) ? e.message : 'Error leyendo Firebase'); } catch(_) {}
+    return false;
+  });
+
+  if (ok) {
+    pollConsecutiveErrors = 0;
+    if (rescueMode) {
+      rescueSuccessStreak++;
+      if (rescueSuccessStreak >= RESCUE_RECOVER_SUCCESSES) exitRescue();
+    }
+  } else {
+    pollConsecutiveErrors++;
+    rescueSuccessStreak = 0;
+    if (pollConsecutiveErrors >= RESCUE_ENTER_ERRORS) enterRescue('errores seguidos');
+  }
+
+  const next = computeNextPollMs();
+  pollLastIntervalMs = next;
+  pollTimer = setTimeout(adaptivePollTick, next);
+}
+
+function startAdaptivePolling() {
+  stopAdaptivePolling();
+  pollConsecutiveErrors = 0;
+  pollLastIntervalMs = POLL_FAST_MS;
+  // al iniciar, limpia rescate visual
+  try { exitRescue(); } catch(e) {}
+  pollTimer = setTimeout(adaptivePollTick, 0);
+}
 
     // =========================
     // Bootstrap (arranque)
@@ -12639,8 +13744,7 @@ handleVoiceAndBeeps();
         if (raceInfo) raceInfo.textContent = 'Firebase OFF - revisa conexión, CSP o bloqueadores.';
         return;
       }
-      loadRaceFromFirebase();
-      setInterval(loadRaceFromFirebase, 250);
+      startAdaptivePolling();
     })();
 
 
