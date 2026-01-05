@@ -1,5 +1,5 @@
 <!--
-Spotter_5.1.5 - BASIC/PRO + idle 20s + pilot cookie + panel compact
+Spotter_5.1.14 - 2 estilos TV/SILENT + presets por sesión + UI simple
 Fecha: 2026-01-04
 Origen: Spotter_5.0.1.html
 
@@ -20,7 +20,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Spotter_5.1.5</title>
+  <title>Spotter_5.1.14</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -2855,16 +2855,11 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       min-width: 92px;
     }
     
-    /* BASIC panel: show/hide toggles by narration mode */
-    body[data-ui-mode="BASIC"] .basic-toggle.mode-tv,
-    body[data-ui-mode="BASIC"] .basic-toggle.mode-coach{
+        /* BASIC panel: show/hide toggles by narration mode */
+    body[data-ui-mode="BASIC"] .basic-toggle.mode-tv{
       display:none;
     }
     body[data-narr-mode="TV"] .basic-toggle.mode-tv{
-      display:inline-flex;
-    }
-    body[data-narr-mode="COACH"] .basic-toggle.mode-tv,
-    body[data-narr-mode="COACH"] .basic-toggle.mode-coach{
       display:inline-flex;
     }
 .basic-toggle.active{
@@ -3917,13 +3912,34 @@ body, .app, .main, .pilot-card, .extras-section{
     .usage-v{ color: var(--text-main); }
     .usage-empty{ font-size: 12px; color: var(--text-muted); padding: 4px 0; }
 
-  </style>
+  
+/* ===== UI CLEAN: Advanced drawer ===== */
+.cbtn.cbtn-settings { min-width: 92px; }
+.cbtn-settings .cbtn-ic { display:inline-block; }
+.cbtn-settings.active { filter: brightness(1.15); }
+body:not(.show-advanced) .mode-pro-only { display:none !important; }
+/* Hide heavy panels unless Advanced is ON */
+body:not(.show-advanced) #configStatusCard { display:none !important; }
+body:not(.show-advanced) .hud-presets { display:none !important; }
+body:not(.show-advanced) .rd-mode-row.mode-pro-only { display:none !important; }
+body:not(.show-advanced) .controls-label.mode-pro-only { display:none !important; }
+body:not(.show-advanced) .precision-row.mode-pro-only { display:none !important; }
+body:not(.show-advanced) section.spotter-section.mode-pro-only { display:none !important; }
+body:not(.show-advanced) .spotter-master { display:none !important; }
+body:not(.show-advanced) .usage-panel { display:none !important; }
+/* When Advanced is OFF, keep essentials visible and add a subtle divider */
+body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; opacity: .8; }
+
+
+/* Hide legacy style selector rows permanently (ya no aportan valor) */
+.rd-mode-row.mode-pro-only { display:none !important; }
+</style>
 </head>
 <body>
   <div class="app">
     <header class="app-header">
       <div class="header-left">
-        <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">Spotter_5.1.5</span><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
+        <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">Spotter_5.1.14</span><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
         <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
         <div class="header-subline" id="raceInfo">Esperando datos en vivo</div>
         <div class="header-subline rescue-banner" id="rescueBanner"></div>
@@ -3935,7 +3951,7 @@ body, .app, .main, .pilot-card, .extras-section{
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">Spotter_5.1.5</div>
+<div class="header-version" id="appVersion">Spotter_5.1.14</div>
       </div>
     </header>
 
@@ -4080,6 +4096,12 @@ body, .app, .main, .pilot-card, .extras-section{
 
           <button id="uiModeBtn" class="cbtn cbtn-mode" type="button" title="Modo de narración">TV</button>
 
+
+<button class="cbtn cbtn-settings" id="advancedToggleBtn" type="button" title="Ajustes avanzados">
+            <span class="cbtn-ic">⚙️</span>
+            <span class="cbtn-txt">Ajustes</span>
+            <span class="cbtn-sub" id="advStripState">OFF</span>
+          </button>
 <button class="cbtn cbtn-rd mode-pro-only" id="rdToggleBtn" type="button" title="Race Director">
             🤖 RD
           </button>
@@ -4092,7 +4114,7 @@ body, .app, .main, .pilot-card, .extras-section{
         </div>
 
         <div class="strip-hint" id="uiModeHintLine">
-          BASIC: Laps + Azul + Pos (confirmada). PRO: controles completos.
+          TV: transmisión. SILENT: solo lo esencial (cero ruido).
         </div>
 
         <div class="basic-quick mode-basic-only" id="basicPanel" aria-label="BASIC - ajustes rápidos">
@@ -4101,11 +4123,9 @@ body, .app, .main, .pilot-card, .extras-section{
             <button class="basic-toggle active lock" data-flag="laps" type="button">⏱ LAPS</button>
             <button class="basic-toggle" data-flag="blueflag" type="button">🟦 AZUL</button>
             <button class="basic-toggle" data-flag="pos" type="button">🏁 POS/RANK</button>
-            <button class="basic-toggle mode-tv mode-coach" data-flag="gaps" type="button">⏱ GAP</button>
-            <button class="basic-toggle mode-tv mode-coach" data-flag="pelea" type="button">⚔️ PELEA</button>
-            <button class="basic-toggle mode-tv mode-coach" data-flag="bestlap" type="button">🏆 BEST</button>
-            <button class="basic-toggle mode-coach" data-flag="ritmo" type="button">📉 RITMO</button>
-            <button class="basic-toggle mode-coach" data-flag="streak" type="button">🔥 RACHA</button>
+            <button class="basic-toggle mode-tv" data-flag="gaps" type="button">⏱ GAP</button>
+            <button class="basic-toggle mode-tv" data-flag="pelea" type="button">⚔️ PELEA</button>
+            <button class="basic-toggle mode-tv" data-flag="bestlap" type="button">🏆 BEST</button>
 </div>
         </div>
 
@@ -4278,8 +4298,8 @@ body, .app, .main, .pilot-card, .extras-section{
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - Spotter_5.1.5</div>
-          <div class="manual-sub">BASIC por default (cero ruido). PRO solo si quieres jugar a ingeniero de pits.</div>
+          <div class="manual-title">Manual - Spotter_5.1.14</div>
+          <div class="manual-sub">TV para transmisión. SILENT para cero ruido. ⚙️ abre ajustes avanzados.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
       </div>
@@ -4291,7 +4311,7 @@ body, .app, .main, .pilot-card, .extras-section{
           <ul>
             <li>Selecciona tu piloto (se guarda y se auto-selecciona al volver).</li>
             <li>Toca <b>VOZ</b> una vez. Debe decir "Audio listo". Si no, toca <b>TEST</b>.</li>
-            <li>En BASIC el spotter habla solo: <b>LAPS</b> (lock), <b>AZUL</b> y <b>POS</b> confirmada.</li>
+            <li>En SILENT el spotter habla solo: <b>LAPS</b> (lock), <b>AZUL</b> y <b>POS</b> confirmada.</li>
             <li>Si no hay movimiento en 20s, se calla. Cuando vuelve el movimiento, regresa solo.</li>
           </ul>
         </div>
@@ -4300,16 +4320,16 @@ body, .app, .main, .pilot-card, .extras-section{
           <h3>2) Barra superior (5 botones)</h3>
           <ul>
             <li><b>VOZ</b>: enciende o apaga narracion (verde = ON).</li>
-            <li><b>BASIC</b>: modo de carrera real (poca voz, alta confianza).</li>
-            <li><b>PRO</b>: desbloquea todos los controles (para stream o analisis).</li>
+            <li><b>SILENT</b>: solo lo esencial (poca voz, alta confianza).</li>
+            <li><b>⚙️ Ajustes</b>: abre controles avanzados (stream o análisis).</li>
             <li><b>RD</b> (Race Director): filtra y prioriza mensajes para que no se vuelva metralleta.</li>
             <li><b>RES</b>: "Leer resumen" (una sola lectura del estado actual).</li>
           </ul>
         </div>
 
         <div class="manual-card">
-          <h3>3) Que dice el spotter en BASIC</h3>
-          <p>BASIC esta pensado para manejar. Pocas frases, siempre utiles.</p>
+          <h3>3) Qué dice el spotter en SILENT</h3>
+          <p>SILENT está pensado para manejar. Pocas frases, siempre útiles.</p>
           <ul>
             <li><b>LAPS</b> (lock): al cruzar meta te canta vueltas y tu ultima vuelta.</li>
             <li><b>AZUL</b>: aviso corto cuando el lider te viene encima / te va a doblar.</li>
@@ -4319,8 +4339,8 @@ body, .app, .main, .pilot-card, .extras-section{
         </div>
 
         <div class="manual-card">
-          <h3>4) PRO - Mensajes (categorias)</h3>
-          <p>En PRO tu decides. Consejo Gen X: prende lo minimo y deja que el carro hable.</p>
+          <h3>4) Ajustes avanzados - Mensajes (categorías)</h3>
+          <p>En Ajustes avanzados tú decides. Consejo Gen X: prende lo minimo y deja que el carro hable.</p>
           <ul>
             <li><b>Esenciales</b>: Laps, Vueltas, Azul, Ritmo +/-, Est, Lider, Podio.</li>
             <li><b>Batalla</b>: Pos, Gap, Adelante &lt;0.6, Atras &lt;0.6, Ataque, Defensa.</li>
@@ -4462,7 +4482,7 @@ body, .app, .main, .pilot-card, .extras-section{
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "Spotter_5.1.12";
+    const APP_NAME = "Spotter_5.1.14";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -4679,6 +4699,26 @@ body, .app, .main, .pilot-card, .extras-section{
         loadDiagPref();
         const diagBtn = document.getElementById('diagToggleBtn');
         if (diagBtn) diagBtn.addEventListener('click', () => setDiagEnabled(!diagEnabled));
+      } catch(e) {}
+
+      // Advanced UI toggle (limpieza)
+      try {
+        const advBtn = document.getElementById('advancedToggleBtn');
+        const advKey = 'spotter_show_advanced';
+        const applyAdv = (on) => {
+          const v = !!on;
+          document.body.classList.toggle('show-advanced', v);
+          if (advBtn) {
+            advBtn.classList.toggle('active', v);
+            const st = document.getElementById('advStripState');
+            if (st) st.textContent = v ? 'ON' : 'OFF';
+          }
+          try { localStorage.setItem(advKey, v ? '1' : '0'); } catch(e) {}
+        };
+        let advOn = false;
+        try { advOn = (localStorage.getItem(advKey) === '1'); } catch(e) { advOn = false; }
+        applyAdv(advOn);
+        if (advBtn) advBtn.addEventListener('click', () => applyAdv(!document.body.classList.contains('show-advanced')));
       } catch(e) {}
 
     });
@@ -5244,70 +5284,57 @@ try{
 
     const uiModeBtn      = document.getElementById('uiModeBtn');
 
-    // ===== Narration Modes (UI simple) =====
+    // ===== Narration Styles (UI simple) =====
     // TV: narrativa tipo transmisión
-    // COACH: balance datos + guía
-    // MIN: mínimo ruido (equivale a BASIC clásico)
-    // ENG: ingeniero (equivale a PRO)
-    const NARR_MODE_ORDER = ['TV','COACH','MIN','ENG'];
+    // SILENT: solo lo esencial (cero ruido)
+    const NARR_MODE_ORDER = ['TV','SILENT'];
+
     let uiNarrationMode = (function(){
       try{
-        const v = (lsGet('spotterNarrMode') || 'TV').toUpperCase();
+        const raw = String(lsGet('spotterNarrMode') || 'TV').toUpperCase();
+        // Compat: MIN => SILENT | COACH/ENG => TV
+        const v = (raw === 'MIN' || raw === 'SILENT') ? 'SILENT'
+                : (raw === 'COACH' || raw === 'ENG' || raw === 'ENGINEER') ? 'TV'
+                : raw;
         return NARR_MODE_ORDER.includes(v) ? v : 'TV';
       }catch(e){ return 'TV'; }
     })();
 
-    function _isEngineerMode(){ return uiNarrationMode === 'ENG'; }
-    function _uiModeToCore(){ return _isEngineerMode() ? 'PRO' : 'BASIC'; }
-
     function _setModeBtnLabel(){
       try{
         if (!uiModeBtn) return;
-        const map = { TV:'TV', COACH:'COACH', MIN:'MIN', ENG:'ENG' };
-        uiModeBtn.textContent = map[uiNarrationMode] || 'TV';
+        uiModeBtn.textContent = uiNarrationMode;
         uiModeBtn.setAttribute('data-mode', uiNarrationMode);
       }catch(e){}
     }
 
     const MODE_ALLOWED_FLAGS = {
-      MIN:   new Set(['laps','blueflag','pos']),
-      COACH: new Set(['laps','blueflag','pos','gaps','pelea','bestlap','ritmo','streak','podium','leadergap']),
-      TV:    new Set(['laps','blueflag','pos','gaps','pelea','bestlap','podium','leadergap']),
-      ENG:   null // all
+      SILENT: new Set(['laps','blueflag','pos']),
+      TV:     new Set(['laps','blueflag','pos','gaps','pelea','bestlap','podium','leadergap'])
     };
 
-    function applyNarrationModePreset(sessionInfo, source){
+    function applyNarrationModePreset(sessionInfo){
       const st = String((sessionInfo && sessionInfo.type) ? sessionInfo.type : 'TRAIN').toUpperCase();
       const allowed = MODE_ALLOWED_FLAGS[uiNarrationMode] || MODE_ALLOWED_FLAGS.TV;
 
-      // Base defaults por modo
+      // Base defaults por estilo
       const base = {};
       Object.keys(DEFAULT_VOICE_SETTINGS).forEach(k=>{ base[k]=false; });
       base.laps = true;
 
-      if (uiNarrationMode === 'MIN'){
+      if (uiNarrationMode === 'SILENT'){
         base.blueflag = true;
         base.pos = true;
-      } else if (uiNarrationMode === 'COACH'){
+      } else { // TV
         base.blueflag = true; base.pos = true;
-        base.gaps = true; base.ritmo = true; base.streak = true;
-        base.bestlap = (st !== 'TRAIN'); // en carrera/clasi sí importa
-        base.pelea = (st === 'FINAL');
+        base.gaps = (st === 'FINAL');          // en MANGA se usa menos gap numérico
+        base.pelea = (st === 'FINAL');         // solo si están rueda a rueda
+        base.bestlap = (st !== 'TRAIN');       // en carrera/clasi sí importa
         base.podium = (st !== 'TRAIN');
-        base.leadergap = (st !== 'TRAIN');
-      } else if (uiNarrationMode === 'TV'){
-        base.blueflag = true; base.pos = true;
-        base.gaps = (st === 'FINAL'); // en MANGA el gap numérico se usa menos
-        base.pelea = (st === 'FINAL');
-        base.bestlap = (st !== 'TRAIN');
-        base.podium = (st !== 'TRAIN');
-        base.leadergap = (st !== 'TRAIN'); // en MANGA = pelea por pole
-      } else {
-        // ENG no pisa nada
-        return;
+        base.leadergap = (st !== 'TRAIN');     // en MANGA = pelea por pole
       }
 
-      // Aplicar allowed (si hay)
+      // Aplicar allowed
       try{
         Object.keys(base).forEach(k=>{
           if (k === 'laps'){ voiceSettings.laps = true; return; }
@@ -5321,6 +5348,23 @@ try{
       try{ saveVoiceSettings(); }catch(e){}
     }
 
+    function setUIMode(mode, opts = {}) {
+      // Siempre BASIC: interfaz simple
+      basicModeEnabled = true;
+      try { document.body.setAttribute('data-ui-mode', 'BASIC'); } catch(e) {}
+      try { if (uiModeBasicBtn) uiModeBasicBtn.classList.add('mode-active'); } catch(e) {}
+      try { if (uiModeProBtn)   uiModeProBtn.classList.remove('mode-active'); } catch(e) {}
+
+      try { lsSet('spotterUIMode', 'BASIC'); } catch(e) {}
+
+      try { loadVoiceSettings(); } catch(e) {}
+      try { applyBasicMode(); } catch(e) {}
+
+      try { applyVoiceSettingsToButtons(); } catch(e) {}
+      try { if (typeof updateToggleAllMsgsBtn === 'function') updateToggleAllMsgsBtn(); } catch(e) {}
+      try { if (typeof updateConfigStatusUI === 'function') updateConfigStatusUI(); } catch(e) {}
+    }
+
     function setNarrationMode(mode, opts = {}){
       const m = String(mode || 'TV').toUpperCase();
       uiNarrationMode = NARR_MODE_ORDER.includes(m) ? m : 'TV';
@@ -5328,52 +5372,20 @@ try{
       try{ lsSet('spotterNarrMode', uiNarrationMode); }catch(e){}
       _setModeBtnLabel();
 
-      // Core UI mode: BASIC para TV/COACH/MIN, PRO para ENG
-      try{ setUIMode(_uiModeToCore(), {silent:true}); }catch(e){}
+      // Asegura UI clean
+      try{ setUIMode('BASIC', {silent:true}); }catch(e){}
 
-      // Align auto-locutor + RD to narration mode
+      // Alinear Auto Locutor + Race Director al estilo
+      try{ setAutoCommentatorMode(uiNarrationMode === 'TV' ? 'tv' : 'minimal'); }catch(e){}
+      try{ setRaceDirectorMode(uiNarrationMode === 'TV' ? 'coach' : 'minimal'); }catch(e){}
+
+      // Preset por sesión + estilo
       try{
-        const am = (uiNarrationMode === "TV") ? "tv" : (uiNarrationMode === "COACH") ? "coach" : (uiNarrationMode === "MIN") ? "minimal" : "engineer";
-        setAutoCommentatorMode(am);
-      }catch(e){}
-      try{
-        const rm = (uiNarrationMode === "ENG") ? "engineer" : (uiNarrationMode === "COACH") ? "coach" : "minimal";
-        setRaceDirectorMode(rm);
-      }catch(e){}
-
-
-
-      // En ENG mostramos todo; en otros, aplicamos preset de modo + sesión
-      try{
-        if (!_isEngineerMode()){
-          autoSessionPresetsEnabled = true; // ahora sí funcionan presets en modos simples
-          applyNarrationModePreset(currentSessionInfo || {type:'TRAIN'}, 'mode');
-        }
+        autoSessionPresetsEnabled = true;
+        applyNarrationModePreset(currentSessionInfo || {type:'TRAIN'});
       }catch(e){}
     }
 
-
-    function setUIMode(mode, opts = {}) {
-      const m = (mode === 'PRO') ? 'PRO' : 'BASIC';
-      const isBasic = (m === 'BASIC');
-      basicModeEnabled = isBasic;
-
-      try { document.body.setAttribute('data-ui-mode', m); } catch(e) {}
-      try { if (uiModeBasicBtn) uiModeBasicBtn.classList.toggle('mode-active', isBasic); } catch(e) {}
-      try { if (uiModeProBtn)   uiModeProBtn.classList.toggle('mode-active', !isBasic); } catch(e) {}
-
-      // Persist
-      try {
-} catch(e) {}
-
-      // Recargar settings del modo (PRO/BASIC) y aplicar BASIC si toca
-      try { loadVoiceSettings(); } catch(e) {}
-      if (isBasic) { try { applyBasicMode(); } catch(e) {} }
-
-      try { applyVoiceSettingsToButtons(); } catch(e) {}
-      try { if (typeof updateToggleAllMsgsBtn === 'function') updateToggleAllMsgsBtn(); } catch(e) {}
-      try { if (typeof updateConfigStatusUI === 'function') updateConfigStatusUI(); } catch(e) {}
-    }
     function cycleNarrationMode(){
       const i = NARR_MODE_ORDER.indexOf(uiNarrationMode);
       const next = NARR_MODE_ORDER[(i + 1) % NARR_MODE_ORDER.length];
@@ -5551,7 +5563,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.1.5_BASIC';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.1.14_BASIC';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -7567,10 +7579,10 @@ function loadVoiceSettings() {
           saveVoiceSettings();
         } else {
           // BASIC:
-          // - MIN: mantiene el BASIC clásico (cero ruido)
-          // - TV/COACH: permite presets por sesión, pero LIMITADOS al modo (UI simple)
+          // - SILENT: mantiene el BASIC clásico (cero ruido)
+          // - TV: permite presets por sesión, pero LIMITADOS al modo (UI simple)
           try {
-            if (typeof uiNarrationMode !== 'undefined' && uiNarrationMode === 'MIN') {
+            if (typeof uiNarrationMode !== 'undefined' && uiNarrationMode === 'SILENT') {
               applyBasicMode();
             } else {
               const allowed = (typeof MODE_ALLOWED_FLAGS !== 'undefined') ? MODE_ALLOWED_FLAGS[uiNarrationMode] : null;
