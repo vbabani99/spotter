@@ -1,5 +1,5 @@
 <!--
-Spotter_5.1.14 - 2 estilos TV/SILENT + presets por sesión + UI simple
+Spotter_5.1.24 - MANGA: BEST LAP sin repetir + versiones coherentes + UI limpia (TV/BASE)
 Fecha: 2026-01-04
 Origen: Spotter_5.0.1.html
 
@@ -20,7 +20,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Spotter_5.1.14</title>
+  <title>Spotter_5.1.24</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -2714,7 +2714,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
     /* ===== Configuración activa + Presets por sesión ===== */
     /* ===== UI Mode BASIC/PRO ===== */
-    body[data-ui-mode="BASIC"] .mode-pro-only{ display:none !important; }
+    body[data-ui-mode="BASIC"]:not(.show-advanced) .mode-pro-only{ display:none !important; }
     body[data-ui-mode="PRO"] .mode-basic-only{ display:none !important; }
 
     /* ===== Control Strip (BASIC/PRO + Voz) ===== */
@@ -3340,14 +3340,18 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
 
     /* ===== Control Strip Compact Pro (v7.41) ===== */
-    body[data-ui-mode="BASIC"] .mode-pro-only{
-      display: inline-flex !important;
-      opacity: 0.35 !important;
-      pointer-events: none !important;
-      filter: grayscale(0.55);
-    }
-
-    .control-strip{
+/* En BASIC, controles PRO quedan ocultos para mantener la UI limpia.
+   Si activas ⚙️ (Ajustes avanzados), se habilitan para configuración. */
+body[data-ui-mode="BASIC"]:not(.show-advanced) .mode-pro-only{
+  display: none !important;
+}
+body.show-advanced .mode-pro-only{
+  display: inline-flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  filter: none !important;
+}
+.control-strip{
       display: grid !important;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 8px;
@@ -3470,6 +3474,46 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
 /* Hide VOZ ON/OFF text: status indicated by color only */
 #voiceStripState{display:none!important;}
+
+/* UI CLEANUP v5.1.15 (UI limpia, TODO sigue existiendo bajo Ajustes) */
+/* UI CLEANUP v5.1.19 (2 estilos: BASE/TV) */
+.rd-mode-row{display:none!important;}
+#presetRdProBtn,#presetRdShowBtn,#masterAllOnBtn,#masterAllOnBtn2,#masterAllOnBtn3{display:none!important;}
+#messagesPanel .spotter-master{display:none!important;}
+/* Avanzado mas limpio: oculta KPIs/presets (todo sigue funcionando por dentro) */
+.hud-kpis{display:none!important;}
+.hud-lists{display:none!important;}
+.session-presets{display:none!important;}
+
+/* Ocultar botones de estilos legacy dentro de mensajes */
+#rdModeMinimal,#rdModeStratega,#rdModeCoach,#rdModeSarca,#rdModeEngineer,#rdModeHype{display:none!important;}
+/* En vista limpia, esconder botones avanzados extra */
+body:not(.show-advanced) #msgsToggleBtn{display:none!important;}
+body:not(.show-advanced) #rdToggleBtn, body:not(.show-advanced) #speakBtn, body:not(.show-advanced) #diagToggleBtn{display:none!important;}
+
+body:not(.show-advanced) #rdToggleBtn,
+body:not(.show-advanced) #speakBtn,
+body:not(.show-advanced) #diagToggleBtn{ display:none !important; }
+
+/* Mensajes panel (categorías) */
+.cbtn-msgs{ background: rgba(255,255,255,0.07); }
+.cbtn-msgs.active{
+  background: linear-gradient(135deg, rgba(255,166,0,.95), rgba(255,80,0,.70));
+  color:#071018;
+  box-shadow: var(--shadow-strong);
+}
+body:not(.show-advanced) #msgsToggleBtn{ display:none !important; }
+body:not(.show-msgs) #messagesPanel{ display:none !important; }
+
+
+/* Ocultar estilos legacy y botones redundantes (ya solo usamos TV/SILENT) */
+#rdModeMinimal,#rdModeStratega,#rdModeCoach,#rdModeSarcastico,#rdModeIngeniero,#rdModeHype,
+#autoLocutorPro,#autoLocutorPicante,#autoLocutorIngeniero{ display:none !important; }
+#presetRdProBtn,#presetRdShowBtn,#masterAllOnBtn{ display:none !important; }
+
+/* Ocultar textos/ayuda legacy que mencionan modos viejos */
+.legacy-modes-hint{ display:none !important; }
+
 
     /* DIAG panel (PRO) */
     .cbtn-diag{
@@ -3939,7 +3983,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
   <div class="app">
     <header class="app-header">
       <div class="header-left">
-        <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">Spotter_5.1.14</span><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
+        <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">Spotter_5.1.24</span><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
         <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
         <div class="header-subline" id="raceInfo">Esperando datos en vivo</div>
         <div class="header-subline rescue-banner" id="rescueBanner"></div>
@@ -3951,7 +3995,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">Spotter_5.1.14</div>
+<div class="header-version" id="appVersion">Spotter_5.1.24</div>
       </div>
     </header>
 
@@ -4102,19 +4146,26 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
             <span class="cbtn-txt">Ajustes</span>
             <span class="cbtn-sub" id="advStripState">OFF</span>
           </button>
-<button class="cbtn cbtn-rd mode-pro-only" id="rdToggleBtn" type="button" title="Race Director">
+
+          <button class="cbtn cbtn-msgs" id="msgsToggleBtn" type="button" title="Mensajes (categorías)">
+            <span class="cbtn-ic">📣</span>
+            <span class="cbtn-txt">Msgs</span>
+            <span class="cbtn-sub" id="msgsStripState">OFF</span>
+          </button>
+
+<button class="cbtn cbtn-rd" id="rdToggleBtn" type="button" title="Race Director">
             🤖 RD
           </button>
-          <button class="cbtn cbtn-speak mode-pro-only" id="speakBtn" type="button">
+          <button class="cbtn cbtn-speak" id="speakBtn" type="button">
             📣 RES
           </button>
-          <button class="cbtn cbtn-diag mode-pro-only" id="diagToggleBtn" type="button" title="Diagnóstico">
+          <button class="cbtn cbtn-diag" id="diagToggleBtn" type="button" title="Diagnóstico">
             🛠 DIAG
           </button>
         </div>
 
         <div class="strip-hint" id="uiModeHintLine">
-          TV: transmisión. SILENT: solo lo esencial (cero ruido).
+          TV: transmisión. BASE: solo lo esencial (cero ruido).
         </div>
 
         <div class="basic-quick mode-basic-only" id="basicPanel" aria-label="BASIC - ajustes rápidos">
@@ -4240,7 +4291,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
 
       </section>
 
-      <section class="spotter-section mode-pro-only">
+      <section class="spotter-section mode-pro-only" id="messagesPanel">
   <div class="controls-label" style="margin-bottom:2px;">Mensajes del spotter</div>
 
   
@@ -4298,8 +4349,8 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - Spotter_5.1.14</div>
-          <div class="manual-sub">TV para transmisión. SILENT para cero ruido. ⚙️ abre ajustes avanzados.</div>
+          <div class="manual-title">Manual - Spotter_5.1.24</div>
+          <div class="manual-sub">TV para transmisión. BASE para cero ruido. ⚙️ abre ajustes avanzados.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
       </div>
@@ -4311,7 +4362,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
           <ul>
             <li>Selecciona tu piloto (se guarda y se auto-selecciona al volver).</li>
             <li>Toca <b>VOZ</b> una vez. Debe decir "Audio listo". Si no, toca <b>TEST</b>.</li>
-            <li>En SILENT el spotter habla solo: <b>LAPS</b> (lock), <b>AZUL</b> y <b>POS</b> confirmada.</li>
+            <li>En BASE el spotter habla solo: <b>LAPS</b> (lock), <b>AZUL</b> y <b>POS</b> confirmada.</li>
             <li>Si no hay movimiento en 20s, se calla. Cuando vuelve el movimiento, regresa solo.</li>
           </ul>
         </div>
@@ -4320,7 +4371,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
           <h3>2) Barra superior (5 botones)</h3>
           <ul>
             <li><b>VOZ</b>: enciende o apaga narracion (verde = ON).</li>
-            <li><b>SILENT</b>: solo lo esencial (poca voz, alta confianza).</li>
+            <li><b>BASE</b>: solo lo esencial (poca voz, alta confianza).</li>
             <li><b>⚙️ Ajustes</b>: abre controles avanzados (stream o análisis).</li>
             <li><b>RD</b> (Race Director): filtra y prioriza mensajes para que no se vuelva metralleta.</li>
             <li><b>RES</b>: "Leer resumen" (una sola lectura del estado actual).</li>
@@ -4328,8 +4379,8 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
         </div>
 
         <div class="manual-card">
-          <h3>3) Qué dice el spotter en SILENT</h3>
-          <p>SILENT está pensado para manejar. Pocas frases, siempre útiles.</p>
+          <h3>3) Qué dice el spotter en BASE</h3>
+          <p>BASE está pensado para manejar. Pocas frases, siempre útiles.</p>
           <ul>
             <li><b>LAPS</b> (lock): al cruzar meta te canta vueltas y tu ultima vuelta.</li>
             <li><b>AZUL</b>: aviso corto cuando el lider te viene encima / te va a doblar.</li>
@@ -4346,15 +4397,15 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
             <li><b>Batalla</b>: Pos, Gap, Adelante &lt;0.6, Atras &lt;0.6, Ataque, Defensa.</li>
             <li><b>Resumen</b>: Total, Cons 10, Best, Box, Pelea, NetGain.</li>
           </ul>
-          <p class="muted">Si algo te abruma, prende <b>RD</b> y usa un modo tranquilo (A Minimal o C Coach).</p>
+          <p class="muted"><span class="legacy-modes-hint">Si algo te abruma, prende <b>RD</b> y usa un modo tranquilo (A Minimal o C Coach).</span></p>
         </div>
 
         <div class="manual-card">
           <h3>5) RD (Race Director) - modos A a F</h3>
           <ul>
-            <li><b>A Minimal</b>: casi solo lo critico (ideal para correr).</li>
-            <li><b>B Estratega</b>: mas contexto (gaps y tendencia).</li>
-            <li><b>C Coach</b>: estilo copiloto (util en final).</li>
+            <li class="legacy-modes-hint"><b>A Minimal</b>: casi solo lo critico (ideal para correr).</li>
+            <li class="legacy-modes-hint"><b>B Estratega</b>: mas contexto (gaps y tendencia).</li>
+            <li class="legacy-modes-hint"><b>C Coach</b>: estilo copiloto (util en final).</li>
             <li><b>D Sarcastico</b>: mismo dato, con picante.</li>
             <li><b>E Ingeniero</b>: mas numeros y comparaciones.</li>
             <li><b>F Hype</b>: para stream, mas energia.</li>
@@ -4403,7 +4454,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
           <h3>10) Problemas comunes</h3>
           <ul>
             <li><b>Solo oigo beep</b>: toca VOZ otra vez o usa TEST. En iPhone a veces requiere un gesto.</li>
-            <li><b>Habla demasiado</b>: usa BASIC, o prende RD y cambia a A Minimal.</li>
+            <li><b>Habla demasiado</b>: usa BASIC.</li>
             <li><b>Posiciones locas</b>: deja POS en BASIC (confirmada) y evita cantar nombres si el feed tiembla.</li>
           </ul>
         </div>
@@ -4451,7 +4502,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
   <div class="diag-panel" id="diagPanel" aria-label="Diagnóstico">
     <div class="diag-title">
       <div>🛠 DIAG</div>
-      <div class="diag-badge" id="diagModeBadge">PRO</div>
+      <div class="diag-badge" id="diagModeBadge">DIAG</div>
     </div>
     <div class="diag-sub" id="diagSubLine">Estado en vivo</div>
     <div class="diag-grid">
@@ -4482,7 +4533,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "Spotter_5.1.14";
+    const APP_NAME = "Spotter_5.1.24";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -4699,7 +4750,23 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
         loadDiagPref();
         const diagBtn = document.getElementById('diagToggleBtn');
         if (diagBtn) diagBtn.addEventListener('click', () => setDiagEnabled(!diagEnabled));
-      } catch(e) {}
+
+
+      // MSGS toggle (categorías)
+      try{
+        const msgsBtn = document.getElementById('msgsToggleBtn');
+        const msgsState = document.getElementById('msgsStripState');
+        function setMsgsOn(on){
+          const v = !!on;
+          document.body.classList.toggle('show-msgs', v);
+          if (msgsBtn) msgsBtn.classList.toggle('active', v);
+          if (msgsState) msgsState.textContent = v ? 'ON' : 'OFF';}
+        // default: OFF (siempre)
+        setMsgsOn(false);
+        try{ localStorage.setItem('spotter_show_msgs','0'); }catch(e){}
+        if (msgsBtn) msgsBtn.addEventListener('click', () => setMsgsOn(!document.body.classList.contains('show-msgs')));
+      }catch(e){}
+} catch(e) {}
 
       // Advanced UI toggle (limpieza)
       try {
@@ -4712,12 +4779,11 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
             advBtn.classList.toggle('active', v);
             const st = document.getElementById('advStripState');
             if (st) st.textContent = v ? 'ON' : 'OFF';
-          }
-          try { localStorage.setItem(advKey, v ? '1' : '0'); } catch(e) {}
-        };
+          }};
         let advOn = false;
-        try { advOn = (localStorage.getItem(advKey) === '1'); } catch(e) { advOn = false; }
+        // UI limpia: siempre inicia sin panel avanzado
         applyAdv(advOn);
+        try { localStorage.setItem(advKey,'0'); } catch(e) {}
         if (advBtn) advBtn.addEventListener('click', () => applyAdv(!document.body.classList.contains('show-advanced')));
       } catch(e) {}
 
@@ -5303,7 +5369,7 @@ try{
     function _setModeBtnLabel(){
       try{
         if (!uiModeBtn) return;
-        uiModeBtn.textContent = uiNarrationMode;
+        uiModeBtn.textContent = (uiNarrationMode === 'SILENT' ? 'BASE' : uiNarrationMode);
         uiModeBtn.setAttribute('data-mode', uiNarrationMode);
       }catch(e){}
     }
@@ -5563,7 +5629,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.1.14_BASIC';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_Spotter_5.1.24_BASIC';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -7187,7 +7253,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
     let posDropDebounceLatest = null;
 
     // MANGA (clasificación) - estabilidad de posición para evitar "flip-flop" por salida escalonada
-    const mangaPosStability = { lastSeenPos: null, stablePos: null, stableCount: 0, lastAnnouncedStablePos: null, lastAnnounceAt: 0 };
+    const mangaPosStability = { lastSeenPos: null, stablePos: null, stableCount: 0, lastAnnouncedStablePos: null, lastAnnounceAt: 0, lastChangeAt: 0 };
     let mangaLastLapCrossPos = null;
     let mangaLastLapCrossLap = 0;
 
@@ -8087,6 +8153,7 @@ function enqueueSpeech(text, opts = {}) {
         let priority = (Number.isFinite(opts.priority) ? opts.priority : null);
         if (priority == null) {
           if (cat === 'bestlap') priority = 80;
+          else if (cat === 'laps') priority = 90;
           else if (cat === 'blueflag') priority = 75;
           else if (cat === 'pos') priority = isManga ? 55 : 65;
           else if (cat === 'leader' || cat === 'leadergap') priority = 60;
@@ -8110,7 +8177,11 @@ function enqueueSpeech(text, opts = {}) {
         // replaceKey: mantiene la cola limpia (ej. gaps/podio/líder actualiza, no apila)
         const replaceKey = (opts.replaceKey !== false) && (!!cat) && (['pos','gaps','leader','leadergap','podium','total'].includes(cat));
         if (replaceKey) {
-          try { speechQueue = speechQueue.filter(it => it.key !== key); } catch(e) {}
+          try {
+            for (let i = speechQueue.length - 1; i >= 0; i--) {
+              if (speechQueue[i] && speechQueue[i].key === key) speechQueue.splice(i, 1);
+            }
+          } catch(e) {}
         }
 
         if (dedupe) {
@@ -8150,7 +8221,7 @@ function enqueueSpeech(text, opts = {}) {
         // Tope de cola (evita monólogos si el feed se vuelve loco)
         const MAX_Q = 12;
         if (speechQueue.length > MAX_Q) {
-          speechQueue = speechQueue.slice(0, MAX_Q);
+          speechQueue.splice(MAX_Q); // recorta sin reasignar (speechQueue es const)
         }
 
         pumpSpeechQueue();
@@ -10296,6 +10367,7 @@ let sessionBestCache = { ms: 0, holder: '-', key: null };
 function refreshSessionBestCache() {
   try {
     const rows = (raceData && Array.isArray(raceData.classification)) ? raceData.classification : [];
+    const now = Date.now();
     let best = 0;
     let holder = '-';
     let holderKey = null;
@@ -10987,20 +11059,17 @@ function updateBlueFlagFromPassEvents() {
         const sec = toFixedFloor((delta / 1000), decimalPrecision);
         const leaderName = safeRacerName(leader.racerName) || 'el líder';
 
-        if (lapDiff >= 1) {
-          // bandera azul real: el líder ya va al menos una vuelta adelante
-          if (selEvent.lap && selEvent.lap <= lastBlueFlagPilotLap) return;
-
-          pendingBlueFlagForPilotKey = selectedPilotKey;
-          pendingBlueFlagMessage = 'Bandera azul. Detrás viene el líder ' + leaderName + ' P1. Mantén tu línea y déjalo pasar';
-          lastBlueFlagPilotLap = selEvent.lap || lastBlueFlagPilotLap;
-        } else {
-          // lapDiff === 0 -> el líder todavía no lo ha lapeado pero viene pegado
+        // Azul: queremos avisar CUANDO TE VAN A DOBLAR (no cuando ya estás doblado)
+        if (lapDiff === 0) {
+          // líder viene detrás y te va a doblar pronto
           if (selEvent.lap && selEvent.lap <= lastBlueWarnPilotLap) return;
 
           pendingBlueFlagForPilotKey = selectedPilotKey;
-          pendingBlueFlagMessage = 'Azul. Detrás viene el líder ' + leaderName + ' P1. Mantén tu línea y deja que te rebase seguro';
+          pendingBlueFlagMessage = 'Bandera azul. Te van a doblar. Detrás viene el líder ' + leaderName + ' P1. Mantén tu línea y déjalo pasar';
           lastBlueWarnPilotLap = selEvent.lap || lastBlueWarnPilotLap;
+        } else {
+          // ya vas una o más vueltas abajo: no spamear en BASIC; en TV/PRO se puede cubrir con otros mensajes
+          return;
         }
       } catch (e) {
         console.error('Error en updateBlueFlagFromPassEvents', e);
@@ -13264,7 +13333,7 @@ function handleVoiceAndBeeps() {
 
       const lapMsNow = normalizeLapMs(p.lastTime);
 
-      
+      const now = Date.now();
 
       // Track de cambios de posición en este tick
       let posChangedTick = false;
@@ -13299,12 +13368,14 @@ function handleVoiceAndBeeps() {
             mangaPosStability.lastSeenPos = curPos;
             mangaPosStability.stablePos = curPos;
             mangaPosStability.stableCount = 1;
+            mangaPosStability.lastChangeAt = now;
           } else if (curPos === mangaPosStability.lastSeenPos) {
             mangaPosStability.stableCount = Math.min(10, (mangaPosStability.stableCount || 0) + 1);
             if (mangaPosStability.stableCount >= 2) mangaPosStability.stablePos = curPos;
           } else {
             mangaPosStability.lastSeenPos = curPos;
             mangaPosStability.stableCount = 1;
+            mangaPosStability.lastChangeAt = now;
           }
         }
 
@@ -13319,7 +13390,6 @@ function handleVoiceAndBeeps() {
         // Si la posición cambia por otros autos (sin meta), en FINAL puede avisar; en MANGA esperamos a tu cruce y a que se estabilice.
         if (voiceSettings.pos) {
           // Anuncio de posicion confirmado (anti-jitter) y SOLO en cruce por meta
-          const now = Date.now();
           const curPos = Math.floor(p.pos);
 
           if (posStability.stablePos == null) posStability.stablePos = curPos;
@@ -13333,18 +13403,21 @@ function handleVoiceAndBeeps() {
               posStability.pendingSince = now;
             }
 
-            const stableByCount = (posStability.pendingCount >= (isManga ? 3 : 2));
-            const stableByTime  = (posStability.pendingSince && (now - posStability.pendingSince) >= (isManga ? 1400 : 800));
+            const stableByCount = (posStability.pendingCount >= (isManga ? 5 : 3));
+            const stableByTime  = (posStability.pendingSince && (now - posStability.pendingSince) >= (isManga ? 3500 : 1200));
 if (stableByCount || stableByTime) {
               const fromPos = posStability.stablePos;
               const toPos   = curPos;
+
+              const pendingCntBefore = (posStability.pendingCount || 0);
+              const pendingSinceBefore = posStability.pendingSince;
 
               posStability.stablePos = toPos;
               posStability.pendingPos = null;
               posStability.pendingCount = 0;
 
               const lapWillSpeak = (lapsNow > lastAnnouncedLapcount); // tu cruce por meta pendiente
-              const canQueue = ((now - (posStability.lastAnnounceAt || 0)) >= (isManga ? 9000 : 6000));
+              const canQueue = ((now - (posStability.lastAnnounceAt || 0)) >= (isManga ? 16000 : 8000));
 
               // MANGA: ranking por reloj propio -> filtrar jitter fuerte. Solo hablamos si se ve estable o si hay cambio grande/top3.
               let mangaOk = true;
@@ -13353,7 +13426,7 @@ if (stableByCount || stableByTime) {
               if (isManga) {
                 const stablePosM = (mangaPosStability && mangaPosStability.stablePos != null) ? mangaPosStability.stablePos : toPos;
                 const stableCountM = (mangaPosStability && mangaPosStability.stableCount != null) ? mangaPosStability.stableCount : 0;
-                const stableOk = (stablePosM === toPos) && (stableCountM >= 2);
+                const stableOk = (stablePosM === toPos) && (stableCountM >= 6) && (!mangaPosStability.lastChangeAt || (now - mangaPosStability.lastChangeAt) >= 3000);
 
                 const prevLapPos = (mangaLastLapCrossPos != null) ? mangaLastLapCrossPos : null;
                 mangaDelta = (prevLapPos != null) ? (prevLapPos - toPos) : mangaDelta;
@@ -13361,11 +13434,13 @@ if (stableByCount || stableByTime) {
                 const bigMove = Math.abs(mangaDelta) >= 2;
                 const intoTop3 = (toPos <= 3) && (prevLapPos == null || prevLapPos > 3 || prevLapPos !== toPos);
 
-                const cd = (intoTop3 || bigMove) ? 5000 : 12000;
+                const cd = (intoTop3 || bigMove) ? 8000 : 18000;
                 const cdOk = (now - (mangaPosStability.lastAnnounceAt || 0)) >= cd;
 
                 const newPos = (mangaPosStability.lastAnnouncedStablePos == null) || (toPos !== mangaPosStability.lastAnnouncedStablePos);
-                mangaOk = cdOk && newPos && (stableOk || bigMove || intoTop3);
+                const smallMove = (!intoTop3 && !bigMove && Math.abs(mangaDelta) === 1);
+                const strongEvidence = ((pendingCntBefore >= 8) || (pendingSinceBefore && (now - pendingSinceBefore) >= 6500));
+                mangaOk = cdOk && newPos && stableOk && (intoTop3 || bigMove || (!smallMove || strongEvidence));
               }
 
               if (lapWillSpeak && canQueue && mangaOk) {
@@ -13388,7 +13463,7 @@ if (stableByCount || stableByTime) {
       }
 
       // NetGain (evento)
-      if (voiceSettings.pos && p.pos && p.pos > 0) {
+      if (!isManga && voiceSettings.pos && p.pos && p.pos > 0) {
         if (startPosForSelected == null) startPosForSelected = p.pos;
         const net = startPosForSelected - p.pos;
         if (lastNetGainValue == null) lastNetGainValue = net;
@@ -13419,7 +13494,7 @@ if (stableByCount || stableByTime) {
         const isNewBest = (lastBestAnnouncedMs == null) ? true : (lapMsNow < (lastBestAnnouncedMs - 30));
         if (isNewBest) {
           pendingBestLap = {
-            text: 'Best lap',
+            text: 'Mejor vuelta',
             opts: { key: 'bestlap_' + lapsNow, priority: 75, cooldownMs: 1500, dedupe: true },
             expLap: lapsNow + 2,
             ms: lapMsNow
@@ -13473,7 +13548,7 @@ if (stableByCount || stableByTime) {
             if (lapMsNow < (lastSpokenLastTime - 20)) playBeep('up');
             else if (lapMsNow > (lastSpokenLastTime + 20)) playBeep('down');
           }
-          say(tiempoATexto(lapMsNow), { key: 'lap_' + lapsNow, priority: 90, dedupe: true });
+          say(tiempoATexto(lapMsNow), { key: 'lap_' + lapsNow, priority: 100, dedupe: true });
           flashLastLap();
           lastSpokenLastTime = lapMsNow;
         }
@@ -13570,7 +13645,7 @@ try {
           if (ppos) {
             if (basicModeEnabled) {
               if (isManga) {
-                text = `Rank P${ppos}`;
+                text = `Ranking P${ppos}`;
               } else {
                 const d = Number(pendingPosChange.delta || 0);
                 if (d > 0) text = `P${ppos}, ganaste ${d===1 ? 'una' : d}`;
@@ -13610,7 +13685,7 @@ try {
         }
       }
 
-      if (voiceSettings.pos && pendingNetGain) {
+      if (!isManga && voiceSettings.pos && pendingNetGain) {
         pushCand('pos', isFinal ? 45 : 25, pendingNetGain.text, pendingNetGain.opts, () => {
           pendingNetGain = null;
           lastNetGainSpokenLap = lapsNow;
@@ -14633,6 +14708,27 @@ function startAdaptivePolling() {
 
 // Best lap global: actualizado desde raceData.classification (ver refreshSessionBestCache)
 
+
+
+    // DIAG toggle (panel flotante)
+    function toggleDiagPanel(forceOn){
+      try{
+        const btn = document.getElementById('diagToggleBtn');
+        const pnl = document.getElementById('diagPanel');
+        if (!pnl) return;
+        const isOn = (pnl.style.display !== 'none' && pnl.style.display !== '');
+        const next = (forceOn != null) ? !!forceOn : !isOn;
+        pnl.style.display = next ? 'block' : 'none';
+        if (btn) btn.classList.toggle('active', next);
+      }catch(e){ console.error('toggleDiagPanel', e); }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      try{
+        const btn = document.getElementById('diagToggleBtn');
+        if (btn) btn.addEventListener('click', () => toggleDiagPanel());
+      }catch(e){}
+    });
 </script>
 </body>
 </html>
