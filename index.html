@@ -5235,7 +5235,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
     // =========================
     // VERSION
     // =========================
-    const SPOTTER_VERSION = "5.2.5";
+    const SPOTTER_VERSION = "5.2.10";
     const APP_NAME = `Spotter_${SPOTTER_VERSION}`;
     const APP_LABEL = APP_NAME;
 
@@ -6175,13 +6175,13 @@ try{
       } else if (uiNarrationMode === 'SILENT'){
         // SILENT = solo lo esencial, pero que SI hable en MANGA/FINAL
         base.pos = true;          // pole / posición confirmada
-        base.bestlap = (st !== 'TRAIN');
-        base.estlap  = (st === 'MANGA'); // estimación solo en mangas
+        base.bestlap = false;
+        base.estlap  = false; // estimación OFF por default
         base.leadergap = (st !== 'TRAIN');
       } else { // TV
         base.pos = true;                 // pole + anuncios estables
-        base.bestlap = (st !== 'TRAIN');
-        base.estlap  = (st === 'MANGA'); // en mangas: estimación
+        base.bestlap = false;
+        base.estlap  = false; // estimación OFF por default
         base.leadergap = (st !== 'TRAIN');
 
         if (st === 'FINAL'){
@@ -6233,8 +6233,12 @@ try{
       // Asegura UI clean
       try{ setUIMode('BASIC', {silent:true}); }catch(e){}
 
-      // Alinear Auto Locutor + Race Director al estilo
-      try{ setAutoCommentatorMode(uiNarrationMode === 'TV' ? 'tv' : 'pro'); }catch(e){}
+      // Alinear Auto Locutor + Race Director al estilo (sin recursion)
+      try{
+        if (!(opts && opts.fromAutoCommentator)) {
+          setAutoCommentatorMode(uiNarrationMode === 'TV' ? 'tv' : 'pro', { fromNarration:true });
+        }
+      }catch(e){}
       try{ setRaceDirectorMode(uiNarrationMode === 'TV' ? 'coach' : 'minimal'); }catch(e){}
 
       // Preset por sesión + estilo
@@ -6697,6 +6701,7 @@ let raceDirectorMode = 'minimal';
 
     // ===== Auto Locutor (sin piloto) - 3 estilos
     let autoCommentatorMode = 'tv';
+    let autoLocutorActive = false; // true cuando está activo Auto Locutor (sin seguimiento)
     try {
       const m = prefGet('autoCommentatorMode', null);
       if (m === 'tv') autoCommentatorMode = 'tv';
@@ -6719,32 +6724,40 @@ let raceDirectorMode = 'minimal';
       setActive(autoLocutorPro,      autoCommentatorMode === 'pro');
       setActive(autoLocutorPicante,  autoCommentatorMode === 'picante');
       setActive(autoLocutorEngineer, autoCommentatorMode === 'engineer');
-      setActive(autoLocutorNarrativo, (autoCommentatorMode === 'tv' || (autoCommentatorMode === 'tv' || autoCommentatorMode === 'narrativo')));
+      // Narrativo = TV
+      setActive(autoLocutorNarrativo, (autoCommentatorMode === 'tv' || autoCommentatorMode === 'narrativo'));
     }
 
-    function setAutoCommentatorMode(mode) {
+    function setAutoCommentatorMode(mode, opts = {}) {
       if (!(mode === 'pro' || mode === 'picante' || mode === 'engineer' || mode === 'tv' || mode === 'narrativo')) return;
       if (mode === 'narrativo') mode = 'tv';
+      const fromNarration = !!(opts && opts.fromNarration);
+
       autoCommentatorMode = mode;
-      // Si estás en Auto Locutor (sin piloto) y estabas en SUPER/BASE, cámbiate a TV para que hable.
-      try { if (!selectedPilotKey && (uiNarrationMode === 'SUPER' || uiNarrationMode === 'SILENT')) setNarrationMode('TV', { silent:true, temp:true }); } catch(e) {}
+      try { autoLocutorActive = true; } catch(e) {}
+
+      // Si esto viene desde setNarrationMode, NO forzar TV ni tocar seguimiento (evita loops)
+      if (!fromNarration) {
+        // Auto Locutor requiere modo TV para pasar filtros de narración
+        try { setNarrationMode('TV', { silent:true, temp:true, fromAutoCommentator:true }); } catch(e) {}
+
+        // Al activar Auto Locutor por click, salimos de seguimiento para que el locutor mande
+        try {
+          if (typeof selectPilotByKey === 'function') {
+            selectPilotByKey('', { announce:false });
+          } else {
+            try { selectedPilotKey = ''; } catch(e) {}
+            try { if (pilotSelect) pilotSelect.value = ''; } catch(e) {}
+            try { prefSet('spotterSelectedPilotKey',''); } catch(e) {}
+          }
+        } catch(e) {}
+      }
+
       try { prefSet('autoCommentatorMode', mode); } catch(e) {}
       updateAutoCommentatorButtons();
-      // Al activar Auto Locutor, salimos de seguimiento para que el locutor hable.
-      try{
-        if (typeof selectPilotByKey === 'function') {
-          selectPilotByKey('', { announce:false });
-        } else {
-          try { selectedPilotKey = ''; } catch(e) {}
-          try { if (pilotSelect) pilotSelect.value = ''; } catch(e) {}
-          try { prefSet('spotterSelectedPilotKey',''); } catch(e) {}
-        }
-      }catch(e){}
-      // Asegurar modo TV (Auto Locutor necesita pasar filtros)
-      try { setNarrationMode('TV', { silent:true, temp:true }); } catch(e) {}
-      // Confirmación corta
-      try { enqueueSpeech('Auto locutor activado.', { key:'sys_autoloc_on', cat:'sys', priority:9, cooldownMs:0, interrupt:false, dedupe:true }); } catch(e) {}
 
+      // Confirmación corta (siempre)
+      try { enqueueSpeech('Auto locutor activado.', { key:'sys_autolocutor_on', cat:'system', prio: 90, ttlMs: 2500, cooldownMs: 2000, interrupt:false, dedupe:true }); } catch(e) {}
     }
 
     if (autoLocutorPro)      autoLocutorPro.addEventListener('click', () => setAutoCommentatorMode('pro'));
@@ -8370,6 +8383,12 @@ function loadVoiceSettings() {
 
     function playBeep(kind = 'up') {
       try {
+        try { if (typeof autoLocutorActive !== 'undefined' && autoLocutorActive) return; } catch(e) {}
+        const __t = Date.now();
+        if (typeof window.__lastBeepAt === 'undefined') window.__lastBeepAt = 0;
+        if (__t - window.__lastBeepAt < 180) return;
+        window.__lastBeepAt = __t;
+
         ensureAudioCtx();
         if (!audioCtx) return;
 
@@ -9169,6 +9188,16 @@ function enqueueSpeech(text, opts = {}) {
             const k2 = String((opts && (opts.key || opts.k)) || '').toLowerCase();
             const t2 = clean.toLowerCase();
             if (k2.startsWith('session_finish_')) catNorm = 'total';
+            else if (k2.startsWith('courtesy_') || k2.includes('courtesy')) catNorm = 'courtesy';
+            else if (k2.includes('blueflag') || k2.includes('blue_flag') || k2.includes('blue-flag')) catNorm = 'blueflag';
+            else if (k2.includes('top3') || k2.includes('podium')) catNorm = 'podium';
+            else if (k2.includes('battle') || k2.includes('pelea') || k2.includes('duel')) catNorm = 'pelea';
+            else if (k2.includes('leadergap') || k2.includes('leader_gap') || (k2.startsWith('leader_'))) catNorm = 'leadergap';
+            else if (k2.includes('gap')) catNorm = 'gaps';
+            else if (k2.includes('ritmo') || k2.includes('pace')) catNorm = 'ritmo';
+            else if (k2.includes('attack')) catNorm = 'attack';
+            else if (k2.includes('defense')) catNorm = 'defense';
+
             else if (k2.includes('bestlap') || t2.includes('best lap')) catNorm = 'bestlap';
             else if (k2.includes('blue') || t2.includes('bandera azul')) catNorm = 'blueflag';
             else if (k2.includes('pos') || t2.includes('posicion') || t2.includes('posición')) catNorm = 'pos';
@@ -11751,8 +11780,11 @@ function refreshSessionBestCache() {
         lastGlobalBestSpokenHolderKey = hKey;
         lastGlobalBestSpokenAt = now;
         // Beep + voz (no interrumpe si ya va hablando)
-        playBeep('up');
-        enqueueSpeech(`Record de carrera. ${hName}. Best lap ${tiempoATexto(cur)}.`, { key: 'global_best_' + cur, priority: 88, cooldownMs: 2000, dedupe: true });
+        const __allowRecord = !!(voiceSettings && voiceSettings.bestlap);
+        if (__allowRecord){
+          playBeep('up');
+          enqueueSpeech(`Record de carrera. ${hName}. Best lap ${tiempoATexto(cur)}.`, { key: 'global_best_' + cur, priority: 88, cooldownMs: 2000, dedupe: true });
+        }
         flashPilotCardGreen();
         flashMangaClock();
       }
@@ -11915,7 +11947,7 @@ function computeSessionBestMs() {
 
       // Auto-selección desde storage (si todavía no hay selección)
       try {
-        if (!selectedPilotKey) {
+        if (!selectedPilotKey && !(typeof autoLocutorActive !== 'undefined' && autoLocutorActive)) {
           const storedKey = String(prefGet('spotterSelectedPilotKey', '') || '').toLowerCase().trim();
           if (storedKey) {
             const existsStored = rows.some(r => getPilotKey(r) === storedKey);
@@ -12009,6 +12041,8 @@ function resetSelectedPilotTrackingState() {
           const announce = (opts.announce !== false);
 
           selectedPilotKey = k;
+
+          try { if (k) autoLocutorActive = false; } catch(e) {}
 
 
       // Auto: si hay piloto seleccionado, arrancamos en SUPER (solo laps + pos). Si sales de seguimiento, volvemos al modo previo.
@@ -14272,7 +14306,21 @@ function autoDecorate(text, type, style) {
         const out = String(fn(ctx) || '').trim();
         return autoDecorate(out, type, style);
       }
-      return '';
+      
+    function autoCatFromType(tp){
+      const t = String(tp || '').toLowerCase();
+      if (t.includes('blue')) return 'blueflag';
+      if (t === 'qualibest' || t === 'qualipole' || t.includes('best')) return 'bestlap';
+      if (t.includes('pole')) return 'bestlap';
+      if (t === 'pass' || t.includes('leaderchange')) return 'pos';
+      if (t.includes('podium') || t.includes('top3')) return 'podium';
+      if (t === 'gap') return 'gaps';
+      if (t.includes('leadergap') || t === 'leader') return 'leadergap';
+      if (t === 'closing' || t === 'battle' || t === 'pressure' || t === 'train' || t === 'story' || t === 'closingstory') return 'pelea';
+      return 'total';
+    }
+
+return '';
     }
 
     function handleAutoCommentator() {
@@ -15069,7 +15117,9 @@ for (const c of candidates) {
              if (!autoTextOk(c.text, now)) continue;
 
             // hablar
-            speakWithLaps(leaderLap, c.text, { voiceURI: nextAutoVoiceURI(), cat: ('auto:' + (c.type || 'x')), key: c.key || c.sig || ('auto_' + c.type), priority: c.priority || 0, cooldownMs: 2500, dedupe: true,
+            const __autoCat = autoCatFromType(c.type);
+            const __autoKey = 'sys_auto_' + String(c.key || c.sig || ('auto_' + c.type));
+            speakWithLaps(leaderLap, c.text, { voiceURI: nextAutoVoiceURI(), cat: __autoCat, key: __autoKey, priority: c.priority || 0, cooldownMs: 2500, dedupe: true,
               mood: (c.type==='battle' || c.type==='closing' || c.type==='leaderChange' || c.type==='pass' || c.type==='pressure' || c.type==='train') ? 'hype' : (c.type==='qualiBest' || c.type==='qualiPole') ? 'serious' : 'calm' });
 
             commentatorAutoState.lastSpeakMs = now;
