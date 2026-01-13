@@ -3744,9 +3744,8 @@ body:not(.show-advanced) #msgsToggleBtn{ display:none !important; }
 body:not(.show-msgs) #messagesPanel{ display:none !important; }
 
 
-/* Ocultar estilos legacy y botones redundantes (ya solo usamos TV/SILENT) */
-#rdModeMinimal,#rdModeStratega,#rdModeCoach,#rdModeSarcastico,#rdModeIngeniero,#rdModeHype,
-#autoLocutorPro,#autoLocutorPicante,#autoLocutorIngeniero{ display:none !important; }
+/* Ocultar estilos legacy y botones redundantes (solo usamos algunos modos RD) */
+#rdModeMinimal,#rdModeStratega,#rdModeCoach,#rdModeSarcastico,#rdModeIngeniero,#rdModeHype{ display:none !important; }
 #presetRdProBtn,#presetRdShowBtn,#masterAllOnBtn{ display:none !important; }
 
 /* Ocultar textos/ayuda legacy que mencionan modos viejos */
@@ -5236,7 +5235,7 @@ body:not(.show-advanced) .strip-hint::after { content: "  -  ⚙️ para más"; 
     // =========================
     // VERSION
     // =========================
-    const SPOTTER_VERSION = "5.2.4";
+    const SPOTTER_VERSION = "5.2.5";
     const APP_NAME = `Spotter_${SPOTTER_VERSION}`;
     const APP_LABEL = APP_NAME;
 
@@ -6731,6 +6730,21 @@ let raceDirectorMode = 'minimal';
       try { if (!selectedPilotKey && (uiNarrationMode === 'SUPER' || uiNarrationMode === 'SILENT')) setNarrationMode('TV', { silent:true, temp:true }); } catch(e) {}
       try { prefSet('autoCommentatorMode', mode); } catch(e) {}
       updateAutoCommentatorButtons();
+      // Al activar Auto Locutor, salimos de seguimiento para que el locutor hable.
+      try{
+        if (typeof selectPilotByKey === 'function') {
+          selectPilotByKey('', { announce:false });
+        } else {
+          try { selectedPilotKey = ''; } catch(e) {}
+          try { if (pilotSelect) pilotSelect.value = ''; } catch(e) {}
+          try { prefSet('spotterSelectedPilotKey',''); } catch(e) {}
+        }
+      }catch(e){}
+      // Asegurar modo TV (Auto Locutor necesita pasar filtros)
+      try { setNarrationMode('TV', { silent:true, temp:true }); } catch(e) {}
+      // Confirmación corta
+      try { enqueueSpeech('Auto locutor activado.', { key:'sys_autoloc_on', cat:'sys', priority:9, cooldownMs:0, interrupt:false, dedupe:true }); } catch(e) {}
+
     }
 
     if (autoLocutorPro)      autoLocutorPro.addEventListener('click', () => setAutoCommentatorMode('pro'));
