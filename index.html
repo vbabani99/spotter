@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.0.4 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
+AI_Spotter_TRM_v0.0.0.5 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
@@ -2875,7 +2875,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.4</div>
+<div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.5</div>
       </div>
     </header>
 
@@ -3489,7 +3489,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.0.4";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.0.5";
     const APP_LABEL = APP_NAME;
 
 
@@ -4029,7 +4029,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.4';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.5';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -6247,6 +6247,7 @@ let ttsRate = detectDefaultTtsRate();
       ttsTestBtn.addEventListener('click', () => {
         try { setVoiceMaster(true, { silent:true }); } catch(e) {}
         try { ensureAudioCtx(); } catch(e) {}
+      try { if (voiceMasterEnabled && isIOSWebKit && isIOSWebKit()) unlockTTSOnce('voice-master'); } catch(e) {}
         try { playBeep('soft'); } catch(e) {}
         try {
           enqueueSpeech('Spotter listo. Probando voz.', { key:'tts_test', priority: 99, cooldownMs: 0, interrupt:true, dedupe: true });
@@ -6634,6 +6635,47 @@ function speakWithLaps(_laps, message, opts) {
       try { window.addEventListener('pointerdown', handler, { once:true, passive:true, capture:true }); } catch(e) {}
     }
 
+
+// Unlock TTS en iOS/WebKit: requiere gesto de usuario y a veces "primera voz" para habilitar speechSynthesis
+let __ttsUnlockedOnce = false;
+
+function unlockTTSOnce(reason = '') {
+  try {
+    if (__ttsUnlockedOnce) return true;
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
+
+    // Debe existir gesto real del usuario
+    if (!__userGestureUnlocked) return false;
+
+    try { window.speechSynthesis.cancel(); } catch(e) {}
+    try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+
+    // Mensaje corto para "desbloquear" en iOS.
+    const u = new SpeechSynthesisUtterance('Audio listo');
+    u.lang = 'es-MX';
+    u.rate = (isFinite(ttsRate) ? ttsRate : 1.5);
+    u.pitch = 1.0;
+    u.volume = 1.0;
+
+    const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+    if (voices && voices.length) {
+      let v = null;
+      if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
+      if (!v) v = pickDefaultVoice(voices);
+      if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
+    }
+
+    u.onend = () => {};
+    u.onerror = () => {};
+    window.speechSynthesis.speak(u);
+
+    __ttsUnlockedOnce = true;
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
 function setVoiceMaster(on, opts = {}) {
       
       // cualquier unlock pendiente se resuelve aquí
@@ -6658,6 +6700,7 @@ voiceMasterEnabled = !!on;
         try {
           btn.addEventListener('click', () => {
             setVoiceMaster(!voiceMasterEnabled);
+            try { if (voiceMasterEnabled && isIOSWebKit && isIOSWebKit()) unlockTTSOnce('voice-btn'); } catch(e) {}
           });
         } catch(e) {}
       });
@@ -8645,11 +8688,16 @@ function computeSessionBestMs() {
             // MANGA: NO inicia reloj al seleccionar (solo muestra UI)
             try { onPilotSelectedManga(k); } catch(e) {}
 
-            // iOS/Chrome a veces requiere gesto extra para TTS
+            // iOS/Chrome: intentar unlock inmediato dentro del gesto de selección
             try {
-              if (isIOSWebKit()) {
-                try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
-                scheduleOneTapUnlock();
+              if (isIOSWebKit && isIOSWebKit()) {
+                if (unlockTTSOnce('pilot-select')) {
+                  try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+                  pendingAutoVoiceUnlock = false;
+                } else {
+                  try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+                  scheduleOneTapUnlock();
+                }
               }
             } catch(e) {}
           } else {
