@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.0.5 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
+AI_Spotter_TRM_v0.0.0.19 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
@@ -18,7 +18,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.0.2</title>
+  <title>AI Spotter TRM v0.0.0.19</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -2858,6 +2858,22 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     /* === UI simplificada: por defecto escondemos paneles "expert" === */
     body:not(.debug) .expert-only{display:none !important;}
     body.debug .expert-only{display:block !important;}
+
+    /* Debug speech log (solo body.debug) */
+    .speechlog { display:none; position:fixed; left:10px; right:10px; bottom:10px;
+      background: rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.12);
+      border-radius:12px; padding:10px 10px 8px; z-index:9999; backdrop-filter: blur(6px);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      max-height: 38vh; overflow:auto;
+    }
+    body.debug .speechlog { display:block; }
+    .speechlog-title { font-weight:700; font-size:12px; letter-spacing:.6px; opacity:.9; margin-bottom:6px; }
+    .speechlog-list { font-size:12px; line-height:1.25; }
+    .speechlog-item { padding:4px 0; border-top:1px solid rgba(255,255,255,.08); }
+    .speechlog-item:first-child { border-top:0; }
+    .speechlog-meta { opacity:.65; font-size:11px; margin-bottom:2px; }
+    .speechlog-hint { opacity:.55; font-size:11px; margin-top:6px; }
+
 </style>
 </head>
 <body>
@@ -2875,7 +2891,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.5</div>
+<div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.19</div>
       </div>
     </header>
 
@@ -3176,7 +3192,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.0.2</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.0.19</div>
           <div class="manual-sub">Modo automatico. El spotter toma las decisiones, tu solo manejas.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -3483,14 +3499,378 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     </div>
   </div>
 
+  <!-- Debug panel (solo en modo debug) -->
+  <div id="speechLogPanel" class="speechlog">
+    <div class="speechlog-title">VOZ (últimos mensajes)</div>
+    <div id="speechLogList" class="speechlog-list"></div>
+    <div class="speechlog-hint">Activa con ?debug=1 - o localStorage aiSpotterDebug=1</div>
+  </div>
+
 
   <script type="module">
 
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.0.5";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.0.19";
     const APP_LABEL = APP_NAME;
+
+    // =========================
+    // AI AUTO-INTRO + FINISHERS (Auto Locutor)
+    // - Se anuncian solo en Auto Locutor (sin piloto seleccionado)
+    // =========================
+    let __autoIntroSig = '';
+    let __autoFinishSig = '';
+    let __autoFinishPrevByKey = new Map();
+    let __autoFinishAnnouncedByKey = new Set();
+    let __autoFinishPhase = false;
+
+    // =========================
+    // Auto Locutor - Ciclo de vida de carrera (silencio inteligente)
+    // - En Auto Locutor: anuncia carrera + participantes y luego ESPERA a que arranque (sin hablar)
+    // - Después narra normal (RUNNING)
+    // - Al terminar: entra a CLOSING (solo finalizo en Finales) y luego FINISHED (silencio hasta nueva carrera)
+    // =========================
+    let __autoPhase = 'IDLE'; // IDLE | WAIT_START | RUNNING | CLOSING | FINISHED
+    let __autoLifeSig = '';
+    let __autoStartedStable = 0;
+    let __autoCloseStartedMs = 0;
+    let __autoLastActivityMs = 0;
+    let __autoLastMaxLap = 0;
+    let __autoLastMaxTotalMs = 0;
+    let __autoActiveKeys = new Set(); // pilotos que ya "arrancaron" (laps>0 o time>0)
+
+    function __autoNowMs() {
+      try { return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); }
+      catch(e){ return Date.now(); }
+    }
+
+    function __autoResetLifecycle(raceName) {
+      try {
+        __autoLifeSig = String(raceName || '');
+        __autoPhase = 'WAIT_START';
+        __autoStartedStable = 0;
+        __autoCloseStartedMs = 0;
+        __autoLastActivityMs = __autoNowMs();
+        __autoLastMaxLap = 0;
+        __autoLastMaxTotalMs = 0;
+        __autoActiveKeys = new Set();
+      } catch(e) {}
+    }
+
+    function __autoGetDurMs() {
+      try {
+        const info = currentSessionInfo || {};
+        const t = String(info.type || '').toUpperCase();
+        const label = String(info.label || '').toUpperCase();
+        const d = Number(info.durationMs) || 0;
+        if (d > 0) return d;
+
+        // fallback seguro
+        if (t === 'FINAL_A' || label.includes('FINAL A')) return 6 * 60 * 1000;
+        if (t.startsWith('FINAL') || label.includes('FINAL')) return 4 * 60 * 1000;
+        if (t === 'MANGA' || t === 'QUALI' || label.includes('MANGA') || label.includes('QUALI')) return 3 * 60 * 1000;
+        return 0;
+      } catch(e) { return 0; }
+    }
+
+    function __autoScanProgress(r) {
+      try {
+        const rows = (r && Array.isArray(r.classification)) ? r.classification : [];
+        let maxLap = 0;
+        let maxTotalMs = 0;
+        let maxLastLapMs = 0;
+
+        for (const row of rows) {
+          if (!row) continue;
+          const laps = Number(row.lapcount) || 0;
+          const totalMs = getRowTotalMs(row) || 0;
+          const lastLapMs = Number(row.lastLapMs) || 0;
+
+          if (laps > maxLap) maxLap = laps;
+          if (totalMs > maxTotalMs) maxTotalMs = totalMs;
+          if (lastLapMs > maxLastLapMs) maxLastLapMs = lastLapMs;
+
+          if (laps > 0 || totalMs > 0 || lastLapMs > 0) {
+            const k = getPilotKey(row) || safeRacerName(row && row.racerName) || '';
+            if (k) __autoActiveKeys.add(String(k));
+          }
+        }
+
+        const bestMs = Number(r && (r.bestLapMs || r.bestLapMsRaw || r.bestLapTimeMs || r.bestLapMsValue)) || 0;
+        const bestTime = Number(r && (r.bestLapTime || 0)) || 0;
+        const bestAny = bestMs || bestTime;
+
+        return { maxLap, maxTotalMs, maxLastLapMs, bestAny };
+      } catch(e) {
+        return { maxLap:0, maxTotalMs:0, maxLastLapMs:0, bestAny:0 };
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+    function __autoIsStarted(scan) {
+      try {
+        if (!scan) return false;
+        const maxLap = Number(scan.maxLap) || 0;
+        const maxTotalMs = Number(scan.maxTotalMs) || 0;
+        const maxLastLapMs = Number(scan.maxLastLapMs) || 0;
+        const bestAny = Number(scan.bestAny) || 0;
+
+        const dur = __autoGetDurMs();
+
+        // Arranque real (evita falsos positivos cuando el feed manda "03:00.xxx" antes de empezar)
+        let startedNow = false;
+
+        if (maxLap >= 1) startedNow = true;
+        else if (maxLastLapMs > 0) startedNow = true;
+        else if (bestAny > 0) startedNow = true;
+        else if (maxTotalMs >= 1500) {
+          // Si el tiempo ya viene pegado a la duración objetivo y no hay laps/best/lastlap, NO arrancó todavía
+          if (dur > 0 && maxTotalMs >= (dur - 2000)) startedNow = false;
+          else startedNow = true;
+        }
+
+        if (startedNow) __autoStartedStable = Math.min(3, (__autoStartedStable || 0) + 1);
+        else __autoStartedStable = 0;
+
+        return (__autoStartedStable >= 2);
+      } catch(e) {
+        __autoStartedStable = 0;
+        return false;
+      }
+    }
+
+
+
+
+
+    function __autoUpdateLifecycle(r) {
+      try {
+        if (!r) return;
+
+        const rn = String(r.raceName || '');
+        if (!rn) return;
+
+        // cambio de carrera -> reset (aunque por alguna razón el intro no haya hablado)
+        if (rn !== __autoLifeSig) {
+          __autoResetLifecycle(rn);
+          return;
+        }
+
+        const now = __autoNowMs();
+        const scan = __autoScanProgress(r);
+
+        // actividad (evitar "silencio eterno" si siguen cambiando)
+        const maxLap = Number(scan.maxLap) || 0;
+        const maxTotalMs = Number(scan.maxTotalMs) || 0;
+        if (maxLap > (__autoLastMaxLap || 0) || maxTotalMs > ((__autoLastMaxTotalMs || 0) + 600)) {
+          __autoLastActivityMs = now;
+          __autoLastMaxLap = maxLap;
+          __autoLastMaxTotalMs = maxTotalMs;
+        }
+
+        // WAIT_START: no hablar hasta arrancar de verdad
+        if (__autoPhase === 'WAIT_START') {
+          if (__autoIsStarted(scan)) {
+            __autoPhase = 'RUNNING';
+            __autoLastActivityMs = now;
+          }
+          return;
+        }
+
+        const dur = __autoGetDurMs();
+        if (!dur) return;
+
+        // Detectar cierre / fin
+        const info = currentSessionInfo || {};
+        const type = String(info.type || '').toUpperCase();
+        const isFinal = (type.startsWith('FINAL') || String(info.label||'').toUpperCase().includes('FINAL'));
+
+        // Al cruzar el tiempo objetivo entramos en cierre
+        if ((__autoPhase === 'RUNNING') && maxTotalMs >= dur) {
+          __autoPhase = isFinal ? 'CLOSING' : 'FINISHED';
+          __autoCloseStartedMs = now;
+          return;
+        }
+
+        // CLOSING: solo finalizo y luego silencio
+        if (__autoPhase === 'CLOSING') {
+          const activeCount = (__autoActiveKeys && __autoActiveKeys.size) ? __autoActiveKeys.size : 0;
+          const announcedCount = (__autoFinishAnnouncedByKey && __autoFinishAnnouncedByKey.size) ? __autoFinishAnnouncedByKey.size : 0;
+
+          // Si ya anunciamos a todos los que arrancaron, acabó
+          if (activeCount > 0 && announcedCount >= activeCount) {
+            __autoPhase = 'FINISHED';
+            return;
+          }
+
+          // Failsafe: si ya pasó mucho tiempo, acabó
+          if (__autoCloseStartedMs && (now - __autoCloseStartedMs) > 70000) {
+            __autoPhase = 'FINISHED';
+            return;
+          }
+          return;
+        }
+
+        // FINISHED: silencio hasta carrera nueva
+        if (__autoPhase === 'FINISHED') {
+          return;
+        }
+
+        // Manga: si ya pasó el tiempo y no hay actividad, acabar
+        if (!isFinal && maxTotalMs >= dur) {
+          const idleMs = now - (__autoLastActivityMs || now);
+          if (idleMs > 8000) __autoPhase = 'FINISHED';
+        }
+      } catch(e) {}
+    }
+
+    function __buildParticipantsList(rows, maxNames=12) {
+      try {
+        if (!Array.isArray(rows)) return { names: [], extra: 0 };
+        const seen = new Set();
+        const names = [];
+        for (const r of rows) {
+          const nm = safeRacerName(r && r.racerName);
+          if (!nm) continue;
+          const k = nm.toLowerCase();
+          if (seen.has(k)) continue;
+          seen.add(k);
+          names.push(nm);
+        }
+        const extra = Math.max(0, names.length - maxNames);
+        return { names: names.slice(0, maxNames), extra };
+      } catch(e) {
+        return { names: [], extra: 0 };
+      }
+    }
+
+    function __maybeAnnounceAutoIntro(r) {
+      try {
+        if (!r) return;
+        if (selectedPilotKey) return; // Solo Auto Locutor
+
+        // En Auto Locutor, si el usuario no ha tocado VOZ, la activamos en silencio para poder anunciar el titulo
+        if (!voiceMasterEnabled) {
+          try { if (!userVoiceOverride) setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
+        }
+        if (!voiceMasterEnabled) return;
+
+        const rn = String(r.raceName || '');
+        if (!rn) return;
+        if (rn === __autoIntroSig) return;
+
+        __autoIntroSig = rn;
+
+        // Lifecycle: al llegar carrera nueva, entramos a WAIT_START (silencio) hasta que arranque
+        try { __autoResetLifecycle(rn); } catch(e) {}
+
+        // Reset finishers tracking for new race
+        __autoFinishSig = '';
+        __autoFinishPrevByKey = new Map();
+        __autoFinishAnnouncedByKey = new Set();
+        __autoFinishPhase = false;
+
+        const info = currentSessionInfo || parseSessionFromRaceName(rn) || {};
+        const label = String(info.label || '').trim();
+        const spokenTitle = String(info.spokenTitle || '').trim() || (label ? label.replace('MODO ', '').trim() : '');
+        const introText = (spokenTitle ? spokenTitle : 'Nueva carrera');
+
+        // Solo titulo profesional (sin leer participantes)
+        enqueueSpeech(introText + ',', {
+          key: 'auto_intro_title_' + rn,
+          priority: 90,
+          cooldownMs: 600000,
+          dedupe: true,
+          maxAgeMs: 60000
+        });
+      } catch(e) {}
+    }
+
+    function __autoAnnounceFinishers() {
+      try {
+        if (!raceData || !Array.isArray(raceData.classification) || !raceData.classification.length) return;
+        if (selectedPilotKey) return; // Solo Auto Locutor
+        if (!voiceMasterEnabled) return;
+
+        const info = currentSessionInfo || {};
+        const type = String(info.type || '').toUpperCase();
+        if (type !== 'FINAL') return; // Solo finales, como pediste
+        const dur = Number(info.durationMs) || 0;
+        if (!dur) return;
+
+        const rn = String(raceData.raceName || '');
+        if (rn && rn !== __autoFinishSig) {
+          __autoFinishSig = rn;
+          __autoFinishPrevByKey = new Map();
+          __autoFinishAnnouncedByKey = new Set();
+          __autoFinishPhase = false;
+        }
+
+        // Reloj de carrera: usamos tiempo del líder (P1)
+        const leader = raceData.classification.find(x => Number(x.pos) === 1) || raceData.classification[0];
+        const raceClockMs = getRowTotalMs(leader) || 0;
+
+        // Entramos en fase de cierre cuando el líder ya pasó el tiempo objetivo
+        if (raceClockMs >= dur) __autoFinishPhase = true;
+        if (!__autoFinishPhase) {
+          // Aun no toca, pero guardamos prevs
+          for (const row of raceData.classification) {
+            const key = getPilotKey(row) || safeRacerName(row && row.racerName) || '';
+            if (!key) continue;
+            const laps = Number(row.lapcount) || 0;
+            const totalMs = getRowTotalMs(row) || 0;
+            __autoFinishPrevByKey.set(key, { laps, totalMs });
+          }
+          return;
+        }
+
+        // En fase cierre: avisar "X finalizo" cuando cruce el límite en una vuelta nueva
+        let enqueued = 0;
+        for (const row of raceData.classification) {
+          if (enqueued >= 2) break; // No spamear en un solo tick
+          const key = getPilotKey(row) || safeRacerName(row && row.racerName) || '';
+          if (!key) continue;
+
+          const nm = safeRacerName(row && row.racerName);
+          const laps = Number(row.lapcount) || 0;
+          const totalMs = getRowTotalMs(row) || 0;
+
+          const prev = __autoFinishPrevByKey.get(key) || { laps: 0, totalMs: 0 };
+          __autoFinishPrevByKey.set(key, { laps, totalMs });
+
+          if (__autoFinishAnnouncedByKey.has(key)) continue;
+          if (!isFinite(totalMs) || totalMs <= 0) continue;
+
+          // Solo disparar cuando sube una vuelta
+          if (laps <= (prev.laps || 0)) continue;
+
+          // Condición: cruzó el límite en la última vuelta
+          if (totalMs < dur) continue;
+
+          enqueueSpeech((nm || 'Piloto') + ' finalizo.', {
+            key: 'auto_finalizo_' + __autoFinishSig + '_' + key,
+            priority: 92,
+            cooldownMs: 600000,
+            dedupe: true,
+            maxAgeMs: 120000
+          });
+
+          __autoFinishAnnouncedByKey.add(key);
+          enqueued++;
+        }
+      } catch(e) {}
+    }
+
 
 
     // Pintar versión en UI
@@ -3509,7 +3889,31 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     });
 
 
-    // =========================
+    
+
+    // Debug: render speech log panel
+    function renderSpeechLog() {
+      try {
+        if (!document.body.classList.contains('debug')) return;
+        const box = document.getElementById('speechLogList');
+        if (!box) return;
+        const list = (Array.isArray(speechLog) ? speechLog : []);
+        const last = list.slice(-12).reverse();
+        const fmt = (t) => {
+          const d = new Date(t);
+          const mm = String(d.getMinutes()).padStart(2,'0');
+          const ss = String(d.getSeconds()).padStart(2,'0');
+          return mm + ':' + ss;
+        };
+        box.innerHTML = last.map(it => {
+          const meta = `${fmt(it.t)} | prio ${it.priority ?? 0} | ${String(it.key||'')}`;
+          const txt = String(it.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          return `<div class="speechlog-item"><div class="speechlog-meta">${meta}</div><div>${txt}</div></div>`;
+        }).join('');
+      } catch(e) {}
+    }
+    try { setInterval(renderSpeechLog, 800); } catch(e) {}
+// =========================
     // Helpers globales (compat)
     // =========================
     // =========================
@@ -3585,6 +3989,12 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     let appFB = null;
     let db = null;
     let __firebaseOk = false;
+
+    // Watchdog de refresco (si se congela, lo veras en UI)
+    let __lastGoodTickMs = 0;
+    let __lastReadErr = '';
+    let __feedTickCount = 0;
+
 
     async function initFirebaseRuntime() {
       try {
@@ -3988,11 +4398,14 @@ try{
 }catch(e){}
 
     const spotterButtons   = document.querySelectorAll('.spotter-btn');
-    let voiceMasterEnabled = false;
+    let voiceMasterEnabled = true;
     try {
       const vme = prefGet('voiceMasterEnabled', null);
       if (vme !== null) voiceMasterEnabled = (vme === '1');
     } catch(e) {}
+
+    // AI: si el usuario nunca ha tocado VOZ, el spotter puede activar voz en Auto Locutor.
+    let userVoiceOverride = false;
 
     // Modo BASICO (solo vueltas, lap time y posicion)
     let basicModeEnabled = false;
@@ -4029,7 +4442,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.5';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.19';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -6245,7 +6658,7 @@ let ttsRate = detectDefaultTtsRate();
     // Botón de prueba de voz (genera gesto de usuario y ayuda a iOS)
     if (ttsTestBtn) {
       ttsTestBtn.addEventListener('click', () => {
-        try { setVoiceMaster(true, { silent:true }); } catch(e) {}
+        try { setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
         try { ensureAudioCtx(); } catch(e) {}
       try { if (voiceMasterEnabled && isIOSWebKit && isIOSWebKit()) unlockTTSOnce('voice-master'); } catch(e) {}
         try { playBeep('soft'); } catch(e) {}
@@ -6502,7 +6915,9 @@ function enqueueSpeech(text, opts = {}) {
         const rate = clampNum((opts.rate != null ? opts.rate : (baseRate * (pr.rateMul || 1.0))), 0.6, 2.2);
         const pitch = clampNum((opts.pitch != null ? opts.pitch : (pr.pitch != null ? pr.pitch : 1.0)), 0.5, 2.0);
         const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
-        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume });
+        const postDelayMs = clampNum((opts.postDelayMs != null ? Number(opts.postDelayMs) : 0), 0, 2000);
+        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs });
+        try { pushSpeechLog({ text: clean, key, priority }); } catch(e) {}
         // prioridad desc, FIFO por tiempo
         speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
 
@@ -6556,13 +6971,17 @@ function enqueueSpeech(text, opts = {}) {
           clearWd();
           speechSpeaking = false;
           lastSpokenKeyAt.set(next.key, Date.now());
-          pumpSpeechQueue();
+          const d = Number(next.postDelayMs || 0) || 0;
+          if (d > 0) setTimeout(pumpSpeechQueue, d);
+          else pumpSpeechQueue();
         };
         u.onerror = () => {
           clearWd();
           speechSpeaking = false;
           lastSpokenKeyAt.set(next.key, Date.now());
-          pumpSpeechQueue();
+          const d = Number(next.postDelayMs || 0) || 0;
+          if (d > 0) setTimeout(pumpSpeechQueue, d);
+          else pumpSpeechQueue();
         };
 
         window.speechSynthesis.speak(u);
@@ -6627,6 +7046,7 @@ function speakWithLaps(_laps, message, opts) {
       const handler = () => {
         if (!pendingAutoVoiceUnlock) return;
         pendingAutoVoiceUnlock = false;
+      try { if (opts && opts.user) userVoiceOverride = true; } catch(e) {}
         try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
         // aquí sí hacemos unlock completo
         try { setVoiceMaster(true); } catch(e) {}
@@ -6699,7 +7119,7 @@ voiceMasterEnabled = !!on;
       voiceToggleBtns.forEach(btn => {
         try {
           btn.addEventListener('click', () => {
-            setVoiceMaster(!voiceMasterEnabled);
+            setVoiceMaster(!voiceMasterEnabled, { user:true });
             try { if (voiceMasterEnabled && isIOSWebKit && isIOSWebKit()) unlockTTSOnce('voice-btn'); } catch(e) {}
           });
         } catch(e) {}
@@ -9235,13 +9655,17 @@ function updateBlueFlagFromPassEvents() {
     // =========================
 
     const commentatorAutoCfg = {
-      minIntervalMs: 6500,
-      windowMs: 30000,
+      // Calma por defecto: el Auto Locutor solo debe hablar cuando hay "acción real"
+      // (cambios de posición, líder, peleas cerradas, best lap/pole en mangas).
+      minIntervalMs: 13000,
+      windowMs: 60000,
       maxMsgsInWindow: 3,
-      sigDefaultCooldownMs: 14000,
-      top3CooldownMs: 22000,
+      sigDefaultCooldownMs: 24000,
+      top3CooldownMs: 50000,
       allowUrgentOverLimitScore: 9.0,
-      baseThresholdScore: 3.2
+      baseThresholdScore: 4.6,
+      quietMinMs: 60000,
+      quietMaxMs: 90000
     };
 
     let commentatorAutoState = {
@@ -9255,7 +9679,8 @@ function updateBlueFlagFromPassEvents() {
       lastQuietMs: 0,
       lastTop3Ms: 0,
       lastTop3Sig: '',
-      lastMilestone: 0
+      lastMilestone: 0,
+      nextQuietCooldownMs: 0
     };
 
     function autoGapTextFromLapDiff(lapDiff) {
@@ -9334,8 +9759,8 @@ function autoRandPick(list, key) {
 
     // ========================================================
     // GAP SPEECH (TV style): frases condicionales por rangos
-    // - < 1s: decimas y frases tipo "a menos de tres decimas"
-    // - >= 1s: segundos con "a", "a menos de", "a mas de" y buckets de 0.5s
+    // - < 1s: décimas y frases tipo "a menos de tres décimas"
+    // - >= 1s: segundos con "a", "a menos de", "a más de" y buckets de 0.5s
     // ========================================================
     function gapNumWord(n) {
       const m = {
@@ -9378,22 +9803,22 @@ function autoRandPick(list, key) {
       };
 
       if (s < 0.12) {
-        return pick(['a nada', 'a menos de una decima', 'pegadisimo, a nada']);
+        return pick(['a nada', 'a menos de una décima', 'pegadísimo, a nada']);
       }
       if (s < 0.25) {
-        return pick(['a menos de dos decimas', 'a poco mas de una decima', 'a dos decimas']);
+        return pick(['a menos de dos décimas', 'a poco más de una décima', 'a dos décimas']);
       }
       if (s < 0.35) {
-        return pick(['a menos de tres decimas', 'a tres decimas', 'a unas tres decimas']);
+        return pick(['a menos de tres décimas', 'a tres décimas', 'a unas tres décimas']);
       }
       if (s < 0.45) {
-        return pick(['a menos de cinco decimas', 'a cuatro decimas', 'a menos de medio segundo']);
+        return pick(['a menos de cinco décimas', 'a cuatro décimas', 'a menos de medio segundo']);
       }
       if (s < 0.55) {
-        return pick(['a medio segundo', 'a cinco decimas', 'a medio segundo cerrado']);
+        return pick(['a medio segundo', 'a cinco décimas', 'a medio segundo cerrado']);
       }
       if (s < 0.75) {
-        return pick(['a menos de ocho decimas', 'a siete decimas', 'a menos de un segundo']);
+        return pick(['a menos de ocho décimas', 'a siete décimas', 'a menos de un segundo']);
       }
       return pick(['a menos de un segundo', 'a menos de un segundo clavado', 'a un segundo menos']);
     }
@@ -9404,7 +9829,7 @@ function autoRandPick(list, key) {
       // buckets de 5s para no aburrir
       const b = Math.max(10, Math.floor(s / 5) * 5);
       const w = gapNumWord(b);
-      return 'a mas de ' + w + ' segundos';
+      return 'a más de ' + w + ' segundos';
     }
 
     function gapToSpeech(sec, bagKey) {
@@ -9420,7 +9845,7 @@ function autoRandPick(list, key) {
 
       if (Math.abs(s - bucket) <= eps) return 'a ' + label;
       if (s < (bucket - eps)) return 'a menos de ' + label;
-      return 'a mas de ' + label;
+      return 'a más de ' + label;
     }
 
     function gapToSpeechBare(sec, bagKey) {
@@ -9437,8 +9862,8 @@ function autoRandPick(list, key) {
       const d = Number(deltaSec);
       if (!isFinite(d) || d <= 0) return '';
       // delta se dice sin "a"
-      if (d < 0.15) return 'una decima';
-      if (d < 0.35) return 'un par de decimas';
+      if (d < 0.15) return 'una décima';
+      if (d < 0.35) return 'un par de décimas';
       if (d < 0.60) return 'medio segundo';
       const bucket = Math.round(d * 2) / 2;
       return gapHalfLabel(bucket) || '';
@@ -9673,7 +10098,7 @@ function autoBuildStoryCandidate(args) {
       autoNarratorState.focusSinceMs = now;
       autoNarratorState.focusLastSec = best.secNum;
       autoNarratorState.focusStage = 'intro';
-      autoNarratorState.focusStickyUntilMs = now + 18000; // 18s de hilo antes de cambiar (si sigue viva)
+      autoNarratorState.focusStickyUntilMs = now + 28000; // 18s de hilo antes de cambiar (si sigue viva)
       focus = best;
     }
 
@@ -9692,7 +10117,7 @@ function autoBuildStoryCandidate(args) {
     const sinceSpeak = now - (autoNarratorState.focusLastSpeakMs || 0);
     const stageChanged = (stageNow && stageNow !== stagePrev && stagePrev !== 'intro');
 
-    if (sinceSpeak < 6500 && !stageChanged && absDelta < 0.06) return null;
+    if (sinceSpeak < 15000 && !stageChanged && absDelta < 0.12) return null;
 
     let stage = stageNow || 'closing';
     if (stagePrev === 'intro') stage = 'closing';
@@ -9719,7 +10144,7 @@ function autoBuildStoryCandidate(args) {
     }, style);
 
     // score: focus manda pero no todo el tiempo
-    let score = 7.6;
+    let score = 6.4;
     score += clamp01((1.20 - sec) / 1.20) * 2.2;
     if (focus.pos <= 3) score += 1.4;
     if (focus.pos === 1) score += 0.8;
@@ -9737,8 +10162,8 @@ function autoBuildStoryCandidate(args) {
       text,
       key,
       sig,
-      sigCooldownMs: isMangaSess ? 12000 : 9000,
-      priority: 8,
+      sigCooldownMs: isMangaSess ? 24000 : 20000,
+      priority: 5,
       onCommit: () => {
         autoNarratorState.focusLastSpeakMs = now;
         autoNarratorState.focusLastSec = sec;
@@ -10456,10 +10881,93 @@ function autoDecorate(text, type, style) {
       return '';
     }
 
-    function handleAutoCommentator() {
+    // =========================
+// BLUE FLAG (Auto Locutor)
+// - Se anuncia solo en Auto Locutor (sin piloto seleccionado)
+// - Lógica: si el líder ya te sacó 1 vuelta (lapDiff>=1 o gap "+1 V"), pide cortesía
+// - Anti-spam: 1 por tick, cooldown global y por piloto, y repetir máximo cada 2 vueltas del líder
+// =========================
+const __autoBlueLatch = new Map(); // pilotKey -> { lastLeaderLap, lastSpeakMs }
+let __autoBlueLastGlobalMs = 0;
+
+function __autoParseLapDiff(raw){
+  try{
+    const s0 = String(raw || '').trim();
+    if (!s0) return 0;
+    const mV = s0.match(/([+-]?\s*\d+)\s*v/i);
+    if (mV){
+      const n = parseInt(String(mV[1]).replace(/\s+/g,''), 10);
+      if (isFinite(n)) return Math.abs(n);
+    }
+    const s = s0.toLowerCase();
+    const mMas = s.match(/m[aá]s\s+(\d+)\s+vueltas?/i);
+    if (mMas){
+      const n = parseInt(mMas[1], 10);
+      if (isFinite(n) && n > 0) return n;
+    }
+  }catch(e){}
+  return 0;
+}
+function __autoSafeName(r){
+  const n = (r && (r.racerName || r.name || r.pilotName || r.piloto || r.driverName)) || '';
+  return String(n).replace(/\s+/g,' ').trim();
+}
+
+function __autoBlueFlagCheck(arr, leader, nowMs, vs){
+  try{
+    if (!vs || !vs.blueflag) return;
+    if (!arr || arr.length < 2 || !leader) return;
+
+    const leaderLap = Number(leader && leader.lapcount) || 0;
+    if (leaderLap < 3) return; // evita falsas al inicio
+    if (nowMs - __autoBlueLastGlobalMs < 9000) return; // cooldown global
+
+    const leaderKey = getPilotKey(leader);
+
+    for (const r of arr){
+      if (!r) continue;
+      const rk = getPilotKey(r);
+      if (!rk || rk === leaderKey) continue;
+
+      const lap = Number(r.lapcount) || 0;
+      if (lap <= 0) continue;
+
+      const lapDiff = leaderLap - lap;
+      const lapFromGap = Math.max(__autoParseLapDiff(r.gap), __autoParseLapDiff(r.diff));
+      const isLapped = (lapDiff >= 1) || (lapFromGap >= 1);
+      if (!isLapped) continue;
+
+      const st = __autoBlueLatch.get(rk) || { lastLeaderLap: -999, lastSpeakMs: 0 };
+      if (leaderLap - st.lastLeaderLap < 2) continue;     // repetir cada 2 vueltas del líder
+      if (nowMs - st.lastSpeakMs < 18000) continue;       // cooldown por piloto
+
+      const name = __autoSafeName(r);
+      if (!name) continue;
+
+      enqueueSpeech(`Bandera azul para ${name}. Deja pasar al líder.`, {
+        key: `auto_blue_${rk}`,
+        priority: 6,
+        cooldownMs: 8000,
+        postDelayMs: 260
+      });
+
+      st.lastLeaderLap = leaderLap;
+      st.lastSpeakMs = nowMs;
+      __autoBlueLatch.set(rk, st);
+      __autoBlueLastGlobalMs = nowMs;
+      break; // 1 por tick
+    }
+  }catch(e){}
+}
+
+function handleAutoCommentator() {
       try {
         if (!raceData || !Array.isArray(raceData.classification)) return;
         if (selectedPilotKey) return; // modo espectador
+        // AI: en Auto Locutor, si el usuario no ha tocado VOZ, activamos voz automáticamente
+        if (!voiceMasterEnabled) {
+          try { if (!userVoiceOverride) setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
+        }
         if (!voiceMasterEnabled) return;
 
         const vs = (typeof voiceSettings !== 'undefined' && voiceSettings) ? voiceSettings : {};
@@ -10468,15 +10976,30 @@ function autoDecorate(text, type, style) {
         if (!autoOn) return;
 
         const arr = raceData.classification.slice().filter(r => r && (r.pos != null));
+        // Auto Locutor: ciclo de vida (espera a que arranque, silencio al terminar)
+        try { __autoUpdateLifecycle(raceData); } catch(e) {}
+        if (__autoPhase === 'WAIT_START') return; // ya se anunció, ahora silencio hasta que arranque
+        if (__autoPhase === 'FINISHED') return;   // carrera terminada, espera siguiente raceName
         if (!arr.length) return;
 
         arr.sort((a,b) => (Number(a.pos)||999) - (Number(b.pos)||999));
+
+        // Auto Locutor: al cumplirse el tiempo de la final, anunciar quienes van finalizando
+        try { __autoAnnounceFinishers(); } catch(e) {}
+
+        // En cierre: solo 'finalizo' y silencio (no narrar peleas ni swaps)
+        if (__autoPhase === 'CLOSING') return;
+
 
         const leader = arr.find(r => Number(r.pos) === 1) || arr[0];
         const leaderLap = Number(leader && leader.lapcount) || 0;
         const progress = autoRaceProgress(leaderLap);
 
         const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+
+        // ====== bandera azul (Auto Locutor)
+        try { __autoBlueFlagCheck(arr, leader, now, vs); } catch(e) {}
+
 
         // ====== candidatos (score decide)
         const candidates = [];
@@ -10757,11 +11280,11 @@ if (secNum <= 1.25) {
             };
             if (commentatorGapHistory) commentatorGapHistory.set(pairKey, newHist);
 
-            if (sec < 0.50 || sec > 1.60) continue;
+            if (sec < 0.35 || sec > 1.35) continue;
             if (!hist || !hist.lastGapMs) continue;
 
             const deltaMs = (hist.lastGapMs - diffMs); // positivo: se acerca
-            if (deltaMs < 170) continue;
+            if (deltaMs < 260) continue;
 
             // no hablar cada vuelta
             if (newHist.lastSpokenTrailLap && bLaps <= (newHist.lastSpokenTrailLap + 1)) continue;
@@ -10808,7 +11331,7 @@ try {
                 text,
                 key:'auto_close_' + pairKey,
                 sig:'auto:close:' + pairKey,
-                sigCooldownMs: 15000,
+                sigCooldownMs: 9000,
                 priority: 4
               });
             }
@@ -10892,7 +11415,7 @@ if (isMangaSess) {
             text: txt,
             key: 'auto_quali_best',
             sig: 'auto:qualiBest:' + String(bestKey || ''),
-            sigCooldownMs: 15000,
+            sigCooldownMs: 24000,
             priority: 6,
             onCommit: () => {
               autoQualiState.bestOverallMs = bestMs;
@@ -10940,12 +11463,12 @@ if (isMangaSess) {
           let maxScore = 0;
           for (const c of candidates) maxScore = Math.max(maxScore, Number(c && c.score) || 0);
 
-          const quietCooldownMs = 28000;
+          const quietCooldownMs = Number(commentatorAutoState.nextQuietCooldownMs || 0) || Math.floor((commentatorAutoCfg.quietMinMs || 60000) + Math.random() * Math.max(0, (commentatorAutoCfg.quietMaxMs || 90000) - (commentatorAutoCfg.quietMinMs || 60000)));
           const sinceQuiet = now - (commentatorAutoState.lastQuietMs || 0);
 
           const allowQuiet = !!(vs.total || vs.leadergap);
 
-          if (allowQuiet && sinceQuiet > quietCooldownMs && maxScore < 3.6) {
+          if (allowQuiet && !isMangaSess && sinceQuiet > quietCooldownMs && maxScore < 3.0 && (now - (commentatorAutoState.lastSpeakMs || 0) > 45000)) {
             const leaderName = safeRacerName(leader && leader.racerName) || 'P1';
             const p2 = (arr.length >= 2) ? arr[1] : null;
             const p2Name = p2 ? (safeRacerName(p2.racerName) || 'P2') : 'P2';
@@ -11002,7 +11525,7 @@ if (isMangaSess) {
               sig: 'auto:quiet',
               sigCooldownMs: quietCooldownMs,
               priority: 1,
-              onCommit: () => { commentatorAutoState.lastQuietMs = now; }
+              onCommit: () => { commentatorAutoState.lastQuietMs = now; commentatorAutoState.nextQuietCooldownMs = Math.floor((commentatorAutoCfg.quietMinMs || 60000) + Math.random() * Math.max(0, (commentatorAutoCfg.quietMaxMs || 90000) - (commentatorAutoCfg.quietMinMs || 60000))); }
             });
           }
         } catch(e) {}
@@ -11855,7 +12378,20 @@ let label = 'MODO -';
         label = m ? ('MODO FINAL ' + m + ' ' + d) : ('MODO FINAL ' + d);
       }
 
-      return { type, main, durationMs, label };
+      // Spoken title (para TTS)
+      let spokenTitle = '';
+      const serieM = name.match(/\bSERIE\s*(\d+)\b/);
+      const serie = (serieM && serieM[1]) ? String(serieM[1]) : '';
+      if (type === 'MANGA') {
+        spokenTitle = main ? ('Clasificación Grupo ' + main) : 'Clasificación';
+      } else if (type === 'FINAL') {
+        spokenTitle = main ? ('Final ' + main) : 'Final';
+      } else {
+        spokenTitle = '';
+      }
+      if (serie) spokenTitle = spokenTitle ? (spokenTitle + ', Serie ' + serie) : ('Serie ' + serie);
+
+      return { type, main, durationMs, label, spokenTitle, serie };
     }
 
 
@@ -11983,6 +12519,10 @@ function checkSessionFinishOnLap() {
     function updateSessionInfo(r) {
       const rn = (r && r.raceName) ? String(r.raceName) : '';
       currentSessionInfo = parseSessionFromRaceName(rn);
+
+      // AI Spotter: aplica perfil automatico SIEMPRE (tambien en Auto Locutor)
+      try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
+
       // Reset de referencias (mejora/best) cuando cambia la sesión
       if (rn && rn !== lastSessionSigForBest) {
         prevBestByKey.clear();
@@ -11995,6 +12535,10 @@ function checkSessionFinishOnLap() {
       if (!r) return;
 
       updateSessionInfo(r);
+
+      // Auto Locutor: al cambiar carrera, anunciar nombre + participantes
+      try { __maybeAnnounceAutoIntro(r); } catch(e) {}
+
 
       if (raceTitleText) {
         raceTitleText.textContent = r.raceName || 'Spotter_5.0.1';
@@ -12035,7 +12579,7 @@ function checkSessionFinishOnLap() {
     }
 
     async function loadRaceFromFirebase() {
-      if (document.hidden && !backgroundModeEnabled) return;
+      // iOS/WebView a veces reporta document.hidden erroneamente; no bloquees la lectura del feed.
       if (!__firebaseOk || !db) { setLiveStatus(false); return; }
 
       const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
@@ -12077,6 +12621,7 @@ function checkSessionFinishOnLap() {
         }
 
         if (!rawRace || !Array.isArray(rawRace.classification)) {
+          try { if (raceInfo) raceInfo.textContent = 'Sin datos (feed sin parsed/rawJson valido)'; } catch(e) {}
           isLoading = false;
           return;
         }
@@ -12127,6 +12672,10 @@ function checkSessionFinishOnLap() {
         updateRecordCarreraUI();
         updateHeaderFromRace(raceData);
         setLastUpdateNow();
+        __lastGoodTickMs = Date.now();
+        __feedTickCount = (__feedTickCount||0) + 1;
+        try { if (lastUpdateInfo) lastUpdateInfo.textContent = 'tick ' + __feedTickCount + ' - ' + new Date().toLocaleTimeString(); } catch(e) {}
+        __lastReadErr = '';
         if (!isSelectingPilot) {
           updatePilotOptions();
         }
@@ -12145,6 +12694,8 @@ handleVoiceAndBeeps();
         handleAutoCommentator();
       } catch (e) {
         console.error('Error leyendo Firebase', e);
+        __lastReadErr = (e && e.message) ? String(e.message) : String(e);
+        try { if (raceInfo) raceInfo.textContent = 'Sin datos (error leyendo): ' + __lastReadErr; } catch(x) {}
         setLiveStatus(false);
       } finally {
         isLoading = false;
@@ -12166,12 +12717,23 @@ handleVoiceAndBeeps();
         return;
       }
       loadRaceFromFirebase();
-      setInterval(loadRaceFromFirebase, 250);
+      setInterval(loadRaceFromFirebase, 500);
+      // Watchdog: si pasan 6s sin actualización, marca OFF y fuerza un refresh
+      setInterval(() => {
+        try {
+          const now = Date.now();
+          if (__lastGoodTickMs && (now - __lastGoodTickMs > 6000)) {
+            setLiveStatus(false);
+            if (raceInfo) raceInfo.textContent = 'Sin actualizaciones. Revisando conexión...';
+            // intenta un refresh inmediato
+            try { loadRaceFromFirebase(); } catch(e) {}
+          }
+        } catch(e) {}
+      }, 1500);
+
     })();
 
 
-// Best lap global: actualizado desde raceData.classification (ver refreshSessionBestCache)
-
-</script>
+// Best lap global: actualizado desde raceData.classification (ver refreshSessionBestCache)</script>
 </body>
 </html>
