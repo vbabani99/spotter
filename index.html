@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.0.19 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
+AI_Spotter_TRM_v0.0.0.21 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
@@ -18,7 +18,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.0.19</title>
+  <title>AI Spotter TRM v0.0.0.21</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -2891,7 +2891,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.19</div>
+<div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.21</div>
       </div>
     </header>
 
@@ -3192,7 +3192,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.0.19</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.0.21</div>
           <div class="manual-sub">Modo automatico. El spotter toma las decisiones, tu solo manejas.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -3509,10 +3509,199 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
   <script type="module">
 
+/*
+====================================================================
+DOCUMENTACION TECNICA - AI Spotter TRM (v0.0.0.21)
+====================================================================
+
+Objetivo
+- Spotter con UI simple y decisiones automaticas.
+- 2 comportamientos principales:
+  1) Seguimiento (Follow): hay piloto seleccionado.
+  2) Auto Locutor (Auto): NO hay piloto seleccionado.
+
+Principios de diseno
+- El usuario no debe "configurar un avion". El spotter decide.
+- Todo anuncio pasa por el motor de VOZ (cola + dedupe + prioridades).
+- La tabla y el header siempre se alimentan del mismo raceData normalizado.
+
+--------------------------------------------------------------------
+0) Glosario rapido
+- raceData: ultimo snapshot de carrera (documento del feed) ya normalizado.
+- classification: arreglo de pilotos (pos, nombre, lapcount, time, best, mean, gap/diff, etc).
+- currentSessionInfo: tipo de sesion detectado desde raceName (MANGA / FINAL A / FINAL B+).
+- selectedPilotKey: piloto elegido por el usuario. Si existe => modo Seguimiento.
+- BASIC (Seguimiento): modo minimalista (solo last lap + posicion).
+- speechQueue: cola de mensajes TTS. Se drena con pumpSpeechQueue().
+- speechLog: bitacora de lo hablado (solo visible con ?debug=1).
+
+--------------------------------------------------------------------
+1) Flujo general de datos (pipeline)
+1.1 Entrada
+- Fuente: Firebase (Firestore) o feed equivalente.
+- initFirebaseRuntime() carga SDK y crea listener/poll.
+- Al recibir snapshot, se arma raceData y se llama a normalizacion.
+
+1.2 Normalizacion (critico para que todo funcione)
+- Se fuerza pos como numero.
+- Se ordena classification por pos.
+- Se calculan campos derivados (intervalos, laps, tiempo total en ms, etc).
+- Resultado: raceData coherente. Si P1 esta mal, TODO se rompe (azul, top3, peleas).
+
+1.3 Render UI
+- updateHeaderFromRace(): titulo, modo, estado de feed.
+- renderClassificationTable(): tabla principal.
+- updateMangaClockDisplay(): reloj (en MANGA muestra "time" real del feed del piloto seleccionado).
+
+1.4 Motor de voz (TTS)
+- say(text, opts): entrada unica a voz.
+- sanitizeTtsText(): limpia texto para evitar "undefined", dobles espacios, etc.
+- enqueue + dedupe: evita repetir frases, y corta mensajes viejos si ya son obsoletos.
+- unlockTTSOnce(): desbloqueo iOS (requiere gesto real).
+
+--------------------------------------------------------------------
+2) Modos: Seguimiento vs Auto Locutor
+
+2.1 Seguimiento (hay piloto seleccionado)
+Objetivo
+- Narracion centrada en 1 piloto.
+- En BASIC: solo "last lap" + "posicion" (y cambios de posicion).
+
+Reglas
+- selectedPilotKey existe => applySmartProfile(FOLLOW).
+- Si BASIC esta ON:
+  - Se apagan anuncios de pelea/gaps/azul/etc.
+  - Se anuncian solo eventos minimos (last lap + posicion).
+
+Eventos tipicos que dispara
+- Cruce por meta del piloto: last lap.
+- Cambio de posicion (estable, sin jitter): "P3" por ejemplo.
+- (No BASIC) avisos: ataque/defensa, gaps por rango, bandera azul si aplica.
+
+2.2 Auto Locutor (NO hay piloto seleccionado)
+Objetivo
+- Narrar la carrera completa, con enfasis en eventos importantes.
+- Sin hablar antes de tiempo (silencio inteligente).
+
+Ciclo de vida (state machine)
+- IDLE: sin carrera valida.
+- WAIT_START: llega raceName nuevo => anuncia titulo y espera arranque real.
+- RUNNING: narracion activa (top3, cambios, cierres fuertes, azul).
+- CLOSING: en finales, cuando se alcanza duracion objetivo => "finalizo" por piloto.
+- FINISHED: silencio hasta que llegue nueva carrera (raceName cambia).
+
+Deteccion de arranque
+- No basta con "time". Se valida movimiento real:
+  - lapcount > 0, o lastLapMs > 0, o bestLapMs > 0, o totalMs avanza de forma coherente.
+- Evita hablar cuando el feed manda un "time" objetivo antes de arrancar.
+
+--------------------------------------------------------------------
+3) Bandera azul (blue flag)
+Donde aplica
+- Seguimiento (si no es BASIC) y Auto Locutor.
+
+Deteccion
+- Principal: diferencia de vueltas (lapDiff >= 1) o diff tipo "+1 V".
+- Anti spam:
+  - cooldown global y cooldown por piloto.
+  - en Auto Locutor se puede repetir cada N vueltas del lider.
+
+Fraseo
+- Se usa "bandera azul" + nombre del piloto a ceder paso.
+- (Se puede ajustar estilo: mandon vs fino).
+
+--------------------------------------------------------------------
+4) Lectura de gaps por rangos (narracion humana)
+- Menor a 1 segundo: se habla en decimas con frases por rango ("a menos de tres decimas", "a medio segundo", etc).
+- Mayor a 1 segundo: buckets a 0.5s y decide "a", "a menos de", "a mas de".
+- 10+ segundos: simplifica para no aburrir.
+
+Funcion clave
+- gapToSpeech(sec): convierte segundos a frase (NO lee numeros crudos).
+
+--------------------------------------------------------------------
+5) Debug y soporte
+- ?debug=1 habilita speechLog (ultimos mensajes hablados) para diagnostico.
+- updateConfigStatusUI(): muestra estado Firebase/Feed y heartbeat.
+
+--------------------------------------------------------------------
+6) Inventario de funciones (por modulos)
+Nota
+- Abajo esta la lista completa de funciones detectadas. Esta pensada como indice rapido.
+- Para cambios, ubica el modulo y entra por la funcion "publica" (update/render/say/auto).
+
+BOOTSTRAP_IO (8)
+  - ensureAudioCtx, ensureCanvasHiDpi, ensureFirebaseSdk, ensureMangaClockTicker, ensurePilotOptionExists, initFirebaseRuntime
+  - loadRaceFromFirebase, loadVoiceSettings
+
+PERSISTENCIA (8)
+  - getCookie, lsGet, lsRemove, lsSet, prefGet, prefKey
+  - prefSet, setCookie
+
+TIEMPOS_FORMATO (6)
+  - fmt, msToMinSec, parseDiff, parseInterval, parseSessionFromRaceName, parseTimeToMs
+
+ANALITICA (4)
+  - computeBattleTag, computeSessionBestMs, getTop3Rows, getTopRows
+
+UI_RENDER (5)
+  - renderAutoLapChartTop3, renderAutoTop3MiniGrid, renderPilotCard, renderPresetCards, renderSpeechLog
+
+UI_UPDATE (14)
+  - updateAutoCommentatorButtons, updateBlueFlagFromPassEvents, updateConfigStatusUI, updateHeaderFromRace, updateLapHistoryAll, updateLapRangeFromHistory
+  - updateMangaClockDisplay, updateMangaPilotStartsFromClassification, updatePilotOptions, updateRdButton, updateRdModeButtons, updateRecordCarreraUI
+  - updateSessionInfo, updateToggleAllMsgsBtn
+
+VOZ_TTS (4)
+  - enqueueSpeech, pumpSpeechQueue, say, unlockTTSOnce
+
+AUTO_LOCUTOR (10)
+  - __autoAnnounceFinishers, __autoBlueFlagCheck, __autoGetDurMs, __autoIsStarted, __autoNowMs, __autoParseLapDiff
+  - __autoResetLifecycle, __autoSafeName, __autoScanProgress, __autoUpdateLifecycle
+
+INTERNAL (5)
+  - __buildParticipantsList, __maybeAnnounceAutoIntro, __modeBucket, __sessionBucket, __wlTry
+
+UTILS (4)
+  - clamp01, clampNum, htmlEsc, safeRacerName
+
+OTROS (146)
+  - _applyBasicOverride, _getVoiceToggleMap, _isAndroidRate, _isIOSWebKitRate, _pillHtml, _toggleMiniGrid
+  - _unlock, _updateBasicBtnUI, addCand, announcePositionBrief, applyDecimalPrecision, applyMiniGridExpandedUI
+  - applyPilotSelectPosTheme, applyPresetVoiceSettings, applySessionPreset, applySessionPresetFull, applySmartProfile, applyVoiceSettingsToButtons
+  - autoBuildMessage, autoBuildStoryCandidate, autoCanSpeak, autoDecorate, autoFmtSec, autoFocusMsg
+  - autoGapTextFromLapDiff, autoMarkPairMention, autoMarkSig, autoPairKey, autoPruneWindow, autoRaceProgress
+  - autoRandPick, autoRememberPair, autoShuffleInPlace, autoSigOk, autoStageFromSec, bindSessionPresetCards
+  - buildGapSummaryForPilotIndex, buildSessionFinishMessage, checkAheadAlertForPilotIndex, checkBehindAlertForPilotIndex, checkSessionFinishOnLap, classifyLapColor
+  - clearWd, closeManual, consistencyPercent, detectDefaultTtsRate, diffTexto, drawDot
+  - drawLabel, drawLapChartForKey, drawLapChartTop3Auto, fill, findFastestStint, findPilotIndexByKey
+  - findWorstLap, flashLastLap, flashMangaClock, flashPilotCardGreen, floorTo, formatAnnouncer
+  - formatClockMs, formatLaps3, formatoGapVueltas, gapDeltaSpeech, gapHalfLabel, gapLargeSpeech
+  - gapNumWord, gapSmallSpeech, gapToSpeech, gapToSpeechBare, getAutoLapChartKey, getBestMsForRow
+  - getConsistencyFromFirebase, getFrontBackContext, getPilotKey, getRowTotalMs, groupOf, handleAutoCommentator
+  - handlePositionChangeNoLap, handleVoiceAndBeeps, handler, isAllMsgsOn, isIOSWebKit, isLapPlausible
+  - lapDiffGuardAllow, maybeAutoApplySessionPreset, near2, nextAutoVoiceURI, normalizeIncomingLapValue, normalizeLapMs
+  - normalizeRaceData, normalizeTtsText, numeroATexto0a999, onPilotSelectedManga, openManual, pick
+  - pickDefaultVoice, playBeep, prosodyFromMood, pushCand, pushLap, rdBuildCtx
+  - rdExtractPos, rdMakeMangaBattleText, rdMakeText, rdPick, rdSafeName, rdSec
+  - rdShuffleInPlace, rdTrimWords, refreshSessionBestCache, refreshVoiceList, releaseWakeLock, requestWakeLock
+  - resetAutoCommentatorState, resetAutoNarratorState, resetSelectedPilotTrackingState, roundRect, saveVoiceSettings, scheduleOneTapUnlock
+  - selectPilotByKey, setActive, setAutoCommentatorMode, setBackgroundStatus, setLapClass, setLastLapMark
+  - setLastUpdateNow, setLiveStatus, setMangaClockColorByRemaining, setMangaClockVisible, setPresetBtnActive, setRaceDirectorMode
+  - setVoiceMaster, shortChipName, speakText, speakWithLaps, statsFromTimes, stopMangaClock
+  - syncPrecisionBadges, tiempoATexto, toFixedFloor, tooSoonId, tooSoonTxt, ttlById
+  - ttlByTxt, wordToNum
+
+====================================================================
+FIN DOCUMENTACION
+====================================================================
+*/
+
+
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.0.19";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.0.21";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -4442,7 +4631,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.19';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.21';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -9086,11 +9275,32 @@ function computeSessionBestMs() {
           pilotSelect.appendChild(opt);
         }
 
-        function selectPilotByKey(key, opts = {}) {
+        
+        // =========================
+        // Persistencia: ultimo piloto seleccionado
+        // - Guarda y restaura automaticamente la ultima seleccion (por dispositivo)
+        // - Si el piloto no existe en la carrera actual, no selecciona nada
+        // =========================
+        function restoreLastPilotSelectionIfNeeded() {
+          try {
+            if (selectedPilotKey) return;
+            const saved = (localStorage.getItem('aiSpotterLastPilotKey') || '').toLowerCase().trim();
+            if (!saved) return;
+            if (!raceData || !raceData.classification || !raceData.classification.length) return;
+            const exists = raceData.classification.some(r => getPilotKey(r) === saved);
+            if (!exists) return;
+            // Asegura que el option exista en el select antes de seleccionar
+            if (typeof ensurePilotOptionExists === 'function') ensurePilotOptionExists(saved);
+            selectPilotByKey(saved, { announce:false, source:'restore' });
+          } catch(e) {}
+        }
+
+function selectPilotByKey(key, opts = {}) {
           const k = (key || '').toLowerCase().trim();
           const announce = (opts.announce !== false);
 
           selectedPilotKey = k;
+          try { localStorage.setItem('aiSpotterLastPilotKey', k || ''); } catch(e) {}
           selectedPilotFirstDetectBeeped = !!firstDetectBeepedByPilot.get(k);
           pendingAutoVoiceUnlock = !!k;
 
@@ -12671,6 +12881,7 @@ function checkSessionFinishOnLap() {
         refreshSessionBestCache();
         updateRecordCarreraUI();
         updateHeaderFromRace(raceData);
+        try { restoreLastPilotSelectionIfNeeded(); } catch(e) {}
         setLastUpdateNow();
         __lastGoodTickMs = Date.now();
         __feedTickCount = (__feedTickCount||0) + 1;
