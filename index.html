@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.0.23 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
+AI_Spotter_TRM_v0.0.0.24 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
@@ -18,7 +18,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.0.23</title>
+  <title>AI Spotter TRM v0.0.0.24</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -2891,7 +2891,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           <span>Offline</span>
         </div>
                 <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.23</div>
+<div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.24</div>
       </div>
     </header>
 
@@ -3192,7 +3192,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.0.23</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.0.24</div>
           <div class="manual-sub">Modo automatico. El spotter toma las decisiones, tu solo manejas.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -3349,7 +3349,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
 /*
 ====================================================================
-DOCUMENTACION TECNICA - AI Spotter TRM (v0.0.0.23)
+DOCUMENTACION TECNICA - AI Spotter TRM (v0.0.0.24)
 ====================================================================
 
 Objetivo
@@ -3539,7 +3539,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.0.23";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.0.24";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -4469,7 +4469,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.23';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.24';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -6156,8 +6156,8 @@ function loadVoiceSettings() {
 
     // WebAudio beeps (sin archivos)
     // SFX: por default OFF (evita el 'tac tac' constante).
-    // Activa solo para debug agregando ?sfx=1 al URL.
-    const soundFxEnabled = /(?:\?|&)sfx=1(?:&|$)/.test(location.search);
+    // SFX deshabilitado (sin beeps).
+    const soundFxEnabled = false; // SFX hard OFF (evita tic/tac).
 
     let audioCtx = null;
     function ensureAudioCtx() {
