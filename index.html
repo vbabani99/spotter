@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.0.60 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
+AI_Spotter_TRM_v0.0.0.67 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
@@ -17,6 +17,7 @@ Changelog:
 - v0.0.0.58: Nuevo tema "Vic's Pulse" basado en colores del logo (rojo/blanco/negro), acentos y header ajustados.
 - v0.0.0.59: Guard rails TTS: si falta dato (nombre/gap/tiempo), el spotter se calla (evita "undefined" y frases incompletas).
 - v0.0.0.60: Auto Locutor: reintenta 1 vez (re-roll) si una frase queda incompleta; si el segundo intento falla, se calla.
+- v0.0.0.62: Bandera azul: menciona nombre del lapeador en P1/P2/P3 (seguimiento y auto locutor).
 - v7.5: Fix Auto Locutor: ya no depende de RD, usa POS para top3/peleas por defecto, umbral ajustado para evitar silencio, y no resetea tus voiceSettings.
 - v7.4: Auto Locutor PRO narrativo: seguimiento de pelea (focus) con contexto, tendencia de gap, y modo MANGA mejorado (pole/best lap) con menos 'robot'.
 - v7.3: Locutor mejorado: frases tipo shuffle-bag (anti repetición real), manga batalla con nombres+gaps, y micro-variación en Auto Locutor.
@@ -30,7 +31,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.0.60</title>
+  <title>AI Spotter TRM v0.0.0.67</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -2973,7 +2974,7 @@ body {
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
 
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.60</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.67</div>
       </div>
       </div>
     </header>
@@ -3613,7 +3614,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.0.60";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.0.67";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -3802,8 +3803,24 @@ FIN DOCUMENTACION
             return;
           }
 
+          // Cierre inteligente: si ya no hay movimiento (ni laps ni totalMs), cerrar por inactividad
+          const idleMs = now - (__autoLastActivityMs || now);
+          const sinceCloseMs = __autoCloseStartedMs ? (now - __autoCloseStartedMs) : 0;
+
+          // Caso comun: algunos no tienen totalMs o no cruzan "bonito" -> no te quedes atorado
+          if (sinceCloseMs > 7000 && idleMs > 12000) {
+            __autoPhase = 'FINISHED';
+            return;
+          }
+
+          // Si ya casi todos estan anunciados, y no hay actividad, cerramos rapido
+          if (activeCount > 0 && announcedCount >= Math.max(1, activeCount - 1) && idleMs > 8000) {
+            __autoPhase = 'FINISHED';
+            return;
+          }
+
           // Failsafe: si ya pasó mucho tiempo, acabó
-          if (__autoCloseStartedMs && (now - __autoCloseStartedMs) > 70000) {
+          if (__autoCloseStartedMs && sinceCloseMs > 70000) {
             __autoPhase = 'FINISHED';
             return;
           }
@@ -4623,7 +4640,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.60';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.67';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -6521,7 +6538,9 @@ function loadVoiceSettings() {
         const next = { ...DEFAULT_VOICE_SETTINGS };
         // Siempre activo
         next.laps = true;
-        // Lo que piden los pilotos exigentes
+        // BASICO ultra limpio:
+        // - Solo last lap (siempre) + posicion (solo cambios estables)
+        // - Cero extras: no azul, no gaps, no best, no contexto.
         next.pos = true;
         next.gaps = false;
         next.leadergap = false;
@@ -6544,9 +6563,10 @@ function loadVoiceSettings() {
 
         // Modos mas sobrios
         try { applyDecimalPrecision(2); } catch(e) {}
+        // RD/Auto fuera en BASICO (garantiza 0 ruido)
         try { setRaceDirectorMode('minimal'); } catch(e) {}
         try { setAutoCommentatorMode('engineer'); } catch(e) {}
-        try { raceDirectorEnabled = true; } catch(e) {}
+        try { raceDirectorEnabled = false; } catch(e) {}
         return true;
       }catch(e){ return false; }
     }
@@ -7125,6 +7145,148 @@ function clampNum(v, lo, hi){
       return { rateMul: 1.0, pitch: 1.0, volume: 1.0 };
     }
 
+
+
+// =============================
+// Anti-repeticion semantica v2
+// - Evita repetir la misma idea con texto distinto
+// - Aplica solo en categorias narrativas (no POS/LAPS)
+// =============================
+const __semMem = new Map();
+const __semStop = new Set([
+  'el','la','los','las','un','una','unos','unas','de','del','al','y','o','a','en','por','para','con','sin','que','se','su','sus',
+  'tu','tus','mi','mis','ya','va','vamos','ahi','aqui','ok','bien','dale','ahora','solo','muy','mas','menos','uno','dos','tres',
+  'p','pos','posicion','vueltas','vuelta','lap','laps','seg','segundos','segundo','ms'
+]);
+
+function __semStripAccents(s){
+  try{ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,''); }catch(e){ return String(s||''); }
+}
+
+function __semNorm(s){
+  s = __semStripAccents(String(s||'').toLowerCase());
+  // quita numeros para comparar "idea" (9.812 vs 9.803)
+  s = s.replace(/[0-9]+([.:][0-9]+)*/g,' # ');
+  // limpia puntuacion
+  s = s.replace(/[^a-zñ#\s]/g,' ');
+  s = s.replace(/\s+/g,' ').trim();
+  return s;
+}
+
+function __semTokens(s){
+  const n = __semNorm(s);
+  if (!n) return [];
+  const parts = n.split(' ').filter(Boolean);
+  const out = [];
+  for (const w of parts){
+    if (w === '#') continue;
+    if (w.length <= 2) continue;
+    if (__semStop.has(w)) continue;
+    out.push(w);
+  }
+  return out;
+}
+
+function __semJaccard(aTokens, bTokens){
+  try{
+    const a = new Set(aTokens||[]);
+    const b = new Set(bTokens||[]);
+    if (!a.size && !b.size) return 1;
+    if (!a.size || !b.size) return 0;
+    let inter = 0;
+    for (const x of a) if (b.has(x)) inter++;
+    const uni = a.size + b.size - inter;
+    return uni ? (inter / uni) : 0;
+  }catch(e){ return 0; }
+}
+
+function __semPrune(list, now, windowMs){
+  try{
+    const w = Math.max(2000, Number(windowMs)||25000);
+    const keep = [];
+    for (const it of (list||[])){
+      if (!it) continue;
+      if ((now - (it.t||0)) <= w) keep.push(it);
+    }
+    return keep;
+  }catch(e){ return list||[]; }
+}
+
+function __semSkipCategory(cat){
+  const c = String(cat||'').toLowerCase();
+  // Nunca bloquees POS ni LAPS ni test
+  if (!c) return true;
+  if (c === 'pos' || c === 'laps' || c === 'lap' || c === 'tts' || c === 'test') return true;
+  if (c === 'manga_start') return true;
+  return false;
+}
+
+function __inferSemCategoryFromKey(key){
+  const k = String(key||'').toLowerCase();
+  if (!k) return '';
+  if (k.includes('blue') || k.includes('bandera_azul') || k.includes('blueflag')) return 'blueflag';
+  if (k.startsWith('auto_finalizo_') || k.includes('finalizo')) return 'finalizo';
+  if (k.startsWith('pos_') || k.includes('pos_manga_') || k.includes('pos_brief_')) return 'pos';
+  if (k.startsWith('lap_') || k.includes('lastlap') || k.includes('lap')) return 'lap';
+  if (k.includes('attack') || k.includes('ataque') || k.includes('defense') || k.includes('defensa') || k.includes('fight') || k.includes('duel')) return 'battle';
+  if (k.includes('gap') || k.includes('interval')) return 'gaps';
+  if (k.includes('leader') || k.includes('lider')) return 'leader';
+  if (k.includes('best') || k.includes('record')) return 'bestlap';
+  if (k.includes('session_finish')) return 'finish';
+  return '';
+}
+
+function __semIsRepeat(cat, text, threshold, windowMs){
+  try{
+    const c = String(cat||'').toLowerCase().trim();
+    if (!c) return false;
+    const now = Date.now();
+    const thr = (Number.isFinite(Number(threshold)) ? Number(threshold) : 0.78);
+    const win = (Number.isFinite(Number(windowMs)) ? Number(windowMs) : 25000);
+
+    const norm = __semNorm(text);
+    const tokens = __semTokens(text);
+
+    let list = __semMem.get(c) || [];
+    list = __semPrune(list, now, win);
+
+    for (const it of list){
+      if (!it) continue;
+      // 1) match directo por normalizado (muy estricto)
+      if (it.norm && norm && it.norm === norm) {
+        __semMem.set(c, list);
+        return true;
+      }
+      // 2) similitud por tokens (jaccard)
+      const sim = __semJaccard(tokens, it.tokens||[]);
+      if (sim >= thr) {
+        __semMem.set(c, list);
+        return true;
+      }
+    }
+
+    __semMem.set(c, list);
+    return false;
+  }catch(e){ return false; }
+}
+
+function __semRemember(cat, text, windowMs){
+  try{
+    const c = String(cat||'').toLowerCase().trim();
+    if (!c) return;
+    const now = Date.now();
+    const win = (Number.isFinite(Number(windowMs)) ? Number(windowMs) : 25000);
+    const norm = __semNorm(text);
+    const tokens = __semTokens(text);
+
+    let list = __semMem.get(c) || [];
+    list = __semPrune(list, now, win);
+    list.push({ t: now, norm, tokens });
+    // limita memoria por categoria
+    if (list.length > 16) list = list.slice(-16);
+    __semMem.set(c, list);
+  }catch(e){}
+}
 function enqueueSpeech(text, opts = {}) {
       try {
         if (!voiceMasterEnabled) return;
@@ -7142,6 +7304,18 @@ function enqueueSpeech(text, opts = {}) {
         const priority = Number.isFinite(opts.priority) ? opts.priority : 0;
         const interrupt = !!opts.interrupt;
         const dedupe = (opts.dedupe !== false);
+
+        // Anti-repeticion semantica (misma idea, texto distinto)
+        // - default ON en categorias narrativas
+        // - se puede desactivar por mensaje: { semanticDedupe:false }
+        const __semCat = String(opts.semanticCategory || opts.category || __inferSemCategoryFromKey(key) || '').trim();
+        if (opts.semanticDedupe !== false && __semCat && !__semSkipCategory(__semCat)) {
+          const thr = (opts.semanticThreshold != null) ? Number(opts.semanticThreshold) : 0.78;
+          const win = (opts.semanticWindowMs != null) ? Number(opts.semanticWindowMs) : 25000;
+          if (__semIsRepeat(__semCat, clean, thr, win)) return;
+          // solo recordamos si va a entrar a cola
+          __semRemember(__semCat, clean, win);
+        }
 
         if (dedupe) {
           if (speechQueue.some(it => it.text === clean)) return;
@@ -9954,10 +10128,11 @@ function updateBlueFlagFromPassEvents() {
         // Cooldowns: una vez cada 2 vueltas del lapeador y no repetir en la misma vuelta del rezagado
         if (selLap && selLap <= lastBlueFlagPilotLap) { blueFlagConfirm.hits = 0; return; }
         if (best.laperLap && (best.laperLap - lastBlueFlagLeaderLap) < 2) { blueFlagConfirm.hits = 0; return; }
-
         const laperPos = Number(best.laper.pos) || 0;
         const laperName = (best.laper && (best.laper.racerName || best.laper.name || best.laper.pilotName)) || '';
-        const who = (laperPos === 1) ? 'el lider P1' : ('P' + laperPos);
+        const laperNameClean = String(laperName).replace(/\s+/g,' ').trim();
+        if (!laperNameClean) return;
+        const who = (laperPos === 1) ? ('el lider P1 ' + laperNameClean) : ('P' + laperPos + ' ' + laperNameClean);
 
         pendingBlueFlagForPilotKey = selectedPilotKey;
         pendingBlueFlagMessage = isFinal
@@ -10590,209 +10765,162 @@ function autoBuildStoryCandidate(args) {
 
     const AUTO_PHRASES_PRO = {
       leaderChange: [
-        (c) => 'Cambio de líder. ' + c.winner + ' toma P1, ' + c.loser + ' queda P2.',
-        (c) => 'Cambio de líder. ' + c.winner + ' al frente, ' + c.loser + ' ahora persigue.',
-        (c) => 'Cambio de líder. ' + c.winner + ' manda, ' + c.loser + ' queda segundo.',
-        (c) => 'Cambio de líder. ' + c.winner + ' lidera, ' + c.loser + ' se queda a la caza.',
-        (c) => 'Cambio de líder. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
-        (c) => 'Cambio de líder. P1 ' + c.winner + '. P2 ' + c.loser + '.',
-        (c) => 'Cambio de líder. ' + c.winner + ' se va adelante. ' + c.loser + ' a perseguir.',
-        (c) => 'Nuevo líder. ' + c.winner + ' toma P1, ' + c.loser + ' queda P2.',
-        (c) => 'Nuevo líder. ' + c.winner + ' al frente, ' + c.loser + ' ahora persigue.',
-        (c) => 'Nuevo líder. ' + c.winner + ' manda, ' + c.loser + ' queda segundo.',
-        (c) => 'Nuevo líder. ' + c.winner + ' lidera, ' + c.loser + ' se queda a la caza.',
-        (c) => 'Nuevo líder. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
-        (c) => 'Nuevo líder. P1 ' + c.winner + '. P2 ' + c.loser + '.',
-        (c) => 'Nuevo líder. ' + c.winner + ' se va adelante. ' + c.loser + ' a perseguir.',
-        (c) => 'Se mueve la punta. ' + c.winner + ' toma P1, ' + c.loser + ' queda P2.',
-        (c) => 'Se mueve la punta. ' + c.winner + ' al frente, ' + c.loser + ' ahora persigue.',
-        (c) => 'Se mueve la punta. ' + c.winner + ' manda, ' + c.loser + ' queda segundo.',
-        (c) => 'Se mueve la punta. ' + c.winner + ' lidera, ' + c.loser + ' se queda a la caza.',
-        (c) => 'Se mueve la punta. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
-        (c) => 'Se mueve la punta. P1 ' + c.winner + '. P2 ' + c.loser + '.',
-        (c) => 'Se mueve la punta. ' + c.winner + ' se va adelante. ' + c.loser + ' a perseguir.',
-        (c) => 'Intercambio en la cima. ' + c.winner + ' toma P1, ' + c.loser + ' queda P2.',
-        (c) => 'Intercambio en la cima. ' + c.winner + ' al frente, ' + c.loser + ' ahora persigue.',
-        (c) => 'Intercambio en la cima. ' + c.winner + ' manda, ' + c.loser + ' queda segundo.',
-        (c) => 'Intercambio en la cima. ' + c.winner + ' lidera, ' + c.loser + ' se queda a la caza.'
+        (c) => 'Cambio de lider. ' + c.winner + ' toma P1. ' + c.loser + ' queda P2.',
+        (c) => 'Cambio de lider: ' + c.winner + ' se pone al frente. ' + c.loser + ' a perseguir.',
+        (c) => 'Nueva punta. P1 ' + c.winner + '. P2 ' + c.loser + '.',
+        (c) => c.winner + ' recupera la punta. ' + c.loser + ' baja a segundo.',
+        (c) => 'Intercambio en P1. ' + c.winner + ' adelante. ' + c.loser + ' segundo.',
+        (c) => 'Se mueve la cabeza: ' + c.winner + ' manda. ' + c.loser + ' responde en P2.',
+        (c) => 'Liderato para ' + c.winner + '. ' + c.loser + ' pierde P1.',
+        (c) => 'Punta nueva: ' + c.winner + '. ' + c.loser + ' se queda a rueda.',
+        (c) => 'Swap en la punta. ' + c.winner + ' P1, ' + c.loser + ' P2.',
+        (c) => 'Cambio arriba. ' + c.winner + ' primero. ' + c.loser + ' segundo.',
+        (c) => 'Golpe de autoridad: ' + c.winner + ' toma P1. ' + c.loser + ' a reorganizar.',
+        (c) => 'Actualizacion punta: ' + c.winner + ' lidera. ' + c.loser + ' queda P2.'
       ],
+
       pass: [
-        (c) => 'Adelantamiento. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' baja a P' + c.oldPos + '.',
-        (c) => 'Adelantamiento. ' + c.winner + ' gana P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
-        (c) => 'Adelantamiento. ' + c.winner + ' se queda con P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Adelantamiento. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' se acomoda en P' + c.oldPos + '.',
-        (c) => 'Adelantamiento. ' + c.winner + ' pasa y asegura P' + c.newPos + '.',
-        (c) => 'Adelantamiento. ' + c.winner + ' ejecuta el pase. P' + c.newPos + '.',
-        (c) => 'Adelantamiento. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
-        (c) => 'Rebase. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' baja a P' + c.oldPos + '.',
-        (c) => 'Rebase. ' + c.winner + ' gana P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
-        (c) => 'Rebase. ' + c.winner + ' se queda con P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Rebase. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' se acomoda en P' + c.oldPos + '.',
-        (c) => 'Rebase. ' + c.winner + ' pasa y asegura P' + c.newPos + '.',
-        (c) => 'Rebase. ' + c.winner + ' ejecuta el pase. P' + c.newPos + '.',
-        (c) => 'Rebase. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
-        (c) => 'Cambio de posición. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' baja a P' + c.oldPos + '.',
-        (c) => 'Cambio de posición. ' + c.winner + ' gana P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
-        (c) => 'Cambio de posición. ' + c.winner + ' se queda con P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Cambio de posición. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' se acomoda en P' + c.oldPos + '.',
-        (c) => 'Cambio de posición. ' + c.winner + ' pasa y asegura P' + c.newPos + '.',
-        (c) => 'Cambio de posición. ' + c.winner + ' ejecuta el pase. P' + c.newPos + '.',
-        (c) => 'Cambio de posición. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
-        (c) => 'Posición ganada. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' baja a P' + c.oldPos + '.',
-        (c) => 'Posición ganada. ' + c.winner + ' gana P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
-        (c) => 'Posición ganada. ' + c.winner + ' se queda con P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Posición ganada. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' se acomoda en P' + c.oldPos + '.'
+        (c) => 'Rebase confirmado. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
+        (c) => c.winner + ' ejecuta el pase y asegura P' + c.newPos + '. ' + c.loser + ' baja a P' + c.oldPos + '.',
+        (c) => 'Cambio de posicion. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' queda P' + c.oldPos + '.',
+        (c) => 'Movimiento limpio: ' + c.winner + ' por delante. Ahora P' + c.newPos + '.',
+        (c) => 'Pase hecho. ' + c.winner + ' gana el lugar en P' + c.newPos + '.',
+        (c) => 'Rebase con calma. ' + c.winner + ' se instala en P' + c.newPos + '.',
+        (c) => 'Posicion ganada: ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' pierde el sitio.',
+        (c) => 'Se concreta el intercambio. ' + c.winner + ' arriba a P' + c.newPos + '.',
+        (c) => 'Adelantamiento al conteo. ' + c.winner + ' sube. ' + c.loser + ' baja.',
+        (c) => 'P' + c.newPos + ' cambia de manos. ' + c.winner + ' toma la plaza.',
+        (c) => 'Buen pase. ' + c.winner + ' ya esta delante de ' + c.loser + '. P' + c.newPos + '.',
+        (c) => 'Rebase cerrado: ' + c.winner + ' gana P' + c.newPos + ', ' + c.loser + ' a P' + c.oldPos + '.'
       ],
+
       battle: [
-        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' presiona a ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' ya está encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' buscando el hueco con ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Duelo en P' + c.pos + '. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' no se despega. ' + c.sec + '.',
-        (c) => 'Batalla en P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'Batalla en P' + c.pos + '. ' + c.attacker + ' presiona a ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Batalla en P' + c.pos + '. ' + c.attacker + ' ya está encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Batalla en P' + c.pos + '. ' + c.attacker + ' buscando el hueco con ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Batalla en P' + c.pos + '. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'Batalla en P' + c.pos + '. ' + c.attacker + ' no se despega. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' está apretado. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' está apretado. ' + c.attacker + ' presiona a ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' está apretado. ' + c.attacker + ' ya está encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' está apretado. ' + c.attacker + ' buscando el hueco con ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' está apretado. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' está apretado. ' + c.attacker + ' no se despega. ' + c.sec + '.',
-        (c) => 'Ojo con P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'Ojo con P' + c.pos + '. ' + c.attacker + ' presiona a ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Ojo con P' + c.pos + '. ' + c.attacker + ' ya está encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Ojo con P' + c.pos + '. ' + c.attacker + ' buscando el hueco con ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Ojo con P' + c.pos + '. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'Ojo con P' + c.pos + '. ' + c.attacker + ' no se despega. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' en pelea directa. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.'
+        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' a rueda de ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' en pelea. ' + c.attacker + ' presiona a ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'Ojo P' + c.pos + '. ' + c.attacker + ' trae el ataque. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' caliente. ' + c.defender + ' defiende, ' + c.attacker + ' insiste. ' + c.sec + '.',
+        (c) => 'Rango de pase en P' + c.pos + '. ' + c.attacker + ' pegado. ' + c.sec + '.',
+        (c) => 'Camara a P' + c.pos + '. ' + c.attacker + ' en el espejo de ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'Separacion minima en P' + c.pos + ': ' + c.sec + '. ' + c.attacker + ' encima.',
+        (c) => 'P' + c.pos + ' sin aire. ' + c.attacker + ' no se despega. ' + c.sec + '.',
+        (c) => 'Atencion P' + c.pos + '. ' + c.attacker + ' busca hueco con ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' en mano a mano. ' + c.attacker + ' contra ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'Duelo directo. P' + c.pos + ' con gap ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' bajo fuego. ' + c.attacker + ' viene encima. ' + c.sec + '.'
       ],
+
       battlePodium: [
-        (c) => 'P' + c.pos + ' por podio. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' por podio. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' por podio. Gap ' + c.sec + '. ' + c.defender + ' defendiendo de ' + c.attacker + '.',
-        (c) => 'P' + c.pos + ' por podio. ' + c.attacker + ' buscando pase sobre ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' por podio. ' + c.defender + ' resiste, ' + c.attacker + ' insiste. ' + c.sec + '.',
-        (c) => 'Esto es podio en P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Esto es podio en P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'Esto es podio en P' + c.pos + '. Gap ' + c.sec + '. ' + c.defender + ' defendiendo de ' + c.attacker + '.',
-        (c) => 'Esto es podio en P' + c.pos + '. ' + c.attacker + ' buscando pase sobre ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Esto es podio en P' + c.pos + '. ' + c.defender + ' resiste, ' + c.attacker + ' insiste. ' + c.sec + '.',
-        (c) => 'Pelea de trofeo en P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Pelea de trofeo en P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'Pelea de trofeo en P' + c.pos + '. Gap ' + c.sec + '. ' + c.defender + ' defendiendo de ' + c.attacker + '.',
-        (c) => 'Pelea de trofeo en P' + c.pos + '. ' + c.attacker + ' buscando pase sobre ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Pelea de trofeo en P' + c.pos + '. ' + c.defender + ' resiste, ' + c.attacker + ' insiste. ' + c.sec + '.',
-        (c) => 'Zona de podio, P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Zona de podio, P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'Zona de podio, P' + c.pos + '. Gap ' + c.sec + '. ' + c.defender + ' defendiendo de ' + c.attacker + '.',
-        (c) => 'Zona de podio, P' + c.pos + '. ' + c.attacker + ' buscando pase sobre ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Zona de podio, P' + c.pos + '. ' + c.defender + ' resiste, ' + c.attacker + ' insiste. ' + c.sec + '.',
-        (c) => 'Podio caliente, P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Podio caliente, P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'Podio caliente, P' + c.pos + '. Gap ' + c.sec + '. ' + c.defender + ' defendiendo de ' + c.attacker + '.',
-        (c) => 'Podio caliente, P' + c.pos + '. ' + c.attacker + ' buscando pase sobre ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Podio caliente, P' + c.pos + '. ' + c.defender + ' resiste, ' + c.attacker + ' insiste. ' + c.sec + '.'
+        (c) => 'Podio en juego en P' + c.pos + '. ' + c.attacker + ' presiona. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' por trofeo. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'Zona de podio. ' + c.defender + ' defiende. ' + c.attacker + ' insiste. ' + c.sec + '.',
+        (c) => 'Podio apretado. Gap ' + c.sec + '. ' + c.attacker + ' con opcion.',
+        (c) => 'Pelea de podio: ' + c.attacker + ' a tiro de ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' por podio con gap ' + c.sec + '. Esto puede cambiar.',
+        (c) => 'Ojo al podio. ' + c.attacker + ' trae ritmo sobre ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'Trofeo en la mira. ' + c.attacker + ' ya lo trae. ' + c.sec + '.',
+        (c) => 'Podio sin margen. ' + c.sec + '. ' + c.defender + ' aguantando.',
+        (c) => 'P' + c.pos + ' de podio: ' + c.attacker + ' en espejo. ' + c.sec + '.',
+        (c) => 'Batalla por el podio. ' + c.attacker + ' quiere P' + c.pos + '. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' por podio. Ventana de pase abierta. ' + c.sec + '.'
       ],
+
+      // closing = cierre de gap (trend)
       closing: [
-        (c) => 'Se cierra P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'Se cierra P' + c.pos + '. ' + c.attacker + ' reduce de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Se cierra P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. ' + c.attacker + ' viene recortando.',
-        (c) => 'Se cierra P' + c.pos + '. ' + c.attacker + ' ya está en ' + c.toSec + ' de ' + c.defender + '.',
-        (c) => 'Se cierra P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Se cierra P' + c.pos + '. ' + c.attacker + ' recorta y se pone a ' + c.toSec + '.',
-        (c) => 'Atención P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'Atención P' + c.pos + '. ' + c.attacker + ' reduce de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Atención P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. ' + c.attacker + ' viene recortando.',
-        (c) => 'Atención P' + c.pos + '. ' + c.attacker + ' ya está en ' + c.toSec + ' de ' + c.defender + '.',
-        (c) => 'Atención P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Atención P' + c.pos + '. ' + c.attacker + ' recorta y se pone a ' + c.toSec + '.',
         (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' reduce de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Cierre en P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. ' + c.attacker + ' viene recortando.',
-        (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' ya está en ' + c.toSec + ' de ' + c.defender + '.',
-        (c) => 'Cierre en P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' recorta y se pone a ' + c.toSec + '.',
-        (c) => 'P' + c.pos + ' se está cerrando. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'P' + c.pos + ' se está cerrando. ' + c.attacker + ' reduce de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'P' + c.pos + ' se está cerrando. De ' + c.fromSec + ' a ' + c.toSec + '. ' + c.attacker + ' viene recortando.',
-        (c) => 'P' + c.pos + ' se está cerrando. ' + c.attacker + ' ya está en ' + c.toSec + ' de ' + c.defender + '.',
-        (c) => 'P' + c.pos + ' se está cerrando. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'P' + c.pos + ' se está cerrando. ' + c.attacker + ' recorta y se pone a ' + c.toSec + '.',
-        (c) => 'Tendencia clara en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + ' sobre ' + c.defender + '.'
+        (c) => 'Recorte en P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + '.',
+        (c) => 'Gap en P' + c.pos + ' cae: ' + c.fromSec + ' a ' + c.toSec + '.',
+        (c) => 'Se acerca en P' + c.pos + '. ' + c.attacker + ' ya esta a ' + c.toSec + ' de ' + c.defender + '.',
+        (c) => 'Tendencia positiva P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + '.',
+        (c) => 'Ojo P' + c.pos + '. ' + c.attacker + ' recorta ' + c.fromSec + ' a ' + c.toSec + '.',
+        (c) => 'Cierre confirmado. P' + c.pos + ' ahora ' + c.toSec + '.',
+        (c) => 'Se aprieta P' + c.pos + '. ' + c.attacker + ' trae el gap en ' + c.toSec + '.',
+        (c) => 'P' + c.pos + ' se esta cerrando. ' + c.toSec + ' entre ellos.',
+        (c) => 'Recorte constante. P' + c.pos + ' de ' + c.fromSec + ' a ' + c.toSec + '.'
       ],
-      
+
       gap: [
         (c) => 'Gap P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
-        (c) => 'Gap P' + c.pos + '. ' + c.defender + ' adelante, ' + c.attacker + ' a ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' gap ' + c.sec + 's. ' + c.attacker + ' viene detrás.',
-        (c) => 'P' + c.pos + '. Separación ' + c.sec + 's entre ' + c.defender + ' y ' + c.attacker + '.',
-        (c) => 'P' + c.pos + '. ' + c.attacker + ' marca ' + c.sec + 's al de adelante.'
+        (c) => 'Separacion P' + c.pos + ': ' + c.sec + 's. ' + c.defender + ' adelante.',
+        (c) => 'P' + c.pos + ' entre ' + c.defender + ' y ' + c.attacker + ': ' + c.sec + 's.',
+        (c) => 'Distancia P' + c.pos + '. ' + c.attacker + ' marca ' + c.sec + 's.',
+        (c) => 'Gap estable en P' + c.pos + ': ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' con ' + c.sec + 's de diferencia.',
+        (c) => 'Referencia P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's.',
+        (c) => 'Tiempo entre autos P' + c.pos + ': ' + c.sec + 's.',
+        (c) => 'Brecha P' + c.pos + ': ' + c.sec + 's.',
+        (c) => 'Gap P' + c.pos + ' = ' + c.sec + 's.'
       ],
+
       pressure: [
-        (c) => 'Presión en P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' bajo presión. ' + c.attacker + ' a ' + c.sec + 's. Ojo defensa.',
-        (c) => 'Defensa en P' + c.pos + '. ' + c.defender + ' se sostiene con ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' en modo defensa. ' + c.attacker + ' está encima, ' + c.sec + 's.'
+        (c) => 'Presion en P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' defendiendo. ' + c.defender + ' con ' + c.attacker + ' pegado.',
+        (c) => 'Ataque en P' + c.pos + '. ' + c.attacker + ' con opcion.',
+        (c) => 'P' + c.pos + ' sin margen. ' + c.attacker + ' lo trae.',
+        (c) => 'Defensa activa en P' + c.pos + '. ' + c.defender + ' aguanta.',
+        (c) => 'P' + c.pos + ' bajo presion. Ojo en la siguiente curva.',
+        (c) => 'P' + c.pos + ' en modo espejo. ' + c.attacker + ' no suelta.',
+        (c) => 'Sombra en P' + c.pos + '. ' + c.attacker + ' pegado.',
+        (c) => 'P' + c.pos + ' con ataque constante de ' + c.attacker + '.',
+        (c) => 'Presion sostenida en P' + c.pos + '. No hay respiro.'
       ],
+
       top3: [
-        (c) => 'Top 3: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
         (c) => 'Top 3: P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
-        (c) => 'Top 3: ' + c.p1 + ' lidera. ' + c.p2 + ' segundo. ' + c.p3 + ' tercero.',
-        (c) => 'Top 3: ' + c.p1 + ' primero, ' + c.p2 + ' segundo, ' + c.p3 + ' tercero.',
-        (c) => 'Top 3: ' + c.p1 + ' al frente, ' + c.p2 + ' y ' + c.p3 + ' detrás.',
-        (c) => 'Estado del podio: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
-        (c) => 'Estado del podio: P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
-        (c) => 'Estado del podio: ' + c.p1 + ' lidera. ' + c.p2 + ' segundo. ' + c.p3 + ' tercero.',
-        (c) => 'Estado del podio: ' + c.p1 + ' primero, ' + c.p2 + ' segundo, ' + c.p3 + ' tercero.',
-        (c) => 'Estado del podio: ' + c.p1 + ' al frente, ' + c.p2 + ' y ' + c.p3 + ' detrás.',
         (c) => 'Arriba van: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
-        (c) => 'Arriba van: P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
-        (c) => 'Arriba van: ' + c.p1 + ' lidera. ' + c.p2 + ' segundo. ' + c.p3 + ' tercero.',
-        (c) => 'Arriba van: ' + c.p1 + ' primero, ' + c.p2 + ' segundo, ' + c.p3 + ' tercero.',
-        (c) => 'Arriba van: ' + c.p1 + ' al frente, ' + c.p2 + ' y ' + c.p3 + ' detrás.',
-        (c) => 'En la punta: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
-        (c) => 'En la punta: P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
-        (c) => 'En la punta: ' + c.p1 + ' lidera. ' + c.p2 + ' segundo. ' + c.p3 + ' tercero.',
-        (c) => 'En la punta: ' + c.p1 + ' primero, ' + c.p2 + ' segundo, ' + c.p3 + ' tercero.',
-        (c) => 'En la punta: ' + c.p1 + ' al frente, ' + c.p2 + ' y ' + c.p3 + ' detrás.',
-        (c) => 'Así va el frente: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
-        (c) => 'Así va el frente: P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
-        (c) => 'Así va el frente: ' + c.p1 + ' lidera. ' + c.p2 + ' segundo. ' + c.p3 + ' tercero.',
-        (c) => 'Así va el frente: ' + c.p1 + ' primero, ' + c.p2 + ' segundo, ' + c.p3 + ' tercero.',
-        (c) => 'Así va el frente: ' + c.p1 + ' al frente, ' + c.p2 + ' y ' + c.p3 + ' detrás.'
+        (c) => 'Punta y podio: ' + c.p1 + ' lidera, ' + c.p2 + ' segundo, ' + c.p3 + ' tercero.',
+        (c) => 'Tabla de punta: ' + c.p1 + ' - ' + c.p2 + ' - ' + c.p3 + '.',
+        (c) => 'Frente de carrera: ' + c.p1 + ' al frente. ' + c.p2 + ' y ' + c.p3 + ' atras.',
+        (c) => 'Orden actual: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
+        (c) => 'Podio provisional: ' + c.p1 + ' / ' + c.p2 + ' / ' + c.p3 + '.',
+        (c) => 'Lider ' + c.p1 + '. Segundo ' + c.p2 + '. Tercero ' + c.p3 + '.',
+        (c) => 'P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
+        (c) => 'Así va el Top 3: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
+        (c) => 'Estado del podio: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
+        (c) => 'En la punta: ' + c.p1 + ' lidera. Detras ' + c.p2 + ' y ' + c.p3 + '.'
       ],
+
       train: [
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Nadie parpadee.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Cualquier error cambia todo.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Aquí se gana con precisión.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'No hay espacio para fallar.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Se viene el swap en cualquier curva.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto por P2 a P4. ') + 'Nadie parpadee.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto por P2 a P4. ') + 'Cualquier error cambia todo.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto por P2 a P4. ') + 'Aquí se gana con precisión.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto por P2 a P4. ') + 'No hay espacio para fallar.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto por P2 a P4. ') + 'Se viene el swap en cualquier curva.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4. ') + 'Nadie parpadee.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4. ') + 'Cualquier error cambia todo.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4. ') + 'Aquí se gana con precisión.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4. ') + 'No hay espacio para fallar.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4. ') + 'Se viene el swap en cualquier curva.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo compacto P2 a P4. ') + 'Nadie parpadee.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo compacto P2 a P4. ') + 'Cualquier error cambia todo.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo compacto P2 a P4. ') + 'Aquí se gana con precisión.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo compacto P2 a P4. ') + 'No hay espacio para fallar.',
-        (c) => 'Trenecito por el podio. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo compacto P2 a P4. ') + 'Se viene el swap en cualquier curva.',
-        (c) => 'Paquete compacto. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Nadie parpadee.',
-        (c) => 'Paquete compacto. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Cualquier error cambia todo.',
-        (c) => 'Paquete compacto. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Aquí se gana con precisión.',
-        (c) => 'Paquete compacto. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'No hay espacio para fallar.',
-        (c) => 'Paquete compacto. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Se viene el swap en cualquier curva.'
+        (c) => 'Paquete P2 a P4. ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. Nadie regala.',
+        (c) => 'Tren por el podio. ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. Error y se voltean.',
+        (c) => 'Grupo compacto. ' + c.p2 + ' adelante, ' + c.p3 + ' y ' + c.p4 + ' pegados.',
+        (c) => 'P2 a P4 en fila: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. Ventana de pase.',
+        (c) => 'Tres autos en paquete. P2 a P4 muy cerrados.',
+        (c) => 'P2 a P4 sin aire. ' + c.p2 + ' con ' + c.p3 + ' encima y ' + c.p4 + ' esperando.',
+        (c) => 'Cluster por el podio. Nadie parpadee.',
+        (c) => 'Paquete apretado P2 a P4. Cualquier curva cambia todo.',
+        (c) => 'Tren formado. P2 a P4 en rango. Precision.',
+        (c) => 'P2 a P4 en modo acordeon. Se viene el swap.',
+        (c) => 'Grupo P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. Alto riesgo.',
+        (c) => 'Paquete por P2-P4. No hay espacio para fallar.'
+      ],
+
+      record: [
+        (c) => 'Best lap. ' + c.pilot + ' marca ' + c.best + '.',
+        (c) => 'Nueva mejor vuelta para ' + c.pilot + ': ' + c.best + '.',
+        (c) => 'Referencia de ritmo: ' + c.pilot + ' con ' + c.best + '.',
+        (c) => 'Se apunta best lap. ' + c.pilot + ' ' + c.best + '.',
+        (c) => 'Mejor vuelta del stint: ' + c.pilot + ' ' + c.best + '.',
+        (c) => 'Tiempo top para ' + c.pilot + ': ' + c.best + '.',
+        (c) => 'Best lap registrado: ' + c.pilot + ' con ' + c.best + '.',
+        (c) => 'Ritmo fuerte. ' + c.pilot + ' clava ' + c.best + '.',
+        (c) => 'Mejor vuelta. ' + c.pilot + ' firma ' + c.best + '.',
+        (c) => 'Se actualiza best lap: ' + c.pilot + ' ' + c.best + '.'
+      ],
+
+      qualiBest: [
+        (c) => 'En clasificacion, ' + c.pilot + ' marca ' + c.best + '.',
+        (c) => 'Tiempo fuerte en quali: ' + c.pilot + ' ' + c.best + '.',
+        (c) => 'Clasificacion: ' + c.pilot + ' mejora con ' + c.best + '.',
+        (c) => 'Queda el registro. ' + c.pilot + ' con ' + c.best + '.',
+        (c) => 'Buen intento. ' + c.pilot + ' suelta ' + c.best + '.',
+        (c) => 'Clasificacion se mueve. ' + c.pilot + ' con ' + c.best + '.',
+        (c) => 'Queda la vuelta. ' + c.pilot + ' ' + c.best + '.',
+        (c) => 'Queda el tiempo: ' + c.pilot + ' ' + c.best + '.',
+        (c) => 'Ojo ese ritmo. ' + c.pilot + ' con ' + c.best + '.',
+        (c) => 'Clasificacion al detalle. ' + c.pilot + ' marca ' + c.best + '.'
       ]
     };
+
 
     const AUTO_PHRASES_PICANTE = {
       leaderChange: [
@@ -11228,43 +11356,96 @@ function autoBuildStoryCandidate(args) {
     };
 
     const AUTO_PHRASES_NARRATIVO = Object.assign({}, AUTO_PHRASES_PRO, {
-      // Menos "lista de frases", más narración con hilo
+      // Finales: mas hilo, mas variedad, menos repeticion.
       leaderChange: [
-        (c) => `Cambio de líder. ${c.newLeader} toma P1. ${c.oldLeader} cae a P2. Esto se reescribe.`,
-        (c) => `¡Hay swap al frente! ${c.newLeader} se queda con la punta. ${c.oldLeader} ahora P2.`,
-        (c) => `P1 cambia de dueño. ${c.newLeader} adelante, y ${c.oldLeader} a recomponer.`
+        (c) => 'Cambio de lider. ' + (c.winner||c.attacker) + ' roba P1. ' + (c.loser||c.defender) + ' cae a P2.',
+        (c) => 'Se volteo la pelicula. ' + (c.winner||c.attacker) + ' toma la punta. ' + (c.loser||c.defender) + ' a remar.',
+        (c) => 'Swap arriba. ' + (c.winner||c.attacker) + ' manda. ' + (c.loser||c.defender) + ' queda segundo.',
+        (c) => 'P1 cambia de manos. ' + (c.winner||c.attacker) + ' al frente. ' + (c.loser||c.defender) + ' no lo suelta.',
+        (c) => 'Que golpe. ' + (c.winner||c.attacker) + ' se queda con P1. ' + (c.loser||c.defender) + ' se acomoda P2.',
+        (c) => 'La punta tiene nuevo dueno: ' + (c.winner||c.attacker) + '.',
+        (c) => 'Arriba se mueven. P1 ' + (c.winner||c.attacker) + ', P2 ' + (c.loser||c.defender) + '.',
+        (c) => 'Cambio de guion. ' + (c.winner||c.attacker) + ' lidera. ' + (c.loser||c.defender) + ' responde.',
+        (c) => 'Se reescribe la Final. ' + (c.winner||c.attacker) + ' primero. ' + (c.loser||c.defender) + ' segundo.',
+        (c) => 'Nueva punta. ' + (c.winner||c.attacker) + ' arriba. ' + (c.loser||c.defender) + ' detras.',
+        (c) => 'Punta para ' + (c.winner||c.attacker) + '. Esto esta vivo.',
+        (c) => 'Cambio en la cima. ' + (c.winner||c.attacker) + ' se queda con P1.'
       ],
+
       pass: [
-        (c) => `Pase confirmado en P${c.pos}. ${c.attacker} ya está por delante de ${c.defender}.`,
-        (c) => `Movimiento limpio: ${c.attacker} gana la posición sobre ${c.defender} en P${c.pos}.`,
-        (c) => `Se concreta el pase. ${c.attacker} se mete en P${c.pos}, ${c.defender} pierde la plaza.`
+        (c) => 'Pase confirmado. ' + (c.winner||c.attacker) + ' ya esta en P' + (c.newPos||c.pos) + '.',
+        (c) => 'Lo hizo. ' + (c.winner||c.attacker) + ' se mete por dentro y gana la plaza.',
+        (c) => 'Movimiento limpio. ' + (c.winner||c.attacker) + ' pasa a ' + (c.loser||c.defender) + '. P' + (c.newPos||c.pos) + '.',
+        (c) => 'Se concreta el intercambio. ' + (c.winner||c.attacker) + ' por delante.',
+        (c) => 'Pase con autoridad. ' + (c.winner||c.attacker) + ' toma P' + (c.newPos||c.pos) + '.',
+        (c) => 'Buen rebase. ' + (c.winner||c.attacker) + ' asegura la posicion.',
+        (c) => 'Cambio de posicion en vivo. ' + (c.winner||c.attacker) + ' sube.',
+        (c) => 'Lo cierra y lo firma. ' + (c.winner||c.attacker) + ' gana el lugar.',
+        (c) => 'P' + (c.newPos||c.pos) + ' cambia de manos. ' + (c.winner||c.attacker) + ' se lo queda.',
+        (c) => 'Pase al limite. ' + (c.winner||c.attacker) + ' por delante.',
+        (c) => 'Rebase completo. ' + (c.winner||c.attacker) + ' ya esta arriba.',
+        (c) => 'Se confirma el pase. ' + (c.winner||c.attacker) + ' gana la plaza.'
       ],
+
       battle: [
-        (c) => `Cámara en P${c.pos}. ${c.attacker} viene pegado a ${c.defender}. Gap ${c.deltaStr}.`,
-        (c) => `P${c.pos} está al rojo: ${c.attacker} en espejo de ${c.defender}. Gap ${c.deltaStr}.`,
-        (c) => `Tenemos pelea real por P${c.pos}. ${c.attacker} presiona a ${c.defender}. Gap ${c.deltaStr}.`
+        (c) => 'Camara a P' + c.pos + '. ' + c.attacker + ' en el espejo de ' + c.defender + '. Gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'P' + c.pos + ' al rojo. ' + c.attacker + ' lo trae pegado. ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'P' + c.pos + ' en mano a mano. ' + c.attacker + ' buscando el hueco. ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Duelo real. ' + c.defender + ' defendiendo, ' + c.attacker + ' atacando. ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Esto puede cambiar en P' + c.pos + '. Gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'P' + c.pos + ' sin respiro. ' + c.attacker + ' no suelta. ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Rango de ataque en P' + c.pos + '. ' + c.attacker + ' con opcion.',
+        (c) => 'Ojo esa pelea. ' + c.attacker + ' trae mejor linea sobre ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' en la mira. ' + c.attacker + ' esta listo.',
+        (c) => 'Se ven espejos. P' + c.pos + ' con gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'P' + c.pos + ' apretado. Todo se decide por milimetros.',
+        (c) => 'Duelo continuo en P' + c.pos + '. ' + (c.sec||c.deltaStr) + '.'
       ],
+
       battlePodium: [
-        (c) => `Batalla por podio. ${c.attacker} sobre ${c.defender}. Gap ${c.deltaStr}.`,
-        (c) => `Podio en juego: ${c.attacker} trae a tiro a ${c.defender}. Gap ${c.deltaStr}.`,
-        (c) => `Esto huele a trofeo: ${c.attacker} quiere el podio y ${c.defender} aguanta. Gap ${c.deltaStr}.`
+        (c) => 'Podio en juego. P' + c.pos + ' con gap ' + (c.sec||c.deltaStr) + '. ' + c.attacker + ' presiona.',
+        (c) => 'Trofeo en la mira. ' + c.attacker + ' encima de ' + c.defender + '. ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'P' + c.pos + ' por podio. ' + c.defender + ' se defiende con el retrovisor lleno.',
+        (c) => 'Zona de podio al limite. ' + c.attacker + ' con opcion clara.',
+        (c) => 'Esto huele a swap por el podio. Gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Pelea de podio. ' + c.attacker + ' no perdona. ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'P' + c.pos + ' por trofeo, sin margen. ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Podio provisional temblando. ' + c.attacker + ' lo quiere.',
+        (c) => 'P' + c.pos + ' en disputa. Cualquier error y cambia el podio.',
+        (c) => 'Podio en fuego. ' + c.attacker + ' a tiro. ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Se aprieta el podio. Gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'P' + c.pos + ' por podio. Esto esta bravo.'
       ],
+
       closing: [
-        (c) => `Último tramo. P1 ${c.p1}, P2 ${c.p2}, P3 ${c.p3}. Aquí se define.`,
-        (c) => `Entramos a cierre. ${c.p2} tiene a ${c.p1} en la mira. ${c.p3} no se baja del podio.`,
-        (c) => `Cierre de carrera. ${c.p1} manda, pero ${c.p2} está incómodo cerca.`
+        (c) => 'Recorte. P' + c.pos + ' de ' + c.fromSec + ' a ' + c.toSec + '. ' + c.attacker + ' se acerca.',
+        (c) => 'Se viene. ' + c.attacker + ' baja a ' + c.toSec + ' sobre ' + c.defender + '.',
+        (c) => 'Gap cayendo en P' + c.pos + '. ' + c.toSec + ' ahora.',
+        (c) => 'Cierre confirmado. P' + c.pos + ' ya esta en ' + c.toSec + '.',
+        (c) => 'Tendencia clara. ' + c.attacker + ' recorta y pone presion.',
+        (c) => 'Atencion. P' + c.pos + ' se aprieta rapido.',
+        (c) => 'Se compacta P' + c.pos + '. Se huele el pase.',
+        (c) => 'Recorte constante. ' + c.attacker + ' viene con ritmo.',
+        (c) => 'De ' + c.fromSec + ' a ' + c.toSec + '. Eso es recortar.',
+        (c) => 'P' + c.pos + ' ahora en rango. ' + c.toSec + '.'
       ],
-      record: [
-        (c) => `${c.pilot} marca mejor vuelta: ${c.best}. Eso sí es ritmo.`,
-        (c) => `Nuevo mejor tiempo de ${c.pilot}: ${c.best}. Deja nota.`,
-        (c) => `Best lap para ${c.pilot}: ${c.best}. Se escuchó el motor.`
-      ],
-      qualiBest: [
-        (c) => `Clasificación al límite. ${c.pilot} suelta ${c.best} y se mete en la conversación.`,
-        (c) => `En quali, ${c.pilot} aprieta con ${c.best}. Eso mueve la tabla.`,
-        (c) => `Queda registrada: ${c.pilot} con ${c.best}. Ojo con esa vuelta.`
+
+      train: [
+        (c) => 'Tren por el podio. ' + (c.p2 ? (c.p2 + ', ' + c.p3 + ', ' + c.p4 + '.') : 'P2 a P4 en paquete.') + ' Nadie respira.',
+        (c) => 'Paquete compacto. Una curva y cambia todo.',
+        (c) => 'P2 a P4 en fila india. Ventana de pase abierta.',
+        (c) => 'Tres autos pegados por el podio. Precision pura.',
+        (c) => 'Cluster por el podio. Se viene el swap.',
+        (c) => 'P2 a P4 sin aire. Error y se voltean.',
+        (c) => 'Paquete por P2-P4. Nadie regala.',
+        (c) => 'Tren formado. Ojo con el toque.',
+        (c) => 'P2 a P4: aqui se gana con cabeza fria.',
+        (c) => 'Grupo compacto. Todo se decide en la proxima chicana.',
+        (c) => 'Trenecito armado. El podio tiembla.',
+        (c) => 'Paquete apretado. Se siente la presion.'
       ]
     });
+
 
     const AUTO_PHRASES_BY_STYLE = {
       pro: AUTO_PHRASES_PRO,
@@ -11458,16 +11639,14 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
 
       const name = __autoSafeName(r);
       if (!name) continue;
-
       const laperPos = Number(best.laper && best.laper.pos) || 0;
       const laperName = __autoSafeName(best.laper);
-      const who = (laperPos === 1)
-        ? ('el líder ' + (laperName || '') + ' P1')
-        : ('P' + laperPos + ' ' + (laperName || ''));
+      if (!laperName) continue;
+      const who = (laperPos === 1) ? ('el lider P1 ' + laperName) : ('P' + laperPos + ' ' + laperName);
 
       const baseMsg = isFinalSess
-        ? `¡Bandera azul! ${name}, detrás viene ${who}. Abre en la recta.`
-        : `Bandera azul. ${name}, detrás viene ${who}. Abre en la recta.`;
+        ? `Bandera azul. ${name}, detras viene ${who}. Abre en la recta.`
+        : `Bandera azul. ${name}, detras viene ${who}. Abre en la recta.`;
 
       // Azul crítica en Finales: si en 30s ya sonó 2 veces, sube tono
       st.blueHits = st.blueHits || 0;
@@ -11479,7 +11658,7 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
       st.blueHits++;
       const useCrit = isFinalSess && st.blueHits >= 2 && (nowMs - st.blueWindowMs) <= 30000;
       const finalMsg = useCrit
-        ? `¡Azul crítica! ${name}, suelta en la recta. Detrás viene ${who}.`
+        ? `Azul critica. ${name}, suelta en la recta. Detras viene ${who}.`
         : baseMsg;
 
       enqueueSpeech(finalMsg, {
@@ -11765,6 +11944,7 @@ if (secNum <= 1.25) {
 
               addCand({
                 type,
+                secNum: secNum,
                 score,
                 text,
                 key: 'auto_duel_' + pairKey,
@@ -12188,6 +12368,35 @@ if (isMangaSess && candidates && candidates.length) {
   }
 }
 
+// Conflict rule: pass vs battle. Prefer battle only if gap <= 0.30s, else pass.
+try {
+  let hasPass = false;
+  let hasBattle = false;
+  let minBattleSec = Infinity;
+  for (const c of candidates) {
+    if (!c) continue;
+    if (c.type === 'pass') hasPass = true;
+    if (c.type === 'battle' || c.type === 'battlePodium') {
+      hasBattle = true;
+      const s = Number(c.secNum);
+      if (isFinite(s)) minBattleSec = Math.min(minBattleSec, s);
+    }
+  }
+  if (hasPass && hasBattle) {
+    const battleWins = isFinite(minBattleSec) && minBattleSec <= 0.30;
+    for (const c of candidates) {
+      if (!c) continue;
+      if (battleWins) {
+        if (c.type === 'pass') { c.score -= 3.5; }
+        if (c.type === 'battle' || c.type === 'battlePodium') { c.score += 2.0; c.priority = Math.max(Number(c.priority)||0, 9); }
+      } else {
+        if (c.type === 'pass') { c.score += 1.5; c.priority = Math.max(Number(c.priority)||0, 9); }
+        if (c.type === 'battle' || c.type === 'battlePodium') { c.score -= 2.5; }
+      }
+    }
+  }
+} catch(e) {}
+
 candidates.sort((a,b) => (b.score - a.score) || (b.priority - a.priority));
 
 for (const c of candidates) {
@@ -12433,15 +12642,23 @@ function handleVoiceAndBeeps() {
       const lapCrossed = (voiceSettings.laps && lapsNow > 0 && lapsNow !== lastAnnouncedLapcount);
 
       if (lapCrossed) {
+        // Beep SIEMPRE en seguimiento al cerrar vuelta:
+        // - Agudo si mejoras vs tu vuelta anterior
+        // - Grave si empeoras
+        // - Si no hay referencia, agudo (marca cierre de vuelta)
+        let __didLapBeep = false;
         if (lapMsNow) {
-          // Beep mejora/empeora
           if (lastSpokenLastTime && lastSpokenLastTime > 0) {
-            if (lapMsNow < (lastSpokenLastTime - 20)) playBeep('lapUp');
-            else if (lapMsNow > (lastSpokenLastTime + 20)) playBeep('lapDown');
+            if (lapMsNow < (lastSpokenLastTime - 20)) { playBeep('lapUp'); __didLapBeep = true; }
+            else if (lapMsNow > (lastSpokenLastTime + 20)) { playBeep('lapDown'); __didLapBeep = true; }
           }
+          if (!__didLapBeep) { try { playBeep('lapUp'); } catch(e) {} }
           say(tiempoATexto(lapMsNow), { key: 'lap_' + lapsNow, priority: 90, dedupe: true });
           flashLastLap();
           lastSpokenLastTime = lapMsNow;
+        } else {
+          // Sin tiempo, igual marcamos cierre de vuelta con beep.
+          try { playBeep('lapUp'); } catch(e) {}
         }
         lastAnnouncedLapcount = lapsNow;
 
@@ -12867,7 +13084,7 @@ try {
       if (!rdOn) {
         // MANGA: no hablar entre metas (salida escalonada + 1 sensor)
         if (isManga && !lapCrossed) return;
-        const maxSpoken = isManga ? 1 : 4;
+        const maxSpoken = 1;// Arbiter: 1 extra max
         let spoken = 0;
         for (const c of candidates) {
           if (!c || !c.text) continue;
@@ -12938,39 +13155,8 @@ try {
         rdLastIdLap.set(pick1.id, lapsNow);
         rdLastTextLap.set(t1, lapsNow);
         try { if (typeof pick1.onCommit === 'function') pick1.onCommit(); } catch (e) {}
-
-        // MANGA: solo 1 mensaje extra por cruce (además del lap time). No metralleta.
-        if (isManga) return;
-
-        const g1 = groupOf(pick1.id);
-
-        // Pick 2 (opcional)
-        let pick2 = null;
-        let t2 = '';
-        for (let i = 0; i < candidates.length; i++) {
-          const c = candidates[i];
-          if (!c || !c.text) continue;
-          if (c.id === pick1.id) continue;
-          if (g1 && groupOf(c.id) === g1) { if (!(pick1 && (pick1.id === 'pos' || c.id === 'pos'))) continue; }
-          if (c.score < 35) continue;
-
-          const tTry = rdTrimWords(rdMakeText(c.id, c.text, rdBuildCtx({ tier: tierRD, isManga, ...ctx }, p)), 12);
-          if (!criticalIds.has(c.id)) {
-            if (tooSoonId(c.id)) continue;
-            if (tooSoonTxt(c.id, tTry)) continue;
-          }
-
-          pick2 = c;
-          t2 = tTry;
-          break;
-        }
-
-        if (pick2) {
-          say(t2, pick2.opts || {});
-          rdLastIdLap.set(pick2.id, lapsNow);
-          rdLastTextLap.set(t2, lapsNow);
-          try { if (typeof pick2.onCommit === 'function') pick2.onCommit(); } catch (e) {}
-        }
+        // Arbitro: 1 solo mensaje extra por cruce (ademas del lap time).
+        return;
       }
       return;
     }
