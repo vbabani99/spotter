@@ -1,9 +1,20 @@
 <!--
-AI_Spotter_TRM_v0.0.0.24 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
+AI_Spotter_TRM_v0.0.0.58 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.0.0.36: Fix TTS palabra 'Clasificacion' (sin acento en voz) en anuncio de carrera nueva.
+- v0.0.0.37: Fix selector de piloto consistente (dark forms + no update mientras seleccionas) y mejora anti-parpadeo iOS/Android/Chrome/Safari.
+- v0.0.0.38: Anuncio de carrera nueva: formato TTS "Clasificacion - Qx - Manga X - Serie X" y anuncios de Finales por A/B/C con frases PRO/divertidas.
+- v0.0.0.39: Fix anuncio de carrera nueva (reintentos si falla TTS, sin bloquear 10 min por error) y estabilidad al reenviar mismo raceName.
+- v0.0.0.42: Parsing de titulo de MANGA/Clasificacion desde raceName tipo "Q1.Manga B - Serie 1" => TTS "Clasificacion, Q1, Manga, B, Serie 1".
+- v0.0.0.44: UI - oculta botones RD Sarca/Engineer/Hype (algoritmo decide en background).
+- v0.0.0.49: UI header - mueve LiveIndicator al renglon de abajo junto a MANUAL, y appVersion al renglon inferior.
+- v0.0.0.50: UI header - aumenta header-logo 50% (alto y max-width).
+- v0.0.0.51: UI header - baja botones + version para alinear (logo arriba, acciones abajo).
+- v0.0.0.57: UI header - aumenta header-logo 15% adicional.
+- v0.0.0.58: Nuevo tema "Vic's Pulse" basado en colores del logo (rojo/blanco/negro), acentos y header ajustados.
 - v7.5: Fix Auto Locutor: ya no depende de RD, usa POS para top3/peleas por defecto, umbral ajustado para evitar silencio, y no resetea tus voiceSettings.
 - v7.4: Auto Locutor PRO narrativo: seguimiento de pelea (focus) con contexto, tendencia de gap, y modo MANGA mejorado (pole/best lap) con menos 'robot'.
 - v7.3: Locutor mejorado: frases tipo shuffle-bag (anti repetición real), manga batalla con nombres+gaps, y micro-variación en Auto Locutor.
@@ -13,15 +24,17 @@ Changelog:
 Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a background real (pantalla apagada o cambiar de app). En Windows/Chrome, si la ventana queda tapada, a veces hay throttling del navegador.
 -->
 
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.0.24</title>
+  <title>AI Spotter TRM v0.0.0.58</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
-    :root {
+    html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
+    body{ color-scheme: dark; }
+
+    :root{
       --bg-dark: #040406;
       --card-dark: #080a0f;
       --card-dark-2: #05070c;
@@ -31,34 +44,34 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       --accent-red: #ff2b2b;
       --accent-red-soft: rgba(255,43,43,0.55);
 
-      --accent-orange: #ff7a18;
-      --accent-orange-soft: rgba(255,122,24,0.55);
+      --accent-orange: #ff3b3b;
+      --accent-orange-soft: rgba(255,59,59,0.55);
 
-      --accent-blue: #2d6bff;
-      --accent-blue-soft: rgba(45,107,255,0.55);
+      --accent-blue: #cbd5e1;
+      --accent-blue-soft: rgba(203,213,225,0.18);
 
-      --accent-cyan: #2d6bff;
+      --accent-cyan: #ff2b2b;
       --border-soft: rgba(148,163,184,0.38);
 
       --radius-lg: 16px;
       --radius-pill: 999px;
 
-      --shadow-strong: 0 0 16px rgba(255,43,43,0.42);
-      --shadow-soft: 0 0 12px rgba(255,122,24,0.26);
+      --shadow-strong: 0 0 18px rgba(255,43,43,0.46);
+      --shadow-soft: 0 0 12px rgba(255,255,255,0.08);
       /* Header (app-header) theme */
-      --hdr-grad-a: rgba(255,40,40,0.14);
-      --hdr-grad-b: rgba(255,140,0,0.16);
+      --hdr-grad-a: rgba(255,43,43,0.18);
+      --hdr-grad-b: rgba(255,255,255,0.06);
       --hdr-stripe-a: #0b1220;
       --hdr-stripe-b: #05070d;
-      --hdr-border: rgba(255,90,0,0.24);
-      --hdr-border-2: rgba(255,140,0,0.18);
-      --hdr-glow: 0 0 18px rgba(255,90,0,0.14);
+      --hdr-border: rgba(255,43,43,0.28);
+      --hdr-border-2: rgba(255,255,255,0.10);
+      --hdr-glow: 0 0 18px rgba(255,43,43,0.16);
 
       /* Badge MODO theme (auto por sesión) */
       --mode-bg-neutral: rgba(0,0,0,0.25);
       --mode-brd-neutral: rgba(255,255,255,0.14);
-      --mode-bg-manga: linear-gradient(135deg, rgba(0,229,255,.92), rgba(0,140,255,.75));
-      --mode-bg-final: linear-gradient(135deg, rgba(255,140,0,.95), rgba(255,60,0,.75));
+      --mode-bg-manga: linear-gradient(135deg, rgba(255,60,60,.86), rgba(120,0,0,.70));
+      --mode-bg-final: linear-gradient(135deg, rgba(255,60,60,.95), rgba(255,255,255,.12));
       --mode-bg-finalA: linear-gradient(135deg, rgba(255,215,0,.96), rgba(255,140,0,.80));
 
     }
@@ -69,12 +82,16 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       padding: 0;
     }
 
-    body {
+    html, body {
+      color-scheme: dark;
+    }
+
+body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Roboto", sans-serif;
       background-color: var(--bg-dark);
       color: var(--text-main);
       background-image:
-        radial-gradient(circle at 20% 10%, rgba(45,107,255,0.14), transparent 55%),
+        radial-gradient(circle at 20% 10%, rgba(255,43,43,0.12), transparent 55%),
         radial-gradient(circle at 80% 0%, rgba(255,122,24,0.14), transparent 55%),
         radial-gradient(circle at 70% 95%, rgba(255,43,43,0.14), transparent 60%),
         repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 2px, rgba(0,0,0,0.0) 2px, rgba(0,0,0,0.0) 6px);
@@ -85,7 +102,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     body.no-scroll {
       overflow: hidden !important;
     }
-
 
     .app {
       max-width: 480px;
@@ -104,8 +120,8 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       border: 1px solid var(--hdr-border);
       box-shadow: var(--shadow-soft), var(--hdr-glow);
       background-image:
-        radial-gradient(120% 180% at 0% 0%, rgba(0,229,255,0.22), transparent 55%),
-        radial-gradient(120% 180% at 100% 0%, rgba(255,140,0,0.18), transparent 55%),
+        radial-gradient(120% 180% at 0% 0%, rgba(255,43,43,0.22), transparent 55%),
+        radial-gradient(120% 180% at 100% 0%, rgba(255,255,255,0.08), transparent 55%),
         linear-gradient(135deg, var(--hdr-grad-a), var(--hdr-grad-b)),
         repeating-linear-gradient(45deg, var(--hdr-stripe-a) 0, var(--hdr-stripe-a) 2px, var(--hdr-stripe-b) 2px, var(--hdr-stripe-b) 4px),
         repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 6px);
@@ -187,8 +203,38 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       display: flex;
       flex-direction: column;
       align-items: flex-end;
+      align-self: stretch;
       gap: 4px;
     }
+    .header-right-bottom{
+      margin-top: auto;
+      display:flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .header-actions-row{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap: 6px;
+    }
+
+    .header-logo{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .header-logo img{
+      height: 76px;
+      width: auto;
+      max-width: 276px;
+      object-fit: contain;
+      image-rendering: auto;
+      filter: drop-shadow(0 0 10px rgba(0,255,163,0.25));
+    }
+
 
     .badge-live {
       display: inline-flex;
@@ -286,16 +332,48 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
     .pilot-select select {
       width: 100%;
-      padding: 12px 14px; /* +100% */
+      padding: 12px 34px 12px 14px; /* right space for arrow */
       border-radius: 999px;
       border: 1px solid var(--border-soft);
       background: rgba(15,23,42,0.95);
       color: var(--text-main);
-      font-size: 18px; /* +100% */
+      font-size: 18px;
       font-weight: 800;
       outline: none;
-      transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
+
+      /* Cross-browser consistency */
+      color-scheme: dark;
+      -webkit-appearance: none;
+      appearance: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+
+      /* Custom arrow (stable on Chrome/Safari/Android) */
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(242,245,255,0.72) 50%),
+        linear-gradient(135deg, rgba(242,245,255,0.72) 50%, transparent 50%);
+      background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+
+      transition: border-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
     }
+
+    .pilot-select select:focus {
+      border-color: rgba(45,107,255,0.50);
+      box-shadow: 0 0 0 3px rgba(255,43,43,0.14);
+    }
+    /* Mejor esfuerzo: algunos navegadores respetan estilos de option */
+    .pilot-select select option {
+      background-color: #0b1220;
+      color: #ffffff;
+    }
+
+    .pilot-select select option:checked {
+      background-color: rgba(45,107,255,0.55);
+      color: #ffffff;
+    }
+
 
     .pilot-select-actions {
       display: flex;
@@ -316,13 +394,18 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       padding: 6px 8px;
       font-size: 11px;
       letter-spacing: 0.06em;
-      opacity: 0.92;
+      opacity: 0.95;
+      border: 1px solid rgba(239,68,68,0.85);
+      background: linear-gradient(135deg, rgba(239,68,68,0.38), rgba(127,29,29,0.18));
+      color: rgba(255,255,255,0.94);
+      box-shadow: 0 0 12px rgba(239,68,68,0.18);
     }
     .btn-basic-mini.active{
-      border-color: rgba(255,255,255,0.18);
-      box-shadow: 0 0 16px rgba(255,255,255,0.12);
-      background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
-      opacity: 0.98;
+      opacity: 1.0;
+      border: 1px solid rgba(34,197,94,0.92);
+      background: linear-gradient(135deg, rgba(34,197,94,0.60), rgba(21,128,61,0.22));
+      color: rgba(255,255,255,0.98);
+      box-shadow: 0 0 14px rgba(34,197,94,0.26);
     }
     .btn-basic-mini[disabled]{
       opacity: 0.35;
@@ -330,7 +413,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       filter: grayscale(0.35);
     }
 
-    /* Color del selector por posición */
+/* Color del selector por posición */
     #pilotSelect.pos-none {
       border-color: var(--border-soft);
       box-shadow: none;
@@ -368,7 +451,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       .btn-basic-mini { flex-basis: 38%; }
       .pilot-select select { font-size: 16px; padding: 10px 12px; }
     }
-
 
     .pilot-pos-row {
       display: flex;
@@ -1493,7 +1575,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     .tgrid-col.bl{ min-width: 96px; }
     .tgrid-col.int{ min-width: 96px; }
 
-
     .tgrid-right{
       display:flex;
       flex-direction: column;
@@ -1541,7 +1622,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       width: 34px;
     }
 
-
     .tgrid-int{
       font-weight: 950;
       font-size: 14px;
@@ -1557,7 +1637,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
     .top3-mini-row.duel{
       border-color: rgba(45,107,255,0.42);
-      box-shadow: 0 0 16px rgba(45,107,255,0.14);
+      box-shadow: 0 0 16px rgba(255,43,43,0.12);
     }
     .top3-mini-row.duel .tgrid-int{
       color: rgba(45,107,255,0.98);
@@ -1580,7 +1660,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       background: rgba(148,163,184,0.08);
       color: rgba(226,232,240,0.90);
     }
-    .tgrid-badge.duel{ border-color: rgba(45,107,255,0.45); background: rgba(45,107,255,0.12); }
+    .tgrid-badge.duel{ border-color: rgba(45,107,255,0.45); background: rgba(255,43,43,0.10); }
     .tgrid-badge.atk{ border-color: rgba(255,122,24,0.55); background: rgba(255,122,24,0.12); }
     .tgrid-badge.def{ border-color: rgba(255,43,43,0.55); background: rgba(255,43,43,0.12); }
 
@@ -1600,8 +1680,8 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       background: rgba(226,232,240,0.85);
       border-radius: 999px;
     }
-    .top3-mini-row.duel .tgrid-bar{ border-color: rgba(45,107,255,0.28); background: rgba(45,107,255,0.12); }
-    .top3-mini-row.duel .tgrid-bar > i{ background: rgba(45,107,255,0.95); }
+    .top3-mini-row.duel .tgrid-bar{ border-color: rgba(255,43,43,0.28); background: rgba(255,43,43,0.10); }
+    .top3-mini-row.duel .tgrid-bar > i{ background: rgba(255,43,43,0.90); }
 
     /* Compacto P4-P20 (1 línea pro) */
     .top3-mini-grid.expanded .top3-mini-row.compact{ padding: 5px 10px; }
@@ -1617,15 +1697,13 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       margin-left: 6px;
     }
 
-
-
     #lapChart {
       width: 100%;
       height: 120px;
       display: block;
       border-radius: 12px;
       background: rgba(2,6,23,0.55);
-      border: 1px solid rgba(34,211,238,0.18);
+      border: 1px solid rgba(255,43,43,0.18);
     }
 
 @media (min-height: 750px) {
@@ -1644,8 +1722,9 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     }
 
     body {
-      background-image: none !important;
+      background-image: radial-gradient(circle at 25% 15%, rgba(255,43,43,0.10), transparent 55%), radial-gradient(circle at 85% 0%, rgba(255,255,255,0.04), transparent 55%) !important;
       background-color: #050508 !important;
+      color-scheme: dark;
     }
 
     .app {
@@ -2219,6 +2298,8 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     /* RD modos - permitir wrap en pantallas chicas */
     .rd-mode-row{ flex-wrap: wrap; }
 
+    /* v0.0.0.44 - ocultar botones RD avanzados (se decide en background) */
+    #rdModeSarca, #rdModeEngineer, #rdModeHype{ display:none !important; }
 
     /* PATCH v5.0.0 - RD ON verde + consistencia UI */
     #rdToggleBtn.active{
@@ -2232,7 +2313,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       color: rgba(255,255,255,.82) !important;
       box-shadow: none !important;
     }
-
 
     /* Manual - modal ayuda (single-file friendly) */
     .header-help{
@@ -2371,7 +2451,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       color: var(--text-muted);
     }
 
-
     /* MANGA UX: flash verde en contenedor del piloto seguido */
     .pilot-card.flash-green{
       border-color: #2eea7a !important;
@@ -2419,7 +2498,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       100%{ transform: scale(1); filter:none; }
     }
 
-
     /* Manual button - más visible */
     #manualBtn{
       background: linear-gradient(135deg, rgba(34,197,94,.22), rgba(0,229,255,.18));
@@ -2464,7 +2542,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       background: rgba(34,197,94,.22);
       box-shadow: 0 0 0 1px rgba(34,197,94,.35) inset, 0 10px 24px rgba(0,0,0,.28);
     }
-
 
     /* =========================
        TIMING MINI GRID - layout fix (v6.5)
@@ -2521,8 +2598,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       padding: 0 10px;
     }
 
-
-
     /* iPhone / pantallas angostas - FIX nombre vertical en Grid Completo */
     @media (max-width: 430px){
       /* Dar mas aire al nombre y recortar con ellipsis (no letras en columna) */
@@ -2538,7 +2613,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       }
       .tgrid-int{ min-width: 58px; }
     }
-
 
     /* === Mini Grid v2 (TOP 3 / TOP 20) - clean table style === */
     .btn-mini{
@@ -2640,7 +2714,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       .tgrid-row{ font-size: 11px; }
     }
 
-
     /* Mini timing screen (Top3/Top20) - Opción A */
     .top3-mini-grid{ width: 100%; }
     .top3-mini-grid.expanded{ max-height: none; overflow: visible; }
@@ -2671,7 +2744,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     .top3-mini-grid .mini-timing tbody tr.pos1{ background: rgba(251,191,36,0.08); }
     .top3-mini-grid .mini-timing tbody tr.pos2{ background: rgba(255,255,255,0.05); }
     .top3-mini-grid .mini-timing tbody tr.pos3{ background: rgba(249,115,22,0.07); }
-    .top3-mini-grid .mini-timing tbody tr:hover{ background: rgba(45,107,255,0.08); }
+    .top3-mini-grid .mini-timing tbody tr:hover{ background: rgba(255,43,43,0.08); }
     .top3-mini-grid .mini-timing tbody tr.pos1 .mt-p{ color: rgba(251,191,36,0.95); font-weight: 900; }
     .top3-mini-grid .mini-timing tbody tr.pos2 .mt-p{ color: rgba(203,213,225,0.95); font-weight: 900; }
     .top3-mini-grid .mini-timing tbody tr.pos3 .mt-p{ color: rgba(205,127,50,0.95); font-weight: 900; }
@@ -2728,8 +2801,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     }
     .top3-mini-grid .mt-atk{ border-color: rgba(255,122,24,0.55); background: rgba(255,122,24,0.12); }
     .top3-mini-grid .mt-def{ border-color: rgba(255,43,43,0.55); background: rgba(255,43,43,0.12); }
-    .top3-mini-grid .mt-duel{ border-color: rgba(45,107,255,0.45); background: rgba(45,107,255,0.12); }
-
+    .top3-mini-grid .mt-duel{ border-color: rgba(45,107,255,0.45); background: rgba(255,43,43,0.10); }
 
     /* ===== Configuración activa + Presets por sesión ===== */
     .config-status-card{
@@ -2886,12 +2958,21 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
         <div class="header-mini" id="lastUpdateInfo"></div>
       </div>
       <div class="header-right">
-        <div class="badge-live live-off" id="liveIndicator">
-          <span class="badge-live-dot"></span>
-          <span>Offline</span>
+        <div class="header-logo" title="Vic's Pulse Timing">
+          <img src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing">
         </div>
-                <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
-<div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.24</div>
+
+        <div class="header-right-bottom">
+        <div class="header-actions-row">
+          <div class="badge-live live-off" id="liveIndicator">
+            <span class="badge-live-dot"></span>
+            <span>Offline</span>
+          </div>
+          <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
+        </div>
+
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.58</div>
+      </div>
       </div>
     </header>
 
@@ -2990,7 +3071,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
         </div>
         <div class="wake-status expert-only" id="backgroundStatus"></div>
 
-
         <div class="rate-row" style="margin-top:8px;">
           <div class="rate-label">Velocidad voz</div>
           <input type="range" id="rateRange" min="1.0" max="2.5" step="0.1" value="1.5" />
@@ -3005,15 +3085,12 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           </div>
         </div>
 
-
         <div class="grid-button-row">
           <button class="btn-grid" id="btnOpenGrid">
             📋 TOP 3
           </button>
 </div>
       </section>
-
-
 
       <section class="controls-section">
         
@@ -3094,7 +3171,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           <button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeHype" title="Hype">F Hype</button>
         </div>
 
-
         <div class="controls-label expert-only">🎙️ Auto Locutor (sin piloto)</div>
         <div class="rd-mode-row expert-only" role="group" aria-label="Modo del Auto Locutor">
           <button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorPro" title="Locutor PRO serio">PRO</button>
@@ -3102,7 +3178,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
           <button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorEngineer" title="Ingeniero de carrera">Ingeniero</button>
           <button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorNarrativo" title="Narración con hilo y contexto">Narrativo</button>
         </div>
-
 
         <div class="precision-row expert-only">
                   <div class="controls-label">Precisión de lectura del tiempo</div>
@@ -3183,7 +3258,6 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
   </div>
 </section>
 
-
     </main>
   </div>
 
@@ -3192,7 +3266,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.0.24</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.0.37</div>
           <div class="manual-sub">Modo automatico. El spotter toma las decisiones, tu solo manejas.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -3344,12 +3418,11 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
     <div class="speechlog-hint">Activa con ?debug=1 - o localStorage aiSpotterDebug=1</div>
   </div>
 
-
   <script type="module">
 
 /*
 ====================================================================
-DOCUMENTACION TECNICA - AI Spotter TRM (v0.0.0.24)
+DOCUMENTACION TECNICA - AI Spotter TRM (v0.0.0.29)
 ====================================================================
 
 Objetivo
@@ -3535,11 +3608,10 @@ FIN DOCUMENTACION
 ====================================================================
 */
 
-
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.0.24";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.0.58";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -3547,6 +3619,8 @@ FIN DOCUMENTACION
     // - Se anuncian solo en Auto Locutor (sin piloto seleccionado)
     // =========================
     let __autoIntroSig = '';
+    let __autoIntroDoneKeys = new Set();
+    let __autoIntroRetryAt = 0;
     let __autoFinishSig = '';
     let __autoFinishPrevByKey = new Map();
     let __autoFinishAnnouncedByKey = new Set();
@@ -3634,16 +3708,6 @@ FIN DOCUMENTACION
       }
     }
 
-
-
-
-
-
-
-
-
-
-
     function __autoIsStarted(scan) {
       try {
         if (!scan) return false;
@@ -3675,10 +3739,6 @@ FIN DOCUMENTACION
         return false;
       }
     }
-
-
-
-
 
     function __autoUpdateLifecycle(r) {
       try {
@@ -3784,7 +3844,7 @@ FIN DOCUMENTACION
     function __maybeAnnounceAutoIntro(r) {
       try {
         if (!r) return;
-        if (selectedPilotKey) return; // Solo Auto Locutor
+        // Al llegar carrera nueva: anuncia siempre (Auto Locutor o Seguimiento)
 
         // En Auto Locutor, si el usuario no ha tocado VOZ, la activamos en silencio para poder anunciar el titulo
         if (!voiceMasterEnabled) {
@@ -3794,29 +3854,128 @@ FIN DOCUMENTACION
 
         const rn = String(r.raceName || '');
         if (!rn) return;
-        if (rn === __autoIntroSig) return;
 
-        __autoIntroSig = rn;
+        const introKey = 'auto_intro_title_' + rn;
+        const now = Date.now();
 
+        // Si ya anunciamos exitosamente este titulo, no repetir
+        if (rn === __autoIntroSig && __autoIntroDoneKeys && __autoIntroDoneKeys.has(introKey)) return;
+
+        // Si aun no se ha podido anunciar (TTS ocupado/errores), reintentar con cooldown corto
+        if (rn === __autoIntroSig && now < (__autoIntroRetryAt || 0)) return;
+
+        // Carrera nueva real: reset completo
+        const isNewRace = (rn !== __autoIntroSig);
+        const sameRace = !isNewRace;
+        if (isNewRace) {
+          __autoIntroSig = rn;
+          try { __autoResetLifecycle(rn); } catch(e) {}
+          try { __autoIntroDoneKeys.clear(); } catch(e) { __autoIntroDoneKeys = new Set(); }
+        }
+
+        __autoIntroRetryAt = now + 3000;
         // Lifecycle: al llegar carrera nueva, entramos a WAIT_START (silencio) hasta que arranque
-        try { __autoResetLifecycle(rn); } catch(e) {}
+        // (ya se resetea arriba solo cuando rn cambia)
 
         // Reset finishers tracking for new race
-        __autoFinishSig = '';
-        __autoFinishPrevByKey = new Map();
-        __autoFinishAnnouncedByKey = new Set();
-        __autoFinishPhase = false;
+        if (isNewRace) {
+          __autoFinishSig = '';
+          __autoFinishPrevByKey = new Map();
+          __autoFinishAnnouncedByKey = new Set();
+          __autoFinishPhase = false;
+        }
+        // Session info SIEMPRE desde raceName nuevo (evita traer la sesion anterior)
+        const info = parseSessionFromRaceName(rn) || {};
+        try { currentSessionInfo = info; } catch(e) {}
 
-        const info = currentSessionInfo || parseSessionFromRaceName(rn) || {};
-        const label = String(info.label || '').trim();
-        const spokenTitle = String(info.spokenTitle || '').trim() || (label ? label.replace('MODO ', '').trim() : '');
-        const introText = (spokenTitle ? spokenTitle : 'Nueva carrera');
+        const type = String(info.type || '').toUpperCase();
+        const serie = String(info.serie || '').trim();
+        const main = String(info.main || '').trim();
 
-        // Solo titulo profesional (sin leer participantes)
-        enqueueSpeech(introText + ',', {
-          key: 'auto_intro_title_' + rn,
-          priority: 90,
-          cooldownMs: 600000,
+        // Formato pedido (TTS):
+        // - MANGA: \"Clasificacion - Qx - Manga X - Serie X\"
+        // - FINALES: anuncio por Final A/B/C con arranque + calentamiento
+        let introText = '';
+
+                function __pickFinalIntro(mainLetter) {
+          const m = String(mainLetter || '').toUpperCase();
+          // Default (acordado): FINALES = HYPE, PRO y divertido sin pasarse.
+          const A = [
+            'Final A. La elite en pista. Vamos a arrancar, pueden calentar.',
+            'Final A. Top de pilotos. Vamos a arrancar, pueden calentar.',
+            'Final A. Aqui se corre fino. Vamos a arrancar, pueden calentar.',
+            'Final A. Puro nivel. Vamos a arrancar, pueden calentar.',
+            'Final A. Los mejores, sin excusas. Vamos a arrancar, pueden calentar.',
+            'Final A. Ojos al apex. Vamos a arrancar, pueden calentar.',
+            'Final A. Se define en detalles. Vamos a arrancar, pueden calentar.',
+            'Final A. La parrilla esta pesada. Vamos a arrancar, pueden calentar.'
+          ];
+          const B = [
+            'Final B. Se pone bueno. Vamos a arrancar, pueden calentar.',
+            'Final B. Segunda linea de fuego. Vamos a arrancar, pueden calentar.',
+            'Final B. Aqui se pelea de verdad. Vamos a arrancar, pueden calentar.',
+            'Final B. Sin regalos. Vamos a arrancar, pueden calentar.',
+            'Final B. Carrera dura, manos suaves. Vamos a arrancar, pueden calentar.',
+            'Final B. El podio se gana en paciencia. Vamos a arrancar, pueden calentar.',
+            'Final B. Mantengan orden en curva uno. Vamos a arrancar, pueden calentar.',
+            'Final B. A correr inteligente. Vamos a arrancar, pueden calentar.'
+          ];
+          const C = [
+            'Final C. Carrera con hambre. Vamos a arrancar, pueden calentar.',
+            'Final C. Aqui todos quieren subir. Vamos a arrancar, pueden calentar.',
+            'Final C. Cero contactos, mucha cabeza. Vamos a arrancar, pueden calentar.',
+            'Final C. Limpio y constante. Vamos a arrancar, pueden calentar.',
+            'Final C. Si te equivocas, pagas. Vamos a arrancar, pueden calentar.',
+            'Final C. Que se note el progreso. Vamos a arrancar, pueden calentar.',
+            'Final C. Practica hecha, ahora cuenta. Vamos a arrancar, pueden calentar.',
+            'Final C. Vamos a divertirnos, pero con control. Vamos a arrancar, pueden calentar.'
+          ];
+          const mm = (m || 'X');
+          const O = [
+            'Final ' + mm + '. Vamos a arrancar, pueden calentar.',
+            'Final ' + mm + '. Se prende esto. Vamos a arrancar, pueden calentar.',
+            'Final ' + mm + '. Ojo en la curva uno. Vamos a arrancar, pueden calentar.',
+            'Final ' + mm + '. Ritmo y cabeza. Vamos a arrancar, pueden calentar.'
+          ];
+          const bag = (m==='A') ? A : (m==='B') ? B : (m==='C') ? C : O;
+          // Rotacion real sin repeticion reciente
+          return autoRandPick(bag, 'introFinal:' + (m || 'X')) || bag[0];
+        }
+
+
+        function __buildMangaTitleTts2(info) {
+          // Formato TTS (pedido): "Clasificacion, Qx, Manga x, Serie x"
+          // Nota: sin acento en "Clasificacion" para TTS iOS/Android.
+          const parts = ['Clasificacion'];
+          const q = String(info.q || '').trim();
+          // En tu raceName la MANGA trae letra (ej: "Q1.Manga B") => usamos main (B).
+          // Fallback: mangaNo numerico si existe.
+          const mLetter = String(info.main || '').trim();
+          const mNo = String(info.mangaNo || '').trim();
+          const serie = String(info.serie || '').trim();
+          if (q) parts.push('Q' + q);
+          if (mLetter) { parts.push('Manga'); parts.push(mLetter); }
+          else if (mNo) { parts.push('Manga'); parts.push(mNo); }
+          if (serie) parts.push('Serie ' + serie);
+          return parts.join(', ');
+        }
+
+        if (type === 'MANGA') {
+          introText = __buildMangaTitleTts2(info);
+        } else if (type === 'FINAL') {
+          // main es A/B/C si existe
+          introText = __pickFinalIntro(main || '');
+        } else {
+          // fallback
+          const label = String(info.label || '').trim();
+          const spokenTitle = String(info.spokenTitle || '').trim() || (label ? label.replace('MODO ', '').trim() : '');
+          introText = (spokenTitle ? spokenTitle : 'Nueva carrera');
+        }
+
+        enqueueSpeech(introText, {
+          key: introKey,
+          priority: 95,
+          cooldownMs: 0,
           dedupe: true,
           maxAgeMs: 60000
         });
@@ -3826,7 +3985,7 @@ FIN DOCUMENTACION
     function __autoAnnounceFinishers() {
       try {
         if (!raceData || !Array.isArray(raceData.classification) || !raceData.classification.length) return;
-        if (selectedPilotKey) return; // Solo Auto Locutor
+        // Al llegar carrera nueva: anuncia siempre (Auto Locutor o Seguimiento)
         if (!voiceMasterEnabled) return;
 
         const info = currentSessionInfo || {};
@@ -3887,7 +4046,8 @@ FIN DOCUMENTACION
           enqueueSpeech((nm || 'Piloto') + ' finalizo.', {
             key: 'auto_finalizo_' + __autoFinishSig + '_' + key,
             priority: 92,
-            cooldownMs: 600000,
+            cooldownMs: 0, // no bloqueo duro: se controla por __autoIntroDoneKeys + retry
+
             dedupe: true,
             maxAgeMs: 120000
           });
@@ -3897,8 +4057,6 @@ FIN DOCUMENTACION
         }
       } catch(e) {}
     }
-
-
 
     // Pintar versión en UI
     window.addEventListener("DOMContentLoaded", () => {
@@ -3914,7 +4072,6 @@ FIN DOCUMENTACION
         document.body.classList.toggle('debug', !!dbg);
       }catch(e){}
     });
-
 
     
 
@@ -3982,6 +4139,7 @@ FIN DOCUMENTACION
     let initializeFirestore = null;
     let doc = null;
     let getDoc = null;
+    let onSnapshot = null;
     let __firebaseSdkReady = false;
 
     async function ensureFirebaseSdk() {
@@ -3993,6 +4151,7 @@ FIN DOCUMENTACION
         initializeFirestore = fsMod.initializeFirestore;
         doc = fsMod.doc;
         getDoc = fsMod.getDoc;
+        onSnapshot = fsMod.onSnapshot;
         __firebaseSdkReady = true;
         return true;
       } catch (e) {
@@ -4001,7 +4160,6 @@ FIN DOCUMENTACION
         return false;
       }
     }
-
 
     const firebaseConfig = {
       apiKey: "AIzaSyBaySYvIxH8JsvXCETv3XwVdNecJY1ez2c",
@@ -4021,7 +4179,6 @@ FIN DOCUMENTACION
     let __lastGoodTickMs = 0;
     let __lastReadErr = '';
     let __feedTickCount = 0;
-
 
     async function initFirebaseRuntime() {
       try {
@@ -4160,7 +4317,6 @@ function htmlEsc(s){
       }catch(e){ return []; }
     }
 
-
     function getTopRows(limit){
       try{
         const lim = Math.max(1, Math.min(50, Number(limit) || 3));
@@ -4249,8 +4405,6 @@ function htmlEsc(s){
       const c = arr[arr.length - 1];
       return isFinite(b) && isFinite(c) && (b <= thr) && (c <= thr);
     };
-
-
 
     const atk = (fSec != null && isFinite(fSec) && fSec <= thr && (near2(hist.front) || (hist.front && hist.front.length>=1 && isFinite(hist.front[hist.front.length-1]) && hist.front[hist.front.length-1] <= thr)));
     const def = (bSec != null && isFinite(bSec) && bSec <= thr && (near2(hist.back) || (hist.back && hist.back.length>=1 && isFinite(hist.back[hist.back.length-1]) && hist.back[hist.back.length-1] <= thr)));
@@ -4352,7 +4506,6 @@ let stateCell = state;
   top3MiniGridEl.innerHTML = html;
 }
 
-
     try{
       lapChartMetaEl.addEventListener('click', (ev) => {
       if (selectedPilotKey) return;
@@ -4367,7 +4520,6 @@ let stateCell = state;
         renderAutoTop3MiniGrid();
       });
     }catch(e){}
-
 
     const rateRange       = document.getElementById('rateRange');
     const rateDisplay     = document.getElementById('rateDisplay');
@@ -4469,7 +4621,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.24';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.58';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -4480,7 +4632,6 @@ try{
         localStorage.setItem(DEFAULTS_APPLIED_KEY, '1');
       }
     }catch(e){}
-
 
     // Defaults y migración NO destructiva (por dispositivo)
     // - Antes reseteaba por "versión de esquema" y eso era gasolina en el fuego.
@@ -4502,8 +4653,6 @@ try{
       // Actualizamos schema sin resetear
       lsSet('spotterSettingsSchema', SETTINGS_SCHEMA_VERSION);
     } catch (e) {}
-
-
 
     let voiceSettings = { ...DEFAULT_VOICE_SETTINGS };
     let raceDirectorEnabled = true;
@@ -4557,6 +4706,7 @@ let raceDirectorMode = 'minimal';
 
     // ===== Auto Locutor (sin piloto) - 3 estilos
     let autoCommentatorMode = 'picante';
+    let autoModeUserOverride = false;
     try {
       const m = prefGet('autoCommentatorMode', null);
       if (m === 'pro' || m === 'picante' || m === 'engineer' || m === 'narrativo') autoCommentatorMode = m;
@@ -4582,6 +4732,7 @@ let raceDirectorMode = 'minimal';
 
     function setAutoCommentatorMode(mode) {
       if (!(mode === 'pro' || mode === 'picante' || mode === 'engineer' || mode === 'narrativo')) return;
+      autoModeUserOverride = true;
       autoCommentatorMode = mode;
       try { prefSet('autoCommentatorMode', mode); } catch(e) {}
       updateAutoCommentatorButtons();
@@ -4591,7 +4742,6 @@ let raceDirectorMode = 'minimal';
     if (autoLocutorPicante)  autoLocutorPicante.addEventListener('click', () => setAutoCommentatorMode('picante'));
     if (autoLocutorEngineer) autoLocutorEngineer.addEventListener('click', () => setAutoCommentatorMode('engineer'));
     if (autoLocutorNarrativo) autoLocutorNarrativo.addEventListener('click', () => setAutoCommentatorMode('narrativo'));
-
 
 function updateRdModeButtons() {
       const setActive = (el, on) => {
@@ -5921,7 +6071,6 @@ function rdPick(variants, key) {
         return s.replace(/\s+/g, ' ').trim();
       };
 
-
 function rdMakeMangaBattleText(kind, c, mode) {
   const front = (c && c.frontNameSafe) ? c.frontNameSafe : 'el de adelante';
   const back  = (c && c.backNameSafe)  ? c.backNameSafe  : 'el de atrás';
@@ -6050,8 +6199,69 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
     let posDropDebounceTimer = null;
     let posDropDebounceLatest = null;
 
-    // MANGA (clasificación) - estabilidad de posición para evitar "flip-flop" por salida escalonada
+    // BASIC (Seguimiento) - estabilidad de posicion para evitar jitter/flip-flop
+    const basicPosStability = { lastSeenPos: null, candidatePos: null, candidateCount: 0, pendingStablePos: null, lastAnnouncedStablePos: null };
+
+// MANGA (clasificación) - estabilidad de posición para evitar "flip-flop" por salida escalonada
     const mangaPosStability = { lastSeenPos: null, stablePos: null, stableCount: 0, lastAnnouncedStablePos: null };
+    const mangaPosSettle = { active:false, lap:0, dueAt:0, samples:[], lastComputedPos:null };
+
+    function startMangaPosSettle(lap, posNow){
+      try{
+        const now = Date.now();
+        const p = (posNow!=null && isFinite(posNow)) ? Math.max(1, Math.floor(posNow)) : null;
+        const jitter = 1200; // ms
+        const base = 3200;   // ms
+        mangaPosSettle.active = true;
+        mangaPosSettle.lap = Number(lap)||0;
+        mangaPosSettle.dueAt = now + base + Math.floor(Math.random()*jitter);
+        mangaPosSettle.samples = [];
+        if (p) mangaPosSettle.samples.push(p);
+        mangaPosSettle.lastComputedPos = null;
+      } catch(e){}
+    }
+
+    function modeOfIntArray(arr){
+      if (!arr || !arr.length) return null;
+      const m = new Map();
+      let bestK = null; let bestV = 0;
+      for (const x of arr){
+        const k = Number(x)|0;
+        if (!k) continue;
+        const v = (m.get(k)||0)+1;
+        m.set(k,v);
+        if (v>bestV){ bestV=v; bestK=k; }
+      }
+      return bestK;
+    }
+
+    function tickMangaPosSettle(lapsNow, posNow){
+      try{
+        if (!mangaPosSettle.active) return;
+        if ((Number(lapsNow)||0) !== (Number(mangaPosSettle.lap)||0)) return;
+        const now = Date.now();
+        const p = (posNow!=null && isFinite(posNow)) ? Math.max(1, Math.floor(posNow)) : null;
+        if (p && now < (mangaPosSettle.dueAt||0)) {
+          mangaPosSettle.samples.push(p);
+          if (mangaPosSettle.samples.length > 20) mangaPosSettle.samples.shift();
+          return;
+        }
+        if (now >= (mangaPosSettle.dueAt||0)){
+          const stable = modeOfIntArray(mangaPosSettle.samples);
+          mangaPosSettle.lastComputedPos = stable;
+          mangaPosSettle.active = false;
+          if (!stable) return;
+          // Solo anunciamos si cambi� contra la �ltima posici�n estable anunciada
+          if (mangaPosStability.lastAnnouncedStablePos === stable) return;
+          pendingPosChange = {
+            pos: stable,
+            opts: { key: 'pos_manga_' + stable + '_' + lapsNow, priority: 70, cooldownMs: 1400, dedupe: true },
+            expLap: (Number(lapsNow)||0) + 3,
+            _mangaStablePos: stable
+          };
+        }
+      } catch(e){}
+    }
 
     function announcePositionBrief(pos) {
       const p = Math.max(1, Math.min(99, Math.floor(Number(pos) || 0)));
@@ -6141,8 +6351,6 @@ function loadVoiceSettings() {
       } catch (e) {}
     }
 
-
-
     loadVoiceSettings();
 
     // Gesto de usuario (Chrome bloquea AudioContext si no hay interacción)
@@ -6157,7 +6365,8 @@ function loadVoiceSettings() {
     // WebAudio beeps (sin archivos)
     // SFX: por default OFF (evita el 'tac tac' constante).
     // SFX deshabilitado (sin beeps).
-    const soundFxEnabled = false; // SFX hard OFF (evita tic/tac).
+    let soundFxEnabled = false; // UI SFX OFF (evita tic/tac).
+    let lapBeepEnabled = true;   // Beep SOLO en SEGUIMIENTO al cerrar vuelta (mejora/empeora).
 
     let audioCtx = null;
     function ensureAudioCtx() {
@@ -6173,7 +6382,10 @@ function loadVoiceSettings() {
     }
 
     function playBeep(kind = 'up') {
-      if (!soundFxEnabled) return;
+      const k = String(kind||'').trim();
+      const isLap = (k === 'lapUp' || k === 'lapDown');
+      if (isLap) { if (!lapBeepEnabled) return; }
+      else { if (!soundFxEnabled) return; }
       try {
         ensureAudioCtx();
         if (!audioCtx) return;
@@ -6182,19 +6394,19 @@ function loadVoiceSettings() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
 
-        const f = (kind === 'soft') ? 620 : ((kind === 'up') ? 880 : 440);
+        const f = (k === 'soft') ? 620 : ((k === 'lapUp' || k === 'up') ? 880 : 440);
         osc.type = 'sine';
         osc.frequency.setValueAtTime(f, now);
 
         gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime((kind === 'soft') ? 0.06 : 0.18, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime((k === 'soft') ? 0.06 : (isLap ? 0.10 : 0.18), now + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.10);
 
         osc.connect(gain);
         gain.connect(audioCtx.destination);
 
         osc.start(now);
-        osc.stop(now + ((kind === 'soft') ? 0.07 : 0.12));
+        osc.stop(now + ((k === 'soft') ? 0.07 : (isLap ? 0.10 : 0.12)));
       } catch (e) {}
     }
 
@@ -6269,7 +6481,6 @@ function loadVoiceSettings() {
       }
     };
 
-
     // =========================================
     // AI Spotter - Perfiles inteligentes (sin botones)
     // - Si hay piloto seleccionado: Seguimiento
@@ -6289,7 +6500,7 @@ function loadVoiceSettings() {
     const AI_SMART_PROFILES = {
       FOLLOW: {
         TRAIN: { rdMode:'engineer', autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
-        MANGA: { rdMode:'minimal',  autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
+        MANGA: { rdMode:'minimal',  autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true,  ritmo:false, estlap:false, bestlap:true,  leadergap:false, pos:true, gaps:false, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
         FINAL: { rdMode:'coach',    autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:false, bestlap:true, leadergap:true, pos:true, gaps:true, podium:true,  front06:true,  back06:true,  attack:true,  defense:true,  pelea:false, total:false, cons10:false, box:false, netgain:false } }
       },
       AUTO: {
@@ -6298,7 +6509,6 @@ function loadVoiceSettings() {
         FINAL: { rdMode:'coach',    autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:false, estlap:false, bestlap:true, leadergap:true, pos:true, gaps:true, podium:true,  front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } }
       }
     };
-
 
     function _applyBasicOverride(sess){
       // Solo aplica en Seguimiento
@@ -6540,7 +6750,6 @@ function loadVoiceSettings() {
       });
     }
 
-
 // ===== Voces (solo español) + rotación Auto Locutor =====
     let autoVoiceRotateEnabled = true; // ON por default
     let __autoVoicePool = [];
@@ -6644,7 +6853,6 @@ let ttsRate = detectDefaultTtsRate();
         if (!__autoVoicePool.length) __autoVoicePool = voicesAll.map(v => v.voiceURI).filter(Boolean);
       } catch(e) {}
 
-
       voiceSelect.innerHTML = '';
       voices.forEach(v => {
         const opt = document.createElement('option');
@@ -6700,7 +6908,6 @@ let ttsRate = detectDefaultTtsRate();
       });
     }
 
-
     // Speech queue manager: evita que se trunque cuando entra otro mensaje.
     const speechQueue = [];
     let speechSpeaking = false;
@@ -6714,6 +6921,11 @@ let ttsRate = detectDefaultTtsRate();
     function normalizeTtsText(raw) {
       try {
         let s = String(raw || '');
+
+        // Normaliza unicode (acentos) para TTS
+        try { s = s.normalize('NFC'); } catch(e) {}
+        // TTS-safe: evita que algunas voces pronuncien raro "Clasificación"
+        s = s.replace(/Clasificación/gi, 'Clasificacion');
 
         // mm:ss.mmm
         s = s.replace(/\b(\d{1,2}):(\d{2})\.(\d{3})\b/g, (m0) => {
@@ -6881,7 +7093,6 @@ function updateMangaPilotStartsFromClassification(classification) {
   } catch(e) {}
 }
 
-
 function flashPilotCardGreen() {
       const card = document.querySelector('.pilot-card');
       if (!card) return;
@@ -6895,7 +7106,6 @@ function flashPilotCardGreen() {
     let lastGlobalBestSpokenMs = 0;
     let lastGlobalBestSpokenHolderKey = null;
     let lastGlobalBestSpokenAt = 0;
-
 
 function clampNum(v, lo, hi){
       const n = Number(v);
@@ -7002,6 +7212,7 @@ function enqueueSpeech(text, opts = {}) {
         u.onend = () => {
           clearWd();
           speechSpeaking = false;
+          try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_title_') === 0) { __autoIntroDoneKeys.add(next.key); } } catch(e) {}
           lastSpokenKeyAt.set(next.key, Date.now());
           const d = Number(next.postDelayMs || 0) || 0;
           if (d > 0) setTimeout(pumpSpeechQueue, d);
@@ -7086,7 +7297,6 @@ function speakWithLaps(_laps, message, opts) {
       try { window.addEventListener('touchstart', handler, { once:true, passive:true, capture:true }); } catch(e) {}
       try { window.addEventListener('pointerdown', handler, { once:true, passive:true, capture:true }); } catch(e) {}
     }
-
 
 // Unlock TTS en iOS/WebKit: requiere gesto de usuario y a veces "primera voz" para habilitar speechSynthesis
 let __ttsUnlockedOnce = false;
@@ -7178,7 +7388,6 @@ voiceMasterEnabled = !!on;
         });
       } catch(e) {}
     }
-
 
     // Toggle UI de mensajes
     function applyVoiceSettingsToButtons() {
@@ -7308,7 +7517,6 @@ voiceMasterEnabled = !!on;
       if (savedPreset === 'pro' || savedPreset === 'show') setPresetBtnActive(savedPreset);
     }catch(e){}
 
-
     function isAllMsgsOn(){
       let allOn = true;
       try{
@@ -7351,7 +7559,6 @@ voiceMasterEnabled = !!on;
     // Categorías desplegables (Esenciales / Batalla / Resumen)
     // =========================
 
-
 // =========================
     
     const DEFAULT_MESSAGE_TOGGLES = {
@@ -7390,7 +7597,6 @@ voiceMasterEnabled = !!on;
       toggles = { ...DEFAULT_MESSAGE_TOGGLES };
     }
 
-
 // Voice message toggles (18 botones)
     // - laps: siempre activo (no se puede apagar)
     // - blueflag: por defecto activo al abrir (si no hay config guardada)
@@ -7407,6 +7613,7 @@ let isLoading = false;
     let loadingSince = 0;
 
     let isSelectingPilot = false;
+    let pendingPilotOptionsUpdate = false;
     let lastPilotOptionsSignature = '';
     let lastRaceName = '';
 
@@ -7585,7 +7792,39 @@ function toFixedFloor(value, decimals = 0) {
           }
         }
       } catch(e) {}
+
     });
+
+    // KeepAlive: intenta mantener TTS vivo cuando el tab queda oculto (Chrome/Android/Safari)
+    // Nota honesta: iOS puede pausar TTS si cambias de app o apagas pantalla. Para hablar "siempre",
+    // deja la app al frente y la pantalla encendida (WakeLock ya va ON).
+    let __bgKeepAliveTimer = 0;
+    function startBgKeepAlive(){
+      if (__bgKeepAliveTimer) return;
+      __bgKeepAliveTimer = setInterval(() => {
+        try {
+          if (!backgroundModeEnabled) return;
+          if (!voiceMasterEnabled) return;
+          try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+          try { ensureAudioCtx(); } catch(e) {}
+        } catch(e) {}
+      }, 4000);
+    }
+    startBgKeepAlive();
+
+    try {
+      window.addEventListener('pageshow', () => {
+        try { startBgKeepAlive(); } catch(e) {}
+        try { loadRaceFromFirebase(); } catch(e) {}
+        try { if (typeof startRaceRealtime === 'function') startRaceRealtime(); } catch(e) {}
+      }, { passive:true });
+      window.addEventListener('resume', () => {
+        try { startBgKeepAlive(); } catch(e) {}
+        try { loadRaceFromFirebase(); } catch(e) {}
+        try { if (typeof startRaceRealtime === 'function') startRaceRealtime(); } catch(e) {}
+      }, { passive:true });
+    } catch(e) {}
+
 function setLiveStatus(isOnline) {
       if (!liveIndicator) return;
       liveIndicator.classList.toggle('live-off', !isOnline);
@@ -7691,7 +7930,6 @@ function setLiveStatus(isOnline) {
       // Máximo 3 caracteres
       return (s.length <= 3) ? s : s.slice(-3);
     }
-
 
     // Rangos plausibles de una vuelta Turbo Racing 1/76 (evita basura tipo 0:00.010)
     const LAP_MS_MIN = 2500;   // 2.5 s (hay feeds que reportan medias vueltas)
@@ -7810,7 +8048,6 @@ function statsFromTimes(arr) {
       const sigma = Math.sqrt(varSum / n);
       return { n, best: isFinite(best) ? best : 0, mean, sigma, last };
     }
-
 
 // Devuelve el mejor "stint" consecutivo de tamaño window (por promedio), y la peor vuelta.
 // times debe venir en ms, ya filtrado a vueltas plausibles.
@@ -7952,6 +8189,14 @@ ensureCanvasHiDpi(lapChartEl);
       const bottom = Math.floor(h * 0.18);
       const gw = w - left - right;
       const gh = h - top - bottom;
+      // X: izquierda->derecha. Inicia desde la izquierda (lap 1 a la izquierda) y se va llenando hacia la derecha.
+      // Con pocas vueltas queda espacio vacío a la derecha (intencional).
+      const k = times.length;
+      const STEP_X = (N > 1) ? (gw / (N - 1)) : 0;
+      const xFor = (i) => {
+        const ii = Math.max(0, Math.min(k - 1, i));
+        return left + STEP_X * ii;
+      };
 
       const baseIdx = timesAll.length - times.length; // índice global del primer punto mostrado
 
@@ -7984,8 +8229,8 @@ try {
     if (endDisp >= 0 && startDisp <= (times.length - 1)) {
       const s = Math.max(0, startDisp);
       const e = Math.min(times.length - 1, endDisp);
-      const x1 = left + (gw * s / (times.length - 1));
-      const x2 = left + (gw * e / (times.length - 1));
+      const x1 = xFor(s);
+      const x2 = xFor(e);
       ctx.save();
       ctx.fillStyle = 'rgba(34,197,94,0.08)';
       ctx.fillRect(Math.min(x1, x2), top, Math.abs(x2 - x1), gh);
@@ -7999,7 +8244,7 @@ try {
       ctx.lineWidth = 2;
       ctx.beginPath();
       times.forEach((v, i) => {
-        const x = left + (times.length === 1 ? 0 : (gw * i / (times.length - 1)));
+        const x = xFor(i);
         const y = top + (1 - (Math.min(Math.max(v, minV), maxV) - minV) / (maxV - minV)) * gh;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -8052,7 +8297,7 @@ try {
 
       for (let i = 0; i < times.length; i++) {
         const v = times[i];
-        const x = left + (times.length === 1 ? 0 : (gw * i / (times.length - 1)));
+        const x = xFor(i);
         const y = top + (1 - (Math.min(Math.max(v, minV), maxV) - minV) / (maxV - minV)) * gh;
 
         const bigErr = (mean && v > (mean + ERR_A_MS)) || (best && v > (best + ERR_B_MS));
@@ -8061,7 +8306,7 @@ try {
 
       // last (color por mejora)
       const iLast = times.length - 1;
-      const xLast = left + (times.length === 1 ? 0 : (gw * iLast / (times.length - 1)));
+      const xLast = xFor(iLast);
       const yLast = top + (1 - (Math.min(Math.max(times[iLast], minV), maxV) - minV) / (maxV - minV)) * gh;
       const prevBest = (times.length > 1) ? Math.min(...times.slice(0, -1)) : 0;
       const lastClass = classifyLapColor ? classifyLapColor(times[iLast], prevBest || best || 0, sessionBestMs) : 'lap-neutral';
@@ -8075,7 +8320,7 @@ try {
       // best (índice) - verde, pero si es best sesión -> morado
       const idxBest = times.findIndex(v => v === best);
       if (idxBest >= 0) {
-        const xB = left + (times.length === 1 ? 0 : (gw * idxBest / (times.length - 1)));
+        const xB = xFor(idxBest);
         const yB = top + (1 - (Math.min(Math.max(best, minV), maxV) - minV) / (maxV - minV)) * gh;
         const bestFill = 'rgba(167,139,250,0.98)';
         drawDot(xB, yB, bestFill, 1.28);
@@ -8091,7 +8336,7 @@ try {
         for (let i = 0; i < marks.length && i < times.length; i++) {
           const tag = marks[i];
           if (!tag) continue;
-          const x = left + (times.length === 1 ? 0 : (gw * i / (times.length - 1)));
+          const x = xFor(i);
           const y = top + (1 - (Math.min(Math.max(times[i], minV), maxV) - minV) / (maxV - minV)) * gh;
 
           let bg = 'rgba(255,255,255,0.10)';
@@ -8198,7 +8443,7 @@ try {
   if (idxBestAll >= 0) {
     const iB = idxBestAll - baseIdx;
     if (iB >= 0 && iB < times.length) {
-      const x = left + (gw * iB / (times.length - 1));
+      const x = xFor(iB);
       const y = top + (1 - (Math.min(Math.max(times[iB], minV), maxV) - minV) / (maxV - minV)) * gh;
       drawLabel('BEST', x, y, 'rgba(167,139,250,0.22)', 'rgba(245,240,255,0.98)');
     }
@@ -8208,7 +8453,7 @@ try {
   if (idxWorstAll >= 0) {
     const iW = idxWorstAll - baseIdx;
     if (iW >= 0 && iW < times.length) {
-      const x = left + (gw * iW / (times.length - 1));
+      const x = xFor(iW);
       const y = top + (1 - (Math.min(Math.max(times[iW], minV), maxV) - minV) / (maxV - minV)) * gh;
       // dot extra para que se vea
       drawDot(x, y, 'rgba(239,68,68,0.92)', 1.25);
@@ -8223,7 +8468,7 @@ try {
     if (e >= 0 && s <= (times.length - 1)) {
       const ss = Math.max(0, s);
       const ee = Math.min(times.length - 1, e);
-      const xc = left + (gw * ((ss + ee) / 2) / (times.length - 1));
+      const xc = ((xFor(ss) + xFor(ee)) / 2);
       const yTop = top + 2;
       drawLabel('FAST5', xc, yTop + labelFont + 10, 'rgba(34,197,94,0.16)', 'rgba(220,255,235,0.95)');
     }
@@ -8231,8 +8476,6 @@ try {
 } catch(e) {}
 
       }
-
-
 
 function drawLapChartTop3Auto(){
       if (!lapChartEl || !lapChartMetaEl) return;
@@ -8348,7 +8591,7 @@ function drawLapChartTop3Auto(){
         ctx.beginPath();
 
         for (let j=0;j<len;j++){
-          const xIdx = (N - len + j);
+          const xIdx = j; // left aligned: lap 1 starts at left
           const x = left + (N === 1 ? 0 : (gw * xIdx / (N - 1)));
           const v = vals[j];
           const y = topPad + (1 - (Math.min(Math.max(v, minV), maxV) - minV) / (maxV - minV)) * gh;
@@ -8359,7 +8602,7 @@ function drawLapChartTop3Auto(){
 
         // dot última vuelta
         const jLast = len - 1;
-        const xIdxL = (N - len + jLast);
+        const xIdxL = jLast; // left aligned
         const xL = left + (N === 1 ? 0 : (gw * xIdxL / (N - 1)));
         const vL = vals[jLast];
         const yL = topPad + (1 - (Math.min(Math.max(vL, minV), maxV) - minV) / (maxV - minV)) * gh;
@@ -8380,12 +8623,10 @@ function drawLapChartTop3Auto(){
       }catch(e){}
     }
 
-
     window.addEventListener('resize', () => {
       if (selectedPilotKey) drawLapChartForKey(selectedPilotKey);
       else { try { drawLapChartTop3Auto(); } catch(e) {} }
     });
-
 
     function numeroATexto0a999(n) {
       n = Math.floor(n);
@@ -8625,6 +8866,19 @@ let meanMs = parseTimeToMs(meanTimeRaw);
     let attackLatch  = { active:false, otherKey:'', lap:-1 };
     let defenseLatch = { active:false, otherKey:'', lap:-1 };
     let fightLatch   = { active:false, lap:-1 };
+
+    // =========================
+    // DUEL / ATK / DEF (EMA + histeresis)
+    // - Entra: gap suavizado <= 0.45s
+    // - Sale: >= 0.65s (ATAQUE) o >= 0.60s (DEFENSA)
+    // - EMA reduce jitter, sobre todo en MANGA
+    // =========================
+    const DUEL_ENTER_SEC = 0.45;
+    const DUEL_EXIT_ATTACK_SEC = 0.65;
+    const DUEL_EXIT_DEFEND_SEC = 0.60;
+    const DUEL_EMA_ALPHA = 0.35;
+    const duelStateByPilotKey = new Map();
+
     let startPosForSelected = null;
     let lastNetGainValue = null;
     let lastNetGainSpokenLap = 0;
@@ -8686,7 +8940,6 @@ function resetAutoNarratorState() {
   } catch(e) {}
 }
 
-
     function resetAutoCommentatorState() {
       try {
         commentatorTop3LastLeaderLap = 0;
@@ -8709,8 +8962,6 @@ function resetAutoNarratorState() {
         try { resetAutoNarratorState(); } catch(e) {}
       } catch(e) {}
     }
-
-
 
     // Historial de vueltas para consistencia
     let lapHistory = new Map();
@@ -8761,6 +9012,9 @@ function resetAutoNarratorState() {
     let pendingBlueFlagMessage = '';
     let lastBlueFlagPilotLap = 0;
     let lastBlueWarnPilotLap = 0;
+    let lastBlueFlagLeaderLap = 0;
+    let lastBlueWarnLeaderLap = 0;
+    let blueFlagConfirm = { pilotKey:'', leaderKey:'', lap:0, hits:0, t:0 };
 
     function renderPilotCard(p) {
       if (!p) {
@@ -8933,6 +9187,13 @@ function refreshSessionBestCache() {
       const cur = (sessionBestCache && sessionBestCache.ms) ? sessionBestCache.ms : 0;
       const hKey = (sessionBestCache && sessionBestCache.holderKey) ? sessionBestCache.holderKey : null;
       const hName = (sessionBestCache && sessionBestCache.holder) ? sessionBestCache.holder : '-';
+      let hPos = null;
+      try {
+        if (hKey && rows && rows.length) {
+          const rr = rows.find(x => (getPilotKey(x) === hKey));
+          if (rr && rr.pos) hPos = rr.pos;
+        }
+      } catch(e) {}
       const improved = cur && ((lastGlobalBestSpokenMs === 0) || (cur < (lastGlobalBestSpokenMs - 25)));
       const newHolder = hKey && (hKey !== lastGlobalBestSpokenHolderKey);
       if (improved && (newHolder || cur < (lastGlobalBestSpokenMs - 60)) && (now - lastGlobalBestSpokenAt > 2500)) {
@@ -8941,7 +9202,7 @@ function refreshSessionBestCache() {
         lastGlobalBestSpokenAt = now;
         // Beep + voz (no interrumpe si ya va hablando)
         playBeep('up');
-        enqueueSpeech(`Record de carrera. ${hName}. Best lap ${tiempoATexto(cur)}.`, { key: 'global_best_' + cur, priority: 88, cooldownMs: 2000, dedupe: true });
+        enqueueSpeech(`Best lap global. ${hPos != null ? ('P ' + hPos + '. ') : ''}${hName}. ${tiempoATexto(cur)}.`, { key: 'global_best_' + cur, priority: 88, cooldownMs: 2000, dedupe: true });
         flashPilotCardGreen();
         flashMangaClock();
       }
@@ -8952,7 +9213,6 @@ function refreshSessionBestCache() {
     sessionBestCache = { ms: 0, holder: '-', holderKey: null };
   }
 }
-
 
 function updateRecordCarreraUI() {
   const lapEl = document.getElementById('bestOverallLap');
@@ -9007,6 +9267,7 @@ function computeSessionBestMs() {
     
 
     function updatePilotOptions() {
+      if (isSelectingPilot) { pendingPilotOptionsUpdate = true; return; }
       if (!raceData || !Array.isArray(raceData.classification)) return;
       const currentKey = selectedPilotKey;
 
@@ -9071,6 +9332,10 @@ function computeSessionBestMs() {
     });
     pilotSelect.addEventListener('blur', () => {
       isSelectingPilot = false;
+      if (pendingPilotOptionsUpdate) {
+        pendingPilotOptionsUpdate = false;
+        setTimeout(() => { try { updatePilotOptions(); } catch(e) {} }, 0);
+      }
     });
 
         function resetSelectedPilotTrackingState() {
@@ -9242,7 +9507,6 @@ pilotSelect.addEventListener('change', () => {
       return raceData.classification.findIndex(r => getPilotKey(r) === key);
     }
 
-
     // =========================
     // GAP lapDiff guard (anti "1 vuelta" fantasma)
     // - Solo hablamos de diferencia de vueltas si se repite estable en 2 lecturas
@@ -9288,45 +9552,31 @@ pilotSelect.addEventListener('change', () => {
         // Si hay diferencia de vueltas, dilo como "más una vuelta" (sin nombres).
         if (lapDiff !== 0) {
 
-
           // Guard: evitar glitches de lapcount en lecturas pegadas
-
 
           const expectedOk = (direction === 'ahead') ? (lapDiff <= 0) : (lapDiff >= 0);
 
-
           if (!expectedOk) {
-
 
             // Inconsistente: tratamos como mismo giro y seguimos con segundos
 
-
           } else {
-
 
             const meKey = getPilotKey(me) || (me.racerName || 'me');
 
-
             const otherKey = getPilotKey(other) || (other.racerName || 'other');
-
 
             const pairKey = meKey + '|' + otherKey + '|' + direction;
 
-
             if (!lapDiffGuardAllow(pairKey, lapDiff)) return null;
-
 
             const v = Math.abs(lapDiff);
 
-
             const palabra = (v === 1) ? 'una vuelta' : (v + ' vueltas');
-
 
             if (direction === 'ahead') return 'Gap con ' + (other.racerName || 'adelante') + ' más ' + palabra;
 
-
             return 'Gap con ' + (other.racerName || 'atrás') + ' más ' + palabra;
-
 
           }
         }
@@ -9451,10 +9701,84 @@ pilotSelect.addEventListener('change', () => {
         backName = behind.racerName || '';
       }
 
+      // DUEL (EMA + histeresis)
+      const meKey = getPilotKey(me) || (me && (me._id || me.racerName)) || String(idx);
+      let st = duelStateByPilotKey.get(meKey);
+      if (!st) st = { frontEma:null, backEma:null, active:false, kind:'' };
+      const ema = (prev, x) => (prev == null || !isFinite(prev)) ? x : (DUEL_EMA_ALPHA * x + (1 - DUEL_EMA_ALPHA) * prev);
+
+      let frontSecEma = null;
+      let backSecEma  = null;
+
+      if (sameFrontLap && frontSec != null && isFinite(frontSec)) {
+        st.frontEma = ema(st.frontEma, frontSec);
+        frontSecEma = st.frontEma;
+      } else {
+        st.frontEma = null;
+      }
+
+      if (sameBackLap && backSec != null && isFinite(backSec)) {
+        st.backEma = ema(st.backEma, backSec);
+        backSecEma = st.backEma;
+      } else {
+        st.backEma = null;
+      }
+
+      let preferred = '';
+      let duelSec = null;
+      if (frontSecEma != null && backSecEma != null) {
+        preferred = (frontSecEma <= backSecEma) ? 'ATTACK' : 'DEFEND';
+        duelSec = Math.min(frontSecEma, backSecEma);
+      } else if (frontSecEma != null) {
+        preferred = 'ATTACK';
+        duelSec = frontSecEma;
+      } else if (backSecEma != null) {
+        preferred = 'DEFEND';
+        duelSec = backSecEma;
+      }
+
+      // Histeresis
+      if (st.active) {
+        if (st.kind === 'ATTACK') {
+          if (!sameFrontLap || frontSecEma == null || frontSecEma >= DUEL_EXIT_ATTACK_SEC) st.active = false;
+        } else if (st.kind === 'DEFEND') {
+          if (!sameBackLap || backSecEma == null || backSecEma >= DUEL_EXIT_DEFEND_SEC) st.active = false;
+        } else {
+          if (duelSec == null || duelSec >= 0.70) st.active = false;
+        }
+      }
+
+      if (!st.active) {
+        if (preferred === 'ATTACK' && frontSecEma != null && sameFrontLap && frontSecEma <= DUEL_ENTER_SEC) {
+          st.active = true;
+          st.kind = 'ATTACK';
+        } else if (preferred === 'DEFEND' && backSecEma != null && sameBackLap && backSecEma <= DUEL_ENTER_SEC) {
+          st.active = true;
+          st.kind = 'DEFEND';
+        } else {
+          st.kind = preferred || st.kind || '';
+        }
+      } else {
+        // Permite cambio de rol solo si la diferencia es clara (evita flip-flop)
+        if (preferred && preferred !== st.kind && frontSecEma != null && backSecEma != null) {
+          if (Math.abs(frontSecEma - backSecEma) >= 0.12) st.kind = preferred;
+        } else if (preferred && preferred !== st.kind && (frontSecEma == null || backSecEma == null)) {
+          st.kind = preferred;
+        }
+      }
+
+      duelStateByPilotKey.set(meKey, st);
+
+      const duelActive = !!st.active;
+      const duelKind = duelActive ? st.kind : (preferred || '');
+      const duelGapSec = duelActive ? (duelKind === 'ATTACK' ? frontSecEma : (duelKind === 'DEFEND' ? backSecEma : duelSec)) : duelSec;
+
       return {
         me, ahead, behind,
         meLaps,
         frontSec, backSec,
+        frontSecEma, backSecEma,
+        duelActive, duelKind, duelGapSec,
         frontKey, backKey,
         frontName, backName,
         sameFrontLap, sameBackLap
@@ -9568,49 +9892,85 @@ function updateBlueFlagFromPassEvents() {
       try {
         if (!raceData || !Array.isArray(raceData.classification) || !selectedPilotKey) return;
         if (!lastPassEvents || typeof lastPassEvents.get !== 'function') return;
+        if (typeof voiceSettings !== 'undefined' && voiceSettings && voiceSettings.blueflag === false) return;
 
-        const leader = raceData.classification.find(r => r.pos === 1) || raceData.classification[0];
-        if (!leader) return;
-        const leaderKey = getPilotKey(leader);
+        // Bandera azul por proximidad real de cruce (0.8s fijo) + considera P1/P2/P3 cuando lapean.
+        // Se dispara solo cuando el lapeador (Top3) pasa MUY cerca por meta DESPUES del rezagado
+        // y ya trae al menos +1 vuelta (lapDiff>=1). Evita falsos por el salto a "+1" cuando estan lejos.
+        const BLUE_PROX_MS = 800;
+        const sessionType = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+        const isFinal = (sessionType === 'FINAL');
+
+        const arr = raceData.classification.slice().filter(r => r && (r.pos != null));
+        if (!arr.length) return;
+        arr.sort((a,b) => (Number(a.pos)||999) - (Number(b.pos)||999));
+
+        const top3 = arr.filter(r => {
+          const p = Number(r.pos)||999;
+          return p >= 1 && p <= 3;
+        }).slice(0,3);
+        if (!top3.length) return;
 
         const selEvent = lastPassEvents.get(selectedPilotKey);
-        const leaderEvent = lastPassEvents.get(leaderKey);
-        if (!selEvent || !leaderEvent) return;
+        if (!selEvent || !isFinite(selEvent.time)) return;
 
-        // queremos el caso donde el piloto seleccionado pasó primero
-        // y después pasa el líder
-        if (leaderEvent.time <= selEvent.time) return;
+        const selLap = Number(selEvent.lap) || 0;
+        const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
 
-        const delta = leaderEvent.time - selEvent.time;
-        if (delta <= 0 || delta > 2000) return;
+        let best = null;
+        for (const laper of top3) {
+          if (!laper) continue;
+          const lk = getPilotKey(laper);
+          if (!lk) continue;
+          const le = lastPassEvents.get(lk);
+          if (!le || !isFinite(le.time)) continue;
+          if (le.time <= selEvent.time) continue; // laper paso antes o igual, no viene detras
 
-        const lapDiff = (leaderEvent.lap || 0) - (selEvent.lap || 0);
-        if (lapDiff < 0) return;
+          const delta = le.time - selEvent.time;
+          if (delta <= 0 || delta > BLUE_PROX_MS) continue;
 
-        const sec = toFixedFloor((delta / 1000), decimalPrecision);
-        const leaderName = leader.racerName || 'el líder';
+          const laperLap = Number(le.lap) || 0;
+          const lapDiff = laperLap - selLap;
+          if (lapDiff < 1) continue; // no hay lapeo confirmado
 
-        if (lapDiff >= 1) {
-          // bandera azul real: el líder ya va al menos una vuelta adelante
-          if (selEvent.lap && selEvent.lap <= lastBlueFlagPilotLap) return;
-
-          pendingBlueFlagForPilotKey = selectedPilotKey;
-          pendingBlueFlagMessage = 'Bandera azul. Detrás viene el líder ' + leaderName + ' P1. Mantén tu línea y déjalo pasar';
-          lastBlueFlagPilotLap = selEvent.lap || lastBlueFlagPilotLap;
-        } else {
-          // lapDiff === 0 -> el líder todavía no lo ha lapeado pero viene pegado
-          if (selEvent.lap && selEvent.lap <= lastBlueWarnPilotLap) return;
-
-          pendingBlueFlagForPilotKey = selectedPilotKey;
-          pendingBlueFlagMessage = 'Azul. Detrás viene el líder ' + leaderName + ' P1. Mantén tu línea y deja que te rebase seguro';
-          lastBlueWarnPilotLap = selEvent.lap || lastBlueWarnPilotLap;
+          if (!best || delta < best.delta) {
+            best = { laper, lk, le, delta, laperLap, lapDiff };
+          }
         }
+        if (!best) return;
+
+        // Confirmacion anti-jitter (2 hits cercanos con mismo par y misma vuelta del rezagado)
+        const samePair = (blueFlagConfirm.pilotKey === selectedPilotKey && blueFlagConfirm.leaderKey === best.lk && blueFlagConfirm.lap === selLap);
+        if (samePair && (now - (blueFlagConfirm.t || 0)) <= 2600) {
+          blueFlagConfirm.hits = (blueFlagConfirm.hits || 0) + 1;
+          blueFlagConfirm.t = now;
+        } else {
+          blueFlagConfirm = { pilotKey: selectedPilotKey, leaderKey: best.lk, lap: selLap, hits: 1, t: now };
+        }
+        if ((blueFlagConfirm.hits || 0) < 2) return;
+
+        // Cooldowns: una vez cada 2 vueltas del lapeador y no repetir en la misma vuelta del rezagado
+        if (selLap && selLap <= lastBlueFlagPilotLap) { blueFlagConfirm.hits = 0; return; }
+        if (best.laperLap && (best.laperLap - lastBlueFlagLeaderLap) < 2) { blueFlagConfirm.hits = 0; return; }
+
+        const laperPos = Number(best.laper.pos) || 0;
+        const laperName = (best.laper && (best.laper.racerName || best.laper.name || best.laper.pilotName)) || '';
+        const who = (laperPos === 1) ? 'el lider P1' : ('P' + laperPos);
+
+        pendingBlueFlagForPilotKey = selectedPilotKey;
+        pendingBlueFlagMessage = isFinal
+          ? ('¡Bandera azul! Detrás viene ' + who + '. Mantén tu línea y déjalo pasar en la recta')
+          : ('Bandera azul. Detrás viene ' + who + '. Mantén tu línea y déjalo pasar en la recta');
+
+        lastBlueFlagPilotLap = selLap || lastBlueFlagPilotLap;
+        lastBlueFlagLeaderLap = best.laperLap || lastBlueFlagLeaderLap;
+        blueFlagConfirm.hits = 0;
+
       } catch (e) {
         console.error('Error en updateBlueFlagFromPassEvents', e);
       }
     }
 
-    
     function updateLapHistoryAll() {
       try {
         if (!raceData || !Array.isArray(raceData.classification)) return;
@@ -9710,15 +10070,15 @@ function updateBlueFlagFromPassEvents() {
     const commentatorAutoCfg = {
       // Calma por defecto: el Auto Locutor solo debe hablar cuando hay "acción real"
       // (cambios de posición, líder, peleas cerradas, best lap/pole en mangas).
-      minIntervalMs: 13000,
+      minIntervalMs: 11000,
       windowMs: 60000,
       maxMsgsInWindow: 3,
       sigDefaultCooldownMs: 24000,
-      top3CooldownMs: 50000,
+      top3CooldownMs: 38000,
       allowUrgentOverLimitScore: 9.0,
       baseThresholdScore: 4.6,
-      quietMinMs: 60000,
-      quietMaxMs: 90000
+      quietMinMs: 30000,// C: mini resumen 30-40s,
+      quietMaxMs: 40000
     };
 
     let commentatorAutoState = {
@@ -9802,7 +10162,6 @@ function autoRandPick(list, key) {
     return list[pickIdx % list.length];
   } catch(e) { return null; }
 }
-
 
     function autoFmtSec(sec) {
       const s = Number(sec);
@@ -9910,7 +10269,6 @@ function autoRandPick(list, key) {
       return ss;
     }
 
-
     function gapDeltaSpeech(deltaSec) {
       const d = Number(deltaSec);
       if (!isFinite(d) || d <= 0) return '';
@@ -9921,7 +10279,6 @@ function autoRandPick(list, key) {
       const bucket = Math.round(d * 2) / 2;
       return gapHalfLabel(bucket) || '';
     }
-
 
     function autoRaceProgress(leaderLap) {
       const total = Number(raceData && raceData.lapCount);
@@ -9980,8 +10337,6 @@ function autoRandPick(list, key) {
         return false;
       }
     }
-
-
 
 // =========================
 // Auto Locutor - Narración con contexto (focus battle)
@@ -10437,7 +10792,6 @@ function autoBuildStoryCandidate(args) {
       ]
     };
 
-
     const AUTO_PHRASES_PICANTE = {
       leaderChange: [
         (c) => 'Cambio de líder. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
@@ -10630,6 +10984,40 @@ function autoBuildStoryCandidate(args) {
       ]
     };
 
+// ====== EXPANSION: catalogo extra de frases (estilo picante TRM) ======
+(function(){
+  try {
+    AUTO_PHRASES_PICANTE.leaderChange = (AUTO_PHRASES_PICANTE.leaderChange||[]).concat([
+      (c) => 'Se prende la punta. ' + c.winner + ' toma P1 y ' + c.loser + ' se queda masticando polvo.',
+      (c) => 'Punta nueva. ' + c.winner + ' al frente. ' + c.loser + ' no se despega.',
+      (c) => 'La cima cambia de due�o. ' + c.winner + ' manda. ' + c.loser + ' a remar.'
+    ]);
+
+    AUTO_PHRASES_PICANTE.pass = (AUTO_PHRASES_PICANTE.pass||[]).concat([
+      (c) => 'Pase quirurgico. ' + c.winner + ' se mete a P' + c.newPos + '. ' + c.loser + ' se reacomoda.',
+      (c) => 'Le cerro la puerta tarde. ' + c.winner + ' gana P' + c.newPos + '.',
+      (c) => 'Con permiso y gracias. ' + c.winner + ' toma P' + c.newPos + '.'
+    ]);
+
+    AUTO_PHRASES_PICANTE.battle = (AUTO_PHRASES_PICANTE.battle||[]).concat([
+      (c) => 'P' + c.pos + ' apretadisimo. ' + c.attacker + ' viene con hambre. ' + c.sec + '.',
+      (c) => 'P' + c.pos + ' sin respiro. ' + c.defender + ' trae espejo lleno. ' + c.sec + '.',
+      (c) => 'Esto es duelo real en P' + c.pos + '. ' + c.attacker + ' lo trae medido. ' + c.sec + '.'
+    ]);
+
+    AUTO_PHRASES_PICANTE.closing = (AUTO_PHRASES_PICANTE.closing||[]).concat([
+      (c) => 'Cierre serio en P' + c.pos + '. ' + c.attacker + ' ya lo trae en la bolsa. ' + c.toSec + '.',
+      (c) => 'Se viene el golpe en P' + c.pos + '. ' + c.attacker + ' ya esta a ' + c.toSec + '.',
+      (c) => 'P' + c.pos + ' en zona de error cero. ' + c.defender + ' con ' + c.attacker + ' encima. ' + c.toSec + '.'
+    ]);
+
+    AUTO_PHRASES_PICANTE.top3 = (AUTO_PHRASES_PICANTE.top3||[]).concat([
+      (c) => 'Arriba estan con manos. ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
+      (c) => 'Punta caliente. ' + c.p1 + ' lidera. ' + c.p2 + ' lo trae en la mira. ' + c.p3 + ' espera el error.',
+      (c) => 'Top 3 en orden. ' + c.p1 + '. ' + c.p2 + '. ' + c.p3 + '.'
+    ]);
+  } catch(e) {}
+})();
 
     const AUTO_PHRASES_ENGINEER = {
       leaderChange: [
@@ -10969,42 +11357,114 @@ function __autoSafeName(r){
 function __autoBlueFlagCheck(arr, leader, nowMs, vs){
   try{
     if (!vs || !vs.blueflag) return;
-    if (!arr || arr.length < 2 || !leader) return;
+    if (!arr || arr.length < 2) return;
+    if (!lastPassEvents || typeof lastPassEvents.get !== 'function') return;
 
+    const BLUE_PROX_MS = 800; // fijo (0.8s)
+    const sessionType = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+    const isMangaSess = (sessionType === 'MANGA');
+    const isFinalSess = (sessionType === 'FINAL');
+
+    // Evita spam al inicio (espera un poco de carrera)
     const leaderLap = Number(leader && leader.lapcount) || 0;
-    if (leaderLap < 3) return; // evita falsas al inicio
-    if (nowMs - __autoBlueLastGlobalMs < 9000) return; // cooldown global
+    const minLap = isMangaSess ? 4 : 3;
+    if (leaderLap < minLap) return;
 
-    const leaderKey = getPilotKey(leader);
+    // Cooldown global (Final mas reactivo, Manga mas conservador)
+    const globalCd = isFinalSess ? 7000 : (isMangaSess ? 11000 : 9000);
+    if (nowMs - __autoBlueLastGlobalMs < globalCd) return;
 
-    for (const r of arr){
+    const sorted = arr.slice().filter(r => r && (r.pos != null));
+    sorted.sort((a,b) => (Number(a.pos)||999) - (Number(b.pos)||999));
+
+    const top3 = sorted.filter(r => {
+      const p = Number(r.pos)||999;
+      return p >= 1 && p <= 3;
+    }).slice(0,3);
+    if (!top3.length) return;
+
+    const topKeys = new Set(top3.map(p => getPilotKey(p)).filter(Boolean));
+
+    // Recorremos rezagados y buscamos si algun Top3 lo esta lapeando MUY cerca por meta.
+    for (const r of sorted){
       if (!r) continue;
       const rk = getPilotKey(r);
-      if (!rk || rk === leaderKey) continue;
+      if (!rk || topKeys.has(rk)) continue;
 
-      const lap = Number(r.lapcount) || 0;
-      if (lap <= 0) continue;
+      const re = lastPassEvents.get(rk);
+      if (!re || !isFinite(re.time)) continue;
+      const rLap = Number(re.lap) || 0;
+      if (rLap <= 0) continue;
 
-      const lapDiff = leaderLap - lap;
-      const lapFromGap = Math.max(__autoParseLapDiff(r.gap), __autoParseLapDiff(r.diff));
-      const isLapped = (lapDiff >= 1) || (lapFromGap >= 1);
-      if (!isLapped) continue;
+      let best = null;
+      for (const laper of top3){
+        const lk = getPilotKey(laper);
+        if (!lk) continue;
+        const le = lastPassEvents.get(lk);
+        if (!le || !isFinite(le.time)) continue;
+        if (le.time <= re.time) continue;
 
-      const st = __autoBlueLatch.get(rk) || { lastLeaderLap: -999, lastSpeakMs: 0 };
-      if (leaderLap - st.lastLeaderLap < 2) continue;     // repetir cada 2 vueltas del líder
-      if (nowMs - st.lastSpeakMs < 18000) continue;       // cooldown por piloto
+        const delta = le.time - re.time;
+        if (delta <= 0 || delta > BLUE_PROX_MS) continue;
+
+        const laperLap = Number(le.lap) || 0;
+        const lapDiff = laperLap - rLap;
+        if (lapDiff < 1) continue;
+
+        if (!best || delta < best.delta) {
+          best = { laper, lk, le, delta, laperLap, lapDiff };
+        }
+      }
+      if (!best) continue;
+
+      let st = __autoBlueLatch.get(rk) || {
+        lastLeaderLap: -999,
+        lastSpeakMs: 0,
+        blueHits: 0,
+        blueWindowMs: 0
+      };
+
+      // repetir max cada 2 vueltas del lapeador (Top3)
+      if (best.laperLap && (best.laperLap - st.lastLeaderLap) < 2) continue;
+
+      // cooldown por piloto
+      const pilotCd = isFinalSess ? 16000 : 18000;
+      if (nowMs - (st.lastSpeakMs || 0) < pilotCd) continue;
 
       const name = __autoSafeName(r);
       if (!name) continue;
 
-      enqueueSpeech(`Bandera azul para ${name}. Deja pasar al líder.`, {
+      const laperPos = Number(best.laper && best.laper.pos) || 0;
+      const laperName = __autoSafeName(best.laper);
+      const who = (laperPos === 1)
+        ? ('el líder ' + (laperName || '') + ' P1')
+        : ('P' + laperPos + ' ' + (laperName || ''));
+
+      const baseMsg = isFinalSess
+        ? `¡Bandera azul! ${name}, detrás viene ${who}. Abre en la recta.`
+        : `Bandera azul. ${name}, detrás viene ${who}. Abre en la recta.`;
+
+      // Azul crítica en Finales: si en 30s ya sonó 2 veces, sube tono
+      st.blueHits = st.blueHits || 0;
+      st.blueWindowMs = st.blueWindowMs || 0;
+      if (!st.blueWindowMs || (nowMs - st.blueWindowMs) > 30000) {
+        st.blueWindowMs = nowMs;
+        st.blueHits = 0;
+      }
+      st.blueHits++;
+      const useCrit = isFinalSess && st.blueHits >= 2 && (nowMs - st.blueWindowMs) <= 30000;
+      const finalMsg = useCrit
+        ? `¡Azul crítica! ${name}, suelta en la recta. Detrás viene ${who}.`
+        : baseMsg;
+
+      enqueueSpeech(finalMsg, {
         key: `auto_blue_${rk}`,
         priority: 6,
         cooldownMs: 8000,
         postDelayMs: 260
       });
 
-      st.lastLeaderLap = leaderLap;
+      st.lastLeaderLap = best.laperLap || st.lastLeaderLap;
       st.lastSpeakMs = nowMs;
       __autoBlueLatch.set(rk, st);
       __autoBlueLastGlobalMs = nowMs;
@@ -11043,7 +11503,6 @@ function handleAutoCommentator() {
         // En cierre: solo 'finalizo' y silencio (no narrar peleas ni swaps)
         if (__autoPhase === 'CLOSING') return;
 
-
         const leader = arr.find(r => Number(r.pos) === 1) || arr[0];
         const leaderLap = Number(leader && leader.lapcount) || 0;
         const progress = autoRaceProgress(leaderLap);
@@ -11052,7 +11511,6 @@ function handleAutoCommentator() {
 
         // ====== bandera azul (Auto Locutor)
         try { __autoBlueFlagCheck(arr, leader, now, vs); } catch(e) {}
-
 
         // ====== candidatos (score decide)
         const candidates = [];
@@ -11137,7 +11595,7 @@ function handleAutoCommentator() {
               if (progress >= m0 && (commentatorAutoState.lastMilestone || 0) < m0) { hitMilestone = m0; break; }
             }
 
-            const stableCooldownMs = 45000; // si no cambia nada, habla mucho menos
+            const stableCooldownMs = 35000;// C: mas frecuente (30-40s) // si no cambia nada, habla mucho menos
             const shouldByChange = orderChanged;
             const shouldByMilestone = !!hitMilestone;
             const shouldByTime = (now - (commentatorAutoState.lastTop3Ms || 0) > stableCooldownMs);
@@ -11170,7 +11628,6 @@ function handleAutoCommentator() {
             }
           }
         }
-
 
         // ====== batallas cerradas (<=0.5s) y trenecito
         if (vs.pelea) {
@@ -11342,7 +11799,6 @@ if (secNum <= 1.25) {
             // no hablar cada vuelta
             if (newHist.lastSpokenTrailLap && bLaps <= (newHist.lastSpokenTrailLap + 1)) continue;
 
-
 const posFight = Number(ahead.pos) || (i + 1);
 const defender = safeRacerName(ahead.racerName) || 'el de adelante';
 const attacker = safeRacerName(behind.racerName) || 'el de atrás';
@@ -11422,11 +11878,20 @@ try {
           }
         }
 
-
 // ====== modo de sesión
 const sessionType = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
 const isMangaSess = (sessionType === 'MANGA');
 const isFinalSess = (sessionType === 'FINAL');
+
+// Auto-estilo por sesion (default): MANGA=SERIO (pro), FINALES=HYPE (narrativo)
+if (!autoModeUserOverride) {
+  const wantMode = isFinalSess ? 'narrativo' : (isMangaSess ? 'pro' : autoCommentatorMode);
+  if (wantMode && autoCommentatorMode !== wantMode) {
+    autoCommentatorMode = wantMode;
+    try { prefSet('autoCommentatorMode', wantMode); } catch(e) {}
+    try { updateAutoCommentatorButtons(); } catch(e) {}
+  }
+}
 
 // ====== narración con hilo: elegimos una pelea y la seguimos con contexto
 if ((voiceSettings.pelea || voiceSettings.attack || voiceSettings.defense) && battles && battles.length) {
@@ -11511,36 +11976,55 @@ if (isMangaSess) {
   } catch(e) {}
 }
 
-// ====== si no hay accion real, resumen con calma (anti-loop / anti-perico)
+// ====== si no hay accion real, mini resumen (C: Top5 + pelea mas cerrada)
         try {
           let maxScore = 0;
           for (const c of candidates) maxScore = Math.max(maxScore, Number(c && c.score) || 0);
 
-          const quietCooldownMs = Number(commentatorAutoState.nextQuietCooldownMs || 0) || Math.floor((commentatorAutoCfg.quietMinMs || 60000) + Math.random() * Math.max(0, (commentatorAutoCfg.quietMaxMs || 90000) - (commentatorAutoCfg.quietMinMs || 60000)));
+          const quietCooldownMs = Number(commentatorAutoState.nextQuietCooldownMs || 0) || Math.floor((commentatorAutoCfg.quietMinMs || 30000) + Math.random() * Math.max(0, (commentatorAutoCfg.quietMaxMs || 40000) - (commentatorAutoCfg.quietMinMs || 30000)));
           const sinceQuiet = now - (commentatorAutoState.lastQuietMs || 0);
 
-          const allowQuiet = !!(vs.total || vs.leadergap);
+          const allowMini = !!(vs.pos || vs.podium || vs.total || vs.leadergap || vs.pelea);
+          const sinceSpeak = now - (commentatorAutoState.lastSpeakMs || 0);
 
-          if (allowQuiet && !isMangaSess && sinceQuiet > quietCooldownMs && maxScore < 3.0 && (now - (commentatorAutoState.lastSpeakMs || 0) > 45000)) {
-            const leaderName = safeRacerName(leader && leader.racerName) || 'P1';
-            const p2 = (arr.length >= 2) ? arr[1] : null;
-            const p2Name = p2 ? (safeRacerName(p2.racerName) || 'P2') : 'P2';
+          // Solo si ya arranco y no hay "accion fuerte"; evita perico, pero mantiene narrativa.
+          if (allowMini && sinceQuiet > quietCooldownMs && maxScore < (commentatorAutoCfg.baseThresholdScore || 4.6) && sinceSpeak > 26000 && leaderLap > 0) {
+            // Top 5 (con pausas)
+            const top = arr.slice(0, 5);
+            const names = top.map((r, idx) => safeRacerName(r && r.racerName) || ('P' + String((Number(r && r.pos) || (idx + 1))))).filter(Boolean);
+            let topTxt = '';
+            if (names.length) topTxt = 'Top cinco. ' + names.map(n => String(n)).join('. ') + '.';
 
-            let gapTxt = '';
+            // Pelea mas cerrada en Top10 (misma vuelta y <= 1.5s)
+            let battleTxt = '';
             try {
-              if (p2 && leader && leader.time != null && p2.time != null) {
-                const lap1 = Number(leader.lapcount) || 0;
-                const lap2 = Number(p2.lapcount) || 0;
-                if (lap1 === lap2) {
-                  const g = Math.max(0, (Number(p2.time) - Number(leader.time)) / 1000);
-                  if (g > 0) gapTxt = gapToSpeech(g, 'quiet');
-                } else if (lap1 > lap2) {
-                  gapTxt = autoGapTextFromLapDiff(lap1 - lap2);
+              let best = null;
+              for (let i = 0; i < Math.min(arr.length, 10) - 1; i++) {
+                const a = arr[i], b = arr[i + 1];
+                if (!a || !b) continue;
+                const la = Number(a.lapcount) || 0;
+                const lb = Number(b.lapcount) || 0;
+                if (la !== lb) continue;
+                if (a.time == null || b.time == null) continue;
+                const sec = (Number(b.time) - Number(a.time)) / 1000;
+                if (!isFinite(sec) || sec <= 0) continue;
+                if (sec > 1.50) continue;
+                if (!best || sec < best.sec) {
+                  best = {
+                    sec,
+                    pos: Number(a.pos) || (i + 1),
+                    defender: safeRacerName(a.racerName) || 'el de adelante',
+                    attacker: safeRacerName(b.racerName) || 'el de atras'
+                  };
                 }
               }
-            } catch(e) {}
+              if (best) {
+                const g = gapToSpeech(best.sec, 'close');
+                battleTxt = `Pelea m�s cerrada. ${best.attacker} viene ${g} de ${best.defender} por la P${best.pos}.`;
+              }
+            } catch (e) {}
 
-            // tiempo restante (si hay duracion)
+            // Tiempo restante si aplica
             let leftTxt = '';
             try {
               const dur = Number(currentSessionInfo && currentSessionInfo.durationMs) || 0;
@@ -11549,41 +12033,116 @@ if (isMangaSess) {
                 const left = Math.max(0, dur - elapsed);
                 leftTxt = formatClockMs(left);
               }
-            } catch(e) {}
+            } catch (e) {}
 
-            let msg = '';
-            if (isMangaSess) {
-              msg = leftTxt
-                ? `Clasificacion estable. Lider ${leaderName}. Quedan ${leftTxt}.`
-                : `Clasificacion estable. Lider ${leaderName}.`;
-            } else if (isFinalSess) {
-              if (gapTxt) {
-                msg = leftTxt
-                  ? `Carrera estable. Lider ${leaderName}. ${p2Name} va a ${gapTxt}. Quedan ${leftTxt}.`
-                  : `Carrera estable. Lider ${leaderName}. ${p2Name} va a ${gapTxt}.`;
-              } else {
-                msg = leftTxt
-                  ? `Carrera estable. Lider ${leaderName}. Quedan ${leftTxt}.`
-                  : `Carrera estable. Lider ${leaderName}.`;
+            // Mini resumen con estilo (pro/picante/engineer/narrativo)
+            const styleMini = (autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo') ? autoCommentatorMode : 'pro';
+
+            const MINI_HDR = {
+              pro: {
+                manga: ['Clasificacion.', 'Clasificacion en vivo.', 'Como va la clasificacion.'],
+                final: ['Carrera.', 'Carrera en vivo.', 'Como va la carrera.'],
+                other: ['Seguimos.', 'Actualizacion.', 'Estado.']
+              },
+              picante: {
+                manga: ['Clasificacion.', 'Clasificacion, sin llorar.', 'Clasificacion, a ver quien trae manos.'],
+                final: ['Carrera.', 'Carrera, sin piedad.', 'Carrera, esto ya se prendio.'],
+                other: ['Seguimos.', 'Ojo.', 'Atencion.']
+              },
+              engineer: {
+                manga: ['Clasificacion.', 'Control. Clasificacion.', 'Dato. Clasificacion.'],
+                final: ['Carrera.', 'Control. Carrera.', 'Dato. Carrera.'],
+                other: ['Control.', 'Dato.', 'Info.']
+              },
+              narrativo: {
+                manga: ['Clasificacion.', 'Cambiamos camara. Clasificacion.', 'Vamos con la clasificacion.'],
+                final: ['Carrera.', 'Cambiamos camara. Carrera.', 'Vamos con la carrera.'],
+                other: ['Seguimos.', 'Cambiamos camara.', 'Atencion.']
               }
-            } else {
-              msg = leftTxt ? `Seguimos. Lider ${leaderName}. Quedan ${leftTxt}.` : `Seguimos. Lider ${leaderName}.`;
+            };
+
+            const MINI_TOP = {
+              pro: ['Top cinco', 'Top 5', 'Los primeros cinco'],
+              picante: ['Top cinco', 'Top cinco, sin regalos', 'Top cinco, a puro control'],
+              engineer: ['Top cinco', 'Top cinco. Control', 'Top cinco. Dato'],
+              narrativo: ['Top cinco', 'Los cinco del frente', 'Los cinco que mandan']
+            };
+
+            const MINI_BATTLE = {
+              pro: [
+                (b) => `Pelea m�s cerrada. ${b.attacker} viene ${b.g} de ${b.defender} por la P${b.pos}.`,
+                (b) => `Cierre en P${b.pos}. ${b.attacker} a ${b.g} de ${b.defender}.`,
+                (b) => `Ojo P${b.pos}. ${b.attacker} trae a tiro a ${b.defender}. ${b.g}.`
+              ],
+              picante: [
+                (b) => `Pelea m�s cerrada. ${b.attacker} viene ${b.g} de ${b.defender} por la P${b.pos}.`,
+                (b) => `P${b.pos} al rojo vivo. ${b.attacker} trae a tiro a ${b.defender}. ${b.g}.`,
+                (b) => `Cierre con colmillo en P${b.pos}. ${b.attacker} ya lo huele. ${b.g}.`,
+                (b) => `P${b.pos} sin respiro. ${b.defender} con espejo lleno. ${b.g}.`
+              ],
+              engineer: [
+                (b) => `Gap minimo en P${b.pos}. ${b.attacker} a ${b.g} de ${b.defender}.`,
+                (b) => `Cierre en P${b.pos}. Delta ${b.g}.`,
+                (b) => `P${b.pos}. ${b.defender} vs ${b.attacker}. ${b.g}.`
+              ],
+              narrativo: [
+                (b) => `La pelea m�s cerrada esta en P${b.pos}. ${b.attacker} viene ${b.g} de ${b.defender}.`,
+                (b) => `En P${b.pos} se respira tension. ${b.attacker} a ${b.g} de ${b.defender}.`,
+                (b) => `Cierre en P${b.pos}. ${b.attacker} no se despega. ${b.g}.`
+              ]
+            };
+
+            const MINI_TIME = {
+              pro: ['Quedan', 'Tiempo restante', 'Restan'],
+              picante: ['Quedan', 'Tiempo, ojo', 'Restan'],
+              engineer: ['Quedan', 'Restan', 'Tiempo'],
+              narrativo: ['Quedan', 'Nos quedan', 'Tiempo restante']
+            };
+
+            const hb = MINI_HDR[styleMini] || MINI_HDR.pro;
+            const header = autoRandPick(isMangaSess ? hb.manga : isFinalSess ? hb.final : hb.other, 'miniHdr:' + styleMini) || (isMangaSess ? 'Clasificacion.' : isFinalSess ? 'Carrera.' : 'Seguimos.');
+            const topIntro = autoRandPick((MINI_TOP[styleMini] || MINI_TOP.pro), 'miniTopIntro:' + styleMini) || 'Top cinco';
+
+            let msg = (header + ' ' + ((topTxt && names.length) ? (topIntro + '. ' + names.map(n => String(n)).join('. ') + '.') : (topTxt || ''))).trim();
+
+            if (battleTxt) {
+              // battleTxt viene armado, pero aqui le damos variacion
+              try {
+                const fn = autoRandPick((MINI_BATTLE[styleMini] || MINI_BATTLE.pro), 'miniBattle:' + styleMini);
+                if (fn && typeof fn === 'function') {
+                  // extrae datos del string actual (ya tenemos best)
+                  // si falla, usamos battleTxt directo
+                  msg = (msg + ' ' + String(fn({ attacker: best.attacker, defender: best.defender, pos: best.pos, g: gapToSpeech(best.sec, 'close') }) || battleTxt)).trim();
+                } else {
+                  msg = (msg + ' ' + battleTxt).trim();
+                }
+              } catch(e) {
+                msg = (msg + ' ' + battleTxt).trim();
+              }
+            }
+
+            if (leftTxt) {
+              const tW = autoRandPick((MINI_TIME[styleMini] || MINI_TIME.pro), 'miniTime:' + styleMini) || 'Quedan';
+              msg = (msg + ' ' + tW + ' ' + leftTxt + '.').trim();
             }
 
             addCand({
-              type:'quiet',
-              score: 2.2 + (progress > 0.85 ? 0.2 : 0),
+              type: 'mini',
+              score: 3.2 + (progress > 0.85 ? 0.2 : 0),
               text: msg,
-              key: 'auto_quiet',
-              sig: 'auto:quiet',
+              key: 'auto_mini',
+              sig: 'auto:mini',
               sigCooldownMs: quietCooldownMs,
-              priority: 1,
-              onCommit: () => { commentatorAutoState.lastQuietMs = now; commentatorAutoState.nextQuietCooldownMs = Math.floor((commentatorAutoCfg.quietMinMs || 60000) + Math.random() * Math.max(0, (commentatorAutoCfg.quietMaxMs || 90000) - (commentatorAutoCfg.quietMinMs || 60000))); }
+              priority: 2,
+              onCommit: () => {
+                commentatorAutoState.lastQuietMs = now;
+                commentatorAutoState.nextQuietCooldownMs = Math.floor((commentatorAutoCfg.quietMinMs || 30000) + Math.random() * Math.max(0, (commentatorAutoCfg.quietMaxMs || 40000) - (commentatorAutoCfg.quietMinMs || 30000)));
+              }
             });
           }
-        } catch(e) {}
+        } catch (e) {}
 
-        // ====== elegir el mejor mensaje \(1 por tick\)
+// ====== elegir el mejor mensaje \(1 por tick\)
         if (!candidates.length) {
           // silencio es oro
           commentatorAutoState.lastLeaderKey = leaderKey || commentatorAutoState.lastLeaderKey;
@@ -11593,7 +12152,7 @@ if (isMangaSess) {
 // MANGA: reduce ruido (menos swaps, más info útil)
 if (isMangaSess && candidates && candidates.length) {
   // Top3 + cierres + trenes. Lo demás en manga suele ser "ruido" por salida escalonada.
-  const allow = new Set(['top3','closing','train','story','qualiBest','qualiPole']);
+  const allow = new Set(['top3','closing','train','story','qualiBest','qualiPole','mini']);
   const filtered = [];
   for (const c of candidates) {
     if (c && c.type && allow.has(c.type)) filtered.push(c);
@@ -11644,8 +12203,6 @@ for (const c of candidates) {
         console.error('handleAutoCommentator', e);
       }
     }
-
-
 
 function handleVoiceAndBeeps() {
       if (!raceData || !Array.isArray(raceData.classification)) return;
@@ -11718,34 +12275,51 @@ function handleVoiceAndBeeps() {
           posTo = p.pos;
           posDelta = (Math.floor(posTo) - Math.floor(posFrom)); // + = cae, - = sube
         }
-
-        // Mensaje corto de posición: solo se agenda en paso por meta.
-        // Si la posición cambia por otros autos (sin meta), en FINAL puede avisar; en MANGA esperamos a tu cruce y a que se estabilice.
-        if (voiceSettings.pos && p.pos !== lastKnownPos) {
-          const lapWillSpeak = (lapsNow > lastAnnouncedLapcount); // tu cruce por meta pendiente
-          if (lapWillSpeak) {
-            const curPos = Math.floor(p.pos);
-            if (isManga) {
-              const stableOk = (mangaPosStability.stablePos === curPos) || (Math.abs(posDelta) >= 3);
-              const already = (mangaPosStability.lastAnnouncedStablePos === curPos);
-              if (stableOk && !already) {
-                pendingPosChange = {
-                  pos: curPos,
-                  opts: { key: 'pos_' + curPos, priority: 75, cooldownMs: 1100, dedupe: true },
-                  expLap: lapsNow + 2,
-                  _mangaStablePos: curPos
-                };
-              }
+        // BASIC: estabilidad de posicion (no spam, solo cambios estables)
+        if (!isManga && basicModeEnabled && voiceSettings.pos) {
+          try{
+            const curPosInt = Math.max(1, Math.floor(Number(p.pos) || 0));
+            if (basicPosStability.candidatePos == null) {
+              basicPosStability.candidatePos = curPosInt;
+              basicPosStability.candidateCount = 1;
+            } else if (curPosInt === basicPosStability.candidatePos) {
+              basicPosStability.candidateCount = Math.min(6, (basicPosStability.candidateCount || 0) + 1);
             } else {
+              basicPosStability.candidatePos = curPosInt;
+              basicPosStability.candidateCount = 1;
+            }
+
+            if (basicPosStability.candidateCount >= 2 && basicPosStability.lastAnnouncedStablePos !== curPosInt) {
+              basicPosStability.pendingStablePos = curPosInt;
+            }
+
+            const lapWillSpeak = (lapsNow > lastAnnouncedLapcount);
+            if (lapWillSpeak && basicPosStability.pendingStablePos != null && basicPosStability.pendingStablePos !== basicPosStability.lastAnnouncedStablePos) {
+              const stable = basicPosStability.pendingStablePos;
               pendingPosChange = {
-                pos: curPos,
-                opts: { key: 'pos_' + curPos, priority: 75, cooldownMs: 900, dedupe: true },
+                pos: stable,
+                opts: { key: 'pos_basic_' + stable, priority: 75, cooldownMs: 1200, dedupe: true },
                 expLap: lapsNow + 2
               };
+              basicPosStability.lastAnnouncedStablePos = stable;
+              basicPosStability.pendingStablePos = null;
             }
-          }
+          }catch(e){}
         }
 
+        // Mensaje corto de posicion: solo se agenda en paso por meta.
+        // En MANGA (quali) NO se anuncia inmediato: se usa ventana de asentamiento post-cruce (start/tickMangaPosSettle).
+        if (!basicModeEnabled && voiceSettings.pos && p.pos !== lastKnownPos) {
+          const lapWillSpeak = (lapsNow > lastAnnouncedLapcount); // tu cruce por meta pendiente
+          if (lapWillSpeak && !isManga) {
+            const curPos = Math.floor(p.pos);
+            pendingPosChange = {
+              pos: curPos,
+              opts: { key: 'pos_' + curPos, priority: 75, cooldownMs: 900, dedupe: true },
+              expLap: lapsNow + 2
+            };
+          }
+        }
         lastKnownPos = p.pos;
       }
 
@@ -11823,6 +12397,11 @@ function handleVoiceAndBeeps() {
       if (pendingBestLap && pendingBestLap.expLap != null && lapsNow > pendingBestLap.expLap) pendingBestLap = null;
       if (pendingEstLap && pendingEstLap.expLap != null && lapsNow > pendingEstLap.expLap) pendingEstLap = null;
 
+      // MANGA: ventana de asentamiento de posicion (ranking por tiempo)
+      if (isManga && voiceSettings.pos) {
+        tickMangaPosSettle(lapsNow, (p && p.pos != null) ? p.pos : null);
+      }
+
       // =========================
       // 2) Laps siempre primero (bloqueado)
       // =========================
@@ -11832,18 +12411,34 @@ function handleVoiceAndBeeps() {
         if (lapMsNow) {
           // Beep mejora/empeora
           if (lastSpokenLastTime && lastSpokenLastTime > 0) {
-            if (lapMsNow < (lastSpokenLastTime - 20)) playBeep('up');
-            else if (lapMsNow > (lastSpokenLastTime + 20)) playBeep('down');
+            if (lapMsNow < (lastSpokenLastTime - 20)) playBeep('lapUp');
+            else if (lapMsNow > (lastSpokenLastTime + 20)) playBeep('lapDown');
           }
           say(tiempoATexto(lapMsNow), { key: 'lap_' + lapsNow, priority: 90, dedupe: true });
           flashLastLap();
           lastSpokenLastTime = lapMsNow;
         }
         lastAnnouncedLapcount = lapsNow;
+
+        // MANGA: ventana de asentamiento para posici�n (ranking por tiempo)
+        if (isManga && voiceSettings.pos) {
+          startMangaPosSettle(lapsNow, p && p.pos != null ? p.pos : null);
+        }
+
       } else {
-        // Sin paso por meta: en MANGA nos quedamos callados (la tabla "brinca" por salida escalonada).
-        // En FINAL podemos avisar breve si te mueven de posición sin tu cruce.
-        if (!isManga && posChangedTick && voiceSettings.pos) {
+        // Sin paso por meta: en MANGA normalmente nos quedamos callados (la tabla brinca por salida escalonada).
+        // EXCEPCION: si ya vencio la ventana de asentamiento, podemos decir la posicion estable aun sin cruce.
+        if (isManga && voiceSettings.pos && pendingPosChange && pendingPosChange.pos) {
+          try {
+            const sp = Math.floor(pendingPosChange.pos);
+            say('P' + sp, (pendingPosChange.opts || { key: 'pos_manga_' + sp + '_' + lapsNow, priority: 65, cooldownMs: 1400, dedupe: true }));
+            mangaPosStability.lastAnnouncedStablePos = sp;
+          } catch(e) {}
+          pendingPosChange = null;
+        }
+
+        // En FINAL podemos avisar breve si te mueven de posicion sin tu cruce.
+        if (!isManga && !basicModeEnabled && posChangedTick && voiceSettings.pos) {
           handlePositionChangeNoLap(posFrom, posTo, posDelta);
         }
         return;
@@ -11861,7 +12456,6 @@ function handleVoiceAndBeeps() {
 
       // Contexto front/back
       const ctx = (idx >= 0) ? getFrontBackContext(idx) : null;
-
 
       // Marca de batalla en Lap Chart (ATK/DEF/DUEL) - se marca SOLO en cruce de meta
 try {
@@ -11990,68 +12584,79 @@ try {
         }
       }
 
-      // Ataque / Defensa (con latch)
-      if (ctx && voiceSettings.attack && ctx.sameFrontLap && ctx.frontSec != null) {
-        const sec = ctx.frontSec;
-        const otherKey = ctx.frontKey || 'front';
-        if (attackLatch.active) {
-          if (attackLatch.otherKey !== otherKey || sec >= 0.90 || !ctx.sameFrontLap) {
-            attackLatch.active = false;
-          }
-        }
-        if (!attackLatch.active && sec < 0.6) {
-          const secStr = toFixedFloor(sec, decimalPrecision);
-          const nm = ctx.frontName || '';
-          const txt = nm ? ('Ataque. ' + nm + ' a ' + secStr + ' segundos') : ('Ataque. Adelante a ' + secStr + ' segundos');
-          pushCand('attack', isFinal ? 88 : 20, txt,
-            { key: 'attack_' + Math.floor(lapsNow/2), priority: 68, cooldownMs: 3500, dedupe: true },
-            () => {
-              attackLatch.active = true;
-              attackLatch.otherKey = otherKey;
-              attackLatch.lap = lapsNow;
+      // Ataque / Defensa / DUEL (EMA + histeresis)
+      // - Usa ctx.duelActive + ctx.duelKind (ATTACK/DEFEND)
+      // - Gap suavizado: ctx.frontSecEma / ctx.backSecEma
+      if (ctx && (voiceSettings.attack || voiceSettings.defense) && ctx.duelActive) {
+        // ATTACK
+        if (voiceSettings.attack && ctx.duelKind === 'ATTACK' && ctx.sameFrontLap && ctx.frontSecEma != null) {
+          const sec = ctx.frontSecEma;
+          const otherKey = ctx.frontKey || 'front';
+          if (attackLatch.active) {
+            if (attackLatch.otherKey !== otherKey || !ctx.duelActive || ctx.duelKind !== 'ATTACK') {
+              attackLatch.active = false;
             }
-          );
+          }
+          if (!attackLatch.active) {
+            const secStr = gapToSpeech(sec, 'attack');
+            const nm = ctx.frontName || '';
+            const txt = nm ? ('Ataque. ' + nm + ' a ' + secStr) : ('Ataque. Adelante a ' + secStr);
+            pushCand('attack', isFinal ? 88 : 22, txt,
+              { key: 'attack_' + Math.floor(lapsNow/2), priority: 70, cooldownMs: 4200, dedupe: true },
+              () => {
+                attackLatch.active = true;
+                attackLatch.otherKey = otherKey;
+                attackLatch.lap = lapsNow;
+              }
+            );
+          }
+        } else {
+          attackLatch.active = false;
+        }
+
+        // DEFEND
+        if (voiceSettings.defense && ctx.duelKind === 'DEFEND' && ctx.sameBackLap && ctx.backSecEma != null) {
+          const sec = ctx.backSecEma;
+          const otherKey = ctx.backKey || 'back';
+          if (defenseLatch.active) {
+            if (defenseLatch.otherKey !== otherKey || !ctx.duelActive || ctx.duelKind !== 'DEFEND') {
+              defenseLatch.active = false;
+            }
+          }
+          if (!defenseLatch.active) {
+            const secStr = gapToSpeech(sec, 'defense');
+            const nm = ctx.backName || '';
+            const txt = nm ? ('Defensa. ' + nm + ' viene ' + secStr) : ('Defensa. Atras viene ' + secStr);
+            pushCand('defense', isFinal ? 88 : 22, txt,
+              { key: 'defense_' + Math.floor(lapsNow/2), priority: 70, cooldownMs: 4200, dedupe: true },
+              () => {
+                defenseLatch.active = true;
+                defenseLatch.otherKey = otherKey;
+                defenseLatch.lap = lapsNow;
+              }
+            );
+          }
+        } else {
+          defenseLatch.active = false;
         }
       } else {
         attackLatch.active = false;
-      }
-
-      if (ctx && voiceSettings.defense && ctx.sameBackLap && ctx.backSec != null) {
-        const sec = ctx.backSec;
-        const otherKey = ctx.backKey || 'back';
-        if (defenseLatch.active) {
-          if (defenseLatch.otherKey !== otherKey || sec >= 0.90 || !ctx.sameBackLap) {
-            defenseLatch.active = false;
-          }
-        }
-        if (!defenseLatch.active && sec < 0.6) {
-          const secStr = gapToSpeech(sec, 'defense');
-          const nm = ctx.backName || '';
-          const txt = nm ? ('Defensa. ' + nm + ' viene ' + secStr) : ('Defensa. Atras viene ' + secStr);
-          pushCand('defense', isFinal ? 88 : 20, txt,
-            { key: 'defense_' + Math.floor(lapsNow/2), priority: 68, cooldownMs: 3500, dedupe: true },
-            () => {
-              defenseLatch.active = true;
-              defenseLatch.otherKey = otherKey;
-              defenseLatch.lap = lapsNow;
-            }
-          );
-        }
-      } else {
         defenseLatch.active = false;
       }
 
-      // Pelea cerrada (encajonado)
-      if (ctx && voiceSettings.pelea && ctx.sameFrontLap && ctx.sameBackLap && ctx.frontSec != null && ctx.backSec != null) {
-        const inFight = (ctx.frontSec < 0.80) && (ctx.backSec < 0.80);
+      // Pelea cerrada (encajonado) - usa gaps suavizados cuando esten disponibles
+      if (ctx && voiceSettings.pelea && ctx.sameFrontLap && ctx.sameBackLap) {
+        const f = (ctx.frontSecEma != null ? ctx.frontSecEma : ctx.frontSec);
+        const b = (ctx.backSecEma  != null ? ctx.backSecEma  : ctx.backSec);
+        const inFight = (f != null && b != null && f < 0.70 && b < 0.70);
         if (fightLatch.active) {
-          if (!inFight || ctx.frontSec >= 1.20 || ctx.backSec >= 1.20) {
+          if (!inFight || (f != null && f >= 1.10) || (b != null && b >= 1.10)) {
             fightLatch.active = false;
           }
         }
         if (!fightLatch.active && inFight) {
-          pushCand('fight', isFinal ? 78 : 16, 'Pelea cerrada',
-            { key: 'fight_' + Math.floor(lapsNow/2), priority: 65, cooldownMs: 4500, dedupe: true },
+          pushCand('fight', isFinal ? 78 : 18, 'Pelea cerrada',
+            { key: 'fight_' + Math.floor(lapsNow/2), priority: 66, cooldownMs: 5200, dedupe: true },
             () => {
               fightLatch.active = true;
               fightLatch.lap = lapsNow;
@@ -12401,10 +13006,10 @@ speakBtn.addEventListener('click', () => {
       const isFinal = /FINAL/.test(name) || /A\s*MAIN|B\s*MAIN|C\s*MAIN/.test(name) || /\bMAIN\b/.test(name);
 
       let main = '';
-      // Busca "MANGA A" o "FINAL A" o "A MAIN"
-      const m1 = name.match(/\bMANGA\s*([ABC])\b/);
-      const m2 = name.match(/\bFINAL\s*([ABC])\b/);
-      const m3 = name.match(/\b([ABC])\s*MAIN\b/);
+      // Busca "MANGA A" o "FINAL A" o "A MAIN" (soporta tambien D)
+      const m1 = name.match(/\bMANGA\s*([A-D])\b/);
+      const m2 = name.match(/\bFINAL\s*([A-D])\b/);
+      const m3 = name.match(/\b([A-D])\s*MAIN\b/);
       if (m1 && m1[1]) main = m1[1];
       else if (m2 && m2[1]) main = m2[1];
       else if (m3 && m3[1]) main = m3[1];
@@ -12435,18 +13040,32 @@ let label = 'MODO -';
       let spokenTitle = '';
       const serieM = name.match(/\bSERIE\s*(\d+)\b/);
       const serie = (serieM && serieM[1]) ? String(serieM[1]) : '';
+
+      // Qx y Manga X (para TTS en titulo)
+      const qM = name.match(/\bQ\s*(\d+)\b/);
+      const q = (qM && qM[1]) ? String(qM[1]) : '';
+      // MANGA 1 / HEAT 1 / ROUND 1 (fallback numerico)
+      const mangaM = name.match(/\bMANGA\s*(\d+)\b/) || name.match(/\bHEAT\s*(\d+)\b/) || name.match(/\bROUND\s*(\d+)\b/);
+      const mangaNo = (mangaM && mangaM[1]) ? String(mangaM[1]) : '';
+
+      // Spoken title (TTS) - sin acentos (mejor compat iOS/Android)
       if (type === 'MANGA') {
-        spokenTitle = main ? ('Clasificación Grupo ' + main) : 'Clasificación';
+        const parts = ['Clasificacion'];
+        if (q) parts.push('Q' + q);
+        if (main) parts.push('Manga ' + main);
+        else if (mangaNo) parts.push('Manga ' + mangaNo);
+        if (serie) parts.push('Serie ' + serie);
+        spokenTitle = parts.join(', ');
       } else if (type === 'FINAL') {
-        spokenTitle = main ? ('Final ' + main) : 'Final';
+        const parts = [main ? ('Final ' + main) : 'Final'];
+        if (serie) parts.push('Serie ' + serie);
+        spokenTitle = parts.join(', ');
       } else {
         spokenTitle = '';
       }
-      if (serie) spokenTitle = spokenTitle ? (spokenTitle + ', Serie ' + serie) : ('Serie ' + serie);
 
-      return { type, main, durationMs, label, spokenTitle, serie };
+      return { type, main, durationMs, label, spokenTitle, serie, q, mangaNo };
     }
-
 
 // =========================
 // FIN DE SESIÓN (por duración)
@@ -12559,8 +13178,8 @@ function checkSessionFinishOnLap() {
     enqueueSpeech(msg, {
       key: 'session_finish_' + sessionFinishSig,
       priority: 97,
-      cooldownMs: 600000,
-      dedupe: true
+      cooldownMs: 0,
+          dedupe: true
     });
 
     sessionFinishAnnounced = true;
@@ -12591,7 +13210,6 @@ function checkSessionFinishOnLap() {
 
       // Auto Locutor: al cambiar carrera, anunciar nombre + participantes
       try { __maybeAnnounceAutoIntro(r); } catch(e) {}
-
 
       if (raceTitleText) {
         raceTitleText.textContent = r.raceName || 'Spotter_5.0.1';
@@ -12631,7 +13249,7 @@ function checkSessionFinishOnLap() {
       }
     }
 
-    async function loadRaceFromFirebase() {
+    async function loadRaceFromFirebase(_snapDataOverride) {
       // iOS/WebView a veces reporta document.hidden erroneamente; no bloquees la lectura del feed.
       if (!__firebaseOk || !db) { setLiveStatus(false); return; }
 
@@ -12646,20 +13264,24 @@ function checkSessionFinishOnLap() {
       isLoading = true;
       loadingSince = now;
 
-      try {
-        const ref = doc(db, 'races', 'currentRace');
+      try {        let data = _snapDataOverride || null;
 
-        // Timeout duro para que getDoc no congele el loop (iOS/red chueca)
-        const snap = await Promise.race([
-          getDoc(ref),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout getDoc')), 3500))
-        ]);
-        if (!snap.exists()) {
-          setLiveStatus(false);
-          isLoading = false;
-          return;
+        if (!data) {
+          const ref = doc(db, 'races', 'currentRace');
+
+          // Timeout duro para que getDoc no congele el loop (iOS/red chueca)
+          const snap = await Promise.race([
+            getDoc(ref),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('timeout getDoc')), 3500))
+          ]);
+          if (!snap.exists()) {
+            setLiveStatus(false);
+            isLoading = false;
+            return;
+          }
+          data = snap.data() || {};
         }
-        const data = snap.data() || {};
+
         setLiveStatus(true);
 
         let rawRace = null;
@@ -12756,7 +13378,52 @@ handleVoiceAndBeeps();
       }
     }
 
+    
+
     // =========================
+    // Realtime listener (onSnapshot) - mejora background en Chrome/Android/Safari
+    // =========================
+    let __raceUnsub = null;
+    let __pendingSnapData = null;
+    let __snapScheduled = false;
+
+    function startRaceRealtime() {
+      try {
+        if (!__firebaseOk || !db || typeof onSnapshot !== 'function' || typeof doc !== 'function') return false;
+        const ref = doc(db, 'races', 'currentRace');
+        try { if (__raceUnsub) __raceUnsub(); } catch(e) {}
+
+        __raceUnsub = onSnapshot(ref, (snap) => {
+          try {
+            if (!snap || !snap.exists()) {
+              setLiveStatus(false);
+              return;
+            }
+            // Coalesce: si llegan muchos updates por segundo, procesamos el ultimo en un tick
+            __pendingSnapData = snap.data() || {};
+            if (__snapScheduled) return;
+            __snapScheduled = true;
+            setTimeout(() => {
+              __snapScheduled = false;
+              const d = __pendingSnapData;
+              __pendingSnapData = null;
+              try { loadRaceFromFirebase(d); } catch(e) {}
+            }, 0);
+          } catch(e) {}
+        }, (err) => {
+          try {
+            console.warn('onSnapshot error', err);
+            // fallback: el watchdog/polling resolvera
+          } catch(e) {}
+        });
+
+        return true;
+      } catch(e) {
+        console.warn('startRaceRealtime fallo', e);
+        return false;
+      }
+    }
+// =========================
     // Bootstrap (arranque)
     // =========================
     window.addEventListener('unhandledrejection', (ev) => {
@@ -12771,7 +13438,10 @@ handleVoiceAndBeeps();
         return;
       }
       loadRaceFromFirebase();
-      setInterval(loadRaceFromFirebase, 500);
+      const __rtOk = startRaceRealtime();
+      if (!__rtOk) {
+        setInterval(loadRaceFromFirebase, 500);
+      }
       // Watchdog: si pasan 6s sin actualización, marca OFF y fuerza un refresh
       setInterval(() => {
         try {
@@ -12786,7 +13456,6 @@ handleVoiceAndBeeps();
       }, 1500);
 
     })();
-
 
 // Best lap global: actualizado desde raceData.classification (ver refreshSessionBestCache)</script>
 </body>
