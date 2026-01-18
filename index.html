@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.0.58 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
+AI_Spotter_TRM_v0.0.0.60 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
 Fecha: 2026-01-03
 Origen: Spotter_5.0.1.html
 
@@ -15,6 +15,8 @@ Changelog:
 - v0.0.0.51: UI header - baja botones + version para alinear (logo arriba, acciones abajo).
 - v0.0.0.57: UI header - aumenta header-logo 15% adicional.
 - v0.0.0.58: Nuevo tema "Vic's Pulse" basado en colores del logo (rojo/blanco/negro), acentos y header ajustados.
+- v0.0.0.59: Guard rails TTS: si falta dato (nombre/gap/tiempo), el spotter se calla (evita "undefined" y frases incompletas).
+- v0.0.0.60: Auto Locutor: reintenta 1 vez (re-roll) si una frase queda incompleta; si el segundo intento falla, se calla.
 - v7.5: Fix Auto Locutor: ya no depende de RD, usa POS para top3/peleas por defecto, umbral ajustado para evitar silencio, y no resetea tus voiceSettings.
 - v7.4: Auto Locutor PRO narrativo: seguimiento de pelea (focus) con contexto, tendencia de gap, y modo MANGA mejorado (pole/best lap) con menos 'robot'.
 - v7.3: Locutor mejorado: frases tipo shuffle-bag (anti repetición real), manga batalla con nombres+gaps, y micro-variación en Auto Locutor.
@@ -28,7 +30,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.0.58</title>
+  <title>AI Spotter TRM v0.0.0.60</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -2971,7 +2973,7 @@ body {
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
 
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.58</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.60</div>
       </div>
       </div>
     </header>
@@ -3611,7 +3613,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.0.58";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.0.60";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -4621,7 +4623,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.58';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.60';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -11310,13 +11312,36 @@ function autoDecorate(text, type, style) {
   return t;
 }
 
+    function autoIsUsableText(s, type) {
+      try {
+        const t = String(s || '').replace(/\s+/g,' ').trim();
+        if (!t || t.length < 3) return false;
+        if (/\b(undefined|null|nan)\b/i.test(t)) return false;
+        // Si menciona gap/delta pero no trae numero, mejor callar.
+        if (/\b(gap|delta)\b/i.test(t) && !/\d/.test(t)) return false;
+        // No deberian quedar llaves sin reemplazar
+        if (/[{}]/.test(t)) return false;
+        // Evita frases con comas dobles por datos faltantes
+        if (/,\s*,/.test(t)) return false;
+        return true;
+      } catch(e) {
+        return false;
+      }
+    }
+
+
     function autoBuildMessage(type, ctx) {
       const style = (autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo') ? autoCommentatorMode : 'pro';
       const dict = (AUTO_PHRASES_BY_STYLE && AUTO_PHRASES_BY_STYLE[style]) ? AUTO_PHRASES_BY_STYLE[style] : AUTO_PHRASES_PRO;
       const bank = (dict && dict[type]) ? dict[type] : (AUTO_PHRASES_PRO[type] || []);
-      const fn = autoRandPick(bank, style + ':' + type);
-      if (typeof fn === 'function') {
+      const keyBase = style + ':' + type;
+
+      // Intento 1 + re-roll 1 vez si la frase queda incompleta (sin datos)
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const fn = autoRandPick(bank, keyBase);
+        if (typeof fn !== 'function') break;
         const out = String(fn(ctx) || '').trim();
+        if (!autoIsUsableText(out, type)) continue;
         return autoDecorate(out, type, style);
       }
       return '';
