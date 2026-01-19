@@ -1,6 +1,6 @@
 <!--
-AI_Spotter_TRM_v0.0.0.67 - UI simplificada (modo 100% automatico) + perfiles inteligentes -
-Fecha: 2026-01-03
+AI_Spotter_TRM_v0.0.0.78 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+Fecha: 2026-01-18
 Origen: Spotter_5.0.1.html
 
 Changelog:
@@ -15,6 +15,10 @@ Changelog:
 - v0.0.0.51: UI header - baja botones + version para alinear (logo arriba, acciones abajo).
 - v0.0.0.57: UI header - aumenta header-logo 15% adicional.
 - v0.0.0.58: Nuevo tema "Vic's Pulse" basado en colores del logo (rojo/blanco/negro), acentos y header ajustados.
+- v0.0.0.71: Fix raceTitleText (wrap pro: evita guion al inicio de linea y evita el "1" huerfano).
+- v0.0.0.72: raceTitleText 33% mas chico (evita cortes en header).
+- v0.0.0.78: Bandera en raceTitleText (fix emoji font) + raceTitleText +2px.
+
 - v0.0.0.59: Guard rails TTS: si falta dato (nombre/gap/tiempo), el spotter se calla (evita "undefined" y frases incompletas).
 - v0.0.0.60: Auto Locutor: reintenta 1 vez (re-roll) si una frase queda incompleta; si el segundo intento falla, se calla.
 - v0.0.0.62: Bandera azul: menciona nombre del lapeador en P1/P2/P3 (seguimiento y auto locutor).
@@ -31,7 +35,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.0.67</title>
+  <title>AI Spotter TRM v0.0.0.78</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -79,7 +83,192 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
     }
 
-    * {
+    /* === SKIN: Vic's Pulse Timing (logo palette) === */
+    body.skin-vicpulse{
+      /* Oscuros (carbon) */
+      --bg-dark: #060507;
+      --card-dark: #0b090c;
+      --card-dark-2: #07060a;
+      /* Texto (blanco suave del logo) */
+      --text-main: #EAEAEC;
+      --text-muted: #C7B3B3;
+
+      /* Acentos (rojo + rojo secundario del logo) */
+      --accent-red: #DD1413;
+      --accent-red-soft: rgba(221,20,19,0.55);
+      --accent-orange: #C14A46;
+      --accent-orange-soft: rgba(193,74,70,0.45);
+
+      /* Highlights neutrales */
+      --accent-blue: #EAEAEC;
+      --accent-blue-soft: rgba(234,234,236,0.18);
+      --accent-cyan: #EAEAEC;
+      --border-soft: rgba(234,234,236,0.28);
+
+      /* Glow rojo (Pulse) */
+      --shadow-strong: 0 0 18px rgba(221,20,19,0.46);
+      --shadow-soft: 0 0 12px rgba(234,234,236,0.08);
+
+      /* Header theme */
+      --hdr-grad-a: rgba(221,20,19,0.22);
+      --hdr-grad-b: rgba(234,234,236,0.06);
+      --hdr-stripe-a: #120d10;
+      --hdr-stripe-b: #07060a;
+      --hdr-border: rgba(221,20,19,0.32);
+      --hdr-border-2: rgba(234,234,236,0.10);
+      --hdr-glow: 0 0 18px rgba(221,20,19,0.18);
+
+      /* Badge MODO theme */
+      --mode-bg-manga: linear-gradient(135deg, rgba(221,20,19,.86), rgba(90,26,31,.72));
+      --mode-bg-final: linear-gradient(135deg, rgba(221,20,19,.95), rgba(234,234,236,.10));
+      /* finalA se queda dorado (bandera de campeon) */
+    }
+
+    body.skin-vicpulse #manualBtn{
+      background: linear-gradient(135deg, rgba(221,20,19,.28), rgba(234,234,236,.10));
+      border-color: rgba(234,234,236,.18);
+    }
+
+    body.skin-vicpulse .header-skin.active{
+      background: linear-gradient(135deg, rgba(221,20,19,.92), rgba(193,74,70,.78));
+      color: #12060a;
+      border-color: rgba(234,234,236,.20);
+      box-shadow: 0 0 14px rgba(221,20,19,.35);
+    }
+
+    /* Vic Skin PRO - volumen, bordes 3D y botones premium */
+    body.skin-vicpulse{
+      --bg-dark: #050507;
+      --card-dark: #090a0e;
+      --card-dark-2: #06070b;
+      --text-main: #f4f5f7;
+      --text-muted: rgba(234,234,236,0.72);
+
+      --accent-red: #dd1413;
+      --accent-red-soft: rgba(221,20,19,0.52);
+      --accent-orange: #c14a46;
+      --accent-orange-soft: rgba(193,74,70,0.45);
+
+      --border-soft: rgba(234,234,236,0.16);
+      --edge-hi: rgba(255,255,255,0.12);
+      --edge-lo: rgba(0,0,0,0.55);
+      --shadow-elev: 0 14px 32px rgba(0,0,0,0.55);
+      --shadow-elev2: 0 10px 22px rgba(0,0,0,0.42);
+      --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -12px 18px rgba(0,0,0,0.55);
+
+      /* Fondo: maroon + carbono sutil */
+      background-color: var(--bg-dark) !important;
+      background-image:
+        radial-gradient(circle at 18% 12%, rgba(221,20,19,0.18), transparent 56%),
+        radial-gradient(circle at 82% 6%, rgba(234,234,236,0.06), transparent 58%),
+        radial-gradient(circle at 60% 92%, rgba(90,26,31,0.18), transparent 62%),
+        repeating-linear-gradient(135deg, rgba(255,255,255,0.028) 0, rgba(255,255,255,0.028) 2px, rgba(0,0,0,0.0) 2px, rgba(0,0,0,0.0) 7px),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.020) 0, rgba(255,255,255,0.020) 1px, rgba(0,0,0,0.0) 1px, rgba(0,0,0,0.0) 6px ) !important;
+      background-blend-mode: screen, screen, screen, overlay, overlay !important;
+    }
+
+    /* Panels con glass + borde doble */
+    body.skin-vicpulse .app-header,
+    body.skin-vicpulse .spotter-section,
+    body.skin-vicpulse .pilot-card,
+    body.skin-vicpulse .controls-section,
+    body.skin-vicpulse .top3-mini{
+      border: 1px solid rgba(234,234,236,0.16) !important;
+      box-shadow: var(--shadow-elev2), 0 0 0 1px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+      background-image:
+        radial-gradient(120% 180% at 0% 0%, rgba(221,20,19,0.14), transparent 55%),
+        radial-gradient(120% 180% at 100% 0%, rgba(234,234,236,0.05), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.22));
+      background-blend-mode: screen, screen, normal;
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+    }
+
+    /* Botones premium: relieve + brillo */
+    body.skin-vicpulse .btn-primary,
+    body.skin-vicpulse .btn-secondary,
+    body.skin-vicpulse .spotter-btn,
+    body.skin-vicpulse .header-help,
+    body.skin-vicpulse .spotter-master-btn,
+    body.skin-vicpulse .btn-mini,
+    body.skin-vicpulse .btn-grid,
+    body.skin-vicpulse .session-preset-card{
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(234,234,236,0.16) !important;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.22)) !important;
+      box-shadow: var(--shadow-elev2), var(--shadow-inset) !important;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      transform: translateZ(0);
+    }
+
+    body.skin-vicpulse .btn-primary::before,
+    body.skin-vicpulse .btn-secondary::before,
+    body.skin-vicpulse .spotter-btn::before,
+    body.skin-vicpulse .header-help::before,
+    body.skin-vicpulse .spotter-master-btn::before,
+    body.skin-vicpulse .btn-mini::before,
+    body.skin-vicpulse .btn-grid::before,
+    body.skin-vicpulse .session-preset-card::before{
+      content: "";
+      position: absolute;
+      inset: -2px -2px auto -2px;
+      height: 58%;
+      background: radial-gradient(120% 140% at 15% 0%, rgba(255,255,255,0.22), rgba(255,255,255,0.08), transparent 70%);
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
+    body.skin-vicpulse .btn-primary:hover,
+    body.skin-vicpulse .btn-secondary:hover,
+    body.skin-vicpulse .spotter-btn:hover,
+    body.skin-vicpulse .header-help:hover,
+    body.skin-vicpulse .spotter-master-btn:hover,
+    body.skin-vicpulse .btn-mini:hover,
+    body.skin-vicpulse .btn-grid:hover,
+    body.skin-vicpulse .session-preset-card:hover{
+      filter: brightness(1.10);
+    }
+
+    body.skin-vicpulse .btn-primary:active,
+    body.skin-vicpulse .btn-secondary:active,
+    body.skin-vicpulse .spotter-btn:active,
+    body.skin-vicpulse .header-help:active,
+    body.skin-vicpulse .spotter-master-btn:active,
+    body.skin-vicpulse .btn-mini:active,
+    body.skin-vicpulse .btn-grid:active,
+    body.skin-vicpulse .session-preset-card:active{
+      transform: translateY(1px) scale(0.99) !important;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -10px 16px rgba(0,0,0,0.60) !important;
+    }
+
+    /* Estados activos: rojo Vic con glow */
+    body.skin-vicpulse .btn-secondary.active,
+    body.skin-vicpulse .spotter-btn.active,
+    body.skin-vicpulse .spotter-master-btn.active,
+    body.skin-vicpulse .session-preset-card.active{
+      background: linear-gradient(135deg, rgba(221,20,19,0.92), rgba(193,74,70,0.74)) !important;
+      color: rgba(18,6,10,0.98) !important;
+      border-color: rgba(234,234,236,0.22) !important;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.55), 0 0 22px rgba(221,20,19,0.22), 0 16px 32px rgba(0,0,0,0.55) !important;
+      text-shadow: none;
+    }
+
+    /* Header botones un poco mas agresivos */
+    body.skin-vicpulse .header-help{
+      letter-spacing: 0.08em;
+      font-weight: 900;
+    }
+
+    /* Contornos finos con relieve en elementos clave */
+    body.skin-vicpulse .badge-mode,
+    body.skin-vicpulse .badge-live,
+    body.skin-vicpulse .manga-clock{
+      box-shadow: 0 10px 22px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+    }
+
+
+        * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
@@ -2239,10 +2428,33 @@ body {
       align-items: baseline;
     }
     #raceTitleText{
-      display:inline-block;
+      /* Wrap PRO: evita guion al inicio de linea y reduce cortes feos */
+      font-size: calc(0.67em + 2px);
+      display:block;
+      flex: 1 1 auto;
+      min-width: 0;
+      max-width: 100%;
       white-space: normal;
-      word-break: break-word;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      text-wrap: balance;
+      /* Max 2 lineas para no invadir el header */
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
     }
+
+    #raceTitleText .flagImg{
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+      vertical-align: -3px;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.65));
+      border-radius: 3px;
+    }
+
+
     .badge-mode{
       font-size: 10px;
       padding: 3px 9px;
@@ -2337,6 +2549,17 @@ body {
     }
     .header-help:hover{ filter: brightness(1.15); }
     .header-help:active{ transform: translateY(1px); }
+
+    /* Skin button (toggle look) */
+    .header-skin{
+      min-width: 54px;
+    }
+    .header-skin.active{
+      background: linear-gradient(135deg, rgba(255,43,43,.92), rgba(255,59,59,.72));
+      color: #12060a;
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 0 14px rgba(255,43,43,.35);
+    }
 
     .manual-backdrop{
       position: fixed;
@@ -2949,6 +3172,130 @@ body {
     .speechlog-meta { opacity:.65; font-size:11px; margin-bottom:2px; }
     .speechlog-hint { opacity:.55; font-size:11px; margin-top:6px; }
 
+
+    /* === Vic Skin PRO+ (sheen + breathing glow + ON fully painted) === */
+    @keyframes vicSheenMove{
+      0%{ transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+      10%{ opacity: 0.0; }
+      22%{ opacity: 0.26; }
+      55%{ opacity: 0.16; }
+      80%{ opacity: 0.0; }
+      100%{ transform: translateX(140%) skewX(-18deg); opacity: 0; }
+    }
+
+    @keyframes vicHdrBreath{
+      0%,100%{ filter: drop-shadow(0 0 8px rgba(221,20,19,0.10)); }
+      50%{ filter: drop-shadow(0 0 16px rgba(221,20,19,0.22)); }
+    }
+
+    @keyframes vicHdrLine{
+      0%,100%{ opacity: 0.55; }
+      50%{ opacity: 0.95; }
+    }
+
+    /* Header: micro glow respirando (sutil, no arbol de navidad) */
+    body.skin-vicpulse .app-header{
+      animation: vicHdrBreath 4.8s ease-in-out infinite;
+    }
+    body.skin-vicpulse .app-header::after{
+      animation: vicHdrLine 3.6s ease-in-out infinite;
+    }
+
+    /* ON = pintado completo (cubre TODOS los botones/toggles relevantes) */
+    body.skin-vicpulse .btn-secondary.active,
+    body.skin-vicpulse .btn-pill.active,
+    body.skin-vicpulse .spotter-btn.active,
+    body.skin-vicpulse .spotter-master-btn.active,
+    body.skin-vicpulse .session-preset-card.active,
+    body.skin-vicpulse .precision-badge.active,
+    body.skin-vicpulse .btn-basic-mini.active,
+    body.skin-vicpulse .btn-speak.active,
+    body.skin-vicpulse .btn-rd.active,
+    body.skin-vicpulse #rdToggleBtn.active,
+    body.skin-vicpulse .toggle-pill.on,
+    body.skin-vicpulse .toggle-pill.active{
+      background: linear-gradient(135deg, rgba(221,20,19,0.96), rgba(193,74,70,0.86)) !important;
+      color: rgba(18,6,10,0.98) !important;
+      border-color: rgba(234,234,236,0.22) !important;
+      opacity: 1 !important;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.55), 0 0 26px rgba(221,20,19,0.26), 0 18px 34px rgba(0,0,0,0.58) !important;
+      text-shadow: none !important;
+    }
+
+    /* VOZ ON (verde) tambien pintado completo */
+    body.skin-vicpulse .btn-primary.voice-on,
+    body.skin-vicpulse .btn-voice.voice-on,
+    body.skin-vicpulse .btn-speak.voice-on{
+      background: linear-gradient(135deg, rgba(22,163,74,0.96), rgba(34,197,94,0.86)) !important;
+      color: rgba(6,18,10,0.98) !important;
+      border-color: rgba(234,234,236,0.18) !important;
+      opacity: 1 !important;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.55), 0 0 24px rgba(34,197,94,0.26), 0 18px 34px rgba(0,0,0,0.58) !important;
+      text-shadow: none !important;
+    }
+
+    /* Asegura que el sheen se vea en chips/toggles */
+    body.skin-vicpulse .toggle-pill,
+    body.skin-vicpulse .precision-badge,
+    body.skin-vicpulse .btn-basic-mini,
+    body.skin-vicpulse .btn-speak,
+    body.skin-vicpulse .btn-rd,
+    body.skin-vicpulse #rdToggleBtn{
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Sheen: brillo que cruza SOLO cuando esta ON */
+    body.skin-vicpulse .btn-secondary.active::after,
+    body.skin-vicpulse .btn-pill.active::after,
+    body.skin-vicpulse .spotter-btn.active::after,
+    body.skin-vicpulse .spotter-master-btn.active::after,
+    body.skin-vicpulse .session-preset-card.active::after,
+    body.skin-vicpulse .precision-badge.active::after,
+    body.skin-vicpulse .btn-basic-mini.active::after,
+    body.skin-vicpulse .btn-speak.active::after,
+    body.skin-vicpulse .btn-rd.active::after,
+    body.skin-vicpulse #rdToggleBtn.active::after,
+    body.skin-vicpulse .toggle-pill.on::after,
+    body.skin-vicpulse .btn-primary.voice-on::after,
+    body.skin-vicpulse .btn-voice.voice-on::after{
+      content: "";
+      position: absolute;
+      top: -10%;
+      bottom: -10%;
+      width: 42%;
+      left: -60%;
+      background: linear-gradient(90deg, rgba(255,255,255,0.00), rgba(255,255,255,0.32), rgba(255,255,255,0.00));
+      transform: skewX(-18deg);
+      pointer-events: none;
+      mix-blend-mode: screen;
+      animation: vicSheenMove 3.8s ease-in-out infinite;
+      opacity: 0.0;
+    }
+
+    /* Reduce motion: no animaciones */
+    @media (prefers-reduced-motion: reduce){
+      body.skin-vicpulse .app-header,
+      body.skin-vicpulse .app-header::after{
+        animation: none !important;
+      }
+      body.skin-vicpulse .btn-secondary.active::after,
+      body.skin-vicpulse .btn-pill.active::after,
+      body.skin-vicpulse .spotter-btn.active::after,
+      body.skin-vicpulse .spotter-master-btn.active::after,
+      body.skin-vicpulse .session-preset-card.active::after,
+      body.skin-vicpulse .precision-badge.active::after,
+      body.skin-vicpulse .btn-basic-mini.active::after,
+      body.skin-vicpulse .btn-speak.active::after,
+      body.skin-vicpulse .btn-rd.active::after,
+      body.skin-vicpulse #rdToggleBtn.active::after,
+      body.skin-vicpulse .toggle-pill.on::after,
+      body.skin-vicpulse .btn-primary.voice-on::after,
+      body.skin-vicpulse .btn-voice.voice-on::after{
+        animation: none !important;
+        display: none !important;
+      }
+    }
 </style>
 </head>
 <body>
@@ -2971,10 +3318,11 @@ body {
             <span class="badge-live-dot"></span>
             <span>Offline</span>
           </div>
+          <button class="header-help header-skin" id="skinBtn" type="button" title="Skin Vic's Pulse Timing">VIC</button>
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
 
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.67</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.78</div>
       </div>
       </div>
     </header>
@@ -3614,7 +3962,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.0.67";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.0.78";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -4640,7 +4988,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.67';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.78';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -4685,6 +5033,32 @@ try{
     
     // Manual (ayuda)
     const manualBtn       = document.getElementById('manualBtn');
+    const skinBtn         = document.getElementById('skinBtn');
+
+    // Skin: Vic's Pulse Timing (toggle)
+    const SKIN_KEY = 'spotterSkin';
+    const SKIN_VIC = 'vicpulse';
+    function applySkin(name){
+      const isVic = (name === SKIN_VIC);
+      document.body.classList.toggle('skin-vicpulse', isVic);
+      if (skinBtn){
+        skinBtn.classList.toggle('active', isVic);
+        skinBtn.textContent = isVic ? 'VIC' : 'STD';
+      }
+    }
+    function toggleSkin(){
+      const isVic = document.body.classList.contains('skin-vicpulse');
+      const next = isVic ? 'std' : SKIN_VIC;
+      try{ prefSet(SKIN_KEY, next); }catch(e){}
+      applySkin(next);
+    }
+    try{
+      let stored = null;
+      try{ stored = prefGet(SKIN_KEY, null); }catch(e){}
+      if (!stored) stored = SKIN_VIC; // default de este build
+      applySkin(stored);
+    }catch(e){}
+    if (skinBtn) skinBtn.addEventListener('click', toggleSkin);
     const manualBackdrop  = document.getElementById('manualBackdrop');
     const manualCloseBtn  = document.getElementById('manualCloseBtn');
 
@@ -13422,11 +13796,71 @@ function checkSessionFinishOnLap() {
       // Auto Locutor: al cambiar carrera, anunciar nombre + participantes
       try { __maybeAnnounceAutoIntro(r); } catch(e) {}
 
+      function __formatRaceTitleForHeader(name) {
+        let s = (name == null) ? '' : String(name);
+        // Sanitiza saltos de linea/tabs del feed (a veces llegan con \n y rompen el header)
+        s = s.replace(/[\r\n\t]+/g, ' ');
+        s = s.replace(/\s{2,}/g, ' ').trim();
+        if (!s) return '';
+        // 1) Evita que el guion quede al inicio de linea (pega el guion al texto anterior)
+        //    "A - B" => "A\u00A0- B"
+        s = s.replace(/\s-\s/g, '\u00A0- ');
+        // 2) Evita que "SERIE 1" se parta dejando el "1" huerfano
+        s = s.replace(/\b(SERIE)\s+(\d+)\b/ig, '$1\u00A0$2');
+        return s;
+      }
+
+      function __escapeHtml(str){
+        const s = (str==null) ? '' : String(str);
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+      function __normForCountry(str){
+        let s = (str==null) ? '' : String(str);
+        try { s = s.normalize('NFD').replace(/[̀-ͯ]/g,''); } catch(e) {}
+        s = s.toUpperCase();
+        // homogeniza guiones y separadores
+        s = s.replace(/[‐-―]/g,'-');
+        return s;
+      }
+      function __detectFlagSvgCode(title){
+        const n = __normForCountry(title);
+        // Twemoji SVG codes (regional indicators)
+        const pairs = [
+          ['REINO UNIDO','1f1ec-1f1e7'], ['UK','1f1ec-1f1e7'], ['UNITED KINGDOM','1f1ec-1f1e7'],
+          ['MEXICO','1f1f2-1f1fd'],
+          ['COSTA RICA','1f1e8-1f1f7'],
+          ['ITALIA','1f1ee-1f1f9'],
+          ['EUA','1f1fa-1f1f8'], ['USA','1f1fa-1f1f8'], ['ESTADOS UNIDOS','1f1fa-1f1f8'], ['UNITED STATES','1f1fa-1f1f8'],
+          ['BRASIL','1f1e7-1f1f7'], ['BRAZIL','1f1e7-1f1f7'],
+          ['PERU','1f1f5-1f1ea'],
+          ['POLONIA','1f1f5-1f1f1'], ['POLAND','1f1f5-1f1f1'],
+          ['SUIZA','1f1e8-1f1ed'], ['SWITZERLAND','1f1e8-1f1ed'],
+          ['ESPANA','1f1ea-1f1f8'], ['SPAIN','1f1ea-1f1f8'],
+          ['FRANCIA','1f1eb-1f1f7'], ['FRANCE','1f1eb-1f1f7'],
+          ['ALEMANIA','1f1e9-1f1ea'], ['GERMANY','1f1e9-1f1ea'],
+          ['ARGENTINA','1f1e6-1f1f7'],
+          ['COLOMBIA','1f1e8-1f1f4'],
+          ['CHILE','1f1e8-1f1f1']
+        ];
+        for (const [k,code] of pairs){
+          if (n.includes(k)) return code;
+        }
+        return '';
+      }
+
+      const __TWEMOJI_FLAG_BASE = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/';
+
+      const rawTitle = r.raceName || 'Spotter_5.0.1';
+      const fmtTitle = __formatRaceTitleForHeader(rawTitle) || rawTitle;
+      const flagSvg = __detectFlagSvgCode(rawTitle);
+      const safeTitle = __escapeHtml(fmtTitle);
+      const htmlTitle = flagSvg ? (`<img class="flagImg" alt="" src="${__TWEMOJI_FLAG_BASE}${flagSvg}.svg"/>` + safeTitle) : safeTitle;
+
       if (raceTitleText) {
-        raceTitleText.textContent = r.raceName || 'Spotter_5.0.1';
+        raceTitleText.innerHTML = htmlTitle;
       } else if (raceTitleMain) {
         // fallback: si no existe el span interno, usa el contenedor
-        raceTitleMain.textContent = r.raceName || 'Spotter_5.0.1';
+        raceTitleMain.textContent = fmtTitle;
       }
 
       if (raceModeBadge) {
