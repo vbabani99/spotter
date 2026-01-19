@@ -1,9 +1,16 @@
 <!--
-AI_Spotter_TRM_v0.0.0.78 - Vic Skin PRO (volumen, sombras, bordes 3D) -
-Fecha: 2026-01-18
+AI_Spotter_TRM_v0.0.1.00 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+Fecha: 2026-01-19
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.0.1.00: controls-section reducido 50% (tipografia/padding/botones) y oculto por defecto (solo visible en modo debug).
+- v0.0.0.99: extras-section reducido 33% (zoom 0.67) para compactar controles.
+- v0.0.0.98: Header-right a 200x123 px (centrado interno preservado).
+- v0.0.0.97: Header-right centrado (logo, acciones y version) + header-version centrada (100% width).
+- v0.0.0.92: UI header - fija header-left y header-right a 224x123 px (bloques simetricos).
+- v0.0.0.94: Badge LIVE igualado a botones del header-actions-row (misma altura/tamano), texto corto OFF/LIVE, alineado.
+- v0.0.0.89: UI header - reduce tamano de botones en header-actions-row (sin cambiar layout base v0.0.0.82) + raceTitleText contenedor 240x56 + raceSubtitle hasta 50px (2 lineas).
 - v0.0.0.36: Fix TTS palabra 'Clasificacion' (sin acento en voz) en anuncio de carrera nueva.
 - v0.0.0.37: Fix selector de piloto consistente (dark forms + no update mientras seleccionas) y mejora anti-parpadeo iOS/Android/Chrome/Safari.
 - v0.0.0.38: Anuncio de carrera nueva: formato TTS "Clasificacion - Qx - Manga X - Serie X" y anuncios de Finales por A/B/C con frases PRO/divertidas.
@@ -17,7 +24,9 @@ Changelog:
 - v0.0.0.58: Nuevo tema "Vic's Pulse" basado en colores del logo (rojo/blanco/negro), acentos y header ajustados.
 - v0.0.0.71: Fix raceTitleText (wrap pro: evita guion al inicio de linea y evita el "1" huerfano).
 - v0.0.0.72: raceTitleText 33% mas chico (evita cortes en header).
-- v0.0.0.78: Bandera en raceTitleText (fix emoji font) + raceTitleText +2px.
+- v0.0.0.79: Bandera en raceTitleText (fix emoji font) + raceTitleText +2px.
+- v0.0.0.79: Paquete de temas T1-T8 (orden A: VIC, CARB, BLUE, LIME, PURP, AMBR, ICE, OLED).
+- v0.0.0.80: Detalles premium: header "vivo" solo en Live (breath + led sweep) y linea sutil tipo LED bajo botones.
 
 - v0.0.0.59: Guard rails TTS: si falta dato (nombre/gap/tiempo), el spotter se calla (evita "undefined" y frases incompletas).
 - v0.0.0.60: Auto Locutor: reintenta 1 vez (re-roll) si una frase queda incompleta; si el segundo intento falla, se calla.
@@ -35,7 +44,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.0.78</title>
+  <title>AI Spotter TRM v0.0.1.00</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -124,7 +133,200 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
       /* finalA se queda dorado (bandera de campeon) */
     }
 
-    body.skin-vicpulse #manualBtn{
+    
+
+    /* === THEME PACK (T1-T8) - orden A === */
+    /* Nota: todos los temas usan el mismo "Skin PRO" (volumen, sombras, bordes 3D) via .skin-pro */
+
+    /* T2 - Carbon Redline */
+    body.skin-carbon{
+      --accent-rgb: 255, 45, 45;
+      --accent2-rgb: 255, 255, 255;
+      --bg-dark: #050506;
+      --card-dark: #0a0b0f;
+      --card-dark-2: #07080c;
+      --text-main: #f4f6fb;
+      --text-muted: rgba(244,246,251,0.72);
+      --accent-red: #ff2d2d;
+      --accent-red-soft: rgba(255,45,45,0.52);
+      --accent-orange: #ffffff;
+      --accent-orange-soft: rgba(255,255,255,0.18);
+      --accent-blue: #d6dde8;
+      --accent-blue-soft: rgba(214,221,232,0.18);
+      --border-soft: rgba(244,246,251,0.16);
+      --hdr-grad-a: rgba(255,45,45,0.22);
+      --hdr-grad-b: rgba(255,255,255,0.06);
+      --hdr-stripe-a: #0f0f12;
+      --hdr-stripe-b: #07070b;
+      --hdr-border: rgba(255,45,45,0.30);
+      --hdr-border-2: rgba(255,255,255,0.10);
+      --hdr-glow: 0 0 18px rgba(255,45,45,0.18);
+      --mode-bg-manga: linear-gradient(135deg, rgba(255,45,45,.88), rgba(80,0,0,.74));
+      --mode-bg-final: linear-gradient(135deg, rgba(255,45,45,.95), rgba(255,255,255,.10));
+    }
+
+    /* T3 - Stealth Blue */
+    body.skin-blue{
+      --accent-rgb: 47, 140, 255;
+      --accent2-rgb: 140, 215, 255;
+      --bg-dark: #05070e;
+      --card-dark: #0a1020;
+      --card-dark-2: #070c18;
+      --text-main: #eef6ff;
+      --text-muted: rgba(238,246,255,0.70);
+      --accent-red: #2f8cff;
+      --accent-red-soft: rgba(47,140,255,0.50);
+      --accent-orange: #8cd7ff;
+      --accent-orange-soft: rgba(140,215,255,0.22);
+      --accent-blue: #d6e7ff;
+      --accent-blue-soft: rgba(214,231,255,0.18);
+      --border-soft: rgba(238,246,255,0.16);
+      --hdr-grad-a: rgba(47,140,255,0.22);
+      --hdr-grad-b: rgba(255,255,255,0.06);
+      --hdr-stripe-a: #0b1428;
+      --hdr-stripe-b: #070c18;
+      --hdr-border: rgba(47,140,255,0.30);
+      --hdr-border-2: rgba(255,255,255,0.10);
+      --hdr-glow: 0 0 18px rgba(47,140,255,0.18);
+      --mode-bg-manga: linear-gradient(135deg, rgba(47,140,255,.86), rgba(0,35,80,.72));
+      --mode-bg-final: linear-gradient(135deg, rgba(47,140,255,.94), rgba(255,255,255,.10));
+    }
+
+    /* T4 - Neon Lime */
+    body.skin-lime{
+      --accent-rgb: 167, 255, 59;
+      --accent2-rgb: 220, 255, 190;
+      --bg-dark: #050705;
+      --card-dark: #0a140a;
+      --card-dark-2: #071007;
+      --text-main: #f3fff1;
+      --text-muted: rgba(243,255,241,0.70);
+      --accent-red: #a7ff3b;
+      --accent-red-soft: rgba(167,255,59,0.46);
+      --accent-orange: #dcffbe;
+      --accent-orange-soft: rgba(220,255,190,0.20);
+      --accent-blue: #e9ffe1;
+      --accent-blue-soft: rgba(233,255,225,0.16);
+      --border-soft: rgba(243,255,241,0.16);
+      --hdr-grad-a: rgba(167,255,59,0.18);
+      --hdr-grad-b: rgba(255,255,255,0.06);
+      --hdr-stripe-a: #0b1a0b;
+      --hdr-stripe-b: #071007;
+      --hdr-border: rgba(167,255,59,0.28);
+      --hdr-border-2: rgba(255,255,255,0.10);
+      --hdr-glow: 0 0 18px rgba(167,255,59,0.16);
+      --mode-bg-manga: linear-gradient(135deg, rgba(167,255,59,.82), rgba(10,60,10,.70));
+      --mode-bg-final: linear-gradient(135deg, rgba(167,255,59,.90), rgba(255,255,255,.10));
+    }
+
+    /* T5 - Purple Night */
+    body.skin-purple{
+      --accent-rgb: 190, 74, 255;
+      --accent2-rgb: 255, 105, 230;
+      --bg-dark: #06050a;
+      --card-dark: #110b1a;
+      --card-dark-2: #0c0714;
+      --text-main: #f6f0ff;
+      --text-muted: rgba(246,240,255,0.70);
+      --accent-red: #be4aff;
+      --accent-red-soft: rgba(190,74,255,0.50);
+      --accent-orange: #ff69e6;
+      --accent-orange-soft: rgba(255,105,230,0.22);
+      --accent-blue: #eadbff;
+      --accent-blue-soft: rgba(234,219,255,0.18);
+      --border-soft: rgba(246,240,255,0.16);
+      --hdr-grad-a: rgba(190,74,255,0.20);
+      --hdr-grad-b: rgba(255,255,255,0.06);
+      --hdr-stripe-a: #1a0f2a;
+      --hdr-stripe-b: #0c0714;
+      --hdr-border: rgba(190,74,255,0.28);
+      --hdr-border-2: rgba(255,255,255,0.10);
+      --hdr-glow: 0 0 18px rgba(190,74,255,0.16);
+      --mode-bg-manga: linear-gradient(135deg, rgba(190,74,255,.84), rgba(50,0,80,.72));
+      --mode-bg-final: linear-gradient(135deg, rgba(190,74,255,.92), rgba(255,255,255,.10));
+    }
+
+    /* T6 - Amber Heat */
+    body.skin-amber{
+      --accent-rgb: 255, 176, 0;
+      --accent2-rgb: 255, 75, 75;
+      --bg-dark: #070504;
+      --card-dark: #120b07;
+      --card-dark-2: #0c0705;
+      --text-main: #fff6ea;
+      --text-muted: rgba(255,246,234,0.72);
+      --accent-red: #ffb000;
+      --accent-red-soft: rgba(255,176,0,0.46);
+      --accent-orange: #ff4b4b;
+      --accent-orange-soft: rgba(255,75,75,0.22);
+      --accent-blue: #ffe3bf;
+      --accent-blue-soft: rgba(255,227,191,0.16);
+      --border-soft: rgba(255,246,234,0.16);
+      --hdr-grad-a: rgba(255,176,0,0.18);
+      --hdr-grad-b: rgba(255,255,255,0.06);
+      --hdr-stripe-a: #23110a;
+      --hdr-stripe-b: #0c0705;
+      --hdr-border: rgba(255,176,0,0.26);
+      --hdr-border-2: rgba(255,255,255,0.10);
+      --hdr-glow: 0 0 18px rgba(255,176,0,0.14);
+      --mode-bg-manga: linear-gradient(135deg, rgba(255,176,0,.82), rgba(90,30,0,.72));
+      --mode-bg-final: linear-gradient(135deg, rgba(255,176,0,.90), rgba(255,255,255,.10));
+    }
+
+    /* T7 - Ice White */
+    body.skin-ice{
+      --accent-rgb: 140, 215, 255;
+      --accent2-rgb: 255, 255, 255;
+      --bg-dark: #06080b;
+      --card-dark: #0c141c;
+      --card-dark-2: #091019;
+      --text-main: #f1fbff;
+      --text-muted: rgba(241,251,255,0.70);
+      --accent-red: #8cd7ff;
+      --accent-red-soft: rgba(140,215,255,0.42);
+      --accent-orange: #ffffff;
+      --accent-orange-soft: rgba(255,255,255,0.18);
+      --accent-blue: #dff6ff;
+      --accent-blue-soft: rgba(223,246,255,0.18);
+      --border-soft: rgba(241,251,255,0.16);
+      --hdr-grad-a: rgba(140,215,255,0.18);
+      --hdr-grad-b: rgba(255,255,255,0.08);
+      --hdr-stripe-a: #0b1a24;
+      --hdr-stripe-b: #091019;
+      --hdr-border: rgba(140,215,255,0.24);
+      --hdr-border-2: rgba(255,255,255,0.12);
+      --hdr-glow: 0 0 18px rgba(140,215,255,0.14);
+      --mode-bg-manga: linear-gradient(135deg, rgba(140,215,255,.78), rgba(10,35,55,.70));
+      --mode-bg-final: linear-gradient(135deg, rgba(140,215,255,.86), rgba(255,255,255,.12));
+    }
+
+    /* T8 - OLED Minimal */
+    body.skin-oled{
+      --accent-rgb: 255, 255, 255;
+      --accent2-rgb: 255, 45, 45;
+      --bg-dark: #000000;
+      --card-dark: #050505;
+      --card-dark-2: #020202;
+      --text-main: #ffffff;
+      --text-muted: rgba(255,255,255,0.68);
+      --accent-red: #ffffff;
+      --accent-red-soft: rgba(255,255,255,0.22);
+      --accent-orange: #ff2d2d;
+      --accent-orange-soft: rgba(255,45,45,0.26);
+      --accent-blue: #e5e7eb;
+      --accent-blue-soft: rgba(229,231,235,0.16);
+      --border-soft: rgba(255,255,255,0.14);
+      --hdr-grad-a: rgba(255,255,255,0.12);
+      --hdr-grad-b: rgba(255,255,255,0.06);
+      --hdr-stripe-a: #050505;
+      --hdr-stripe-b: #000000;
+      --hdr-border: rgba(255,255,255,0.18);
+      --hdr-border-2: rgba(255,255,255,0.10);
+      --hdr-glow: 0 0 16px rgba(255,255,255,0.10);
+      --mode-bg-manga: linear-gradient(135deg, rgba(255,255,255,.78), rgba(30,30,30,.72));
+      --mode-bg-final: linear-gradient(135deg, rgba(255,255,255,.86), rgba(255,45,45,.12));
+    }
+body.skin-vicpulse #manualBtn{
       background: linear-gradient(135deg, rgba(221,20,19,.28), rgba(234,234,236,.10));
       border-color: rgba(234,234,236,.18);
     }
@@ -325,12 +527,16 @@ body {
     }
 
     .header-left {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .header-title-main {
+  width: 224px;
+  height: 123px;
+  max-width: 224px;
+  min-width: 224px;
+  max-height: 123px;
+  min-height: 123px;
+  flex: 0 0 224px;
+  box-sizing: border-box;
+}
+.header-title-main {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -392,31 +598,44 @@ body {
     }
 
     .header-right {
+      width: 200px;
+      height: 123px;
+      max-width: 200px;
+      min-width: 200px;
+      max-height: 123px;
+      min-height: 123px;
+      flex: 0 0 200px;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
-      align-self: stretch;
-      gap: 4px;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
     }
-    .header-right-bottom{
+
+.header-right-bottom{
       margin-top: auto;
       display:flex;
       flex-direction: column;
-      align-items: flex-end;
+      align-items: center;
       gap: 4px;
+      width: 100%;
     }
 
     .header-actions-row{
       display:flex;
       align-items:center;
-      justify-content:flex-end;
+      justify-content:center;
       gap: 6px;
+      width: 100%;
     }
 
     .header-logo{
       display:flex;
       align-items:center;
-      justify-content:flex-end;
+      justify-content:center;
+      width: 100%;
+      align-self: stretch;
     }
     .header-logo img{
       height: 76px;
@@ -460,6 +679,8 @@ body {
     .header-version {
       font-size: 10px;
       color: var(--text-muted);
+      width: 100%;
+      text-align: center;
     }
 
     .app-main {
@@ -1010,6 +1231,8 @@ body {
       border-color: rgba(255,255,255,0.10);
     }
 .extras-section {
+      zoom: 0.67;
+
       border-radius: var(--radius-lg);
       padding: 2px 4px 4px;
       background: radial-gradient(circle at top, rgba(15,23,42,0.96), rgba(2,6,23,0.98));
@@ -1330,7 +1553,7 @@ body {
     
     .grid-list {
       --grid-cols: 1;
-      flex: 1 1 auto;
+ 
       min-height: 0;
       display: grid;
       grid-template-columns: repeat(var(--grid-cols), minmax(220px, 1fr));
@@ -2065,6 +2288,8 @@ body {
     }
 
     .extras-section {
+      zoom: 0.67;
+
       padding: 8px 10px 10px;
       gap: 8px;
       background: rgba(2,6,23,0.82);
@@ -2418,6 +2643,39 @@ body {
       pointer-events:none;
     }
 
+
+
+
+
+    /* Premium - Header vivo solo cuando esta LIVE (sin casino) */
+    @keyframes headerBreath {
+      0%, 100% { box-shadow: 0 10px 28px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.06); }
+      50% { box-shadow: 0 12px 34px rgba(0,0,0,0.62), 0 0 18px rgba(var(--accent-rgb), 0.22), inset 0 0 0 1px rgba(255,255,255,0.08); }
+    }
+    @keyframes ledSweep {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+    .app-header.live-on{
+      animation: headerBreath 3.6s ease-in-out infinite;
+    }
+    .app-header.live-on::after{
+      opacity: .98;
+      background-size: 200% 100%;
+      animation: ledSweep 2.8s linear infinite;
+    }
+    .header-actions-row{ position: relative; }
+    .app-header.live-on .header-actions-row::after{
+      content: "";
+      position: absolute;
+      left: 0; right: 0;
+      bottom: -4px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(0,0,0,0), rgba(var(--accent-rgb), .70), rgba(var(--accent2-rgb), .45), rgba(0,0,0,0));
+      opacity: .85;
+      pointer-events: none;
+      filter: blur(.2px);
+    }
     /* Header layout - título manda */
     .header-left{ gap: 3px; }
     .header-title-main{
@@ -2431,18 +2689,34 @@ body {
       /* Wrap PRO: evita guion al inicio de linea y reduce cortes feos */
       font-size: calc(0.67em + 2px);
       display:block;
-      flex: 1 1 auto;
       min-width: 0;
-      max-width: 100%;
+      max-width: 240px;
+      width: 240px;
+      flex: 0 0 240px;
       white-space: normal;
       word-break: keep-all;
       overflow-wrap: break-word;
       text-wrap: balance;
-      /* Max 2 lineas para no invadir el header */
+      /* Max 3 lineas, altura tope 60px */
+      max-height: 56px;
+      line-height: 1.15;
       overflow: hidden;
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 2;
+    }
+
+    #raceSubtitle{
+      /* Subtitle: tope 50px (2 lineas aprox) */
+      max-width: 150px;
+      width: 150px;
+      max-height: 50px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-height: 1.15;
+      text-wrap: balance;
     }
 
     #raceTitleText .flagImg{
@@ -2473,7 +2747,9 @@ body {
       font-size: 9px;
       opacity: .9;
     }
-    .header-right{ gap: 2px; }
+    width: 210px;
+  height: 123px;
+}
     .badge-live{
       padding: 4px 10px;
       font-size: 11px;
@@ -2548,6 +2824,9 @@ body {
       user-select: none;
     }
     .header-help:hover{ filter: brightness(1.15); }
+    .header-auto{ min-width: 62px; padding: 8px 10px; font-size: 12px; letter-spacing: 0.06em; }
+    @media (max-width: 560px){ .header-auto{ min-width: 56px; padding: 7px 8px; font-size: 11px; } }
+
     .header-help:active{ transform: translateY(1px); }
 
     /* Skin button (toggle look) */
@@ -3157,6 +3436,30 @@ body {
     body:not(.debug) .expert-only{display:none !important;}
     body.debug .expert-only{display:block !important;}
 
+    /* v0.0.1.00: controls-section compacto (50%) - oculto por defecto, visible solo en debug */
+    body.debug #controlsSection{
+      padding: 4px 6px 6px !important;
+      gap: 5px !important;
+    }
+    body.debug #controlsSection .buttons-row{ gap: 4px !important; }
+    body.debug #controlsSection .btn-secondary,
+    body.debug #controlsSection .btn-primary,
+    body.debug #controlsSection .btn-grid{
+      padding: 5px 6px !important;
+      font-size: 10px !important;
+      letter-spacing: 0.06em !important;
+      border-radius: 10px !important;
+      min-height: 0 !important;
+    }
+    body.debug #controlsSection .controls-label{ font-size: 9px !important; }
+    body.debug #controlsSection .config-status-card{ padding: 6px 8px !important; }
+    body.debug #controlsSection .cfg-pill{ font-size: 9px !important; padding: 2px 6px !important; }
+    body.debug #controlsSection .session-presets-title{ font-size: 10px !important; }
+    body.debug #controlsSection .spc-name{ font-size: 10px !important; }
+    body.debug #controlsSection .spc-sub{ font-size: 9px !important; }
+    body.debug #controlsSection .precision-badge{ font-size: 9px !important; padding: 3px 6px !important; border-radius: 9px !important; }
+
+
     /* Debug speech log (solo body.debug) */
     .speechlog { display:none; position:fixed; left:10px; right:10px; bottom:10px;
       background: rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.12);
@@ -3173,7 +3476,195 @@ body {
     .speechlog-hint { opacity:.55; font-size:11px; margin-top:6px; }
 
 
-    /* === Vic Skin PRO+ (sheen + breathing glow + ON fully painted) === */
+    
+
+    /* === SKIN PRO (aplica a TODOS los temas) === */
+    @keyframes proSheenMove{
+      0%{ transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+      18%{ opacity: 0.0; }
+      28%{ opacity: 0.24; }
+      58%{ opacity: 0.16; }
+      82%{ opacity: 0.0; }
+      100%{ transform: translateX(140%) skewX(-18deg); opacity: 0; }
+    }
+
+    @keyframes proHdrBreath{
+      0%,100%{ filter: drop-shadow(0 0 8px rgba(var(--accent-rgb,221,20,19),0.10)); }
+      50%{ filter: drop-shadow(0 0 16px rgba(var(--accent-rgb,221,20,19),0.22)); }
+    }
+
+    @keyframes proHdrLine{
+      0%,100%{ opacity: 0.55; }
+      50%{ opacity: 0.95; }
+    }
+
+    body.skin-pro{
+      --edge-hi: rgba(255,255,255,0.12);
+      --edge-lo: rgba(0,0,0,0.55);
+      --shadow-elev: 0 14px 32px rgba(0,0,0,0.55);
+      --shadow-elev2: 0 10px 22px rgba(0,0,0,0.42);
+      --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -12px 18px rgba(0,0,0,0.55);
+
+      background-color: var(--bg-dark) !important;
+      background-image:
+        radial-gradient(circle at 18% 12%, rgba(var(--accent-rgb,221,20,19),0.18), transparent 56%),
+        radial-gradient(circle at 82% 6%, rgba(255,255,255,0.06), transparent 58%),
+        radial-gradient(circle at 60% 92%, rgba(var(--accent-rgb,221,20,19),0.14), transparent 62%),
+        repeating-linear-gradient(135deg, rgba(255,255,255,0.028) 0, rgba(255,255,255,0.028) 2px, rgba(0,0,0,0.0) 2px, rgba(0,0,0,0.0) 7px),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.020) 0, rgba(255,255,255,0.020) 1px, rgba(0,0,0,0.0) 1px, rgba(0,0,0,0.0) 6px ) !important;
+      background-blend-mode: screen, screen, screen, overlay, overlay !important;
+    }
+
+    body.skin-pro .app-header{
+      animation: proHdrBreath 4.8s ease-in-out infinite;
+    }
+    body.skin-pro .app-header::after{
+      animation: proHdrLine 3.6s ease-in-out infinite;
+    }
+
+    body.skin-pro .app-header,
+    body.skin-pro .spotter-section,
+    body.skin-pro .pilot-card,
+    body.skin-pro .controls-section,
+    body.skin-pro .top3-mini{
+      border: 1px solid rgba(255,255,255,0.16) !important;
+      box-shadow: var(--shadow-elev2), 0 0 0 1px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+      background-image:
+        radial-gradient(120% 180% at 0% 0%, rgba(var(--accent-rgb,221,20,19),0.14), transparent 55%),
+        radial-gradient(120% 180% at 100% 0%, rgba(255,255,255,0.05), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.22));
+      background-blend-mode: screen, screen, normal;
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+    }
+
+    body.skin-pro .btn-primary,
+    body.skin-pro .btn-secondary,
+    body.skin-pro .spotter-btn,
+    body.skin-pro .header-help,
+    body.skin-pro .spotter-master-btn,
+    body.skin-pro .btn-mini,
+    body.skin-pro .btn-grid,
+    body.skin-pro .session-preset-card{
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.16) !important;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.22)) !important;
+      box-shadow: var(--shadow-elev2), var(--shadow-inset) !important;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      transform: translateZ(0);
+    }
+
+    body.skin-pro .btn-primary::before,
+    body.skin-pro .btn-secondary::before,
+    body.skin-pro .spotter-btn::before,
+    body.skin-pro .header-help::before,
+    body.skin-pro .spotter-master-btn::before,
+    body.skin-pro .btn-mini::before,
+    body.skin-pro .btn-grid::before,
+    body.skin-pro .session-preset-card::before{
+      content: "";
+      position: absolute;
+      inset: -2px -2px auto -2px;
+      height: 58%;
+      background: radial-gradient(120% 140% at 15% 0%, rgba(255,255,255,0.22), rgba(255,255,255,0.08), transparent 70%);
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
+    body.skin-pro .btn-primary:hover,
+    body.skin-pro .btn-secondary:hover,
+    body.skin-pro .spotter-btn:hover,
+    body.skin-pro .header-help:hover,
+    body.skin-pro .spotter-master-btn:hover,
+    body.skin-pro .btn-mini:hover,
+    body.skin-pro .btn-grid:hover,
+    body.skin-pro .session-preset-card:hover{
+      filter: brightness(1.10);
+    }
+
+    body.skin-pro .btn-primary:active,
+    body.skin-pro .btn-secondary:active,
+    body.skin-pro .spotter-btn:active,
+    body.skin-pro .header-help:active,
+    body.skin-pro .spotter-master-btn:active,
+    body.skin-pro .btn-mini:active,
+    body.skin-pro .btn-grid:active,
+    body.skin-pro .session-preset-card:active{
+      transform: translateY(1px) scale(0.99) !important;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -10px 16px rgba(0,0,0,0.60) !important;
+    }
+
+    /* ON pintado completo (tema) */
+    body.skin-pro .btn-secondary.active,
+    body.skin-pro .btn-pill.active,
+    body.skin-pro .spotter-btn.active,
+    body.skin-pro .spotter-master-btn.active,
+    body.skin-pro .session-preset-card.active,
+    body.skin-pro .precision-badge.active,
+    body.skin-pro .btn-basic-mini.active,
+    body.skin-pro .btn-speak.active,
+    body.skin-pro .btn-rd.active,
+    body.skin-pro #rdToggleBtn.active,
+    body.skin-pro .toggle-pill.on,
+    body.skin-pro .toggle-pill.active{
+      background: linear-gradient(135deg, rgba(var(--accent-rgb,221,20,19),0.96), rgba(var(--accent2-rgb,193,74,70),0.86)) !important;
+      color: rgba(18,6,10,0.98) !important;
+      border-color: rgba(255,255,255,0.22) !important;
+      opacity: 1 !important;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.55), 0 0 26px rgba(var(--accent-rgb,221,20,19),0.26), 0 18px 34px rgba(0,0,0,0.58) !important;
+      text-shadow: none !important;
+    }
+
+    /* Sheen SOLO cuando esta ON */
+    body.skin-pro .btn-secondary.active::after,
+    body.skin-pro .btn-pill.active::after,
+    body.skin-pro .spotter-btn.active::after,
+    body.skin-pro .spotter-master-btn.active::after,
+    body.skin-pro .session-preset-card.active::after,
+    body.skin-pro .precision-badge.active::after,
+    body.skin-pro .btn-basic-mini.active::after,
+    body.skin-pro .btn-speak.active::after,
+    body.skin-pro .btn-rd.active::after,
+    body.skin-pro #rdToggleBtn.active::after,
+    body.skin-pro .toggle-pill.on::after,
+    body.skin-pro .btn-primary.voice-on::after,
+    body.skin-pro .btn-voice.voice-on::after{
+      content: "";
+      position: absolute;
+      top: -10%;
+      bottom: -10%;
+      width: 42%;
+      left: -60%;
+      background: linear-gradient(90deg, rgba(255,255,255,0.00), rgba(255,255,255,0.32), rgba(255,255,255,0.00));
+      transform: skewX(-18deg);
+      pointer-events: none;
+      mix-blend-mode: screen;
+      animation: proSheenMove 3.8s ease-in-out infinite;
+      opacity: 0.0;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      body.skin-pro .app-header,
+      body.skin-pro .app-header::after{ animation: none !important; }
+      body.skin-pro .btn-secondary.active::after,
+      body.skin-pro .btn-pill.active::after,
+      body.skin-pro .spotter-btn.active::after,
+      body.skin-pro .spotter-master-btn.active::after,
+      body.skin-pro .session-preset-card.active::after,
+      body.skin-pro .precision-badge.active::after,
+      body.skin-pro .btn-basic-mini.active::after,
+      body.skin-pro .btn-speak.active::after,
+      body.skin-pro .btn-rd.active::after,
+      body.skin-pro #rdToggleBtn.active::after,
+      body.skin-pro .toggle-pill.on::after,
+      body.skin-pro .btn-primary.voice-on::after,
+      body.skin-pro .btn-voice.voice-on::after{
+        animation: none !important;
+        display: none !important;
+      }
+    }
+/* === Vic Skin PRO+ (sheen + breathing glow + ON fully painted) === */
     @keyframes vicSheenMove{
       0%{ transform: translateX(-140%) skewX(-18deg); opacity: 0; }
       10%{ opacity: 0.0; }
@@ -3296,9 +3787,58 @@ body {
         display: none !important;
       }
     }
+
+    /* v0.0.0.92 - header-actions-row: reducir botones al 50% (tamano + letra) y forzar texto blanco */
+/* v0.0.0.90 - header-logo: alinear logo a la izquierda */
+.header-actions-row .header-help{
+  font-size: 5px !important;
+  padding: 3px 5px !important;
+  min-height: 15px;
+  line-height: 1;
+  color: #ffffff !important;
+}
+.header-actions-row .header-auto{
+  min-width: 29px !important;
+}
+.header-actions-row .header-skin{
+  min-width: 28px !important;
+}
+@media (max-width: 560px){
+  .header-actions-row .header-help{
+    font-size: 5px !important;
+    padding: 3px 5px !important;
+    min-height: 15px;
+    color: #ffffff !important;
+  }
+  .header-actions-row .header-auto{ min-width: 26px !important; }
+  .header-actions-row .header-skin{ min-width: 25px !important; }
+}
+
+/* v0.0.0.94 - badge-live: mismo tamano que botones del header-actions-row + alineado */
+.header-actions-row .badge-live{
+  font-size: 5px !important;
+  padding: 3px 5px !important;
+  min-height: 15px;
+  min-width: 29px;
+  line-height: 1;
+  color: #ffffff !important;
+  letter-spacing: 0.06em;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.header-actions-row .badge-live-dot{
+  width: 4px;
+  height: 4px;
+}
+
 </style>
 </head>
-<body>
+<body class="skin-pro skin-vicpulse">
   <div class="app">
     <header class="app-header">
       <div class="header-left">
@@ -3316,13 +3856,14 @@ body {
         <div class="header-actions-row">
           <div class="badge-live live-off" id="liveIndicator">
             <span class="badge-live-dot"></span>
-            <span>Offline</span>
+            <span>OFF</span>
           </div>
+          <button class="header-help header-auto" id="autoSkinBtn" type="button" title="Auto-skin">AUTO</button>
           <button class="header-help header-skin" id="skinBtn" type="button" title="Skin Vic's Pulse Timing">VIC</button>
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
 
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.0.78</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.1.00</div>
       </div>
       </div>
     </header>
@@ -3443,7 +3984,7 @@ body {
 </div>
       </section>
 
-      <section class="controls-section">
+      <section class="controls-section expert-only" id="controlsSection">
         
 
         <div class="buttons-row">
@@ -3617,7 +4158,7 @@ body {
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.0.37</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.1.00</div>
           <div class="manual-sub">Modo automatico. El spotter toma las decisiones, tu solo manejas.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -3962,7 +4503,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.0.78";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.1.00";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -4575,6 +5116,7 @@ FIN DOCUMENTACION
     const raceInfo        = document.getElementById('raceInfo');
     const lastUpdateInfo  = document.getElementById('lastUpdateInfo');
     const liveIndicator   = document.getElementById('liveIndicator');
+    const appHeader      = document.querySelector('.app-header');
 
     const pilotSelect     = document.getElementById('pilotSelect');
 
@@ -4988,7 +5530,7 @@ try{
 
     // One-time: aplicar defaults de esta versión (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.78';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.90';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -5034,31 +5576,141 @@ try{
     // Manual (ayuda)
     const manualBtn       = document.getElementById('manualBtn');
     const skinBtn         = document.getElementById('skinBtn');
+    const autoSkinBtn     = document.getElementById('autoSkinBtn');
 
-    // Skin: Vic's Pulse Timing (toggle)
-    const SKIN_KEY = 'spotterSkin';
-    const SKIN_VIC = 'vicpulse';
-    function applySkin(name){
-      const isVic = (name === SKIN_VIC);
-      document.body.classList.toggle('skin-vicpulse', isVic);
+    // Tema (paquete T1-T8) - orden A: VIC, CARB, BLUE, LIME, PURP, AMBR, ICE, OLED
+    const THEME_KEY = 'spotterSkin';
+    const AUTO_SKIN_KEY = 'spotterSkinAuto'; // '1'=auto por sesion, '0'=manual
+    let autoSkinEnabled = true;
+
+    const THEMES = [
+      { key: 'vicpulse', label: 'VIC', cls: 'skin-vicpulse' },
+      { key: 'carbon',   label: 'CARB', cls: 'skin-carbon' },
+      { key: 'blue',     label: 'BLUE', cls: 'skin-blue' },
+      { key: 'lime',     label: 'LIME', cls: 'skin-lime' },
+      { key: 'purple',   label: 'PURP', cls: 'skin-purple' },
+      { key: 'amber',    label: 'AMBR', cls: 'skin-amber' },
+      { key: 'ice',      label: 'ICE',  cls: 'skin-ice' },
+      { key: 'oled',     label: 'OLED', cls: 'skin-oled' },
+    ]
+
+    // Auto-skin: por defecto ON. Long-press (700ms) en el boton de tema para alternar AUTO/MANUAL.
+    try{
+      const a = prefGet(AUTO_SKIN_KEY, null);
+      if (a === null) { autoSkinEnabled = true; try{ prefSet(AUTO_SKIN_KEY,'1'); }catch(e){} }
+      else autoSkinEnabled = (a === '1');
+    }catch(e){ autoSkinEnabled = true; }
+
+    function __skinModeLabel(){ return autoSkinEnabled ? 'AUTO' : 'MANUAL'; }
+
+    function refreshAutoSkinUI(){
+      if (!autoSkinBtn) return;
+      autoSkinBtn.textContent = autoSkinEnabled ? 'AUTO' : 'MAN';
+      autoSkinBtn.classList.toggle('active', !!autoSkinEnabled);
+      autoSkinBtn.title = autoSkinEnabled
+        ? 'Auto-skin: ON (MANGA->BLUE, FINAL->AMBR)'
+        : 'Auto-skin: OFF (manual)';
+      // Mantener title del tema consistente
+      try{ if (skinBtn) skinBtn.title = 'Tema: ' + (skinBtn.textContent||'VIC') + ' [' + __skinModeLabel() + ']'; }catch(e){}
+    }
+
+
+    function getAutoThemeForSessionInfo(info){
+      const t = String((info && info.type) || '').toUpperCase();
+      if (t === 'MANGA' || t === 'QUALI') return 'blue';
+      if (t.startsWith('FINAL')) return 'amber';
+      return null;
+    }
+
+    function maybeApplyAutoThemeByRaceName(raceName, force=false){
+      if ((!autoSkinEnabled) && (!force)) return;
+      if (!raceName) return;
+      let info = null;
+      try { info = detectSessionFromRaceName(String(raceName)); } catch(e) {}
+      const rec = getAutoThemeForSessionInfo(info);
+      if (!rec) return;
+      try { prefSet(THEME_KEY, rec); } catch(e) {}
+      applyTheme(rec);
+    }
+
+    function toggleAutoSkin(){
+      autoSkinEnabled = !autoSkinEnabled;
+      try{ prefSet(AUTO_SKIN_KEY, autoSkinEnabled ? '1' : '0'); }catch(e){}
+      // Al prender AUTO, aplica el recomendado segun la carrera actual.
+      try{ if (typeof lastRaceName !== 'undefined' && lastRaceName) maybeApplyAutoThemeByRaceName(lastRaceName, true); }catch(e){}
+      refreshAutoSkinUI();
+    }
+;
+
+    function applyTheme(key){
+      const found = THEMES.find(t => t.key === key) || THEMES[0];
+
+      // Limpia clases de tema
+      for (const t of THEMES) document.body.classList.remove(t.cls);
+
+      // Activa PRO + tema
+      document.body.classList.add('skin-pro');
+      document.body.classList.add(found.cls);
+
       if (skinBtn){
-        skinBtn.classList.toggle('active', isVic);
-        skinBtn.textContent = isVic ? 'VIC' : 'STD';
+        skinBtn.textContent = found.label;
+        skinBtn.classList.add('active');
+        skinBtn.title = 'Tema: ' + found.label + ' [' + __skinModeLabel() + ']';
       }
+      return found.key;
     }
-    function toggleSkin(){
-      const isVic = document.body.classList.contains('skin-vicpulse');
-      const next = isVic ? 'std' : SKIN_VIC;
-      try{ prefSet(SKIN_KEY, next); }catch(e){}
-      applySkin(next);
+
+    function nextTheme(){
+      let curKey = null;
+      try{ curKey = prefGet(THEME_KEY, null); }catch(e){}
+      // Compat: valores viejos
+      if (curKey === 'std' || !curKey) curKey = 'vicpulse';
+      const idx = Math.max(0, THEMES.findIndex(t => t.key === curKey));
+      const next = THEMES[(idx + 1) % THEMES.length].key;
+      // Si el usuario cambia tema manualmente, apagamos AUTO (override manual).
+      try{ prefSet(AUTO_SKIN_KEY,'0'); }catch(e){}
+      autoSkinEnabled = false;
+      refreshAutoSkinUI();
+
+      try{ prefSet(THEME_KEY, next); }catch(e){}
+      applyTheme(next);
     }
+
     try{
       let stored = null;
-      try{ stored = prefGet(SKIN_KEY, null); }catch(e){}
-      if (!stored) stored = SKIN_VIC; // default de este build
-      applySkin(stored);
-    }catch(e){}
-    if (skinBtn) skinBtn.addEventListener('click', toggleSkin);
+      try{ stored = prefGet(THEME_KEY, null); }catch(e){}
+      if (!stored || stored === 'std') stored = 'vicpulse';
+      applyTheme(stored);
+      refreshAutoSkinUI();
+    }catch(e){
+      applyTheme('vicpulse');
+      refreshAutoSkinUI();
+    }
+
+    // Boton AUTO: toggle explícito
+    if (autoSkinBtn){
+      autoSkinBtn.addEventListener('click', ()=>{ toggleAutoSkin(); });
+    }
+
+    // Boton TEMA: click = siguiente tema (manual), long-press 700ms = alterna AUTO/MANUAL.
+    if (skinBtn){
+      let lpTimer = null;
+      let lpFired = false;
+      const clearLP = ()=>{ if (lpTimer){ clearTimeout(lpTimer); lpTimer=null; } };
+      skinBtn.addEventListener('pointerdown', ()=>{
+        lpFired = false;
+        clearLP();
+        lpTimer = setTimeout(()=>{ lpFired = true; toggleAutoSkin(); }, 700);
+      });
+      skinBtn.addEventListener('pointerup', clearLP);
+      skinBtn.addEventListener('pointerleave', clearLP);
+      skinBtn.addEventListener('click', (e)=>{
+        if (lpFired){ e.preventDefault(); e.stopPropagation(); return; }
+        nextTheme();
+      });
+      // Right-click (desktop) tambien alterna AUTO/MANUAL
+      skinBtn.addEventListener('contextmenu', (e)=>{ e.preventDefault(); toggleAutoSkin(); });
+    }
     const manualBackdrop  = document.getElementById('manualBackdrop');
     const manualCloseBtn  = document.getElementById('manualCloseBtn');
 
@@ -8376,9 +9028,20 @@ function toFixedFloor(value, decimals = 0) {
     } catch(e) {}
 
 function setLiveStatus(isOnline) {
-      if (!liveIndicator) return;
-      liveIndicator.classList.toggle('live-off', !isOnline);
-      liveIndicator.querySelector('span:last-child').textContent = isOnline ? 'Live' : 'Offline';
+      const online = !!isOnline;
+      try {
+        if (liveIndicator) {
+          liveIndicator.classList.toggle('live-off', !online);
+          const label = liveIndicator.querySelector('span:last-child');
+          if (label) label.textContent = online ? 'LIVE' : 'OFF';
+        }
+      } catch(e) {}
+      try {
+        if (appHeader) {
+          appHeader.classList.toggle('live-on', online);
+          appHeader.classList.toggle('live-off', !online);
+        }
+      } catch(e) {}
     }
 
     function getPilotKey(row) {
@@ -13975,6 +14638,9 @@ function checkSessionFinishOnLap() {
           sessionFinishAnnounced = false;
           sessionFinishPrevByKey = new Map();
           lastRaceName = newRaceName;
+
+          // Auto-skin por sesion (MANGA vs FINAL)
+          try { maybeApplyAutoThemeByRaceName(newRaceName); } catch(e) {}
 
           stopMangaClock();
           if (lastPassEvents && typeof lastPassEvents.clear === 'function') {
