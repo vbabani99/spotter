@@ -1,9 +1,10 @@
 <!--
-AI_Spotter_TRM_v0.0.1.00 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.1.02 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-19
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.0.1.02: Fix iPhone/pequenas pantallas - header responsivo (sin recortes) + safe-area top + logo always-fit.
 - v0.0.1.00: controls-section reducido 50% (tipografia/padding/botones) y oculto por defecto (solo visible en modo debug).
 - v0.0.0.99: extras-section reducido 33% (zoom 0.67) para compactar controles.
 - v0.0.0.98: Header-right a 200x123 px (centrado interno preservado).
@@ -44,8 +45,8 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.1.00</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>AI Spotter TRM v0.0.1.02</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
     body{ color-scheme: dark; }
@@ -503,7 +504,11 @@ body {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 10px 12px 12px;
+      padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 12px;
+      padding-top: calc(10px + env(safe-area-inset-top));
+      padding-left: calc(12px + env(safe-area-inset-left));
+      padding-right: calc(12px + env(safe-area-inset-right));
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
       gap: 8px;
     }
 
@@ -521,21 +526,22 @@ body {
         repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 6px);
       background-blend-mode: screen, screen, normal, normal, overlay;
       display: flex;
+      flex-wrap: nowrap;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
     }
+    .header-left{
+      height: 123px;
+      max-height: 123px;
+      min-height: 123px;
+      flex: 1 1 224px;
+      max-width: 224px;
+      min-width: 0;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
 
-    .header-left {
-  width: 224px;
-  height: 123px;
-  max-width: 224px;
-  min-width: 224px;
-  max-height: 123px;
-  min-height: 123px;
-  flex: 0 0 224px;
-  box-sizing: border-box;
-}
 .header-title-main {
       display: flex;
       align-items: center;
@@ -545,6 +551,7 @@ body {
       text-transform: uppercase;
       font-weight: 700;
       flex-wrap: wrap;
+      min-width: 0;
     }
 
     .badge-mode {
@@ -596,15 +603,13 @@ body {
       font-size: 9px;
       color: var(--text-muted);
     }
-
-    .header-right {
-      width: 200px;
+    .header-right{
       height: 123px;
-      max-width: 200px;
-      min-width: 200px;
       max-height: 123px;
       min-height: 123px;
-      flex: 0 0 200px;
+      flex: 0 1 200px;
+      max-width: 200px;
+      min-width: 160px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
@@ -612,6 +617,12 @@ body {
       justify-content: space-between;
       text-align: center;
     }
+
+@media (max-width: 420px){
+  .header-right{ flex-basis: 180px; width: 180px; max-width: 180px; min-width: 150px; }
+  .header-left{ max-width: none; }
+}
+
 
 .header-right-bottom{
       margin-top: auto;
@@ -629,25 +640,25 @@ body {
       gap: 6px;
       width: 100%;
     }
-
     .header-logo{
       display:flex;
       align-items:center;
       justify-content:center;
       width: 100%;
       align-self: stretch;
+      overflow: visible;
     }
     .header-logo img{
-      height: 76px;
+      max-height: 76px;
+      height: auto;
       width: auto;
-      max-width: 276px;
+      max-width: 100%;
       object-fit: contain;
       image-rendering: auto;
       filter: drop-shadow(0 0 10px rgba(0,255,163,0.25));
     }
 
-
-    .badge-live {
+.badge-live {
       display: inline-flex;
       align-items: center;
       gap: 4px;
@@ -3791,35 +3802,35 @@ body {
     /* v0.0.0.92 - header-actions-row: reducir botones al 50% (tamano + letra) y forzar texto blanco */
 /* v0.0.0.90 - header-logo: alinear logo a la izquierda */
 .header-actions-row .header-help{
-  font-size: 5px !important;
-  padding: 3px 5px !important;
-  min-height: 15px;
+  font-size: 6px !important;
+  padding: 4px 6px !important;
+  min-height: 17px;
   line-height: 1;
   color: #ffffff !important;
 }
 .header-actions-row .header-auto{
-  min-width: 29px !important;
+  min-width: 33px !important;
 }
 .header-actions-row .header-skin{
-  min-width: 28px !important;
+  min-width: 32px !important;
 }
 @media (max-width: 560px){
   .header-actions-row .header-help{
-    font-size: 5px !important;
-    padding: 3px 5px !important;
-    min-height: 15px;
+    font-size: 6px !important;
+    padding: 4px 6px !important;
+    min-height: 17px;
     color: #ffffff !important;
   }
-  .header-actions-row .header-auto{ min-width: 26px !important; }
-  .header-actions-row .header-skin{ min-width: 25px !important; }
+  .header-actions-row .header-auto{ min-width: 30px !important; }
+  .header-actions-row .header-skin{ min-width: 29px !important; }
 }
 
 /* v0.0.0.94 - badge-live: mismo tamano que botones del header-actions-row + alineado */
 .header-actions-row .badge-live{
-  font-size: 5px !important;
-  padding: 3px 5px !important;
-  min-height: 15px;
-  min-width: 29px;
+  font-size: 6px !important;
+  padding: 4px 6px !important;
+  min-height: 17px;
+  min-width: 33px;
   line-height: 1;
   color: #ffffff !important;
   letter-spacing: 0.06em;
@@ -3832,8 +3843,8 @@ body {
   gap: 4px;
 }
 .header-actions-row .badge-live-dot{
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 
 </style>
@@ -3863,7 +3874,7 @@ body {
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
 
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.1.00</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.1.02</div>
       </div>
       </div>
     </header>
@@ -4158,7 +4169,7 @@ body {
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.1.00</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.1.02</div>
           <div class="manual-sub">Modo automatico. El spotter toma las decisiones, tu solo manejas.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -4503,7 +4514,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.1.00";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.1.02";
     const APP_LABEL = APP_NAME;
 
     // =========================
