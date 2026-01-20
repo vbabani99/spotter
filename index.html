@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.1.35 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.1.36 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-19
 Origen: Spotter_5.0.1.html
 
@@ -48,7 +48,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Spotter TRM v0.0.1.35</title>
+  <title>AI Spotter TRM v0.0.1.36</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -4093,7 +4093,7 @@ body {
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
 
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.1.35</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.1.36</div>
       </div>
       </div>
     </header>
@@ -4390,7 +4390,7 @@ body {
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.1.35</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.1.36</div>
           <div class="manual-sub">Guia rapida y ordenada. Menos drama, mas vueltas.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -4704,7 +4704,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.1.35";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.1.36";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -8482,6 +8482,43 @@ function __semRemember(cat, text, windowMs){
     __semMem.set(c, list);
   }catch(e){}
 }
+
+
+// =========================
+// Silencio por inactividad (VOZ sigue ON)
+// - Si el feed no cambia (pos/laps/top3), evitamos que el spotter repita y repita.
+// - Solo dejamos pasar mensajes esenciales (bandera azul, cambios fuertes, sistema).
+// =========================
+let __activitySig = '';
+let __lastActivityChangeTs = Date.now();
+let __silenceAfterMs = 20000; // 20s sin cambios = silencio
+
+function __setActivitySig(sig){
+  try{
+    const s = String(sig||'');
+    if (!s) return;
+    if (s !== __activitySig){
+      __activitySig = s;
+      __lastActivityChangeTs = Date.now();
+    }
+  }catch(e){}
+}
+function __inActivitySilence(){
+  try{ return (Date.now() - (__lastActivityChangeTs||0)) > (__silenceAfterMs||20000); }catch(e){ return false; }
+}
+function __isEssentialSpeech(opts, key, priority){
+  try{
+    if (opts && (opts.force === true || opts.user === true)) return true;
+    const pr = Number(priority||0) || 0;
+    if (pr >= 80) return true;
+    const k = String(key||'').toLowerCase();
+    const cat = String((opts && (opts.semanticCategory || opts.category)) || '').toLowerCase();
+    if (cat === 'ess' || cat === 'system' || cat === 'critical') return true;
+    if (k.includes('blue') || k.includes('bandera') || k.includes('leader') || k.includes('lider') || k.includes('finish') || k.includes('cuadros') || k.includes('podium')) return true;
+    if (k.includes('tts_test') || k.includes('unlock') || k.includes('audio listo')) return true;
+    return false;
+  }catch(e){ return false; }
+}
 function enqueueSpeech(text, opts = {}) {
       try {
         if (!voiceMasterEnabled) return;
@@ -8499,6 +8536,12 @@ function enqueueSpeech(text, opts = {}) {
         const priority = Number.isFinite(opts.priority) ? opts.priority : 0;
         const interrupt = !!opts.interrupt;
         const dedupe = (opts.dedupe !== false);
+
+        // Silencio por inactividad: si no hay cambios reales, no hables (salvo esenciales)
+        if (__inActivitySilence() && !__isEssentialSpeech(opts, key, priority)) {
+          return;
+        }
+
 
         // Anti-repeticion semantica (misma idea, texto distinto)
         // - default ON en categorias narrativas
@@ -14864,6 +14907,31 @@ function checkSessionFinishOnLap() {
         refreshSessionBestCache();
         updateRecordCarreraUI();
         updateHeaderFromRace(raceData);
+
+        // Activity signature: detecta si el estado realmente cambia
+        try {
+          const cls = (raceData && Array.isArray(raceData.classification)) ? raceData.classification.slice() : [];
+          cls.sort((a,b) => (Number(a.pos||999)-Number(b.pos||999)));
+          const top3 = cls.slice(0,3).map(p => {
+            const pk = getPilotKey(p);
+            const laps = Number(p.lapcount ?? p.laps ?? 0) || 0;
+            const gap = String(p.gap ?? p.diff ?? p.interval ?? '').trim();
+            return [pk, Number(p.pos||0)||0, laps, gap];
+          });
+          const leader = cls[0] || null;
+          const leaderLaps = leader ? (Number(leader.lapcount ?? leader.laps ?? 0) || 0) : 0;
+          let selPos = null, selLaps = null;
+          if (selectedPilotKey) {
+            const sp = cls.find(r => getPilotKey(r) === selectedPilotKey) || null;
+            if (sp) {
+              selPos = Number(sp.pos||0)||0;
+              selLaps = Number(sp.lapcount ?? sp.laps ?? 0) || 0;
+            }
+          }
+          const sigObj = { rn: String(newRaceName||''), leaderLaps, top3, selPos, selLaps };
+          __setActivitySig(JSON.stringify(sigObj));
+        } catch(e) {}
+
         try { restoreLastPilotSelectionIfNeeded(); } catch(e) {}
         setLastUpdateNow();
         __lastGoodTickMs = Date.now();
