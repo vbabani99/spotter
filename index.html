@@ -1,9 +1,10 @@
 <!--
-AI_Spotter_TRM_v0.0.1.36 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.1.42 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-19
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.0.1.38: Auto Locutor lifecycle: actividad robusta (tiempo sube o baja) + debug strip (solo ?debug=1).
 - v0.0.1.02: Fix iPhone/pequenas pantallas - header responsivo (sin recortes) + safe-area top + logo always-fit.
 - v0.0.1.08: Fix ReferenceError (miniGridExpanded/miniGridLimit + voiceToggleBtns). Mantiene Top grid expanded como rows estilo scoreboard con INT vs anterior.
 - v0.0.1.11: Pulido Top20 expanded (rows): columnas mas compactas, mejor alineacion y truncado, INT mas legible.
@@ -624,8 +625,33 @@ body {
       text-align: center;
     }
 
-@media (max-width: 420px){
-  .header-right{ flex-basis: 180px; width: 180px; max-width: 180px; min-width: 215px; }
+@media (max-width: 520px){
+  .app-header{ flex-wrap: wrap; padding: 10px 12px; gap: 10px; }
+  .header-left{ flex: 1 1 100%; max-width: none; height: auto; min-height: 0; }
+  .header-right{ flex: 1 1 100%; max-width: none; width: 100%; height: auto; min-height: 0; }
+  .header-right-inner{ height: auto; min-height: 0; }
+
+  /* Titulo: que respire en movil */
+  #raceTitleMain{ justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+
+  #raceTitleText{
+    max-width: 100%;
+    width: auto;
+    flex: 1 1 auto;
+    font-size: clamp(14px, 3.9vw, 18px);
+    max-height: none;
+    -webkit-line-clamp: 3;
+  }
+
+  #raceSubtitle{
+    max-width: 100%;
+    width: auto;
+    font-size: clamp(11px, 3.0vw, 12px);
+  }
+
+  .header-subline{ font-size: 12px; }
+}
+
   .header-left{ max-width: none; }
 }
 
@@ -3654,6 +3680,38 @@ body {
     body.debug #controlsSection .precision-badge{ font-size: 9px !important; padding: 3px 6px !important; border-radius: 9px !important; }
 
 
+    
+    /* Debug strip (solo body.debug) */
+    .debugstrip{
+      display:none;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      margin: 8px 10px 0;
+      padding: 8px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-size: 11px;
+      letter-spacing: .2px;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    body.debug .debugstrip{ display:flex; }
+    .debugstrip .dbg-item{ display:flex; gap:6px; align-items:center; }
+    .debugstrip .dbg-k{
+      font-weight:800;
+      padding:2px 6px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+    .debugstrip .dbg-v{ font-weight:700; opacity: .95; }
+
+
     /* Debug speech log (solo body.debug) */
     .speechlog { display:none; position:fixed; left:10px; right:10px; bottom:10px;
       background: rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.12);
@@ -4093,10 +4151,22 @@ body {
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
 
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.1.36</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.1.42</div>
       </div>
       </div>
     </header>
+
+    <!-- Debug strip (solo en modo debug) -->
+    <div id="debugStrip" class="debugstrip expert-only" aria-hidden="true">
+      <div class="dbg-item"><span class="dbg-k">AUTO</span> <span id="dbgAutoPhase" class="dbg-v">-</span></div>
+      <div class="dbg-item"><span class="dbg-k">LAP</span> <span id="dbgAutoLap" class="dbg-v">0</span></div>
+      <div class="dbg-item"><span class="dbg-k">T</span> <span id="dbgAutoT" class="dbg-v">0</span></div>
+      <div class="dbg-item"><span class="dbg-k">DUR</span> <span id="dbgAutoDur" class="dbg-v">0</span></div>
+      <div class="dbg-item"><span class="dbg-k">FINAL</span> <span id="dbgAutoFinal" class="dbg-v">0</span></div>
+      <div class="dbg-item"><span class="dbg-k">IDLE</span> <span id="dbgAutoIdle" class="dbg-v">0</span></div>
+      <div class="dbg-item"><span class="dbg-k">TIME</span> <span id="dbgAutoTrend" class="dbg-v">?</span></div>
+    </div>
+
 
     <main class="app-main">
       <section class="pilot-card">
@@ -4390,7 +4460,7 @@ body {
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.1.36</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.1.42</div>
           <div class="manual-sub">Guia rapida y ordenada. Menos drama, mas vueltas.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -4704,7 +4774,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.1.36";
+    const APP_NAME = "AI_Spotter_TRM_v0.0.1.42";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -4734,6 +4804,36 @@ FIN DOCUMENTACION
     let __autoLastMaxTotalMs = 0;
     let __autoActiveKeys = new Set(); // pilotos que ya "arrancaron" (laps>0 o time>0)
 
+    let __autoDbg = { phase:'IDLE', maxLap:0, maxTotalMs:0, dur:0, isFinal:false, idleMs:0, trend:'?' };
+
+    function __autoDbgMs(ms){
+      const n = Number(ms) || 0;
+      if (!n) return '0';
+      if (n < 1000) return String(n|0) + 'ms';
+      return (n/1000).toFixed(1) + 's';
+    }
+    function __autoUpdateDebugStrip(){
+      try{
+        if (!document.body.classList.contains('debug')) return;
+        const d = __autoDbg || {};
+        const $ = (id)=>document.getElementById(id);
+        const ph = String(d.phase||'-');
+        const lap = String(Number(d.maxLap)||0);
+        const t = __autoDbgMs(d.maxTotalMs);
+        const dur = __autoDbgMs(d.dur);
+        const fin = d.isFinal ? '1' : '0';
+        const idle = __autoDbgMs(d.idleMs);
+        const trend = String(d.trend||'?');
+        if ($('dbgAutoPhase')) $('dbgAutoPhase').textContent = ph;
+        if ($('dbgAutoLap')) $('dbgAutoLap').textContent = lap;
+        if ($('dbgAutoT')) $('dbgAutoT').textContent = t;
+        if ($('dbgAutoDur')) $('dbgAutoDur').textContent = dur;
+        if ($('dbgAutoFinal')) $('dbgAutoFinal').textContent = fin;
+        if ($('dbgAutoIdle')) $('dbgAutoIdle').textContent = idle;
+        if ($('dbgAutoTrend')) $('dbgAutoTrend').textContent = trend;
+      }catch(e){}
+    }
+
     function __autoNowMs() {
       try { return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(); }
       catch(e){ return Date.now(); }
@@ -4743,6 +4843,7 @@ FIN DOCUMENTACION
       try {
         __autoLifeSig = String(raceName || '');
         __autoPhase = 'WAIT_START';
+      try{ __autoDbg = { phase: __autoPhase, maxLap:0, maxTotalMs:0, dur: __autoGetDurMs(), isFinal:false, idleMs:0, trend:'?' }; __autoUpdateDebugStrip(); }catch(e){}
         __autoStartedStable = 0;
         __autoCloseStartedMs = 0;
         __autoLastActivityMs = __autoNowMs();
@@ -4852,17 +4953,39 @@ FIN DOCUMENTACION
         // actividad (evitar "silencio eterno" si siguen cambiando)
         const maxLap = Number(scan.maxLap) || 0;
         const maxTotalMs = Number(scan.maxTotalMs) || 0;
-        if (maxLap > (__autoLastMaxLap || 0) || maxTotalMs > ((__autoLastMaxTotalMs || 0) + 600)) {
+
+        const durDbg = __autoGetDurMs();
+        const infoDbg = currentSessionInfo || {};
+        const typeDbg = String(infoDbg.type || '').toUpperCase();
+        const isFinalDbg = (typeDbg.startsWith('FINAL') || String(infoDbg.label||'').toUpperCase().includes('FINAL'));
+        __autoDbg = {
+          phase: __autoPhase,
+          maxLap,
+          maxTotalMs,
+          dur: durDbg,
+          isFinal: !!isFinalDbg,
+          idleMs: now - (Number(__autoLastActivityMs) || 0),
+          trend: '?'
+        };
+        const __lastMaxTotalMs = Number(__autoLastMaxTotalMs) || 0;
+        const __diffTotalMs = maxTotalMs - __lastMaxTotalMs;
+        const __trend = (__diffTotalMs > 600) ? 'UP' : (__diffTotalMs < -600) ? 'DOWN' : '~';
+        try{ if (__autoDbg) __autoDbg.trend = __trend; }catch(e){}
+        if (maxLap > (__autoLastMaxLap || 0) || Math.abs(__diffTotalMs) > 600) {
           __autoLastActivityMs = now;
           __autoLastMaxLap = maxLap;
           __autoLastMaxTotalMs = maxTotalMs;
         }
+
+        __autoUpdateDebugStrip();
 
         // WAIT_START: no hablar hasta arrancar de verdad
         if (__autoPhase === 'WAIT_START') {
           if (__autoIsStarted(scan)) {
             __autoPhase = 'RUNNING';
             __autoLastActivityMs = now;
+            try{ if (__autoDbg) __autoDbg.phase = __autoPhase; }catch(e){}
+            __autoUpdateDebugStrip();
           }
           return;
         }
@@ -7627,7 +7750,84 @@ function loadVoiceSettings() {
     // TTS
     let chosenVoiceURI = '';
 
-    // ===== Auto presets por sesi√≥n (TRAIN/MANGA/FINAL) =====
+    
+// ===== DUO voces (solo Web/desktop): Sabina + Raul =====
+// - En mobile (iOS/Android) dejamos SINGLE para no pelear con restricciones de audio.
+// - En web/desktop alternamos voces por frase para sonar como duo.
+let __duoWebEnabled = false;
+let __duoVoiceSabinaURI = '';
+let __duoVoiceRaulURI = '';
+let __duoLastRole = ''; // 'sabina'|'raul'
+
+function __isDuoWebContext() {
+  try {
+    const ua = navigator.userAgent || '';
+    const isMobUA = /iPad|iPhone|iPod|Android/i.test(ua);
+    if (isMobUA) return false;
+    // Si la ventana es muy chica, tratamos como mobile para no forzar duo.
+    if (window.matchMedia && window.matchMedia('(max-width: 700px)').matches) return false;
+    return true;
+  } catch (e) { return false; }
+}
+
+function __findVoiceByNeedle(voices, needles) {
+  try {
+    if (!voices || !voices.length) return null;
+    const ns = (needles || []).map(s => String(s||'').toLowerCase()).filter(Boolean);
+    if (!ns.length) return null;
+    // Preferimos es-MX/es-ES si hay varias
+    const scored = voices.map(v => {
+      const name = String(v.name || '').toLowerCase();
+      const uri  = String(v.voiceURI || '').toLowerCase();
+      let hit = 0;
+      for (const n of ns) {
+        if (name.includes(n)) hit += 2;
+        if (uri.includes(n)) hit += 1;
+      }
+      const lang = String(v.lang || '').toLowerCase();
+      if (lang.startsWith('es-')) hit += 0.25;
+      return { v, hit };
+    }).filter(o => o.hit > 0).sort((a,b)=>b.hit-a.hit);
+    return scored.length ? scored[0].v : null;
+  } catch (e) { return null; }
+}
+
+function __refreshDuoVoices(voices) {
+  try {
+    // Solo web/desktop
+    __duoWebEnabled = __isDuoWebContext();
+    if (!__duoWebEnabled) { __duoVoiceSabinaURI = ''; __duoVoiceRaulURI = ''; return; }
+
+    // Busca por nombre aproximado. Ajustable si cambian los nombres reales en tu maquina.
+    const vSab = __findVoiceByNeedle(voices, ['sabina']);
+    const vRau = __findVoiceByNeedle(voices, ['raul']);
+
+    __duoVoiceSabinaURI = vSab ? (vSab.voiceURI || vSab.name || '') : '';
+    __duoVoiceRaulURI   = vRau ? (vRau.voiceURI || vRau.name || '') : '';
+
+    // Si no estan las dos, duo off (fallback SINGLE)
+    if (!__duoVoiceSabinaURI || !__duoVoiceRaulURI) {
+      __duoWebEnabled = false;
+    }
+  } catch (e) {
+    __duoWebEnabled = false;
+    __duoVoiceSabinaURI = '';
+    __duoVoiceRaulURI = '';
+  }
+}
+
+function __duoGuessRole(txt, key) {
+  try {
+    const t = String(txt||'');
+    const k = String(key||'');
+    // Datos duros y posiciones -> Raul
+    if (/(\bP\d+\b|\bpos\b|posici\w+|\bgap\b|\bvuelta\b|\bvueltas\b|\btiempo\b|\bseg\b|\bsegundo\b|\btercero\b|\d)/i.test(t)) return 'raul';
+    if (/(\bP\d+\b|pos|gap|lap)/i.test(k)) return 'raul';
+    // Narrativa/hype -> Sabina
+    return 'sabina';
+  } catch (e) { return 'sabina'; }
+}
+// ===== Auto presets por sesi√≥n (TRAIN/MANGA/FINAL) =====
     let autoSessionPresetsEnabled = true;   // ON por default
     let __lastAutoPresetType = '';
     
@@ -8082,7 +8282,9 @@ let ttsRate = detectDefaultTtsRate();
       if (!toUse) {
         toUse = pickDefaultVoice(voices);
         chosenVoiceURI = toUse ? (toUse.voiceURI || toUse.name) : '';
-      }
+      
+      try { __refreshDuoVoices(voicesAll); } catch (e) {}
+}
 
       if (chosenVoiceURI) voiceSelect.value = chosenVoiceURI;
 
@@ -8601,7 +8803,19 @@ function enqueueSpeech(text, opts = {}) {
 
         const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
         if (voices && voices.length) {
-          let v = null;
+          
+let v = null;
+
+// DUO web/desktop: alterna Sabina/Raul por frase (fallback a SINGLE si no estan ambas)
+if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
+  try {
+    let role = __duoGuessRole(next.text, next.key);
+    if (__duoLastRole && role === __duoLastRole) role = (role === 'raul' ? 'sabina' : 'raul');
+    const wanted = (role === 'raul') ? __duoVoiceRaulURI : __duoVoiceSabinaURI;
+    const dv = voices.find(x => (x.voiceURI || x.name) === wanted);
+    if (dv) { v = dv; __duoLastRole = role; }
+  } catch (e) {}
+}
           if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
           if (!v) v = pickDefaultVoice(voices);
           if (v) {
@@ -8735,7 +8949,19 @@ function unlockTTSOnce(reason = '') {
 
     const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
     if (voices && voices.length) {
-      let v = null;
+      
+let v = null;
+
+// DUO web/desktop: alterna Sabina/Raul por frase (fallback a SINGLE si no estan ambas)
+if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
+  try {
+    let role = __duoGuessRole(next.text, next.key);
+    if (__duoLastRole && role === __duoLastRole) role = (role === 'raul' ? 'sabina' : 'raul');
+    const wanted = (role === 'raul') ? __duoVoiceRaulURI : __duoVoiceSabinaURI;
+    const dv = voices.find(x => (x.voiceURI || x.name) === wanted);
+    if (dv) { v = dv; __duoLastRole = role; }
+  } catch (e) {}
+}
       if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
       if (!v) v = pickDefaultVoice(voices);
       if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
@@ -10381,6 +10607,9 @@ function resetAutoNarratorState() {
           commentatorAutoState.lastTop3Ms = 0;
           commentatorAutoState.lastTop3Sig = '';
           commentatorAutoState.lastMilestone = 0;
+          commentatorAutoState.lastTop5Sig = '';
+          commentatorAutoState.stableTop5Laps = 0;
+          commentatorAutoState.lastTop5Lap = 0;
         }
         try { resetAutoNarratorState(); } catch(e) {}
       } catch(e) {}
@@ -11557,7 +11786,10 @@ function updateBlueFlagFromPassEvents() {
       lastTop3Ms: 0,
       lastTop3Sig: '',
       lastMilestone: 0,
-      nextQuietCooldownMs: 0
+      nextQuietCooldownMs: 0,
+      lastTop5Sig: '',
+      stableTop5Laps: 0,
+      lastTop5Lap: 0
     };
 
     function autoGapTextFromLapDiff(lapDiff) {
@@ -12998,6 +13230,21 @@ function handleAutoCommentator() {
         const leaderLap = Number(leader && leader.lapcount) || 0;
         const progress = autoRaceProgress(leaderLap);
 
+
+        // ====== Top5 stability gate (para anunciar pases en posiciones bajas)
+        try {
+          const top5 = arr.slice(0, 5);
+          const top5Sig = top5.map(r => String(getPilotKey(r) || '')).join('|');
+          if (leaderLap && leaderLap !== (commentatorAutoState.lastTop5Lap || 0)) {
+            if (top5Sig && top5Sig === (commentatorAutoState.lastTop5Sig || '')) {
+              commentatorAutoState.stableTop5Laps = (Number(commentatorAutoState.stableTop5Laps) || 0) + 1;
+            } else {
+              commentatorAutoState.stableTop5Laps = 0;
+            }
+            commentatorAutoState.lastTop5Sig = top5Sig;
+            commentatorAutoState.lastTop5Lap = leaderLap;
+          }
+        } catch(e) {}
         const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
 
         // ====== bandera azul (Auto Locutor)
@@ -13044,11 +13291,35 @@ function handleAutoCommentator() {
               // solo si realmente gan√≥ posiciones
               if (prevPos && currPos < prevPos) {
                 const loserKey = prevKeyAtThisPos;
-                const loserPrevPos = commentatorAutoState.prevPosByKey.get(loserKey) || (currPos + 1);
+                if (!loserKey || loserKey === currKey) continue;
+
+                // Snapshot de posiciones previas (tick anterior) para un pase consistente:
+                // - winnerPrevPos: de dÛnde venÌa el ganador
+                // - loserPrevPos: dÛnde iba el perdedor (debe coincidir con currPos para un swap simple)
+                const winnerPrevPos = prevPos;
+                const loserPrevPos = commentatorAutoState.prevPosByKey.get(loserKey);
+
+                // Solo narramos swaps simples (evita anunciar cosas raras y evita "P1...P1"):
+                if (loserPrevPos && loserPrevPos !== currPos) continue;
+
+                // Nueva posiciÛn del perdedor: cae al lugar de donde venÌa el ganador
+                let loserNewPos = winnerPrevPos || (currPos + 1);
+                // Guardrail: nunca narrar que ambos quedaron en la misma posiciÛn
+                if (loserNewPos === currPos) loserNewPos = currPos + 1;
+
                 const winner = safeRacerName(curr.racerName) || 'un piloto';
                 const loser = safeRacerName((arr.find(x => getPilotKey(x)===loserKey)||{}).racerName) || 'otro piloto';
-                const text = autoBuildMessage('pass', { winner, loser, newPos: currPos, oldPos: loserPrevPos });
 
+                const text = autoBuildMessage('pass', { winner, loser, newPos: currPos, oldPos: loserNewPos });
+
+
+                // Gate: cambios en posiciones bajas solo si Top5 sin cambios en 3 vueltas
+                try {
+                  const stable = Number(commentatorAutoState && commentatorAutoState.stableTop5Laps) || 0;
+                  if (Number(currPos) > 5 && stable < 3) {
+                    continue;
+                  }
+                } catch(e) {}
                 let s = 8.8;
                 if (currPos <= 3) s += 0.9;
                 if (currPos === 1) s += 0.6;
