@@ -1,9 +1,11 @@
 <!--
-AI_Spotter_TRM_v0.0.1.75 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.1.86 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-19
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.0.1.79: LIVE como radio-button (solo punto verde) + MODO legible sin recortes y con color por estado.
+- v0.0.1.86: Fix TTS (P# en español, +V como 'más 1 vuelta', tildes, HobbyShop México, Italia, Messina).
 - v0.0.1.38: Auto Locutor lifecycle: actividad robusta (tiempo sube o baja) + debug strip (solo ?debug=1).
 - v0.0.1.02: Fix iPhone/pequenas pantallas - header responsivo (sin recortes) + safe-area top + logo always-fit.
 - v0.0.1.08: Fix ReferenceError (miniGridExpanded/miniGridLimit + voiceToggleBtns). Mantiene Top grid expanded como rows estilo scoreboard con INT vs anterior.
@@ -49,7 +51,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI Spotter TRM v0.0.1.36</title>
+  <title>AI_Spotter_TRM_v0.0.1.86</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -2945,6 +2947,14 @@ body {
       font-size: 9px;
       opacity: .85;
     }
+    .header-version-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      flex-wrap: wrap;
+      width:100%;
+    }
 
     /* Timing colors (F1 style) */
     .timing-value.lap-purple{ color: rgb(192,132,252); }
@@ -4197,7 +4207,139 @@ body {
 
 
 
-    /* SOLID GREEN VOICE-ON OVERRIDE (all themes) */
+    
+/* v0.0.1.78 - header-actions-row: botones racing legibles (colores + brillo) */
+.header-actions-row{
+  gap: 8px !important;
+}
+
+/* altura y legibilidad uniforme (badge + botones) */
+.header-actions-row .header-help,
+.header-actions-row .badge-live,
+.header-actions-row .badge-mode{
+  height: 22px !important;
+  min-height: 22px !important;
+  line-height: 1 !important;
+}
+
+/* Botones del header: look premium racing */
+.header-actions-row .header-help{
+  --btn1: 255,255,255;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px !important;
+  min-width: 54px;
+  font-size: 9px !important;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.22) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Indicador tipo LED */
+.header-actions-row .header-help::before{
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(var(--btn1), 0.95);
+  box-shadow: 0 0 10px rgba(var(--btn1), 0.55);
+}
+
+/* Sheen al hover */
+.header-actions-row .header-help::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(120deg, rgba(255,255,255,0.00), rgba(255,255,255,0.18), rgba(255,255,255,0.00));
+  transform: translateX(-120%) skewX(-18deg);
+  opacity: 0;
+  transition: transform .45s ease, opacity .45s ease;
+  pointer-events:none;
+}
+.header-actions-row .header-help:hover::after{
+  transform: translateX(120%) skewX(-18deg);
+  opacity: .90;
+}
+.header-actions-row .header-help:active{
+  transform: translateY(1px);
+  filter: brightness(1.05);
+}
+
+/* Colores por accion */
+#autoSkinBtn{
+  --btn1: 0,220,255;
+  border-color: rgba(0,220,255,0.55) !important;
+  background: linear-gradient(180deg, rgba(0,220,255,0.28), rgba(0,0,0,0.38)) !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.42), 0 0 14px rgba(0,220,255,0.22), inset 0 1px 0 rgba(255,255,255,0.22) !important;
+}
+#skinBtn{
+  --btn1: 176, 38, 255;
+  border-color: rgba(176,38,255,0.55) !important;
+  background: linear-gradient(180deg, rgba(176,38,255,0.26), rgba(0,0,0,0.40)) !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.42), 0 0 14px rgba(176,38,255,0.20), inset 0 1px 0 rgba(255,255,255,0.22) !important;
+}
+#manualBtn{
+  --btn1: 255, 180, 0;
+  border-color: rgba(255,180,0,0.62) !important;
+  background: linear-gradient(180deg, rgba(255,180,0,0.28), rgba(0,0,0,0.40)) !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.42), 0 0 14px rgba(255,180,0,0.18), inset 0 1px 0 rgba(255,255,255,0.22) !important;
+}
+
+/* Badge LIVE: mismo look que botones */
+.header-actions-row .badge-live{
+  padding: 0 12px !important;
+  font-size: 9px !important;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+.header-actions-row .badge-live-dot{
+  width: 6px !important;
+  height: 6px !important;
+}
+
+/* MODO badge: ms pro y legible */
+.header-actions-row .badge-mode{
+  height: 22px !important;
+  padding: 0 12px !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.12em !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(var(--accent-rgb), 0.55) !important;
+  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.24), rgba(0,0,0,0.42)) !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.40), 0 0 16px rgba(var(--accent-rgb), 0.12), inset 0 1px 0 rgba(255,255,255,0.16) !important;
+  color: #ffffff !important;
+}
+
+/* Compacto extremo en pantallas chicas */
+@media (max-width: 520px){
+  .header-actions-row{ gap: 6px !important; }
+  .header-actions-row .header-help,
+  .header-actions-row .badge-live,
+  .header-actions-row .badge-mode{
+    height: 21px !important;
+    min-height: 21px !important;
+  }
+  .header-actions-row .header-help{ padding: 0 10px !important; font-size: 8px !important; }
+  .header-actions-row .badge-live{ padding: 0 10px !important; font-size: 8px !important; }
+  .header-actions-row .badge-mode{ padding: 0 10px !important; font-size: 8px !important; }
+}
+
+
+/* SOLID GREEN VOICE-ON OVERRIDE (all themes) */
     .btn-voice.voice-on,
     .btn-primary.voice-on,
     .btn-speak.voice-on,
@@ -4317,7 +4459,7 @@ body {
 /* Reduce secondary header text (Turbo Racing / raceInfo / tick) by ~20% */
 #raceSubtitle{ font-size: 10px !important; }
 #raceInfo{ font-size: 8px !important; }
-#lastUpdateInfo{ font-size: 7px !important; }
+    #lastUpdateInfo{ font-size: 9px !important; opacity: .85; }
 
 
 
@@ -4547,7 +4689,7 @@ body {
 }
 
 
-/* ====== v0.0.1.75 header live-on compact + no overlap (PRO) ====== */
+/* ====== v0.0.1.78 header live-on compact + no overlap (PRO) ====== */
 .app-header.live-on{
   height:200px !important;
   min-height:200px !important;
@@ -4654,7 +4796,113 @@ body {
   opacity: 0.55 !important;
   position: static !important;
 }
-/* ====== end v0.0.1.75 ====== */
+
+/* v0.0.1.78: appVersion + lastUpdateInfo en la misma linea */
+.header-version-row{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+  margin-top: 6px !important;
+}
+.header-version-row .header-version{
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  display: inline-block !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.05 !important;
+  white-space: nowrap !important;
+}
+#lastUpdateInfo{
+  opacity: 0.72 !important;
+  max-width: 48vw !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+/* v0.0.1.78: override responsive absolute version when inside row */
+.app-header .header-version-row .header-version{
+  pointer-events: none !important;
+  text-align: left !important;
+}
+
+/* ====== end v0.0.1.78 ====== */
+
+
+/* v0.0.1.79 - LIVE radio + MODO legible (restaurar look pro) */
+.header-actions-row{
+  gap: 8px !important;
+  justify-content: center !important;
+}
+
+/* LIVE: solo radio button */
+.header-actions-row #liveIndicator.badge-live{
+  width: 16px !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,0.26) !important;
+  background: rgba(0,0,0,0.22) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 8px 18px rgba(0,0,0,0.35) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  letter-spacing: 0 !important;
+}
+.header-actions-row #liveIndicator .badge-live-dot{
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.14) !important;
+  box-shadow: none !important;
+}
+.header-actions-row #liveIndicator:not(.live-off) .badge-live-dot{
+  background: #22c55e !important;
+  box-shadow: 0 0 14px rgba(34,197,94,0.60) !important;
+}
+
+/* MODO: no recortar, que se lea completo y con color segun clase */
+.header-actions-row #raceModeRow{
+  flex: 1 1 auto !important;
+  min-width: 160px !important;
+  max-width: 280px !important;
+  justify-content: center !important;
+}
+.header-actions-row #raceModeBadge.badge-mode{
+  width: 100% !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  padding: 0 10px !important;
+  font-size: 9px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.10em !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* Limpia overrides viejos que lo encogian demasiado */
+.header-actions-row .header-help{
+  height: 20px !important;
+  min-height: 20px !important;
+  font-size: 9px !important;
+  padding: 0 10px !important;
+}
+
+/* Mobile: si falta espacio, baja un punto y permite un poco mas de compresion */
+@media (max-width: 420px){
+  .header-actions-row #raceModeRow{ min-width: 140px !important; max-width: 240px !important; }
+  .header-actions-row #raceModeBadge.badge-mode{ font-size: 8px !important; }
+}
 
 </style>
 </head>
@@ -4677,19 +4925,18 @@ body {
         <div class="header-actions-row">
           <div class="badge-live live-off" id="liveIndicator">
             <span class="badge-live-dot"></span>
-            <span>OFF</span>
-          </div>
+            </div>
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
-          <div class="header-info-panel">
-                  <div class="header-mini" id="lastUpdateInfo"></div>
-                </div>
           <button class="header-help header-auto" id="autoSkinBtn" type="button" title="Auto-skin">AUTO</button>
           <button class="header-help header-skin" id="skinBtn" type="button" title="Skin Vic's Pulse Timing">VIC</button>
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
       </div>
 
-      <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.1.75</div>
+      <div class="header-version-row">
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.1.86</div>
+        <div class="header-version" id="lastUpdateInfo"></div>
+      </div>
     </header>
 
     <!-- Debug strip (solo en modo debug) -->
@@ -5310,7 +5557,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-    const APP_NAME = "AI_Spotter_TRM_v0.0.1.75";
+const APP_NAME = "AI_Spotter_TRM_v0.0.1.86";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -8800,10 +9047,25 @@ let ttsRate = detectDefaultTtsRate();
       const voicesES = voicesAll.filter(v => ((v.lang || '').toLowerCase().startsWith('es')));
       const voices = voicesES.length ? voicesES : voicesAll;
 
-      // Pool para rotacin de Auto Locutor (solo voces visibles)
+      // Pool para rotacion de Auto Locutor
+      // - Preferimos voces ES "Microsoft" cuando existan.
+      // - Si el navegador no muestra "Microsoft" (caso comun: solo ves Raul/Sabina/Helena/Laura/Pablo),
+      //   las incluimos como preferidas para rotar siempre entre ellas.
       try {
-        __autoVoicePool = voices.map(v => v.voiceURI).filter(Boolean);
-        if (!__autoVoicePool.length) __autoVoicePool = voicesAll.map(v => v.voiceURI).filter(Boolean);
+        const nameL = (v) => String((v && v.name) || '').toLowerCase().trim();
+        const isMS = (v) => nameL(v).includes('microsoft');
+        const isES = (v) => String((v && v.lang) || '').toLowerCase().startsWith('es');
+
+        const preferred = new Set(['raul','sabina','helena','laura','pablo']);
+
+        const preferredES = (voicesAll || []).filter(v => isES(v) && (isMS(v) || preferred.has(nameL(v))));
+        __autoVoicePool = preferredES.map(v => (v.voiceURI || v.name)).filter(Boolean);
+
+        // fallback 1: voces espanolas visibles (rotar todas)
+        if (!__autoVoicePool.length) __autoVoicePool = (voicesES.length ? voicesES : (voices || [])).map(v => (v.voiceURI || v.name)).filter(Boolean);
+
+        // fallback 2: cualquier voz disponible
+        if (!__autoVoicePool.length) __autoVoicePool = (voicesAll || []).map(v => (v.voiceURI || v.name)).filter(Boolean);
       } catch(e) {}
 
       voiceSelect.innerHTML = '';
@@ -8880,7 +9142,55 @@ let ttsRate = detectDefaultTtsRate();
         // Normaliza unicode (acentos) para TTS
         try { s = s.normalize('NFC'); } catch(e) {}
         // TTS-safe: evita que algunas voces pronuncien raro "Clasificacin"
-        s = s.replace(/Clasificacin/gi, 'Clasificacion');
+        s = s.replace(/Clasificacin/gi, 'Clasificación');
+
+        // Diccionario rápido de tildes y pronunciación (TTS)
+        // - evita lecturas raras por falta de acento ("basico") o por encoding
+        const __dict = [
+          [/\bbasico\b/gi, 'básico'],
+          [/\bclasificaci[oó]n\b/gi, 'clasificación'],
+          [/\bclasificacion\b/gi, 'clasificación'],
+          [/\bposicion\b/gi, 'posición'],
+          [/\bultima\b/gi, 'última'],
+          [/\blider\b/gi, 'líder'],
+          [/\bmas\b/gi, 'más'],
+          [/\bpenalizacion\b/gi, 'penalización'],
+          [/\btrafico\b/gi, 'tráfico'],
+          [/HobbyShopMX/gi, 'HobbyShop México'],
+          [/Italia\s*-\s*Messina/gi, 'Italia, Messina'],
+        ];
+        for (const [re, rep] of __dict) s = s.replace(re, rep);
+
+        // P2 -> "P dos" (evita "pee two")
+        const __u = ['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez',
+                     'once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve'];
+        const __tens = {20:'veinte',30:'treinta',40:'cuarenta',50:'cincuenta',60:'sesenta',70:'setenta',80:'ochenta',90:'noventa'};
+        const __numToEs = (n) => {
+          n = Number(n);
+          if (!isFinite(n)) return String(n);
+          if (n < 20) return __u[n] || String(n);
+          if (n === 20) return 'veinte';
+          if (n < 30) return 'veinti' + (__u[n-20] || String(n-20));
+          const t = Math.floor(n/10)*10, r = n%10;
+          if (!r) return __tens[t] || String(n);
+          return (__tens[t] || String(t)) + ' y ' + (__u[r] || String(r));
+        };
+        s = s.replace(/\bP\s*([0-9]{1,2})\b/gi, (m, n) => 'P ' + __numToEs(n));
+
+        // +1 V / +2 V / +3 V -> "más 1 vuelta", "más 2 vueltas" (quita el "+", que suele confundir al TTS)
+        s = s.replace(/\+(\d+)\s*V\b/gi, (m, n) => {
+          const k = parseInt(n,10);
+          if (!isFinite(k) || k <= 0) return m;
+          return k === 1 ? 'más 1 vuelta' : ('más ' + k + ' vueltas');
+        });
+        s = s.replace(/\+(\d+)V\b/gi, (m, n) => {
+          const k = parseInt(n,10);
+          if (!isFinite(k) || k <= 0) return m;
+          return k === 1 ? 'más 1 vuelta' : ('más ' + k + ' vueltas');
+        });
+        // "más una vuelta" -> "más 1 vuelta" (más corto y consistente)
+        s = s.replace(/\bm[aá]s\s+una\s+vuelta\b/gi, 'más 1 vuelta');
+        
 
         // mm:ss.mmm
         s = s.replace(/\b(\d{1,2}):(\d{2})\.(\d{3})\b/g, (m0) => {
@@ -9310,7 +9620,7 @@ function enqueueSpeech(text, opts = {}) {
         const pitch = clampNum((opts.pitch != null ? opts.pitch : (pr.pitch != null ? pr.pitch : 1.0)), 0.5, 2.0);
         const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
         const postDelayMs = clampNum((opts.postDelayMs != null ? Number(opts.postDelayMs) : 0), 0, 2000);
-        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs });
+        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: (opts && (opts.voiceURI || opts.voiceUri)) || '' });
         try { pushSpeechLog({ text: clean, key, priority }); } catch(e) {}
         // prioridad desc, FIFO por tiempo
         speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
@@ -9352,7 +9662,11 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
     if (dv) { v = dv; __duoLastRole = role; }
   } catch (e) {}
 }
-          if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
+          // Auto voice override (per-message), used by Auto Locutor rotation
+          if (!v && next && next.voiceURI) {
+            try { v = voices.find(x => (x.voiceURI || x.name) === next.voiceURI); } catch(e) {}
+          }
+          if (!v && chosenVoiceURI && !(next && next.voiceURI)) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
           if (!v) v = pickDefaultVoice(voices);
           if (v) {
             u.voice = v;
@@ -10006,9 +10320,7 @@ function setLiveStatus(isOnline) {
       try {
         if (liveIndicator) {
           liveIndicator.classList.toggle('live-off', !online);
-          const label = liveIndicator.querySelector('span:last-child');
-          if (label) label.textContent = online ? 'LIVE' : 'OFF';
-        }
+          }
       } catch(e) {}
       try {
         if (appHeader) {
@@ -16231,7 +16543,7 @@ handleVoiceAndBeeps();
 .header-actions-row{gap:6px !important;}
 
 
-/* v0.0.1.75 - tighten header-title-sub to 8px height */
+/* v0.0.1.78 - tighten header-title-sub to 8px height */
 .header-title-sub{
   height:8px !important;
   min-height:8px !important;
