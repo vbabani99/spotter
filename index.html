@@ -11,7 +11,7 @@ Changelog:
 - v0.0.1.91: Limpieza editorial de textos del locutor (acentos y palabras recortadas) en RD_PHRASES y AUTO_PHRASES_PRO. Solo texto/UI.
 - v0.0.1.87: TTS PRO (ms -> segundos/dcimas/centsimas/milsimas; +V como 'ms una vuelta'; correccin de recortes en normalizador).
 - v0.0.1.79: LIVE como radio-button (solo punto verde) + MODO legible sin recortes y con color por estado.
-- v0.0.1.86: Fix TTS (P# en espaol, +V como 'ms 1 vuelta', tildes, HobbyShop México, Italia, Messina).
+- v0.0.1.86: Fix TTS (P# en espaol, +V como 'ms 1 vuelta', tildes, HobbyShop Mxico, Italia, Messina).
 - v0.0.1.38: Auto Locutor lifecycle: actividad robusta (tiempo sube o baja) + debug strip (solo ?debug=1).
 - v0.0.1.02: Fix iPhone/pequenas pantallas - header responsivo (sin recortes) + safe-area top + logo always-fit.
 - v0.0.1.08: Fix ReferenceError (miniGridExpanded/miniGridLimit + voiceToggleBtns). Mantiene Top grid expanded como rows estilo scoreboard con INT vs anterior.
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.23</title>
+  <title>AI_Spotter_TRM_v0.0.2.25</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -4774,8 +4774,9 @@ body {
 
 /* ====== v0.0.1.78 header live-on compact + no overlap (PRO) ====== */
 .app-header.live-on{
-  height:200px !important;
-  min-height:200px !important;
+  height:137px !important;
+  min-height:137px !important;
+  max-height:137px !important;
 }
 
 /* tighten vertical rhythm */
@@ -5078,10 +5079,10 @@ body {
 <body class="skin-pro skin-vicpulse">
   <div class="app">
     <div class="top-banner-placeholder" aria-hidden="true"><img class="top-banner-logo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" /></div>
-<header class="app-header">
+<header class=\"app-header live-off\" style=\"height:137px;min-height:137px;max-height:137px;\">
 <div class="header-stack">
         <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">AI Spotter TRM</span></div>
-        <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
+        <div class="header-title-sub" id="raceSubtitle">Turbo Racing Mxico - x-vic!</div>
         
       </div>
 
@@ -5099,7 +5100,7 @@ body {
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.23</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.25</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -10196,50 +10197,66 @@ function unlockTTSOnce(reason = '') {
     if (__ttsUnlockedOnce) return true;
     if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
 
-    // Debe existir gesto real del usuario
+    // Requiere gesto real del usuario (iOS/Android bloquean TTS sin interaccion)
     if (!__userGestureUnlocked) return false;
 
+    // Voces pueden tardar en cargar (iOS/Android). No bloqueamos el unlock.
+// Si aun no hay voces, dejamos un hook y seguimos: el micro-utterance suele destrabar igual.
+    try {
+      const vv = (window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : []) || [];
+      if (!vv.length) {
+        try {
+          window.speechSynthesis.onvoiceschanged = () => {
+            try {
+              if (voiceMasterEnabled && __userGestureUnlocked && !__ttsUnlockedOnce) unlockTTSOnce('voiceschanged');
+            } catch(e) {}
+          };
+        } catch(e) {}
+      }
+    } catch(e) {}
+
+    // Reset suave
     try { window.speechSynthesis.cancel(); } catch(e) {}
     try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
 
-    // Mensaje corto para "desbloquear" en iOS.
-    const u = new SpeechSynthesisUtterance('Audio listo');
+    // En iOS a veces necesita una "primera" emision corta para habilitar el motor.
+    // Hacemos un micro-utterance casi inaudible y lo cancelamos rapido.
+    const u = new SpeechSynthesisUtterance('a');
     u.lang = 'es-MX';
     u.rate = (isFinite(ttsRate) ? ttsRate : 1.5);
     u.pitch = 1.0;
-    u.volume = 1.0;
+    u.volume = 0.02;
 
-    const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-    if (voices && voices.length) {
-      
-let v = null;
-
-// DUO web/desktop: alterna Sabina/Raul por frase (fallback a SINGLE si no estan ambas)
-if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
-  try {
-    let role = __duoGuessRole(next.text, next.key);
-    if (__duoLastRole && role === __duoLastRole) role = (role === 'raul' ? 'sabina' : 'raul');
-    const wanted = (role === 'raul') ? __duoVoiceRaulURI : __duoVoiceSabinaURI;
-    const dv = voices.find(x => (x.voiceURI || x.name) === wanted);
-    if (dv) { v = dv; __duoLastRole = role; }
-  } catch (e) {}
-}
-      if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
+    try {
+      const voices = (window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : []) || [];
+      let v = null;
+      if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI) || null;
       if (!v) v = pickDefaultVoice(voices);
       if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
+    } catch(e) {}
+
+    try {
+      let done = false;
+      const finish = () => { if (done) return; done = true; __ttsUnlockedOnce = true; };
+      u.onstart = () => { try { __ttsDidStart = true; } catch(e) {} };
+      u.onend = () => { finish(); };
+      u.onerror = () => { finish(); };
+      window.speechSynthesis.speak(u);
+
+      // Si no arranca, igual marcamos unlocked despues de un instante para no quedar atrapados
+      setTimeout(() => {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+        finish();
+      }, 260);
+    } catch(e) {
+      __ttsUnlockedOnce = true;
     }
 
-    u.onend = () => {};
-    u.onerror = () => {};
-    window.speechSynthesis.speak(u);
-
-    __ttsUnlockedOnce = true;
     return true;
   } catch(e) {
     return false;
   }
 }
-
 function setVoiceMaster(on, opts = {}) {
       
       // cualquier unlock pendiente se resuelve aqu
@@ -10310,9 +10327,14 @@ voiceMasterEnabled = !!on;
 
       voiceToggleBtns.forEach(btn => {
         try { btn.style.touchAction = 'manipulation'; } catch(e) {}
-        try { btn.addEventListener('pointerdown', __onVoiceToggle, { passive:false }); } catch(e) {}
-        try { btn.addEventListener('touchstart', __onVoiceToggle, { passive:false }); } catch(e) {}
-        // Evita doble toggle por click despues de touch/pointer
+        // IMPORTANTE: no registramos touchstart y pointerdown a la vez (en iOS puede disparar doble y deja el boton en OFF).
+        try {
+          const evName = (window.PointerEvent ? 'pointerdown' : 'touchstart');
+          btn.addEventListener(evName, __onVoiceToggle, { passive:false });
+        } catch(e) {
+          try { btn.addEventListener('touchstart', __onVoiceToggle, { passive:false }); } catch(e2) {}
+        }
+        // Evita doble toggle por click fantasma
         try { btn.addEventListener('click', (ev)=>{ try{ev.preventDefault();}catch(e){} }, { passive:false }); } catch(e) {}
       });
 }
@@ -16749,13 +16771,13 @@ handleVoiceAndBeeps();
     }
     function getRaceBaseFromRaceName(raceName){
       // Objetivo: llave estable para guardar Qs (Q1/Q2/Q3...) sin que se resetee por cambios menores del raceName.
-      // NO toca lÃ³gica de carrera: solo normaliza texto para el storage de Q TABLA.
+      // NO toca lógica de carrera: solo normaliza texto para el storage de Q TABLA.
       const raw = (raceName == null) ? '' : String(raceName);
       let s = raw.trim();
       if (!s) return '';
 
       // Si viene con separadores tipo " - ", tomamos el prefijo (usualmente el evento/pista).
-      // Si no, usamos toda la cadena y limpiamos tokens de sesiÃ³n.
+      // Si no, usamos toda la cadena y limpiamos tokens de sesión.
       const dashIdx = s.indexOf(' - ');
       if (dashIdx > 2) s = s.slice(0, dashIdx).trim();
 
@@ -16769,7 +16791,7 @@ handleVoiceAndBeeps();
       k = k.replace(/[|,]+/g, ' ');
       k = k.replace(/\s+/g, ' ').trim();
 
-      // Fallback si quedÃ³ vacÃ­o
+      // Fallback si quedó vacío
       return k || raw.trim();
     }
     function getQualiIdFromRaceName(raceName){
@@ -17705,8 +17727,71 @@ handleVoiceAndBeeps();
   color: rgba(163,173,189,0.65);
 }
 
+
+/* =========================
+   HARD OVERRIDES v0.0.2.26
+   - Corrige "brinco" del header y recortes en iPhone 12
+   - Ajusta header-mode-row sin scale (wrap responsive)
+   - Top banner siempre responsivo (no desaparece)
+========================= */
+.top-banner-placeholder{
+  width: min(400px, 100%) !important;
+  height: 145px !important;
+  max-width: 100% !important;
+}
+.top-banner-placeholder .top-banner-logo{
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display:block !important;
+}
+
+/* Header: misma altura siempre (evita que abra grande y luego se encoja) */
+.app-header,
+.app-header.live-on,
+.app-header.live-off{
+  height: 137px !important;
+  min-height: 137px !important;
+  max-height: 137px !important;
+}
+
+/* El modo/controles se adaptan al ancho real, sin transform que recorta */
+.app-header .header-mode-row{
+  transform: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+  display:flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 6px 8px !important;
+  overflow: visible !important;
+}
+
+/* En pantallas chicas: reduce gap y permite 2 renglones sin cortar */
+@media (max-width: 420px){
+  .app-header .header-mode-row{ gap: 5px 6px !important; }
+  .app-header .header-mode-row .btn-pill,
+  .app-header .header-mode-row .spotter-btn{
+    padding: 7px 10px !important;
+    min-width: 64px !important;
+  }
+}
+
 </style>
-<div class="toast" id="toast"></div>
+<div class=
+/* ===== v0.0.2.25 FIX: header estable (sin salto de grande->chico) ===== */
+.app-header{
+  height: 137px !important;
+  min-height: 137px !important;
+  max-height: 137px !important;
+}
+.app-header.live-on{
+  height: 137px !important;
+  min-height: 137px !important;
+  max-height: 137px !important;
+}
+
+"toast" id="toast"></div>
 
 
   <!-- Q TABLA (Clasificacin) -->
