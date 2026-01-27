@@ -4,7 +4,7 @@ Fecha: 2026-01-24
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.0.2.21: Q TABLA (FIX guardado) (clasificacin) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
+- v0.0.2.21: Q TABLA (FIX guardado) (clasificación) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
 - v0.0.2.23: Fix UX: VOZ responde al primer toque (iOS/Android), debounced LIVE (sin parpadeo), header altura estable (sin salto). UI/TTS only.
 - v0.0.2.17: LapChart watermark restaurada (logo Vic) en fondo del canvas. UI only.
 - v0.0.1.99: Logo header ajustado -5% (reduce height de 88px a 84px) manteniendo 'cover' para recorte del aire.
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.25</title>
+  <title>AI_Spotter_TRM_v0.0.2.37</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -2309,7 +2309,7 @@ body {
 
     #lapChart {
       width: 100%;
-      height: 120px;
+      height: var(--lapchart-h, 120px);
       display: block;
             border-radius: 10px;
       background: rgba(2,6,23,0.55);
@@ -4774,9 +4774,9 @@ body {
 
 /* ====== v0.0.1.78 header live-on compact + no overlap (PRO) ====== */
 .app-header.live-on{
-  height:137px !important;
-  min-height:137px !important;
-  max-height:137px !important;
+  height:165px !important;
+  min-height:165px !important;
+  max-height:165px !important;
 }
 
 /* tighten vertical rhythm */
@@ -4993,7 +4993,7 @@ body {
 .top-banner-placeholder{
   display:block;
   flex: 0 0 auto;
-  width: 400px;
+  width: 440px;
   height: 145px;
   margin: 10px auto 8px auto;
   background: transparent;
@@ -5011,8 +5011,8 @@ body {
 
 /* Main header height requirement */
 .app-header.live-on{
-  height: 137px !important;
-  min-height: 137px !important;
+  height: 165px !important;
+  min-height: 165px !important;
 }
 
 
@@ -5075,14 +5075,44 @@ body {
 }
 </style>
 
+
+<style id="version-visibility-fix">
+/* FIX v0.0.2.37: version siempre visible en header */
+.header-version-row{
+  position:absolute !important;
+  left:0 !important; right:0 !important; bottom:6px !important;
+  z-index:50 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+  margin:0 !important;
+}
+.header-version-row .header-version{
+  position:static !important;
+  display:inline-block !important;
+  font-size:10px !important;
+  letter-spacing:.6px !important;
+  opacity:.86 !important;
+  color: rgba(255,255,255,0.78) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45) !important;
+  pointer-events:none !important;
+}
+#appVersion{
+  font-weight:900 !important;
+  opacity:.96 !important;
+  color: rgba(255,255,255,0.90) !important;
+}
+</style>
+
 </head>
 <body class="skin-pro skin-vicpulse">
   <div class="app">
     <div class="top-banner-placeholder" aria-hidden="true"><img class="top-banner-logo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" /></div>
-<header class=\"app-header live-off\" style=\"height:137px;min-height:137px;max-height:137px;\">
+<header class="app-header live-off" style="height:165px;min-height:165px;max-height:165px;">
 <div class="header-stack">
         <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">AI Spotter TRM</span></div>
-        <div class="header-title-sub" id="raceSubtitle">Turbo Racing Mxico - x-vic!</div>
+        <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
         
       </div>
 
@@ -5094,13 +5124,13 @@ body {
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
           <button class="header-help header-auto" id="autoSkinBtn" type="button" title="Auto-skin">AUTO</button>
           <button class="header-help header-skin" id="skinBtn" type="button" title="Skin Vic's Pulse Timing">VIC</button>
-          <button class="header-help header-qtable" id="qTableBtn" type="button" title="Q TABLA (clasificacin)">Q TABLA</button>
+          <button class="header-help header-qtable" id="qTableBtn" type="button" title="Q TABLA (clasificación)">Q TABLA</button>
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.25</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.37</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5413,8 +5443,8 @@ body {
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.23</div>
-          <div class="manual-sub">Gua rpida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.37</div>
+          <div class="manual-sub">Guía rápida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
       </div>
@@ -5696,7 +5726,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.23";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.37";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -5931,7 +5961,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.23";
             return;
           } else {
             // Manga: anunciar cierre + Top3 y luego silencio
-            try { __autoAnnounceTop3Summary(r, 'Termin la clasificacin'); } catch(e) {}
+            try { __autoAnnounceTop3Summary(r, 'Termin la clasificación'); } catch(e) {}
             __autoPhase = 'FINISHED';
             __autoCloseStartedMs = now;
             return;
@@ -6032,7 +6062,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.23";
         const top = rows.slice(0,3);
         if (!top.length) return;
 
-        let head = forcedLabel ? String(forcedLabel) : (isManga ? 'Termin la clasificacin.' : 'Carrera terminada.');
+        let head = forcedLabel ? String(forcedLabel) : (isManga ? 'Termin la clasificación.' : 'Carrera terminada.');
         if (!head.endsWith('.')) head += '.';
 
         const part = (row, idx) => {
@@ -8564,7 +8594,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
     // BASIC (Seguimiento) - estabilidad de posicion para evitar jitter/flip-flop
     const basicPosStability = { lastSeenPos: null, candidatePos: null, candidateCount: 0, pendingStablePos: null, lastAnnouncedStablePos: null };
 
-// MANGA (clasificacin) - estabilidad de posicin para evitar "flip-flop" por salida escalonada
+// MANGA (clasificación) - estabilidad de posicin para evitar "flip-flop" por salida escalonada
     const mangaPosStability = { lastSeenPos: null, stablePos: null, stableCount: 0, lastAnnouncedStablePos: null };
     const mangaPosSettle = { active:false, lap:0, dueAt:0, samples:[], lastComputedPos:null };
 
@@ -9427,7 +9457,7 @@ let ttsRate = detectDefaultTtsRate();
           [/\bbsico\b/gi, 'b\xe1sico'],
           [/\bclasificaci[o\xf3]n\b/gi, 'clasificaci\xf3n'],
           [/\bclasificacion\b/gi, 'clasificaci\xf3n'],
-          [/\bclasificacin\b/gi, 'clasificaci\xf3n'],
+          [/\bclasificación\b/gi, 'clasificaci\xf3n'],
           [/\bposicion\b/gi, 'posici\xf3n'],
           [/\bposicin\b/gi, 'posici\xf3n'],
           [/\bultima\b/gi, '\xfaltima'],
@@ -10200,32 +10230,16 @@ function unlockTTSOnce(reason = '') {
     // Requiere gesto real del usuario (iOS/Android bloquean TTS sin interaccion)
     if (!__userGestureUnlocked) return false;
 
-    // Voces pueden tardar en cargar (iOS/Android). No bloqueamos el unlock.
-// Si aun no hay voces, dejamos un hook y seguimos: el micro-utterance suele destrabar igual.
-    try {
-      const vv = (window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : []) || [];
-      if (!vv.length) {
-        try {
-          window.speechSynthesis.onvoiceschanged = () => {
-            try {
-              if (voiceMasterEnabled && __userGestureUnlocked && !__ttsUnlockedOnce) unlockTTSOnce('voiceschanged');
-            } catch(e) {}
-          };
-        } catch(e) {}
-      }
-    } catch(e) {}
-
     // Reset suave
     try { window.speechSynthesis.cancel(); } catch(e) {}
     try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
 
-    // En iOS a veces necesita una "primera" emision corta para habilitar el motor.
-    // Hacemos un micro-utterance casi inaudible y lo cancelamos rapido.
-    const u = new SpeechSynthesisUtterance('a');
+    // Mensaje corto (audible) para destrabar motor en WebKit
+    const u = new SpeechSynthesisUtterance('Audio listo');
     u.lang = 'es-MX';
     u.rate = (isFinite(ttsRate) ? ttsRate : 1.5);
     u.pitch = 1.0;
-    u.volume = 0.02;
+    u.volume = 1.0;
 
     try {
       const voices = (window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : []) || [];
@@ -10235,28 +10249,21 @@ function unlockTTSOnce(reason = '') {
       if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
     } catch(e) {}
 
-    try {
-      let done = false;
-      const finish = () => { if (done) return; done = true; __ttsUnlockedOnce = true; };
-      u.onstart = () => { try { __ttsDidStart = true; } catch(e) {} };
-      u.onend = () => { finish(); };
-      u.onerror = () => { finish(); };
-      window.speechSynthesis.speak(u);
+    // Marcar unlock aunque el motor falle para no quedar atrapados en loop
+    __ttsUnlockedOnce = true;
 
-      // Si no arranca, igual marcamos unlocked despues de un instante para no quedar atrapados
-      setTimeout(() => {
-        try { window.speechSynthesis.cancel(); } catch(e) {}
-        finish();
-      }, 260);
-    } catch(e) {
-      __ttsUnlockedOnce = true;
-    }
+    try {
+      u.onend = () => {};
+      u.onerror = () => {};
+      window.speechSynthesis.speak(u);
+    } catch(e) {}
 
     return true;
   } catch(e) {
     return false;
   }
 }
+
 function setVoiceMaster(on, opts = {}) {
       
       // cualquier unlock pendiente se resuelve aqu
@@ -10339,7 +10346,10 @@ voiceMasterEnabled = !!on;
       });
 }
 
-    // Boton BASICO (solo seguimiento). No existe modo manual: el spotter decide todo.
+      // Sync UI del boton VOZ con el estado real al cargar (evita clicks extra)
+      try { setVoiceMaster(voiceMasterEnabled, { silent:true }); } catch(e) {}
+
+      // Boton BASICO (solo seguimiento). No existe modo manual: el spotter decide todo.
     if (typeof basicToggleBtnMini !== 'undefined' && basicToggleBtnMini) {
       try {
         basicToggleBtnMini.addEventListener('click', () => {
@@ -11010,9 +11020,11 @@ function isLapPlausible(ms) {
       // pueden llegar "vueltas parciales" (ej. 3.0s) y se deben registrar.
       const min = LAP_MS_MIN;
 
-      let pad = isFinal ? 3200 : 2200;
+      const preset = getLapChartPreset();
+
+      let pad = preset.pad;
       // cap por seguridad
-      const maxCap = isFinal ? 150000 : 130000;
+      const maxCap = preset.maxCap;
       const max = Math.min(maxCap, p90 + pad);
 
       lapRange = { min, max };
@@ -11171,9 +11183,14 @@ function drawLapChartForKey(pilotKey) {
         if (ctx) ctx.clearRect(0, 0, lapChartEl.width, lapChartEl.height);
         return;
       }
-
-      const N = 40;
+      applyLapChartPreset();
+      const preset = getLapChartPreset();
+      const N = preset.N;
+      // Eje X por TIEMPO: acumulado desde el inicio
+      let __accT = 0;
+      const tAll = timesAll.map(ms => (__accT += ms));
       const times = timesAll.slice(-N);
+      const tMs = tAll.slice(-N);
       const marksAll = (hist.marks || []).filter(v => (typeof v === 'string' || v == null));
       const marks = marksAll.slice(-N);
       const st = statsFromTimes(times);
@@ -11236,10 +11253,12 @@ ensureCanvasHiDpi(lapChartEl);
       // X: izquierda->derecha. Inicia desde la izquierda (lap 1 a la izquierda) y se va llenando hacia la derecha.
       // Con pocas vueltas queda espacio vaco a la derecha (intencional).
       const k = times.length;
-      const STEP_X = (N > 1) ? (gw / (N - 1)) : 0;
+      const xMax = getLapChartXMaxMs((tMs && tMs.length) ? tMs[tMs.length - 1] : 0);
       const xFor = (i) => {
         const ii = Math.max(0, Math.min(k - 1, i));
-        return left + STEP_X * ii;
+        const t = (tMs && tMs[ii]) ? tMs[ii] : 0;
+        const frac = xMax ? Math.max(0, Math.min(1, t / xMax)) : 0;
+        return left + (gw * frac);
       };
 
       const baseIdx = timesAll.length - times.length; // ndice global del primer punto mostrado
@@ -11254,6 +11273,22 @@ ensureCanvasHiDpi(lapChartEl);
         ctx.lineTo(left + gw, y);
         ctx.stroke();
       }
+
+      // grid vertical por minutos (eje X = tiempo)
+      try{
+        const xMaxG = getLapChartXMaxMs((tMs && tMs.length) ? tMs[tMs.length - 1] : 0);
+        const mins = Math.max(0, Math.floor(xMaxG / 60000));
+        for (let m=1; m<=mins; m++){
+          const frac = xMaxG ? (m*60000 / xMaxG) : 0;
+          const x = left + (gw * frac);
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(148,163,184,0.10)';
+          ctx.lineWidth = 1;
+          ctx.moveTo(x, top);
+          ctx.lineTo(x, top + gh);
+          ctx.stroke();
+        }
+      } catch(e){}
 
       // lnea promedio
       if (isLapPlausible(mean)) {
@@ -11332,7 +11367,7 @@ try {
         ctx.fill();
       };
 
-      // best sesin (Opcin B: desde clasificacin visible)
+      // best sesin (Opcin B: desde clasificación visible)
       const sessionBestMs = computeSessionBestMs ? computeSessionBestMs() : 0;
 
       // errores grandes (rojo): +0.8s vs media o +0.9s vs best (lo que aplique)
@@ -11554,7 +11589,17 @@ function drawLapChartTop3Auto(){
         const k = keys[i];
         const hist = lapHistory.get(k) || { times: [] };
         const raw = (hist.times || []).filter(v => typeof v === 'number' && isFinite(v) && v > 0);
-        let valsAll = raw.filter(isLapPlausible);
+        // Construye vals + tiempo acumulado (eje X)
+        let valsAll = [];
+        let tAll = [];
+        let acc = 0;
+        for (let r=0; r<raw.length; r++){
+          const v0 = normalizeLapMs(raw[r]);
+          if (!isLapPlausible(v0)) continue;
+          acc += v0;
+          valsAll.push(v0);
+          tAll.push(acc);
+        }
 
         // Fallback: si todavia no hay historial (inicio de carrera), al menos pinta un punto con lastTime/best.
         if (!valsAll.length) {
@@ -11562,12 +11607,16 @@ function drawLapChartTop3Auto(){
           const last = row ? normalizeLapMs(parseTimeToMs(row.lastTime)) : 0;
           const best = row ? normalizeLapMs(parseTimeToMs(row.best)) : 0;
           const candidate = isLapPlausible(last) ? last : (isLapPlausible(best) ? best : 0);
-          if (candidate) valsAll = [candidate];
+          if (candidate) {
+            valsAll = [candidate];
+            tAll = [candidate];
+          }
         }
 
         if (!valsAll.length) continue;
         const vals = valsAll.slice(-N);
-        series.push({ key: k, vals, color: colors[i], idx: i });
+        const tms = tAll.slice(-N);
+        series.push({ key: k, vals, tms, color: colors[i], idx: i });
         allVals = allVals.concat(vals);
       }
 
@@ -11608,6 +11657,15 @@ function drawLapChartTop3Auto(){
       const gw = w - left - right;
       const gh = h - topPad - bottom;
 
+      // Eje X por TIEMPO: max por modo (3/4/6 min + fraccion)
+      let __lastElapsed = 0;
+      for (const ss of series){
+        const tt = ss.tms || [];
+        const lt = tt.length ? tt[tt.length - 1] : 0;
+        if (lt > __lastElapsed) __lastElapsed = lt;
+      }
+      const xMax = getLapChartXMaxMs(__lastElapsed);
+
       // grid
       ctx.strokeStyle = 'rgba(148,163,184,0.18)';
       ctx.lineWidth = 1;
@@ -11618,6 +11676,21 @@ function drawLapChartTop3Auto(){
         ctx.lineTo(left + gw, y);
         ctx.stroke();
       }
+
+      // grid vertical por minutos (eje X = tiempo)
+      try{
+        const mins = Math.max(0, Math.floor(xMax / 60000));
+        for (let m=1; m<=mins; m++){
+          const frac = xMax ? (m*60000 / xMax) : 0;
+          const x = left + (gw * frac);
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(148,163,184,0.10)';
+          ctx.lineWidth = 1;
+          ctx.moveTo(x, topPad);
+          ctx.lineTo(x, topPad + gh);
+          ctx.stroke();
+        }
+      } catch(e){}
 
       const focusKey = (lapChartAutoKey && keys.includes(lapChartAutoKey)) ? lapChartAutoKey : keys[0];
 
@@ -11635,8 +11708,9 @@ function drawLapChartTop3Auto(){
         ctx.beginPath();
 
         for (let j=0;j<len;j++){
-          const xIdx = j; // left aligned: lap 1 starts at left
-          const x = left + (N === 1 ? 0 : (gw * xIdx / (N - 1)));
+          const t = (s.tms && s.tms[j]) ? s.tms[j] : 0;
+          const frac = xMax ? Math.max(0, Math.min(1, t / xMax)) : 0;
+          const x = left + (gw * frac);
           const v = vals[j];
           const y = topPad + (1 - (Math.min(Math.max(v, minV), maxV) - minV) / (maxV - minV)) * gh;
           if (j===0) ctx.moveTo(x,y);
@@ -11646,8 +11720,9 @@ function drawLapChartTop3Auto(){
 
         // dot ltima vuelta
         const jLast = len - 1;
-        const xIdxL = jLast; // left aligned
-        const xL = left + (N === 1 ? 0 : (gw * xIdxL / (N - 1)));
+        const tL = (s.tms && s.tms[jLast]) ? s.tms[jLast] : 0;
+        const fracL = xMax ? Math.max(0, Math.min(1, tL / xMax)) : 0;
+        const xL = left + (gw * fracL);
         const vL = vals[jLast];
         const yL = topPad + (1 - (Math.min(Math.max(vL, minV), maxV) - minV) / (maxV - minV)) * gh;
         const r = Math.max(2, Math.floor(w * 0.005)) * (isFocus ? 1.25 : 1.05);
@@ -11954,7 +12029,7 @@ let autoNarratorState = {
 // pairKey -> { lastSec, lastSec2, lastMs, lastLap, lastMentionMs }
 let autoPairState = new Map();
 
-// MANGA (clasificacin): seguimiento de pole/best lap sin saturar
+// MANGA (clasificación): seguimiento de pole/best lap sin saturar
 let autoQualiState = {
   bestOverallMs: null,
   bestOverallKey: '',
@@ -12560,7 +12635,8 @@ function onPilotSelectedManga(pilotKey) {
     try {
       if (raceData && raceData.raceName) {
         currentSessionInfo = parseSessionFromRaceName(raceData.raceName);
-       try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
+       try { applyLapChartPreset(); } catch(e) {}
+try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
       }
     } catch(e) {}
 
@@ -13820,7 +13896,7 @@ function autoBuildStoryCandidate(args) {
       ],
 
       qualiBest: [
-        (c) => 'En clasificacin, ' + c.pilot + ' marca ' + c.best + '.',
+        (c) => 'En clasificación, ' + c.pilot + ' marca ' + c.best + '.',
         (c) => 'Tiempo fuerte en quali: ' + c.pilot + ' ' + c.best + '.',
         (c) => 'Clasificacin: ' + c.pilot + ' mejora con ' + c.best + '.',
         (c) => 'Queda el registro. ' + c.pilot + ' con ' + c.best + '.',
@@ -15055,7 +15131,7 @@ if ((voiceSettings.pelea || voiceSettings.attack || voiceSettings.defense) && ba
   if (sc) addCand(sc);
 }
 
-// ====== MANGA (clasificacin): pole/best lap (menos ruido, ms sustancia)
+// ====== MANGA (clasificación): pole/best lap (menos ruido, ms sustancia)
 if (isMangaSess) {
   const wantBest = !!vs.bestlap;
   const wantPoleFight = !!(vs.bestlap || vs.pelea);
@@ -15423,7 +15499,8 @@ function handleVoiceAndBeeps() {
       // Actualiza el modo desde raceName (ya viene de Firebase)
       if (raceData && raceData.raceName) {
         currentSessionInfo = parseSessionFromRaceName(raceData.raceName);
-       try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
+       try { applyLapChartPreset(); } catch(e) {}
+try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
       }
 
       const isManga = currentSessionInfo && currentSessionInfo.type === 'MANGA';
@@ -16160,7 +16237,82 @@ speakBtn.addEventListener('click', () => {
         // =========================
     // Modo de sesin (AUTO desde raceName)
     // =========================
-    let currentSessionInfo = { type: 'UNKNOWN', main: '', durationMs: 0, label: 'MODO -' };
+    var currentSessionInfo = { type: 'UNKNOWN', main: '', durationMs: 0, label: 'MODO -' };
+    // =========================
+    // LapChart scale preset por modo (MANGA vs FINAL A vs Finales bajas)
+    // =========================
+    var _lapChartPresetKey = '';
+    function getLapChartPreset(){
+      const info = currentSessionInfo || {};
+      const type = String(info.type || '').toUpperCase();
+      const main = String(info.main || '').toUpperCase();
+
+      // Defaults
+      let N = 40;         // ventana de vueltas en la grafica
+      let pad = 2200;     // margen vertical (ms) para escala
+      let maxCap = 130000;// cap maximo de escala vertical (ms)
+      let cssH = 120;     // alto visual del canvas (px)
+
+      if (type === 'MANGA') {
+        // Qualy: zoom mas apretado y ventana mas corta (cambios rapidos)
+        N = 28;
+        pad = 2000;
+        maxCap = 130000;
+        cssH = 120;
+      } else if (type === 'FINAL') {
+        if (main === 'A') {
+          // Final A: mas vueltas, grafica mas alta
+          N = 55;
+          pad = 3200;
+          maxCap = 150000;
+          cssH = 140;
+        } else {
+          // Finales bajas (B/C/D): mas variacion, margen mas amplio
+          N = 45;
+          pad = 4200;
+          maxCap = 160000;
+          cssH = 132;
+        }
+      }
+      return { N, pad, maxCap, cssH };
+    }
+
+    // LapChart - Eje X por TIEMPO (no por vueltas)
+    // - Manga: 3:00 + fraccion
+    // - Finales bajas: 4:00 + fraccion
+    // - Final A: 6:00 + fraccion
+    // Nota: usamos currentSessionInfo.durationMs como base y agregamos un margen para cubrir la "fraccion".
+    function getLapChartXMaxMs(lastElapsedMs){
+      const info = currentSessionInfo || {};
+      const type = String(info.type || '').toUpperCase();
+      const main = String(info.main || '').toUpperCase();
+      const base = Number(info.durationMs) || 0;
+
+      let extra = 0;
+      if (type === 'MANGA') extra = 15000;                 // +15s
+      else if (type === 'FINAL') extra = (main === 'A') ? 25000 : 20000; // +25s A, +20s bajas
+
+      let xMax = base ? (base + extra) : 0;
+
+      const last = Number(lastElapsedMs) || 0;
+      if (!xMax) xMax = Math.max(120000, last + 2000); // fallback 2:00 min
+      else if (last > xMax) xMax = Math.max(xMax, last + 2000);
+
+      return xMax;
+    }
+
+
+    function applyLapChartPreset(){
+      try{
+        const p = getLapChartPreset();
+        const key = `${p.N}|${p.pad}|${p.maxCap}|${p.cssH}`;
+        if (key === _lapChartPresetKey) return;
+        _lapChartPresetKey = key;
+        // Ajusta alto del canvas via CSS var (sin tocar layout global)
+        document.documentElement.style.setProperty('--lapchart-h', `${p.cssH}px`);
+      } catch(e){}
+    }
+
 
     function parseSessionFromRaceName(raceName) {
       const name = String(raceName || '').toUpperCase();
@@ -16231,7 +16383,7 @@ let label = 'MODO -';
 
 // =========================
 // FIN DE SESIN (por duracin)
-// - MANGA: 3:00 -> "Termin la clasificacin"
+// - MANGA: 3:00 -> "Termin la clasificación"
 // - FINAL: segn modo (A=6:00, otras=4:00) -> "Carrera terminada" + posicin + resumen
 // Dispara SOLO cuando tu tiempo total cruza el lmite EN UNA NUEVA VUELTA.
 // =========================
@@ -16275,7 +16427,7 @@ function buildSessionFinishMessage(row) {
   const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
   const totalMs = getRowTotalMs(row) || 0;
 
-  let msg = isManga ? 'Termin la clasificacin.' : 'Carrera terminada.';
+  let msg = isManga ? 'Termin la clasificación.' : 'Carrera terminada.';
 
   // Resultado (si sabemos posicin)
   if (posNum > 0) msg += ' P' + posNum + '.';
@@ -16356,7 +16508,8 @@ function checkSessionFinishOnLap() {
       const rn = (r && r.raceName) ? String(r.raceName) : '';
       currentSessionInfo = parseSessionFromRaceName(rn);
 
-      // AI Spotter: aplica perfil automatico SIEMPRE (tambien en Auto Locutor)
+      try { applyLapChartPreset(); } catch(e) {}
+// AI Spotter: aplica perfil automatico SIEMPRE (tambien en Auto Locutor)
       try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
 
       // Reset de referencias (mejora/best) cuando cambia la sesin
@@ -16606,7 +16759,7 @@ function checkSessionFinishOnLap() {
             return; // ignorar tick cero
           }
         } catch(e) {}
-        // Q TABLA: snapshot de clasificacin (UI only)
+        // Q TABLA: snapshot de clasificación (UI only)
         try { recordQualiSnapshotIfNeeded(rawRace); } catch(e) {}
 raceData = normalizeRaceData(rawRace);
         updateLapHistoryAll();
@@ -16771,13 +16924,13 @@ handleVoiceAndBeeps();
     }
     function getRaceBaseFromRaceName(raceName){
       // Objetivo: llave estable para guardar Qs (Q1/Q2/Q3...) sin que se resetee por cambios menores del raceName.
-      // NO toca lógica de carrera: solo normaliza texto para el storage de Q TABLA.
+      // NO toca lgica de carrera: solo normaliza texto para el storage de Q TABLA.
       const raw = (raceName == null) ? '' : String(raceName);
       let s = raw.trim();
       if (!s) return '';
 
       // Si viene con separadores tipo " - ", tomamos el prefijo (usualmente el evento/pista).
-      // Si no, usamos toda la cadena y limpiamos tokens de sesión.
+      // Si no, usamos toda la cadena y limpiamos tokens de sesin.
       const dashIdx = s.indexOf(' - ');
       if (dashIdx > 2) s = s.slice(0, dashIdx).trim();
 
@@ -16791,7 +16944,7 @@ handleVoiceAndBeeps();
       k = k.replace(/[|,]+/g, ' ');
       k = k.replace(/\s+/g, ' ').trim();
 
-      // Fallback si quedó vacío
+      // Fallback si qued vaco
       return k || raw.trim();
     }
     function getQualiIdFromRaceName(raceName){
@@ -17624,16 +17777,16 @@ handleVoiceAndBeeps();
 
 /* v0.0.2.12 - Header: altura estable (sin salto al cambiar LIVE) */
 .app-header{
-  height: 137px !important;
-  min-height: 137px !important;
-  max-height: 137px !important;
+  height: 165px !important;
+  min-height: 165px !important;
+  max-height: 165px !important;
   padding: 12px 14px !important;
 }
 .app-header.live-on,
 .app-header.live-off{
-  height: 137px !important;
-  min-height: 137px !important;
-  max-height: 137px !important;
+  height: 165px !important;
+  min-height: 165px !important;
+  max-height: 165px !important;
 }
 .header-stack{ flex: 0 0 auto !important; }
 .header-controls{ margin-top: 6px !important; }
@@ -17735,10 +17888,27 @@ handleVoiceAndBeeps();
    - Top banner siempre responsivo (no desaparece)
 ========================= */
 .top-banner-placeholder{
-  width: min(400px, 100%) !important;
+  width: 440px !important;
+  max-width: 440px !important;
+  min-width: 440px !important;
   height: 145px !important;
-  max-width: 100% !important;
+  margin: 10px auto 8px auto !important;
+  background: rgba(8,10,15,0.55) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.05) !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(6px) !important;
 }
+
+@media (max-width: 460px){
+  .top-banner-placeholder{
+    width: min(440px, 100%) !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
 .top-banner-placeholder .top-banner-logo{
   width: 100% !important;
   height: 100% !important;
@@ -17750,9 +17920,9 @@ handleVoiceAndBeeps();
 .app-header,
 .app-header.live-on,
 .app-header.live-off{
-  height: 137px !important;
-  min-height: 137px !important;
-  max-height: 137px !important;
+  height: 165px !important;
+  min-height: 165px !important;
+  max-height: 165px !important;
 }
 
 /* El modo/controles se adaptan al ancho real, sin transform que recorta */
@@ -17777,26 +17947,54 @@ handleVoiceAndBeeps();
   }
 }
 
-</style>
-<div class=
-/* ===== v0.0.2.25 FIX: header estable (sin salto de grande->chico) ===== */
-.app-header{
-  height: 137px !important;
-  min-height: 137px !important;
-  max-height: 137px !important;
+
+/* ===== HOTFIX v0.0.2.37: responsive header rows (no scale, no cut) ===== */
+.app-header .header-mode-row{
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 6px 8px !important;
 }
-.app-header.live-on{
-  height: 137px !important;
-  min-height: 137px !important;
-  max-height: 137px !important;
+.app-header .header-controls{
+  transform: none !important;
+  margin-top: 0 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 6px 8px !important;
+}
+.app-header .header-actions-row{
+  flex-wrap: wrap !important;
+  row-gap: 6px !important;
+}
+@media (max-width: 420px){
+  .app-header .header-controls .btn{ padding: 6px 10px !important; }
+  .app-header .header-mode-row .badge-mode{ font-size: 10px !important; }
 }
 
-"toast" id="toast"></div>
+
+/* v0.0.2.37: Header mas alto para que quepa titulo + botones + version */
+.app-header,
+.app-header.live-on,
+.app-header.live-off{
+  height: 170px !important;
+  min-height: 170px !important;
+  max-height: 170px !important;
+}
+.app-header{ overflow: visible !important; }
+.header-version-row{ margin-top: 4px !important; padding-bottom: 6px !important; }
+.header-version-row .header-version{ font-size: 11px !important; line-height: 1.1 !important; opacity: 0.95 !important; }
+
+</style>
+<div class="toast" id="toast"></div>
 
 
   <!-- Q TABLA (Clasificacin) -->
   <div class="manual-backdrop" id="qualiBackdrop" aria-hidden="true">
-    <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Tabla general de clasificacin">
+    <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Tabla general de clasificación">
       <div class="manual-top">
         <div>
           <div class="manual-title">Clasificacin del da</div>
