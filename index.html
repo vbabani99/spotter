@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.37</title>
+  <title>AI_Spotter_TRM_v0.0.2.38</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -5077,7 +5077,7 @@ body {
 
 
 <style id="version-visibility-fix">
-/* FIX v0.0.2.37: version siempre visible en header */
+/* FIX v0.0.2.38: version siempre visible en header */
 .header-version-row{
   position:absolute !important;
   left:0 !important; right:0 !important; bottom:6px !important;
@@ -5130,7 +5130,7 @@ body {
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.37</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.38</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5443,7 +5443,7 @@ body {
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.37</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.38</div>
           <div class="manual-sub">Guía rápida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -5726,7 +5726,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.37";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.38";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10230,9 +10230,13 @@ function unlockTTSOnce(reason = '') {
     // Requiere gesto real del usuario (iOS/Android bloquean TTS sin interaccion)
     if (!__userGestureUnlocked) return false;
 
+    const synth = window.speechSynthesis;
+
     // Reset suave
-    try { window.speechSynthesis.cancel(); } catch(e) {}
-    try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+    try { synth.cancel(); } catch(e) {}
+    try { if (typeof synth.resume === 'function') synth.resume(); } catch(e) {}
+
+    let didStart = false;
 
     // Mensaje corto (audible) para destrabar motor en WebKit
     const u = new SpeechSynthesisUtterance('Audio listo');
@@ -10242,20 +10246,28 @@ function unlockTTSOnce(reason = '') {
     u.volume = 1.0;
 
     try {
-      const voices = (window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : []) || [];
+      const voices = (synth.getVoices ? synth.getVoices() : []) || [];
       let v = null;
       if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI) || null;
       if (!v) v = pickDefaultVoice(voices);
       if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
     } catch(e) {}
 
-    // Marcar unlock aunque el motor falle para no quedar atrapados en loop
-    __ttsUnlockedOnce = true;
+    // Solo marcamos unlocked si realmente arranca. En iPhone, si falla speak(), no nos quedamos "bloqueados".
+    try { u.onstart = () => { didStart = true; __ttsUnlockedOnce = true; }; } catch(e) {}
+    u.onend = () => { try { if (!didStart) __ttsUnlockedOnce = false; } catch(e) {} };
+    u.onerror = () => { try { __ttsUnlockedOnce = false; } catch(e) {} };
 
     try {
-      u.onend = () => {};
-      u.onerror = () => {};
-      window.speechSynthesis.speak(u);
+      synth.speak(u);
+    } catch(e) {
+      try { __ttsUnlockedOnce = false; } catch(e2) {}
+      return false;
+    }
+
+    // Start-guard extra: si en ~1.3s no arrancó, no consideres unlocked
+    try {
+      setTimeout(() => { try { if (!didStart) __ttsUnlockedOnce = false; } catch(e) {} }, 1300);
     } catch(e) {}
 
     return true;
@@ -17948,7 +17960,7 @@ handleVoiceAndBeeps();
 }
 
 
-/* ===== HOTFIX v0.0.2.37: responsive header rows (no scale, no cut) ===== */
+/* ===== HOTFIX v0.0.2.38: responsive header rows (no scale, no cut) ===== */
 .app-header .header-mode-row{
   transform: none !important;
   margin: 0 !important;
@@ -17976,7 +17988,7 @@ handleVoiceAndBeeps();
 }
 
 
-/* v0.0.2.37: Header mas alto para que quepa titulo + botones + version */
+/* v0.0.2.38: Header mas alto para que quepa titulo + botones + version */
 .app-header,
 .app-header.live-on,
 .app-header.live-off{
