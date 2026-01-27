@@ -1,10 +1,10 @@
 <!--
-AI_Spotter_TRM_v0.0.1.92 - Vic Skin PRO (volumen, sombras, bordes 3D) -
-Fecha: 2026-01-24
+AI_Spotter_TRM_v0.0.2.41 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.0.2.21: Q TABLA (FIX guardado) (clasificación) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
+- v0.0.2.21: Q TABLA (FIX guardado) (clasificacin) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
 - v0.0.2.23: Fix UX: VOZ responde al primer toque (iOS/Android), debounced LIVE (sin parpadeo), header altura estable (sin salto). UI/TTS only.
 - v0.0.2.17: LapChart watermark restaurada (logo Vic) en fondo del canvas. UI only.
 - v0.0.1.99: Logo header ajustado -5% (reduce height de 88px a 84px) manteniendo 'cover' para recorte del aire.
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.38</title>
+  <title>AI_Spotter_TRM_v0.0.2.41</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -5077,7 +5077,7 @@ body {
 
 
 <style id="version-visibility-fix">
-/* FIX v0.0.2.38: version siempre visible en header */
+/* FIX v0.0.2.41: version siempre visible en header */
 .header-version-row{
   position:absolute !important;
   left:0 !important; right:0 !important; bottom:6px !important;
@@ -5112,7 +5112,7 @@ body {
 <header class="app-header live-off" style="height:165px;min-height:165px;max-height:165px;">
 <div class="header-stack">
         <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">AI Spotter TRM</span></div>
-        <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
+        <div class="header-title-sub" id="raceSubtitle">Turbo Racing Mxico - x-vic!</div>
         
       </div>
 
@@ -5124,13 +5124,13 @@ body {
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
           <button class="header-help header-auto" id="autoSkinBtn" type="button" title="Auto-skin">AUTO</button>
           <button class="header-help header-skin" id="skinBtn" type="button" title="Skin Vic's Pulse Timing">VIC</button>
-          <button class="header-help header-qtable" id="qTableBtn" type="button" title="Q TABLA (clasificación)">Q TABLA</button>
+          <button class="header-help header-qtable" id="qTableBtn" type="button" title="Q TABLA (clasificacin)">Q TABLA</button>
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.38</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.41</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5443,8 +5443,8 @@ body {
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.38</div>
-          <div class="manual-sub">Guía rápida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.41</div>
+          <div class="manual-sub">Gua rpida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
       </div>
@@ -5726,7 +5726,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.38";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.41";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -5961,7 +5961,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.38";
             return;
           } else {
             // Manga: anunciar cierre + Top3 y luego silencio
-            try { __autoAnnounceTop3Summary(r, 'Termin la clasificación'); } catch(e) {}
+            try { __autoAnnounceTop3Summary(r, 'Termin la clasificacin'); } catch(e) {}
             __autoPhase = 'FINISHED';
             __autoCloseStartedMs = now;
             return;
@@ -6062,7 +6062,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.38";
         const top = rows.slice(0,3);
         if (!top.length) return;
 
-        let head = forcedLabel ? String(forcedLabel) : (isManga ? 'Termin la clasificación.' : 'Carrera terminada.');
+        let head = forcedLabel ? String(forcedLabel) : (isManga ? 'Termin la clasificacin.' : 'Carrera terminada.');
         if (!head.endsWith('.')) head += '.';
 
         const part = (row, idx) => {
@@ -8594,7 +8594,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
     // BASIC (Seguimiento) - estabilidad de posicion para evitar jitter/flip-flop
     const basicPosStability = { lastSeenPos: null, candidatePos: null, candidateCount: 0, pendingStablePos: null, lastAnnouncedStablePos: null };
 
-// MANGA (clasificación) - estabilidad de posicin para evitar "flip-flop" por salida escalonada
+// MANGA (clasificacin) - estabilidad de posicin para evitar "flip-flop" por salida escalonada
     const mangaPosStability = { lastSeenPos: null, stablePos: null, stableCount: 0, lastAnnouncedStablePos: null };
     const mangaPosSettle = { active:false, lap:0, dueAt:0, samples:[], lastComputedPos:null };
 
@@ -8772,6 +8772,26 @@ function loadVoiceSettings() {
         }
       } catch (e) {}
     }
+
+
+function hardUnlockAudioPipe(){
+  // iOS: a veces el "primer audio" requiere un micro-sonido para abrir el canal.
+  try{
+    ensureAudioCtx();
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, now);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.02);
+  }catch(e){}
+}
+
 
     function playBeep(kind = 'up') {
       const k = String(kind||'').trim();
@@ -9389,6 +9409,7 @@ let ttsRate = detectDefaultTtsRate();
       ttsTestBtn.addEventListener('click', () => {
         try { setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
         try { ensureAudioCtx(); } catch(e) {}
+        try { hardUnlockAudioPipe(); } catch(e) {}
       try { if (voiceMasterEnabled && isIOSWebKit && isIOSWebKit()) unlockTTSOnce('voice-master'); } catch(e) {}
         try { playBeep('soft'); } catch(e) {}
         try {
@@ -9457,7 +9478,7 @@ let ttsRate = detectDefaultTtsRate();
           [/\bbsico\b/gi, 'b\xe1sico'],
           [/\bclasificaci[o\xf3]n\b/gi, 'clasificaci\xf3n'],
           [/\bclasificacion\b/gi, 'clasificaci\xf3n'],
-          [/\bclasificación\b/gi, 'clasificaci\xf3n'],
+          [/\bclasificacin\b/gi, 'clasificaci\xf3n'],
           [/\bposicion\b/gi, 'posici\xf3n'],
           [/\bposicin\b/gi, 'posici\xf3n'],
           [/\bultima\b/gi, '\xfaltima'],
@@ -9955,11 +9976,23 @@ function __pruneQueueDuringBlock(){
 function forceTtsRecover(reason = ''){
   try{
     if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
-    try { if (typeof window.speechSynthesis.cancel === 'function') window.speechSynthesis.cancel(); } catch(e){}
+
+    // Si estamos tratando de destrabar el motor (unlock), NO mates el utterance
+    try { if (typeof __ttsUnlockInFlight !== 'undefined' && __ttsUnlockInFlight) return; } catch(e) {}
+
+    // "Soft recover": reanuda motor y drena cola sin spamear cancel()
     try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e){}
+
+    // Solo cancela si ya estaba hablando y el motivo es "stuck/idle" (evita romper unlock/primer speak)
+    try {
+      const r = String(reason || '');
+      if (window.speechSynthesis.speaking && (r.includes('stuck') || r.includes('idle') || r.includes('recover'))) {
+        if (typeof window.speechSynthesis.cancel === 'function') if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel();
+      }
+    } catch(e){}
+
     try { speechSpeaking = false; } catch(e){}
     try { __flushSpeechQueueStale(8000); } catch(e){}
-    try { if (typeof unlockTTSOnce === 'function') unlockTTSOnce('recover:' + reason); } catch(e){}
     try { pumpSpeechQueue(); } catch(e){}
   }catch(e){}
 }
@@ -10015,7 +10048,7 @@ function enqueueSpeech(text, opts = {}) {
         if (interrupt) {
           speechQueue.length = 0;
           speechSpeaking = false;
-          try { window.speechSynthesis.cancel(); } catch (e) {}
+          try { if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch (e) {}
         }
 
         const baseRate = (Number.isFinite(ttsRate) ? ttsRate : 1.5);
@@ -10095,7 +10128,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
         clearWd();
         speechWatchdog = setTimeout(() => {
           // watchdog anti-freeze (iOS/Chrome a veces se queda "hablando")
-          try { window.speechSynthesis.cancel(); } catch (e) {}
+          try { if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch (e) {}
           speechSpeaking = false;
           pumpSpeechQueue();
         }, 15000);
@@ -10128,7 +10161,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
             try {
               if (__ttsDidStart) return;
               // Intento de recuperacion suave
-              try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') window.speechSynthesis.cancel(); } catch(e) {}
+              try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch(e) {}
               speechSpeaking = false;
 
               // Reinsertar el mismo mensaje al frente (no se pierde)
@@ -10219,26 +10252,40 @@ function speakWithLaps(_laps, message, opts) {
       try { window.addEventListener('pointerdown', handler, { once:true, passive:true, capture:true }); } catch(e) {}
     }
 
-// Unlock TTS en iOS/WebKit: requiere gesto de usuario y a veces "primera voz" para habilitar speechSynthesis
+// Unlock TTS en iOS/WebKit: requiere gesto del usuario.
+// Nota: NO uses cancel() aqui - en iPhone mata el "primer speak" y obliga a dar 20 taps.
 let __ttsUnlockedOnce = false;
+    let __ttsCancelShieldUntil = 0; // evita cancelar mientras se esta desbloqueando (iPhone)
+
+let __ttsUnlockInFlight = false;
+let __ttsUnlockStartedAt = 0;
 
 function unlockTTSOnce(reason = '') {
   try {
     if (__ttsUnlockedOnce) return true;
     if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
 
-    // Requiere gesto real del usuario (iOS/Android bloquean TTS sin interaccion)
+    // iOS/Android bloquean TTS sin gesto real
     if (!__userGestureUnlocked) return false;
 
     const synth = window.speechSynthesis;
 
-    // Reset suave
-    try { synth.cancel(); } catch(e) {}
+    // Evita spam simultaneo
+    const now = Date.now();
+    if (__ttsUnlockInFlight && (now - (__ttsUnlockStartedAt || 0) < 1200)) return false;
+    __ttsUnlockInFlight = true;
+    __ttsUnlockStartedAt = now;
+
+    // Abre canal de audio (micro-sonido WebAudio)
+    try { hardUnlockAudioPipe(); } catch(e){}
+
+    // En iPhone, esto es lo mas confiable: cancel + resume + speak (en el MISMO gesto)
+    try { __ttsCancelShieldUntil = Date.now() + 1400; } catch(e) {}
+    try { if (typeof synth.cancel === 'function') synth.cancel(); } catch(e) {}
     try { if (typeof synth.resume === 'function') synth.resume(); } catch(e) {}
 
     let didStart = false;
 
-    // Mensaje corto (audible) para destrabar motor en WebKit
     const u = new SpeechSynthesisUtterance('Audio listo');
     u.lang = 'es-MX';
     u.rate = (isFinite(ttsRate) ? ttsRate : 1.5);
@@ -10253,28 +10300,33 @@ function unlockTTSOnce(reason = '') {
       if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
     } catch(e) {}
 
-    // Solo marcamos unlocked si realmente arranca. En iPhone, si falla speak(), no nos quedamos "bloqueados".
-    try { u.onstart = () => { didStart = true; __ttsUnlockedOnce = true; }; } catch(e) {}
-    u.onend = () => { try { if (!didStart) __ttsUnlockedOnce = false; } catch(e) {} };
-    u.onerror = () => { try { __ttsUnlockedOnce = false; } catch(e) {} };
+    u.onstart = () => { didStart = true; __ttsUnlockedOnce = true; __ttsUnlockInFlight = false; };
+    u.onend = () => { try { __ttsUnlockInFlight = false; if (!didStart) __ttsUnlockedOnce = false; } catch(e) {} };
+    u.onerror = () => { try { __ttsUnlockInFlight = false; __ttsUnlockedOnce = false; } catch(e) {} };
 
-    try {
-      synth.speak(u);
-    } catch(e) {
-      try { __ttsUnlockedOnce = false; } catch(e2) {}
-      return false;
-    }
+    try { synth.speak(u); } catch(e) { __ttsUnlockInFlight = false; __ttsUnlockedOnce = false; return false; }
 
-    // Start-guard extra: si en ~1.3s no arrancó, no consideres unlocked
+    // Si no arranco, deja listo para reintento sin obligarte a 20 taps
     try {
-      setTimeout(() => { try { if (!didStart) __ttsUnlockedOnce = false; } catch(e) {} }, 1300);
+      setTimeout(() => {
+        try {
+          if (!didStart) {
+            __ttsUnlockedOnce = false;
+            __ttsUnlockInFlight = false;
+            try { pendingAutoVoiceUnlock = true; } catch(e){}
+            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e){}
+          }
+        } catch(e){}
+      }, 1100);
     } catch(e) {}
 
     return true;
   } catch(e) {
+    try { __ttsUnlockInFlight = false; } catch(e2){}
     return false;
   }
 }
+
 
 function setVoiceMaster(on, opts = {}) {
       
@@ -10293,15 +10345,15 @@ voiceMasterEnabled = !!on;
         try { unlockTTSOnce('voice-master-on'); } catch(e) {}
       }
       if (!voiceMasterEnabled) {
-        try { window.speechSynthesis.cancel(); } catch(e) {}
+        try { if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch(e) {}
         // Importante: si apagas la voz, NO dejes cola acumulada (evita que luego 'escupa todo')
         try { speechQueue.length = 0; } catch(e) {}
         try { speechSpeaking = false; } catch(e) {}
         try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
       } else {
-        // Encendido: intenta recuperar motor y limpia backlog viejo
-        try { forceTtsRecover('voice-master-on'); } catch(e) {}
-      }
+        // Encendido: NO canceles en este punto (iPhone se queda mudo). Solo intenta unlock + drena cola.
+        try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 80); } catch(e) {}
+}
     }
 
       // VOZ: respuesta inmediata al primer toque (iOS/Android).
@@ -10332,8 +10384,8 @@ voiceMasterEnabled = !!on;
         if (voiceMasterEnabled && __voiceBtnNeedsUnlock()){
           try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
           try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
-          try { forceTtsRecover('voice-btn-recover'); } catch(e) {}
           try { unlockTTSOnce('voice-btn-recover'); } catch(e) {}
+          try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 120); } catch(e) {}
           try { showToast('Audio reactivado', 900); } catch(e) {}
           return;
         }
@@ -10346,15 +10398,26 @@ voiceMasterEnabled = !!on;
 
       voiceToggleBtns.forEach(btn => {
         try { btn.style.touchAction = 'manipulation'; } catch(e) {}
-        // IMPORTANTE: no registramos touchstart y pointerdown a la vez (en iOS puede disparar doble y deja el boton en OFF).
+
+        // iPhone: usar CLICK (mas confiable para destrabar TTS).
+        // Otros: pointerdown/touchstart para respuesta rapida y evitar doble toggle.
         try {
-          const evName = (window.PointerEvent ? 'pointerdown' : 'touchstart');
+          const isIOS = (() => {
+            try {
+              return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            } catch(e) { return false; }
+          })();
+
+          const evName = (isIOS ? 'click' : (window.PointerEvent ? 'pointerdown' : 'touchstart'));
           btn.addEventListener(evName, __onVoiceToggle, { passive:false });
+
+          // Evita doble toggle por click fantasma SOLO cuando el handler principal no es click
+          if (evName !== 'click') {
+            try { btn.addEventListener('click', (ev)=>{ try{ev.preventDefault();}catch(e){} }, { passive:false }); } catch(e) {}
+          }
         } catch(e) {
-          try { btn.addEventListener('touchstart', __onVoiceToggle, { passive:false }); } catch(e2) {}
+          try { btn.addEventListener('click', __onVoiceToggle, { passive:false }); } catch(e2) {}
         }
-        // Evita doble toggle por click fantasma
-        try { btn.addEventListener('click', (ev)=>{ try{ev.preventDefault();}catch(e){} }, { passive:false }); } catch(e) {}
       });
 }
 
@@ -10796,7 +10859,7 @@ function toFixedFloor(value, decimals = 0) {
           // Si estuviste fuera un rato y la voz est activa, permitimos re-unlock y reanudamos.
           if (awayMs > 15000 && voiceMasterEnabled) {
             try { __ttsUnlockedOnce = false; } catch(e) {}
-            try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') window.speechSynthesis.cancel(); } catch(e) {}
+            try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch(e) {}
             try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
             try { pendingAutoVoiceUnlock = true; } catch(e) {}
             try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
@@ -11379,7 +11442,7 @@ try {
         ctx.fill();
       };
 
-      // best sesin (Opcin B: desde clasificación visible)
+      // best sesin (Opcin B: desde clasificacin visible)
       const sessionBestMs = computeSessionBestMs ? computeSessionBestMs() : 0;
 
       // errores grandes (rojo): +0.8s vs media o +0.9s vs best (lo que aplique)
@@ -12041,7 +12104,7 @@ let autoNarratorState = {
 // pairKey -> { lastSec, lastSec2, lastMs, lastLap, lastMentionMs }
 let autoPairState = new Map();
 
-// MANGA (clasificación): seguimiento de pole/best lap sin saturar
+// MANGA (clasificacin): seguimiento de pole/best lap sin saturar
 let autoQualiState = {
   bestOverallMs: null,
   bestOverallKey: '',
@@ -13908,7 +13971,7 @@ function autoBuildStoryCandidate(args) {
       ],
 
       qualiBest: [
-        (c) => 'En clasificación, ' + c.pilot + ' marca ' + c.best + '.',
+        (c) => 'En clasificacin, ' + c.pilot + ' marca ' + c.best + '.',
         (c) => 'Tiempo fuerte en quali: ' + c.pilot + ' ' + c.best + '.',
         (c) => 'Clasificacin: ' + c.pilot + ' mejora con ' + c.best + '.',
         (c) => 'Queda el registro. ' + c.pilot + ' con ' + c.best + '.',
@@ -15143,7 +15206,7 @@ if ((voiceSettings.pelea || voiceSettings.attack || voiceSettings.defense) && ba
   if (sc) addCand(sc);
 }
 
-// ====== MANGA (clasificación): pole/best lap (menos ruido, ms sustancia)
+// ====== MANGA (clasificacin): pole/best lap (menos ruido, ms sustancia)
 if (isMangaSess) {
   const wantBest = !!vs.bestlap;
   const wantPoleFight = !!(vs.bestlap || vs.pelea);
@@ -16395,7 +16458,7 @@ let label = 'MODO -';
 
 // =========================
 // FIN DE SESIN (por duracin)
-// - MANGA: 3:00 -> "Termin la clasificación"
+// - MANGA: 3:00 -> "Termin la clasificacin"
 // - FINAL: segn modo (A=6:00, otras=4:00) -> "Carrera terminada" + posicin + resumen
 // Dispara SOLO cuando tu tiempo total cruza el lmite EN UNA NUEVA VUELTA.
 // =========================
@@ -16439,7 +16502,7 @@ function buildSessionFinishMessage(row) {
   const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
   const totalMs = getRowTotalMs(row) || 0;
 
-  let msg = isManga ? 'Termin la clasificación.' : 'Carrera terminada.';
+  let msg = isManga ? 'Termin la clasificacin.' : 'Carrera terminada.';
 
   // Resultado (si sabemos posicin)
   if (posNum > 0) msg += ' P' + posNum + '.';
@@ -16771,7 +16834,7 @@ function checkSessionFinishOnLap() {
             return; // ignorar tick cero
           }
         } catch(e) {}
-        // Q TABLA: snapshot de clasificación (UI only)
+        // Q TABLA: snapshot de clasificacin (UI only)
         try { recordQualiSnapshotIfNeeded(rawRace); } catch(e) {}
 raceData = normalizeRaceData(rawRace);
         updateLapHistoryAll();
@@ -17960,7 +18023,7 @@ handleVoiceAndBeeps();
 }
 
 
-/* ===== HOTFIX v0.0.2.38: responsive header rows (no scale, no cut) ===== */
+/* ===== HOTFIX v0.0.2.41: responsive header rows (no scale, no cut) ===== */
 .app-header .header-mode-row{
   transform: none !important;
   margin: 0 !important;
@@ -17988,7 +18051,7 @@ handleVoiceAndBeeps();
 }
 
 
-/* v0.0.2.38: Header mas alto para que quepa titulo + botones + version */
+/* v0.0.2.41: Header mas alto para que quepa titulo + botones + version */
 .app-header,
 .app-header.live-on,
 .app-header.live-off{
@@ -18006,7 +18069,7 @@ handleVoiceAndBeeps();
 
   <!-- Q TABLA (Clasificacin) -->
   <div class="manual-backdrop" id="qualiBackdrop" aria-hidden="true">
-    <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Tabla general de clasificación">
+    <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Tabla general de clasificacin">
       <div class="manual-top">
         <div>
           <div class="manual-title">Clasificacin del da</div>
