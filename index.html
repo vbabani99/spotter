@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.42 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.45 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.42</title>
+  <title>AI_Spotter_TRM_v0.0.2.45</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -5130,7 +5130,7 @@ body {
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.42</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.45</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5726,7 +5726,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.42";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.45";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10077,6 +10077,9 @@ function enqueueSpeech(text, opts = {}) {
 
         if (speechSpeaking || window.speechSynthesis.speaking) return;
 
+        // Si el TTS esta bloqueado y esperando tap, no intentes hablar (evita loops y 20 taps).
+        if (pendingAutoVoiceUnlock) return;
+
         const next = speechQueue.shift();
         if (!next) return;
 
@@ -10161,7 +10164,12 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
             try {
               if (__ttsDidStart) return;
               // Intento de recuperacion suave
-              try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch(e) {}
+              try {
+                if (!pendingAutoVoiceUnlock && window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') {
+                  const ss = window.speechSynthesis;
+                  if ((ss.speaking || ss.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) ss.cancel();
+                }
+              } catch(e) {}
               speechSpeaking = false;
 
               // Reinsertar el mismo mensaje al frente (no se pierde)
@@ -10237,20 +10245,35 @@ function speakWithLaps(_laps, message, opts) {
       const ua = navigator.userAgent || '';
       return /iPad|iPhone|iPod/i.test(ua);
     }
-    function scheduleOneTapUnlock() {
-      // iOS/Chrome (WebKit) a veces no suelta TTS hasta un tap extra.
-      const handler = () => {
-        if (!pendingAutoVoiceUnlock) return;
-        pendingAutoVoiceUnlock = false;
-        try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
-        // aqui hacemos unlock completo (sin backlog)
-        try { setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
-        try { forceTtsRecover('one-tap'); } catch(e) {}
-        try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
-      };
-      try { window.addEventListener('touchstart', handler, { once:true, passive:true, capture:true }); } catch(e) {}
-      try { window.addEventListener('pointerdown', handler, { once:true, passive:true, capture:true }); } catch(e) {}
-    }
+    let __oneTapUnlockArmed = false;
+let __oneTapUnlockLastAt = 0;
+
+function scheduleOneTapUnlock() {
+  // iOS/WebKit: a veces el TTS queda "mudo" tras sleep/background.
+  // Queremos 1 tap para reactivar, PERO sin robarle el tap a los botones (no preventDefault/stopPropagation).
+  try { if (__oneTapUnlockArmed) return; } catch(e) {}
+  try { __oneTapUnlockArmed = true; } catch(e) {}
+
+  const handler = (ev) => {
+    try { __oneTapUnlockArmed = false; __oneTapUnlockLastAt = Date.now(); } catch(e) {}
+    if (!pendingAutoVoiceUnlock) return;
+
+    // Este tap cuenta como gesto: abrimos WebAudio + intentamos unlock TTS.
+    try { __userGestureUnlocked = true; } catch(e) {}
+    try { ensureAudioCtx(); } catch(e) {}
+    try { hardUnlockAudioPipe(); } catch(e) {}
+
+    // Intento de desbloqueo (no toca el toggle de VOZ; eso lo decide el boton).
+    try { unlockTTSOnce('one-tap'); } catch(e) {}
+    try { forceTtsRecover('one-tap'); } catch(e) {}
+
+    // Si siguio bloqueado, armamos otro tap (sin tragarnos el toque).
+    try { if (pendingAutoVoiceUnlock) scheduleOneTapUnlock(); } catch(e) {}
+  };
+
+  try { window.addEventListener('pointerdown', handler, { once:true, passive:true, capture:true }); } catch(e) {}
+  try { window.addEventListener('touchstart',  handler, { once:true, passive:true, capture:true }); } catch(e) {}
+}
 
 // Unlock TTS en iOS/WebKit: requiere gesto del usuario.
 // Nota: NO uses cancel() aqui - en iPhone mata el "primer speak" y obliga a dar 20 taps.
@@ -10261,79 +10284,134 @@ let __ttsUnlockInFlight = false;
 let __ttsUnlockStartedAt = 0;
 
 function unlockTTSOnce(reason = '') {
-  try {
-    if (__ttsUnlockedOnce) return true;
-    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
+      try {
+        if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
+        if (!voiceMasterEnabled) return false;
 
-    // iOS/Android bloquean TTS sin gesto real
-    if (!__userGestureUnlocked) return false;
+        // Si ya se desbloqueo en esta sesion, solo reanuda y sigue.
+        if (__ttsUnlockedOnce) {
+          try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+          try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+          try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+          return true;
+        }
 
-    const synth = window.speechSynthesis;
+        const now = Date.now();
 
-    // Evita spam simultaneo
-    const now = Date.now();
-    if (__ttsUnlockInFlight && (now - (__ttsUnlockStartedAt || 0) < 1200)) return false;
-    __ttsUnlockInFlight = true;
-    __ttsUnlockStartedAt = now;
-
-    // Abre canal de audio (micro-sonido WebAudio)
-    try { hardUnlockAudioPipe(); } catch(e){}
-
-    // En iPhone, esto es lo mas confiable: cancel + resume + speak (en el MISMO gesto)
-    try { __ttsCancelShieldUntil = Date.now() + 1400; } catch(e) {}
-    try { if (typeof synth.cancel === 'function') synth.cancel(); } catch(e) {}
-    try { if (typeof synth.resume === 'function') synth.resume(); } catch(e) {}
-
-    let didStart = false;
-
-    const u = new SpeechSynthesisUtterance('Audio listo');
-    u.lang = 'es-MX';
-    u.rate = (isFinite(ttsRate) ? ttsRate : 1.5);
-    u.pitch = 1.0;
-    u.volume = 1.0;
-
-    try {
-      const voices = (synth.getVoices ? synth.getVoices() : []) || [];
-      let v = null;
-      if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI) || null;
-      if (!v) v = pickDefaultVoice(voices);
-      if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
-    } catch(e) {}
-
-    u.onstart = () => { didStart = true; __ttsUnlockedOnce = true; __ttsUnlockInFlight = false; };
-    u.onend = () => { try { __ttsUnlockInFlight = false; if (!didStart) __ttsUnlockedOnce = false; } catch(e) {} };
-    u.onerror = () => { try { __ttsUnlockInFlight = false; __ttsUnlockedOnce = false; } catch(e) {} };
-
-    try { synth.speak(u); } catch(e) { __ttsUnlockInFlight = false; __ttsUnlockedOnce = false; return false; }
-
-    // Si no arranco, deja listo para reintento sin obligarte a 20 taps
-    try {
-      setTimeout(() => {
+        // Anti-spam: evita 20 taps que disparen 20 unlocks en paralelo.
         try {
-          if (!didStart) {
-            __ttsUnlockedOnce = false;
-            __ttsUnlockInFlight = false;
-            try { pendingAutoVoiceUnlock = true; } catch(e){}
-            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e){}
-          }
-        } catch(e){}
-      }, 1100);
-    } catch(e) {}
+          if (__ttsUnlockInFlight && (now - (__ttsUnlockStartedAt || 0)) < 1800) return false;
+        } catch(e) {}
 
-    return true;
-  } catch(e) {
-    try { __ttsUnlockInFlight = false; } catch(e2){}
-    return false;
-  }
-}
+        try { __ttsUnlockInFlight = true; __ttsUnlockStartedAt = now; } catch(e) {}
+
+        // Gesto de usuario + WebAudio (iOS)
+        try { __userGestureUnlocked = true; } catch(e) {}
+        try { ensureAudioCtx(); } catch(e) {}
+        try { hardUnlockAudioPipe(); } catch(e) {}
+
+        const synth = window.speechSynthesis;
+
+        // Resume suave
+        try { if (typeof synth.resume === 'function') synth.resume(); } catch(e) {}
+
+        // NO canceles siempre: en iPhone a veces lo empeora.
+        // Solo si estaba hablando o pendiente.
+        try {
+          if ((synth.speaking || synth.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) {
+            __ttsCancelShieldUntil = Date.now() + 1200;
+            if (typeof synth.cancel === 'function') synth.cancel();
+            if (typeof synth.resume === 'function') synth.resume();
+          }
+        } catch(e) {}
+
+        let didStart = false;
+
+        const u = new SpeechSynthesisUtterance('Audio listo');
+        u.lang = 'es-MX';
+        u.rate = clampNum((isFinite(ttsRate) ? ttsRate : 1.5), 0.8, 2.0);
+        u.pitch = 1.0;
+        // Casi inaudible: desbloquea sin gritarte "AUDIO LISTO" cada vez.
+        u.volume = 0.35;
+
+        try {
+          u.onstart = () => {
+            didStart = true;
+            try { __ttsUnlockedOnce = true; } catch(e) {}
+            try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
+
+            // Ahora SI: ya arranco el motor, limpiamos estado de bloqueo.
+            try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+
+            try { showToast('Audio listo', 900); } catch(e) {}
+            try { pumpSpeechQueue(); } catch(e) {}
+          };
+        } catch(e) {}
+
+        const finishFail = () => {
+          try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
+          // Seguimos marcando bloqueo: requiere otro tap
+          try { pendingAutoVoiceUnlock = true; } catch(e) {}
+          try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+          try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
+        };
+
+        try { u.onend = () => { if (!didStart) finishFail(); }; } catch(e) {}
+        try { u.onerror = () => { finishFail(); }; } catch(e) {}
+
+        // Respetar voz elegida (si existe)
+        try {
+          const voices = synth.getVoices ? synth.getVoices() : [];
+          if (voices && voices.length) {
+            let v = null;
+            if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
+            if (!v) v = pickDefaultVoice(voices);
+            if (v) {
+              u.voice = v;
+              if (v.lang) u.lang = v.lang;
+            }
+          }
+        } catch(e) {}
+
+        try {
+          synth.speak(u);
+        } catch(e) {
+          try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(ex) {}
+          return false;
+        }
+
+        // Watchdog: si no arranca rapido, marcamos bloqueo y pedimos otro tap.
+        try {
+          setTimeout(() => {
+            try {
+              if (__ttsUnlockedOnce) return;
+              if (didStart) return;
+              finishFail();
+            } catch(e) {}
+          }, 900);
+        } catch(e) {}
+
+        return true;
+      } catch (e) {
+        try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(ex) {}
+        return false;
+      }
+    }
 
 
 function setVoiceMaster(on, opts = {}) {
       
-      // cualquier unlock pendiente se resuelve aqu
-      pendingAutoVoiceUnlock = false;
-      try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
-voiceMasterEnabled = !!on;
+      const turningOn = !!on;
+
+      // Si apagamos VOZ: limpiamos todo.
+      // Si prendemos VOZ: NO borres 'needs-unlock' hasta que el motor realmente arranque (onstart).
+      if (!turningOn) {
+        try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+        try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+      }
+
+      voiceMasterEnabled = turningOn;
       try { prefSet('voiceMasterEnabled', voiceMasterEnabled ? '1' : '0'); } catch(e) {}
       try { voiceToggleBtns.forEach(b => b.classList.toggle('voice-on', voiceMasterEnabled)); } catch(e) {}
       try { voiceToggleBtns.forEach(b => b.textContent = voiceMasterEnabled ? ' VOZ ACTIVA' : ' ACTIVAR VOZ'); } catch(e) {}
@@ -10382,11 +10460,11 @@ voiceMasterEnabled = !!on;
 
         // Si esta ON pero bloqueado, solo reactivamos (no toggle OFF)
         if (voiceMasterEnabled && __voiceBtnNeedsUnlock()){
-          try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
-          try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+          // No limpies needs-unlock aqui. Se limpia solo cuando el motor realmente arranca (onstart).
           try { unlockTTSOnce('voice-btn-recover'); } catch(e) {}
+          try { forceTtsRecover('voice-btn-recover'); } catch(e) {}
           try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 120); } catch(e) {}
-          try { showToast('Audio reactivado', 900); } catch(e) {}
+          try { showToast('Reactivando audio...', 900); } catch(e) {}
           return;
         }
 
@@ -10842,28 +10920,45 @@ function toFixedFloor(value, decimals = 0) {
       try {
         if (document.visibilityState === 'hidden') {
           __visHiddenAt = Date.now();
+
+          // iPhone: al apagar pantalla, el motor de voz puede quedar "bloqueado".
+          if (voiceMasterEnabled) {
+            try { __ttsUnlockedOnce = false; } catch(e) {}
+            try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
+            try { pendingAutoVoiceUnlock = true; } catch(e) {}
+            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+          }
           return;
         }
+
         if (document.visibilityState === 'visible') {
           const awayMs = __visHiddenAt ? (Date.now() - __visHiddenAt) : 0;
 
           // forzar refresh inmediato al regresar
           try { loadRaceFromFirebase(); } catch(e) {}
 
-          // Reintentar wake lock si estaba ON
-          if (wakeLockToggle && wakeLockToggle.classList.contains('active')) {
-            await requestWakeLock();
-          }
+          // Reintentar wake lock si estaba ON (o si la voz esta ON)
+          try {
+            if (wakeLockToggle && wakeLockToggle.classList.contains('active')) {
+              await requestWakeLock();
+            } else if (voiceMasterEnabled) {
+              await requestWakeLock();
+            }
+          } catch(e) {}
 
-          // Recovery TTS post-idle: algunas veces Safari/Chrome "olvida" el motor de voz al volver.
-          // Si estuviste fuera un rato y la voz est activa, permitimos re-unlock y reanudamos.
-          if (awayMs > 15000 && voiceMasterEnabled) {
+          // Recovery TTS: en iPhone a veces se rompe aunque hayas estado fuera poquito.
+          if (voiceMasterEnabled) {
             try { __ttsUnlockedOnce = false; } catch(e) {}
-            try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch(e) {}
             try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+            try { confirmVoiceButtons && confirmVoiceButtons(); } catch(e) {}
             try { pendingAutoVoiceUnlock = true; } catch(e) {}
             try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
-            try { showToast('Regresaste. Si no habla, toca la pantalla para reactivar audio', 2000); } catch(e) {}
+            try {
+              const msg = (awayMs > 3000)
+                ? 'Volviste. Un tap y el audio revive.'
+                : 'Si el iPhone se quedo mudo, toca una vez.';
+              showToast(msg, 2200);
+            } catch(e) {}
             try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
           }
         }
@@ -10871,7 +10966,18 @@ function toFixedFloor(value, decimals = 0) {
 
     });
 
-    // KeepAlive: intenta mantener TTS vivo cuando el tab queda oculto (Chrome/Android/Safari)
+    
+    // iOS: al volver desde sleep/bfcache, forzar reenganche de audio con un solo tap
+    try {
+      window.addEventListener('pageshow', () => {
+        try { if (voiceMasterEnabled) { __ttsUnlockedOnce = false; pendingAutoVoiceUnlock = true; if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } } catch(e) {}
+        try { if (wakeLockToggle && wakeLockToggle.classList.contains('active')) requestWakeLock().catch(()=>{}); } catch(e) {}
+      }, { passive:true });
+      window.addEventListener('pagehide', () => {
+        try { if (voiceMasterEnabled) { __ttsUnlockedOnce = false; pendingAutoVoiceUnlock = true; } } catch(e) {}
+      }, { passive:true });
+    } catch(e) {}
+// KeepAlive: intenta mantener TTS vivo cuando el tab queda oculto (Chrome/Android/Safari)
     // Nota honesta: iOS puede pausar TTS si cambias de app o apagas pantalla. Para hablar "siempre",
     // deja la app al frente y la pantalla encendida (WakeLock ya va ON).
     let __bgKeepAliveTimer = 0;
