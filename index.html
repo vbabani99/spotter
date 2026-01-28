@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.49 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.50 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.49</title>
+  <title>AI_Spotter_TRM_v0.0.2.50</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -5107,7 +5107,7 @@ body {
 
 
 <style id="header-compat-fix">
-/* v0.0.2.49 - header compatibility hardening */
+/* v0.0.2.50 - header compatibility hardening */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Avoid fixed-height traps (especially iOS with large text / dynamic viewport) */
@@ -5149,7 +5149,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.49</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.50</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5745,7 +5745,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.49";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.50";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -18173,7 +18173,7 @@ handleVoiceAndBeeps();
 }
 
 
-/* v0.0.2.49 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
+/* v0.0.2.50 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
 html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .app-header,
 .app-header.live-on,
@@ -18221,6 +18221,32 @@ html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   .app-header .header-actions-row{ gap: 5px !important; row-gap: 5px !important; }
   .app-header .header-title-main{ font-size: 18px !important; }
 }
+
+
+/* --- FINAL HEADER OVERRIDES (iOS Safari stability) --- */
+html, body{
+  -webkit-text-size-adjust: 100% !important;
+  text-size-adjust: 100% !important;
+}
+
+/* Center button rows always (Safari was forcing flex-start somewhere) */
+.app-header .header-actions-row{
+  justify-content: center !important;
+  align-content: center !important;
+  flex-wrap: wrap !important;
+  padding: 0 !important;
+  row-gap: 8px !important;
+}
+
+/* Buttons: never stretch, never wrap text */
+.app-header .header-actions-row button.header-help{
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+
+/* Make sure the version row never overlaps controls */
+.app-header .header-controls{ margin-bottom: 2px !important; }
+.app-header .header-version-row{ margin-top: 2px !important; }
 </style>
 
 <div class="toast" id="toast"></div>
