@@ -1,10 +1,10 @@
 <!--
-AI_Spotter_TRM_v0.0.2.51 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.52 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.0.2.21: Q TABLA (FIX guardado) (clasificación) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
+- v0.0.2.21: Q TABLA (FIX guardado) (clasificacin) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
 - v0.0.2.23: Fix UX: VOZ responde al primer toque (iOS/Android), debounced LIVE (sin parpadeo), header altura estable (sin salto). UI/TTS only.
 - v0.0.2.17: LapChart watermark restaurada (logo Vic) en fondo del canvas. UI only.
 - v0.0.1.99: Logo header ajustado -5% (reduce height de 88px a 84px) manteniendo 'cover' para recorte del aire.
@@ -56,10 +56,30 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.51</title>
+  <title>AI_Spotter_TRM_v0.0.2.52</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <style>
-    html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<style id="appStyles">
+
+
+/* ============================================================
+   CONSOLIDATED CSS (v0.0.2.52)
+   - Original style blocks merged in source order (no behavior change intended).
+   ============================================================ */
+
+html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
     body{ color-scheme: dark; }
 
     :root{
@@ -5053,9 +5073,8 @@ body {
       background: transparent;
     }
 
-</style>
+/* ---- merged block ---- */
 
-<style id="logo-size-override">
 /* Logo size override (keeps aspect ratio, fills header area) */
 .header-top{ margin-bottom: 8px !important; }
 .header-logo{ width: 100% !important; display:flex !important; justify-content:center !important; align-items:center !important; overflow: visible !important; }
@@ -5073,10 +5092,9 @@ body {
     max-width: min(420px, 92vw) !important;
   }
 }
-</style>
 
+/* ---- merged block ---- */
 
-<style id="version-visibility-fix">
 /* FIX v0.0.2.41: version siempre visible en header */
 .header-version-row{
   position:absolute !important;
@@ -5103,11 +5121,10 @@ body {
   opacity:.96 !important;
   color: rgba(255,255,255,0.90) !important;
 }
-</style>
 
+/* ---- merged block ---- */
 
-<style id="header-compat-fix">
-/* v0.0.2.51 - header compatibility hardening */
+/* v0.0.2.52 - header compatibility hardening */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Avoid fixed-height traps (especially iOS with large text / dynamic viewport) */
@@ -5122,11 +5139,10 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Ensure header can position debug badge safely */
 .app-header { position: relative; }
-</style>
 
+/* ---- merged block ---- */
 
-<style id="hdr-canon-0_0_2_51">
-/* HEADER CANON v0.0.2.51 - iOS Safari/Chrome consistent */
+/* HEADER CANON v0.0.2.52 - iOS Safari/Chrome consistent */
 html, body {
   -webkit-text-size-adjust: 100% !important;
   text-size-adjust: 100% !important;
@@ -5184,6 +5200,711 @@ html, body {
   max-width: 100%;
 }
 
+/* ---- merged block ---- */
+
+.toast{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+    background: rgba(0,0,0,0.72); color: rgba(255,255,255,0.92);
+    border:1px solid rgba(255,255,255,0.14); border-radius: 999px;
+    padding: 8px 14px; font-weight: 800; letter-spacing: .04em;
+    z-index: 99999; opacity:0; pointer-events:none; transition: opacity .18s ease, transform .18s ease;
+  }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(-4px); }
+
+
+    /* --- Header layout refresh (v0.0.1.43) --- */
+    .app-header{
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 8px !important;
+      padding: 10px 12px !important;
+      height: auto !important;
+      max-height: none !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+    }
+    .app-header .header-left,
+    .app-header .header-right{
+      display: none !important;
+    }
+
+    /* Header PRO (logo arriba, titulo grande, jerarquia clara) */
+    .app-header{
+      padding: 14px 16px;
+    }
+
+    .header-top{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .header-logo{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: auto;
+    }
+    .header-logo img{
+      max-height: 110px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.55)) drop-shadow(0 0 14px rgba(0,255,163,0.18));
+    }
+
+    .header-stack{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .header-title-main{
+      width: 100%;
+      max-width: 980px;
+      padding: 0 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #raceTitleText{
+      max-width: 100%;
+      width: auto;
+      flex: 1 1 auto;
+      font-size: clamp(20px, 6.2vw, 32px);
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.55);
+      max-height: none;
+      -webkit-line-clamp: 3;
+    }
+
+    .header-mode-row{
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 2px;
+    }
+    .badge-mode{
+      font-size: clamp(12px, 3.4vw, 14px);
+      padding: 6px 12px;
+      border-radius: 999px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    }
+
+    .app-header .header-title-sub{
+      width: 100%;
+      max-width: 980px;
+      font-size: clamp(12px, 3.8vw, 16px);
+      opacity: 0.92;
+      white-space: normal;
+      padding: 0 8px;
+      letter-spacing: 0.08em;
+    }
+    #raceSubtitle{
+      max-width: 100%;
+      width: auto;
+      font-size: inherit;
+    }
+
+    .header-subline{
+      width: 100%;
+      max-width: 980px;
+      font-size: clamp(12px, 3.3vw, 14px);
+      opacity: 0.92;
+      white-space: normal;
+      padding: 0 8px;
+    }
+    .header-mini{
+      width: 100%;
+      max-width: 980px;
+      font-size: clamp(11px, 3.0vw, 12px);
+      opacity: 0.72;
+      padding: 0 8px;
+    }
+
+    .header-controls{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .header-actions-row{
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 980px;
+    }
+
+    .header-version{
+      width: 100%;
+      text-align: center;
+      font-size: 11px;
+      opacity: 0.70;
+      padding-top: 6px;
+    }
+
+    @media (max-width: 420px){
+      .app-header{ padding: 12px 10px !important; }
+      .header-actions-row{ gap: 6px; }
+      .header-logo img{ max-height: 96px; }
+      #raceTitleText{ font-size: clamp(22px, 7.2vw, 30px); }
+      .badge-mode{ padding: 6px 10px; }
+      .app-header .header-title-sub{ letter-spacing: 0.06em; }
+    }
+
+    @media (max-width: 360px){
+      #raceTitleText{ font-size: clamp(20px, 7.8vw, 28px); }
+      .header-logo img{ max-height: 90px; }
+    }
+
+    @media (min-width: 900px){
+      .header-logo img{ max-height: 124px; }
+      #raceTitleText{ font-size: clamp(24px, 3.2vw, 34px); }
+    }
+
+
+/* v0.0.1.47 - Header compact: fixed height 250px (without breaking logic) */
+.app-header{
+  height: 250px !important;
+  min-height: 250px !important;
+  max-height: 250px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  overflow: hidden !important;
+}
+
+.header-top{ margin-bottom: 2px !important; }
+
+.header-logo img{
+  max-height: 80px !important;
+  width: auto !important;
+}
+
+.header-stack{
+  width: 100% !important;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  overflow: visible !important;
+  z-index: 2 !important;
+}
+
+.header-title-main{
+  margin: 0 !important;
+  line-height: 1.05 !important;
+}
+#raceTitleText{
+  font-size: clamp(14px, 4.0vw, 22px) !important;
+  letter-spacing: 0.5px !important;
+  -webkit-line-clamp: 2 !important;
+}
+
+.header-mode-row{ margin-top: 2px !important; }
+
+#raceModeRow{ width: 100% !important; display:flex !important; justify-content:center !important; z-index: 3 !important; }
+#raceModeBadge{ font-size: 12px !important; height: 28px !important; padding: 0 14px !important; background: rgba(0,0,0,0.35) !important; border-color: rgba(255,255,255,0.28) !important; color: rgba(255,255,255,0.96) !important; text-shadow: 0 2px 10px rgba(0,0,0,0.65) !important; }
+
+.header-title-sub{
+  margin-top: 0 !important;
+  font-size: clamp(10px, 2.6vw, 12px) !important;
+  line-height: 1.1 !important;
+  max-width: 100% !important;
+}
+
+.header-subline{
+  font-size: clamp(11px, 2.8vw, 13px) !important;
+  line-height: 1.15 !important;
+}
+
+.header-mini{
+  font-size: 10px !important;
+  opacity: 0.85 !important;
+}
+
+.header-controls{
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin-top: 8px !important;
+  z-index: 1 !important;
+}
+
+.header-actions-row{
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+}
+
+.header-version{
+  margin-top: auto !important;
+  padding-top: 4px !important;
+  font-size: 10px !important;
+  opacity: 0.75 !important;
+  text-align: center !important;
+}
+
+/* v0.0.1.52 - Force race mode badge visibility and contrast */
+#raceModeRow{
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 5;
+}
+#raceModeBadge{
+  display: inline-flex !important;
+  min-height: 28px;
+  padding: 6px 14px;
+}
+
+
+/* ===== Header controls: force single row (LIVE + MODO + buttons) ===== */
+:root{
+  --hdrCtrlH: 22px;
+  --hdrCtrlFont: 9px;
+  --hdrCtrlPadX: 6px;
+  --hdrCtrlGap: 4px;
+  --hdrCtrlW: 60px;
+}
+.header-controls{
+  width: 100% !important;
+  margin-top: 6px !important;
+}
+.header-actions-row{
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: var(--hdrCtrlGap) !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+.header-actions-row > *{
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+}
+.header-actions-row button.header-help{
+  height: var(--hdrCtrlH) !important;
+  padding: 0 var(--hdrCtrlPadX) !important;
+  font-size: var(--hdrCtrlFont) !important;
+  line-height: 1 !important;
+  border-radius: 12px !important;
+  white-space: nowrap !important;
+  min-width: var(--hdrCtrlW) !important;
+  width: var(--hdrCtrlW) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+#raceModeRow{
+  height: var(--hdrCtrlH) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+#raceModeBadge.badge-mode{
+  height: var(--hdrCtrlH) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 var(--hdrCtrlPadX) !important;
+  font-size: var(--hdrCtrlFont) !important;
+  line-height: 1 !important;
+  border-radius: 12px !important;
+  white-space: nowrap !important;
+}
+#liveIndicator.badge-live{
+  height: var(--hdrCtrlH) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 var(--hdrCtrlPadX) !important;
+  font-size: var(--hdrCtrlFont) !important;
+  line-height: 1 !important;
+  border-radius: 12px !important;
+  white-space: nowrap !important;
+  min-width: var(--hdrCtrlW) !important;
+  width: var(--hdrCtrlW) !important;
+  justify-content: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Kill any scaling that could hide controls */
+.app-header .header-controls{ transform: none !important; }
+
+@media (max-width: 420px){
+  :root{
+    --hdrCtrlH: 26px;
+    --hdrCtrlFont: 12px;
+    --hdrCtrlPadX: 10px;
+    --hdrCtrlGap: 6px;
+  }
+  .header-actions-row{
+    justify-content: flex-start !important;
+    padding: 0 6px !important;
+  }
+}
+/* ===== /Header controls ===== */
+
+
+/* v0.0.1.69 tweak: header-stack 50px, keep subtitle visible */
+.header-stack{height:50px !important; max-height:50px !important; overflow:visible !important;}
+#raceTitleText{font-size: clamp(14px, 4.0vw, 22px) !important; line-height:1.05 !important;}
+#raceSubtitle{font-size: 9px !important; line-height:1.0 !important; margin-top:-4px !important; opacity:0.78 !important;}
+.header-controls{margin-top:6px !important;}
+.header-actions-row{gap:6px !important;}
+
+
+/* v0.0.1.78 - tighten header-title-sub to 8px height */
+.header-title-sub{
+  height:8px !important;
+  min-height:8px !important;
+  line-height:8px !important;
+  overflow:hidden !important;
+  margin:0 !important;
+  padding:0 !important;
+  display:block !important;
+}
+
+/* ---- LOGO OVERRIDE (v0.0.1.96) ---- */
+.header-logo img{
+  width: auto !important;
+  height: 96px !important;
+  max-height: 96px !important;
+  max-width: 95% !important;
+  object-fit: contain !important;
+}
+@media (max-width: 520px){
+  .header-logo img{
+    height: 72px !important;
+    max-height: 72px !important;
+    max-width: 96% !important;
+  }
+}
+
+
+/* ====== v0.0.2.12 logo fit (no crop, bigger, moved down) ====== */
+.app-header .header-logo{
+  height: 110px !important;
+  min-height: 110px !important;
+  overflow: visible !important; /* allow full logo, no clipping */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-top: 6px !important;
+}
+.app-header .header-logo img{
+  width: min(620px, 96%) !important;
+  height: 100% !important;
+  max-height: none !important;
+  max-width: none !important;
+  object-fit: contain !important; /* never crop */
+  transform: translateY(10px) scale(1.00) !important; /* move down 10px */
+  transform-origin: center center !important;
+  filter: drop-shadow(0 0 10px rgba(0,0,0,0.35)) !important;
+}
+@media (max-width: 520px){
+  .app-header .header-logo{
+    height: 84px !important;
+    min-height: 84px !important;
+    padding-top: 4px !important;
+  }
+  .app-header .header-logo img{
+    width: 96% !important;
+    transform: translateY(8px) scale(1.00) !important;
+  }
+}
+
+/* v0.0.2.12 - Header: altura estable (sin salto al cambiar LIVE) */
+.app-header{
+  height: 165px !important;
+  min-height: 165px !important;
+  max-height: 165px !important;
+  padding: 12px 14px !important;
+}
+.app-header.live-on,
+.app-header.live-off{
+  height: 165px !important;
+  min-height: 165px !important;
+  max-height: 165px !important;
+}
+.header-stack{ flex: 0 0 auto !important; }
+.header-controls{ margin-top: 6px !important; }
+.header-version{ padding-top: 4px !important; }
+
+
+/* =========================
+   Q TABLA (Clasificacin) - UI only
+   ========================= */
+.header-help.header-qtable{ letter-spacing: .35px; font-weight: 900; }
+
+#qualiBackdrop .manual-panel{
+  width: min(880px, 100%);
+  padding: 10px;
+  border-radius: 16px;
+}
+#qualiBackdrop .manual-title{ font-size: 15px; }
+#qualiBackdrop .manual-sub{ font-size: 10.5px; }
+
+#qualiBackdrop .qmeta{ display:flex; flex-wrap:wrap; gap:6px; margin: 0 0 8px 0; }
+#qualiBackdrop .qchip{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 5px 9px; font-size: 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.22);
+  background: rgba(0,0,0,0.18);
+  color: var(--text-main);
+  font-weight: 900;
+}
+#qualiBackdrop .qsel{
+  padding: 5px 7px; font-size: 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,0.22);
+  background: rgba(0,0,0,0.22);
+  color: var(--text-main);
+  outline: none;
+}
+#qualiBackdrop .qtable-wrap{
+  overflow:auto;
+  max-height: 60vh;
+  border-radius: 12px;
+  border: 1px solid rgba(148,163,184,0.14);
+  background: rgba(0,0,0,0.14);
+}
+#qualiBackdrop .qtable{
+  font-size: 11px;
+  min-width: 720px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+#qualiBackdrop .qtable th, #qualiBackdrop .qtable td{
+  padding: 6px 7px;
+  vertical-align: top;
+}
+#qualiBackdrop .qtable th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(8,10,15,0.96);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(148,163,184,0.18);
+}
+#qualiBackdrop .qtable tbody tr:nth-child(even) td{
+  background: rgba(255,255,255,0.015);
+}
+#qualiBackdrop .qcol-pos{ width: 46px; }
+#qualiBackdrop .qcol-name{ width: 210px; }
+#qualiBackdrop .qcol-q{ width: 58px; }
+#qualiBackdrop .qcol-laps{ width: 82px; }
+#qualiBackdrop .qcol-time{ width: 128px; }
+#qualiBackdrop .qmain{ white-space: nowrap; }
+#qualiBackdrop .qtag{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .3px;
+  border: 1px solid rgba(255,122,24,0.35);
+  background: rgba(255,122,24,0.10);
+  color: rgba(242,245,255,0.95);
+  margin-bottom: 3px;
+}
+#qualiBackdrop td.qcell-best{
+  background: rgba(0, 255, 160, 0.07);
+  box-shadow: inset 2px 0 0 rgba(0,255,160,0.55);
+}
+#qualiBackdrop td.qcell-empty{
+  color: rgba(163,173,189,0.65);
+}
+
+
+/* =========================
+   HARD OVERRIDES v0.0.2.26
+   - Corrige "brinco" del header y recortes en iPhone 12
+   - Ajusta header-mode-row sin scale (wrap responsive)
+   - Top banner siempre responsivo (no desaparece)
+========================= */
+.top-banner-placeholder{
+  width: 440px !important;
+  max-width: 440px !important;
+  min-width: 440px !important;
+  height: 145px !important;
+  margin: 10px auto 8px auto !important;
+  background: rgba(8,10,15,0.55) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.05) !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+@media (max-width: 460px){
+  .top-banner-placeholder{
+    width: min(440px, 100%) !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+.top-banner-placeholder .top-banner-logo{
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display:block !important;
+}
+
+/* Header: misma altura siempre (evita que abra grande y luego se encoja) */
+.app-header,
+.app-header.live-on,
+.app-header.live-off{
+  height: 165px !important;
+  min-height: 165px !important;
+  max-height: 165px !important;
+}
+
+/* El modo/controles se adaptan al ancho real, sin transform que recorta */
+.app-header .header-mode-row{
+  transform: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+  display:flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 6px 8px !important;
+  overflow: visible !important;
+}
+
+/* En pantallas chicas: reduce gap y permite 2 renglones sin cortar */
+@media (max-width: 420px){
+  .app-header .header-mode-row{ gap: 5px 6px !important; }
+  .app-header .header-mode-row .btn-pill,
+  .app-header .header-mode-row .spotter-btn{
+    padding: 7px 10px !important;
+    min-width: 64px !important;
+  }
+}
+
+
+/* ===== HOTFIX v0.0.2.41: responsive header rows (no scale, no cut) ===== */
+.app-header .header-mode-row{
+  transform: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 6px 8px !important;
+}
+.app-header .header-controls{
+  transform: none !important;
+  margin-top: 0 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 6px 8px !important;
+}
+.app-header .header-actions-row{
+  flex-wrap: wrap !important;
+  row-gap: 6px !important;
+}
+@media (max-width: 420px){
+  .app-header .header-controls .btn{ padding: 6px 10px !important; }
+  .app-header .header-mode-row .badge-mode{ font-size: 10px !important; }
+}
+
+
+/* v0.0.2.52 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
+html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+.app-header,
+.app-header.live-on,
+.app-header.live-off{
+  height: auto !important;
+  min-height: 170px !important;
+  max-height: none !important;
+  padding-top: calc(10px + env(safe-area-inset-top)) !important;
+  overflow: clip !important;
+}
+@supports not (overflow: clip){
+  .app-header{ overflow: hidden !important; }
+}
+
+.app-header .header-controls,
+.app-header .header-stack,
+.app-header .header-title-main,
+.app-header .header-title-sub,
+.app-header .header-version-row{
+  min-width: 0 !important;
+}
+
+.app-header .header-actions-row{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  row-gap: 6px !important;
+}
+
+.app-header .header-title-sub{
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.app-header .header-version-row{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+@media (max-width: 420px){
+  .app-header .header-actions-row{ gap: 5px !important; row-gap: 5px !important; }
+  .app-header .header-title-main{ font-size: 18px !important; }
+}
+
+
+/* --- FINAL HEADER OVERRIDES (iOS Safari stability) --- */
+html, body{
+  -webkit-text-size-adjust: 100% !important;
+  text-size-adjust: 100% !important;
+}
+
+/* Center button rows always (Safari was forcing flex-start somewhere) */
+.app-header .header-actions-row{
+  justify-content: center !important;
+  align-content: center !important;
+  flex-wrap: wrap !important;
+  padding: 0 !important;
+  row-gap: 8px !important;
+}
+
+/* Buttons: never stretch, never wrap text */
+.app-header .header-actions-row button.header-help{
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+
+/* Make sure the version row never overlaps controls */
+.app-header .header-controls{ margin-bottom: 2px !important; }
+.app-header .header-version-row{ margin-top: 2px !important; }
+
 </style>
 </head>
 <body class="skin-pro skin-vicpulse">
@@ -5192,7 +5913,7 @@ html, body {
 <header class="app-header live-off">
 <div class="header-stack">
         <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">AI Spotter TRM</span></div>
-        <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
+        <div class="header-title-sub" id="raceSubtitle">Turbo Racing Mxico - x-vic!</div>
         
       </div>
 
@@ -5205,13 +5926,13 @@ html, body {
           <div class="hdr-break"></div>
           <button class="header-help header-auto" id="autoSkinBtn" type="button" title="Auto-skin">AUTO</button>
           <button class="header-help header-skin" id="skinBtn" type="button" title="Skin Vic's Pulse Timing">VIC</button>
-          <button class="header-help header-qtable" id="qTableBtn" type="button" title="Q TABLA (clasificación)">Q TABLA</button>
+          <button class="header-help header-qtable" id="qTableBtn" type="button" title="Q TABLA (clasificacin)">Q TABLA</button>
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.51</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.52</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5524,7 +6245,7 @@ html, body {
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.51</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.52</div>
           <div class="manual-sub">Gua rpida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -5614,7 +6335,19 @@ html, body {
     <div class="speechlog-hint">Activa con ?debug=1 - o localStorage aiSpotterDebug=1</div>
   </div>
 
-  <script type="module">
+  <script id="appScript">
+
+
+// ============================================================
+// CONSOLIDATED JS (v0.0.2.52)
+// - All inline scripts merged in source order.
+// - Wrapped with init guard to avoid double-binding listeners.
+// ============================================================
+
+if (window.__AI_SPOTTER_TRM_INIT__) {
+  console.warn('AI Spotter TRM: init already ran - skipping');
+} else {
+  window.__AI_SPOTTER_TRM_INIT__ = true;
 
 /*
 ====================================================================
@@ -5807,7 +6540,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.51";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.52";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -6042,7 +6775,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.51";
             return;
           } else {
             // Manga: anunciar cierre + Top3 y luego silencio
-            try { __autoAnnounceTop3Summary(r, 'Termin la clasificación'); } catch(e) {}
+            try { __autoAnnounceTop3Summary(r, 'Termin la clasificacin'); } catch(e) {}
             __autoPhase = 'FINISHED';
             __autoCloseStartedMs = now;
             return;
@@ -6143,7 +6876,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.51";
         const top = rows.slice(0,3);
         if (!top.length) return;
 
-        let head = forcedLabel ? String(forcedLabel) : (isManga ? 'Termin la clasificación.' : 'Carrera terminada.');
+        let head = forcedLabel ? String(forcedLabel) : (isManga ? 'Termin la clasificacin.' : 'Carrera terminada.');
         if (!head.endsWith('.')) head += '.';
 
         const part = (row, idx) => {
@@ -8675,7 +9408,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
     // BASIC (Seguimiento) - estabilidad de posicion para evitar jitter/flip-flop
     const basicPosStability = { lastSeenPos: null, candidatePos: null, candidateCount: 0, pendingStablePos: null, lastAnnouncedStablePos: null };
 
-// MANGA (clasificación) - estabilidad de posicin para evitar "flip-flop" por salida escalonada
+// MANGA (clasificacin) - estabilidad de posicin para evitar "flip-flop" por salida escalonada
     const mangaPosStability = { lastSeenPos: null, stablePos: null, stableCount: 0, lastAnnouncedStablePos: null };
     const mangaPosSettle = { active:false, lap:0, dueAt:0, samples:[], lastComputedPos:null };
 
@@ -9559,7 +10292,7 @@ let ttsRate = detectDefaultTtsRate();
           [/\bbsico\b/gi, 'b\xe1sico'],
           [/\bclasificaci[o\xf3]n\b/gi, 'clasificaci\xf3n'],
           [/\bclasificacion\b/gi, 'clasificaci\xf3n'],
-          [/\bclasificación\b/gi, 'clasificaci\xf3n'],
+          [/\bclasificacin\b/gi, 'clasificaci\xf3n'],
           [/\bposicion\b/gi, 'posici\xf3n'],
           [/\bposicin\b/gi, 'posici\xf3n'],
           [/\bultima\b/gi, '\xfaltima'],
@@ -11626,7 +12359,7 @@ try {
         ctx.fill();
       };
 
-      // best sesin (Opcin B: desde clasificación visible)
+      // best sesin (Opcin B: desde clasificacin visible)
       const sessionBestMs = computeSessionBestMs ? computeSessionBestMs() : 0;
 
       // errores grandes (rojo): +0.8s vs media o +0.9s vs best (lo que aplique)
@@ -12288,7 +13021,7 @@ let autoNarratorState = {
 // pairKey -> { lastSec, lastSec2, lastMs, lastLap, lastMentionMs }
 let autoPairState = new Map();
 
-// MANGA (clasificación): seguimiento de pole/best lap sin saturar
+// MANGA (clasificacin): seguimiento de pole/best lap sin saturar
 let autoQualiState = {
   bestOverallMs: null,
   bestOverallKey: '',
@@ -14155,7 +14888,7 @@ function autoBuildStoryCandidate(args) {
       ],
 
       qualiBest: [
-        (c) => 'En clasificación, ' + c.pilot + ' marca ' + c.best + '.',
+        (c) => 'En clasificacin, ' + c.pilot + ' marca ' + c.best + '.',
         (c) => 'Tiempo fuerte en quali: ' + c.pilot + ' ' + c.best + '.',
         (c) => 'Clasificacin: ' + c.pilot + ' mejora con ' + c.best + '.',
         (c) => 'Queda el registro. ' + c.pilot + ' con ' + c.best + '.',
@@ -15390,7 +16123,7 @@ if ((voiceSettings.pelea || voiceSettings.attack || voiceSettings.defense) && ba
   if (sc) addCand(sc);
 }
 
-// ====== MANGA (clasificación): pole/best lap (menos ruido, ms sustancia)
+// ====== MANGA (clasificacin): pole/best lap (menos ruido, ms sustancia)
 if (isMangaSess) {
   const wantBest = !!vs.bestlap;
   const wantPoleFight = !!(vs.bestlap || vs.pelea);
@@ -16642,7 +17375,7 @@ let label = 'MODO -';
 
 // =========================
 // FIN DE SESIN (por duracin)
-// - MANGA: 3:00 -> "Termin la clasificación"
+// - MANGA: 3:00 -> "Termin la clasificacin"
 // - FINAL: segn modo (A=6:00, otras=4:00) -> "Carrera terminada" + posicin + resumen
 // Dispara SOLO cuando tu tiempo total cruza el lmite EN UNA NUEVA VUELTA.
 // =========================
@@ -16686,7 +17419,7 @@ function buildSessionFinishMessage(row) {
   const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
   const totalMs = getRowTotalMs(row) || 0;
 
-  let msg = isManga ? 'Termin la clasificación.' : 'Carrera terminada.';
+  let msg = isManga ? 'Termin la clasificacin.' : 'Carrera terminada.';
 
   // Resultado (si sabemos posicin)
   if (posNum > 0) msg += ' P' + posNum + '.';
@@ -17018,7 +17751,7 @@ function checkSessionFinishOnLap() {
             return; // ignorar tick cero
           }
         } catch(e) {}
-        // Q TABLA: snapshot de clasificación (UI only)
+        // Q TABLA: snapshot de clasificacin (UI only)
         try { recordQualiSnapshotIfNeeded(rawRace); } catch(e) {}
 raceData = normalizeRaceData(rawRace);
         updateLapHistoryAll();
@@ -17604,757 +18337,8 @@ handleVoiceAndBeeps();
       }catch(e){}
     })();
 
-</script>
+/* ---- merged script ---- */
 
-<style>
-  .toast{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
-    background: rgba(0,0,0,0.72); color: rgba(255,255,255,0.92);
-    border:1px solid rgba(255,255,255,0.14); border-radius: 999px;
-    padding: 8px 14px; font-weight: 800; letter-spacing: .04em;
-    z-index: 99999; opacity:0; pointer-events:none; transition: opacity .18s ease, transform .18s ease;
-  }
-  .toast.on{ opacity:1; transform:translateX(-50%) translateY(-4px); }
-
-
-    /* --- Header layout refresh (v0.0.1.43) --- */
-    .app-header{
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: stretch !important;
-      gap: 8px !important;
-      padding: 10px 12px !important;
-      height: auto !important;
-      max-height: none !important;
-      min-height: 0 !important;
-      overflow: visible !important;
-    }
-    .app-header .header-left,
-    .app-header .header-right{
-      display: none !important;
-    }
-
-    /* Header PRO (logo arriba, titulo grande, jerarquia clara) */
-    .app-header{
-      padding: 14px 16px;
-    }
-
-    .header-top{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    .header-logo{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      height: auto;
-    }
-    .header-logo img{
-      max-height: 110px;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.55)) drop-shadow(0 0 14px rgba(0,255,163,0.18));
-    }
-
-    .header-stack{
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .header-title-main{
-      width: 100%;
-      max-width: 980px;
-      padding: 0 8px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #raceTitleText{
-      max-width: 100%;
-      width: auto;
-      flex: 1 1 auto;
-      font-size: clamp(20px, 6.2vw, 32px);
-      line-height: 1.05;
-      letter-spacing: 0.02em;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.55);
-      max-height: none;
-      -webkit-line-clamp: 3;
-    }
-
-    .header-mode-row{
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 2px;
-    }
-    .badge-mode{
-      font-size: clamp(12px, 3.4vw, 14px);
-      padding: 6px 12px;
-      border-radius: 999px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-    }
-
-    .app-header .header-title-sub{
-      width: 100%;
-      max-width: 980px;
-      font-size: clamp(12px, 3.8vw, 16px);
-      opacity: 0.92;
-      white-space: normal;
-      padding: 0 8px;
-      letter-spacing: 0.08em;
-    }
-    #raceSubtitle{
-      max-width: 100%;
-      width: auto;
-      font-size: inherit;
-    }
-
-    .header-subline{
-      width: 100%;
-      max-width: 980px;
-      font-size: clamp(12px, 3.3vw, 14px);
-      opacity: 0.92;
-      white-space: normal;
-      padding: 0 8px;
-    }
-    .header-mini{
-      width: 100%;
-      max-width: 980px;
-      font-size: clamp(11px, 3.0vw, 12px);
-      opacity: 0.72;
-      padding: 0 8px;
-    }
-
-    .header-controls{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      margin-top: 8px;
-    }
-    .header-actions-row{
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      max-width: 980px;
-    }
-
-    .header-version{
-      width: 100%;
-      text-align: center;
-      font-size: 11px;
-      opacity: 0.70;
-      padding-top: 6px;
-    }
-
-    @media (max-width: 420px){
-      .app-header{ padding: 12px 10px !important; }
-      .header-actions-row{ gap: 6px; }
-      .header-logo img{ max-height: 96px; }
-      #raceTitleText{ font-size: clamp(22px, 7.2vw, 30px); }
-      .badge-mode{ padding: 6px 10px; }
-      .app-header .header-title-sub{ letter-spacing: 0.06em; }
-    }
-
-    @media (max-width: 360px){
-      #raceTitleText{ font-size: clamp(20px, 7.8vw, 28px); }
-      .header-logo img{ max-height: 90px; }
-    }
-
-    @media (min-width: 900px){
-      .header-logo img{ max-height: 124px; }
-      #raceTitleText{ font-size: clamp(24px, 3.2vw, 34px); }
-    }
-
-
-/* v0.0.1.47 - Header compact: fixed height 250px (without breaking logic) */
-.app-header{
-  height: 250px !important;
-  min-height: 250px !important;
-  max-height: 250px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 6px !important;
-  overflow: hidden !important;
-}
-
-.header-top{ margin-bottom: 2px !important; }
-
-.header-logo img{
-  max-height: 80px !important;
-  width: auto !important;
-}
-
-.header-stack{
-  width: 100% !important;
-  flex: 1 1 auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 6px !important;
-  overflow: visible !important;
-  z-index: 2 !important;
-}
-
-.header-title-main{
-  margin: 0 !important;
-  line-height: 1.05 !important;
-}
-#raceTitleText{
-  font-size: clamp(14px, 4.0vw, 22px) !important;
-  letter-spacing: 0.5px !important;
-  -webkit-line-clamp: 2 !important;
-}
-
-.header-mode-row{ margin-top: 2px !important; }
-
-#raceModeRow{ width: 100% !important; display:flex !important; justify-content:center !important; z-index: 3 !important; }
-#raceModeBadge{ font-size: 12px !important; height: 28px !important; padding: 0 14px !important; background: rgba(0,0,0,0.35) !important; border-color: rgba(255,255,255,0.28) !important; color: rgba(255,255,255,0.96) !important; text-shadow: 0 2px 10px rgba(0,0,0,0.65) !important; }
-
-.header-title-sub{
-  margin-top: 0 !important;
-  font-size: clamp(10px, 2.6vw, 12px) !important;
-  line-height: 1.1 !important;
-  max-width: 100% !important;
-}
-
-.header-subline{
-  font-size: clamp(11px, 2.8vw, 13px) !important;
-  line-height: 1.15 !important;
-}
-
-.header-mini{
-  font-size: 10px !important;
-  opacity: 0.85 !important;
-}
-
-.header-controls{
-  width: 100% !important;
-  display: flex !important;
-  justify-content: center !important;
-  margin-top: 8px !important;
-  z-index: 1 !important;
-}
-
-.header-actions-row{
-  gap: 6px !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-}
-
-.header-version{
-  margin-top: auto !important;
-  padding-top: 4px !important;
-  font-size: 10px !important;
-  opacity: 0.75 !important;
-  text-align: center !important;
-}
-
-/* v0.0.1.52 - Force race mode badge visibility and contrast */
-#raceModeRow{
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  z-index: 5;
-}
-#raceModeBadge{
-  display: inline-flex !important;
-  min-height: 28px;
-  padding: 6px 14px;
-}
-
-
-/* ===== Header controls: force single row (LIVE + MODO + buttons) ===== */
-:root{
-  --hdrCtrlH: 22px;
-  --hdrCtrlFont: 9px;
-  --hdrCtrlPadX: 6px;
-  --hdrCtrlGap: 4px;
-  --hdrCtrlW: 60px;
-}
-.header-controls{
-  width: 100% !important;
-  margin-top: 6px !important;
-}
-.header-actions-row{
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  justify-content: center !important;
-  align-items: center !important;
-  gap: var(--hdrCtrlGap) !important;
-  width: 100% !important;
-  overflow: hidden !important;
-}
-.header-actions-row > *{
-  flex: 0 1 auto !important;
-  min-width: 0 !important;
-}
-.header-actions-row button.header-help{
-  height: var(--hdrCtrlH) !important;
-  padding: 0 var(--hdrCtrlPadX) !important;
-  font-size: var(--hdrCtrlFont) !important;
-  line-height: 1 !important;
-  border-radius: 12px !important;
-  white-space: nowrap !important;
-  min-width: var(--hdrCtrlW) !important;
-  width: var(--hdrCtrlW) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-#raceModeRow{
-  height: var(--hdrCtrlH) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-}
-#raceModeBadge.badge-mode{
-  height: var(--hdrCtrlH) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  padding: 0 var(--hdrCtrlPadX) !important;
-  font-size: var(--hdrCtrlFont) !important;
-  line-height: 1 !important;
-  border-radius: 12px !important;
-  white-space: nowrap !important;
-}
-#liveIndicator.badge-live{
-  height: var(--hdrCtrlH) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  padding: 0 var(--hdrCtrlPadX) !important;
-  font-size: var(--hdrCtrlFont) !important;
-  line-height: 1 !important;
-  border-radius: 12px !important;
-  white-space: nowrap !important;
-  min-width: var(--hdrCtrlW) !important;
-  width: var(--hdrCtrlW) !important;
-  justify-content: center !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-/* Kill any scaling that could hide controls */
-.app-header .header-controls{ transform: none !important; }
-
-@media (max-width: 420px){
-  :root{
-    --hdrCtrlH: 26px;
-    --hdrCtrlFont: 12px;
-    --hdrCtrlPadX: 10px;
-    --hdrCtrlGap: 6px;
-  }
-  .header-actions-row{
-    justify-content: flex-start !important;
-    padding: 0 6px !important;
-  }
-}
-/* ===== /Header controls ===== */
-
-
-/* v0.0.1.69 tweak: header-stack 50px, keep subtitle visible */
-.header-stack{height:50px !important; max-height:50px !important; overflow:visible !important;}
-#raceTitleText{font-size: clamp(14px, 4.0vw, 22px) !important; line-height:1.05 !important;}
-#raceSubtitle{font-size: 9px !important; line-height:1.0 !important; margin-top:-4px !important; opacity:0.78 !important;}
-.header-controls{margin-top:6px !important;}
-.header-actions-row{gap:6px !important;}
-
-
-/* v0.0.1.78 - tighten header-title-sub to 8px height */
-.header-title-sub{
-  height:8px !important;
-  min-height:8px !important;
-  line-height:8px !important;
-  overflow:hidden !important;
-  margin:0 !important;
-  padding:0 !important;
-  display:block !important;
-}
-
-/* ---- LOGO OVERRIDE (v0.0.1.96) ---- */
-.header-logo img{
-  width: auto !important;
-  height: 96px !important;
-  max-height: 96px !important;
-  max-width: 95% !important;
-  object-fit: contain !important;
-}
-@media (max-width: 520px){
-  .header-logo img{
-    height: 72px !important;
-    max-height: 72px !important;
-    max-width: 96% !important;
-  }
-}
-
-
-/* ====== v0.0.2.12 logo fit (no crop, bigger, moved down) ====== */
-.app-header .header-logo{
-  height: 110px !important;
-  min-height: 110px !important;
-  overflow: visible !important; /* allow full logo, no clipping */
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding-top: 6px !important;
-}
-.app-header .header-logo img{
-  width: min(620px, 96%) !important;
-  height: 100% !important;
-  max-height: none !important;
-  max-width: none !important;
-  object-fit: contain !important; /* never crop */
-  transform: translateY(10px) scale(1.00) !important; /* move down 10px */
-  transform-origin: center center !important;
-  filter: drop-shadow(0 0 10px rgba(0,0,0,0.35)) !important;
-}
-@media (max-width: 520px){
-  .app-header .header-logo{
-    height: 84px !important;
-    min-height: 84px !important;
-    padding-top: 4px !important;
-  }
-  .app-header .header-logo img{
-    width: 96% !important;
-    transform: translateY(8px) scale(1.00) !important;
-  }
-}
-
-/* v0.0.2.12 - Header: altura estable (sin salto al cambiar LIVE) */
-.app-header{
-  height: 165px !important;
-  min-height: 165px !important;
-  max-height: 165px !important;
-  padding: 12px 14px !important;
-}
-.app-header.live-on,
-.app-header.live-off{
-  height: 165px !important;
-  min-height: 165px !important;
-  max-height: 165px !important;
-}
-.header-stack{ flex: 0 0 auto !important; }
-.header-controls{ margin-top: 6px !important; }
-.header-version{ padding-top: 4px !important; }
-
-
-/* =========================
-   Q TABLA (Clasificacin) - UI only
-   ========================= */
-.header-help.header-qtable{ letter-spacing: .35px; font-weight: 900; }
-
-#qualiBackdrop .manual-panel{
-  width: min(880px, 100%);
-  padding: 10px;
-  border-radius: 16px;
-}
-#qualiBackdrop .manual-title{ font-size: 15px; }
-#qualiBackdrop .manual-sub{ font-size: 10.5px; }
-
-#qualiBackdrop .qmeta{ display:flex; flex-wrap:wrap; gap:6px; margin: 0 0 8px 0; }
-#qualiBackdrop .qchip{
-  display:inline-flex; align-items:center; gap:6px;
-  padding: 5px 9px; font-size: 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(148,163,184,0.22);
-  background: rgba(0,0,0,0.18);
-  color: var(--text-main);
-  font-weight: 900;
-}
-#qualiBackdrop .qsel{
-  padding: 5px 7px; font-size: 11px;
-  border-radius: 10px;
-  border: 1px solid rgba(148,163,184,0.22);
-  background: rgba(0,0,0,0.22);
-  color: var(--text-main);
-  outline: none;
-}
-#qualiBackdrop .qtable-wrap{
-  overflow:auto;
-  max-height: 60vh;
-  border-radius: 12px;
-  border: 1px solid rgba(148,163,184,0.14);
-  background: rgba(0,0,0,0.14);
-}
-#qualiBackdrop .qtable{
-  font-size: 11px;
-  min-width: 720px;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-#qualiBackdrop .qtable th, #qualiBackdrop .qtable td{
-  padding: 6px 7px;
-  vertical-align: top;
-}
-#qualiBackdrop .qtable th{
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: rgba(8,10,15,0.96);
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(148,163,184,0.18);
-}
-#qualiBackdrop .qtable tbody tr:nth-child(even) td{
-  background: rgba(255,255,255,0.015);
-}
-#qualiBackdrop .qcol-pos{ width: 46px; }
-#qualiBackdrop .qcol-name{ width: 210px; }
-#qualiBackdrop .qcol-q{ width: 58px; }
-#qualiBackdrop .qcol-laps{ width: 82px; }
-#qualiBackdrop .qcol-time{ width: 128px; }
-#qualiBackdrop .qmain{ white-space: nowrap; }
-#qualiBackdrop .qtag{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: .3px;
-  border: 1px solid rgba(255,122,24,0.35);
-  background: rgba(255,122,24,0.10);
-  color: rgba(242,245,255,0.95);
-  margin-bottom: 3px;
-}
-#qualiBackdrop td.qcell-best{
-  background: rgba(0, 255, 160, 0.07);
-  box-shadow: inset 2px 0 0 rgba(0,255,160,0.55);
-}
-#qualiBackdrop td.qcell-empty{
-  color: rgba(163,173,189,0.65);
-}
-
-
-/* =========================
-   HARD OVERRIDES v0.0.2.26
-   - Corrige "brinco" del header y recortes en iPhone 12
-   - Ajusta header-mode-row sin scale (wrap responsive)
-   - Top banner siempre responsivo (no desaparece)
-========================= */
-.top-banner-placeholder{
-  width: 440px !important;
-  max-width: 440px !important;
-  min-width: 440px !important;
-  height: 145px !important;
-  margin: 10px auto 8px auto !important;
-  background: rgba(8,10,15,0.55) !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-  border-radius: 18px !important;
-  box-shadow: 0 12px 34px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.05) !important;
-  overflow: hidden !important;
-  backdrop-filter: blur(6px) !important;
-}
-
-@media (max-width: 460px){
-  .top-banner-placeholder{
-    width: min(440px, 100%) !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }
-}
-
-.top-banner-placeholder .top-banner-logo{
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain !important;
-  display:block !important;
-}
-
-/* Header: misma altura siempre (evita que abra grande y luego se encoja) */
-.app-header,
-.app-header.live-on,
-.app-header.live-off{
-  height: 165px !important;
-  min-height: 165px !important;
-  max-height: 165px !important;
-}
-
-/* El modo/controles se adaptan al ancho real, sin transform que recorta */
-.app-header .header-mode-row{
-  transform: none !important;
-  margin: 0 !important;
-  width: 100% !important;
-  display:flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 6px 8px !important;
-  overflow: visible !important;
-}
-
-/* En pantallas chicas: reduce gap y permite 2 renglones sin cortar */
-@media (max-width: 420px){
-  .app-header .header-mode-row{ gap: 5px 6px !important; }
-  .app-header .header-mode-row .btn-pill,
-  .app-header .header-mode-row .spotter-btn{
-    padding: 7px 10px !important;
-    min-width: 64px !important;
-  }
-}
-
-
-/* ===== HOTFIX v0.0.2.41: responsive header rows (no scale, no cut) ===== */
-.app-header .header-mode-row{
-  transform: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 6px 8px !important;
-}
-.app-header .header-controls{
-  transform: none !important;
-  margin-top: 0 !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 6px 8px !important;
-}
-.app-header .header-actions-row{
-  flex-wrap: wrap !important;
-  row-gap: 6px !important;
-}
-@media (max-width: 420px){
-  .app-header .header-controls .btn{ padding: 6px 10px !important; }
-  .app-header .header-mode-row .badge-mode{ font-size: 10px !important; }
-}
-
-
-/* v0.0.2.51 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
-html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-.app-header,
-.app-header.live-on,
-.app-header.live-off{
-  height: auto !important;
-  min-height: 170px !important;
-  max-height: none !important;
-  padding-top: calc(10px + env(safe-area-inset-top)) !important;
-  overflow: clip !important;
-}
-@supports not (overflow: clip){
-  .app-header{ overflow: hidden !important; }
-}
-
-.app-header .header-controls,
-.app-header .header-stack,
-.app-header .header-title-main,
-.app-header .header-title-sub,
-.app-header .header-version-row{
-  min-width: 0 !important;
-}
-
-.app-header .header-actions-row{
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 6px !important;
-  row-gap: 6px !important;
-}
-
-.app-header .header-title-sub{
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-.app-header .header-version-row{
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 6px !important;
-}
-
-@media (max-width: 420px){
-  .app-header .header-actions-row{ gap: 5px !important; row-gap: 5px !important; }
-  .app-header .header-title-main{ font-size: 18px !important; }
-}
-
-
-/* --- FINAL HEADER OVERRIDES (iOS Safari stability) --- */
-html, body{
-  -webkit-text-size-adjust: 100% !important;
-  text-size-adjust: 100% !important;
-}
-
-/* Center button rows always (Safari was forcing flex-start somewhere) */
-.app-header .header-actions-row{
-  justify-content: center !important;
-  align-content: center !important;
-  flex-wrap: wrap !important;
-  padding: 0 !important;
-  row-gap: 8px !important;
-}
-
-/* Buttons: never stretch, never wrap text */
-.app-header .header-actions-row button.header-help{
-  flex: 0 0 auto !important;
-  white-space: nowrap !important;
-}
-
-/* Make sure the version row never overlaps controls */
-.app-header .header-controls{ margin-bottom: 2px !important; }
-.app-header .header-version-row{ margin-top: 2px !important; }
-</style>
-
-<div class="toast" id="toast"></div>
-
-
-  <!-- Q TABLA (Clasificacin) -->
-  <div class="manual-backdrop" id="qualiBackdrop" aria-hidden="true">
-    <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Tabla general de clasificación">
-      <div class="manual-top">
-        <div>
-          <div class="manual-title">Clasificacin del da</div>
-          <div class="manual-sub" id="qualiSub">Mejor resultado por piloto (best-per-pilot).</div>
-        </div>
-        <button class="manual-close" id="qualiCloseBtn" type="button">Cerrar</button>
-      </div>
-
-      <div style="padding:8px 12px;">
-        <div class="qmeta" id="qualiMeta">
-          <span class="qchip" id="qualiMetaEvent">Evento: -</span>
-          <span class="qchip" id="qualiMetaDate">Fecha: -</span>
-          <span class="qchip" id="qualiMetaSessions">Sesiones: -</span>
-          <label class="qchip" style="gap:8px;">
-            Vista
-            <select class="qsel" id="qualiViewSel">
-              <option value="best">Mejor por piloto</option>
-              <option value="byq">Detalle por Q</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="qtable-wrap">
-          <table class="qtable" id="qualiTable">
-            <thead id="qualiThead"></thead>
-            <tbody id="qualiTbody"></tbody>
-          </table>
-        </div>
-
-        <div class="manual-note" style="margin-top:10px;">
-          Tip: La tabla se guarda en el dispositivo (localStorage). Se reinicia si cambia el evento base o el da.
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-<script id="layout-guard">
 /* LayoutGuard - shows a small badge if the header overflows (useful for iOS Pro/Max and large-text settings) */
 (function(){
   try {
@@ -18409,6 +18393,9 @@ html, body{
     // no-op
   }
 })();
+
+}
+
 </script>
 
 </body>
