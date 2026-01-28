@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.45 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.46 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.45</title>
+  <title>AI_Spotter_TRM_v0.0.2.46</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -5130,7 +5130,7 @@ body {
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.45</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.46</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5726,7 +5726,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.45";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.46";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -9744,7 +9744,7 @@ function clampNum(v, lo, hi){
       // Nota: Web Speech API no tiene "emociones" reales. Esto solo ajusta rate/pitch/volume.
       if (m === 'hype' || m === 'excited') return { rateMul: 1.06, pitch: 1.12, volume: 1.0 };
       if (m === 'urgent') return { rateMul: 1.10, pitch: 1.18, volume: 1.0 };
-      if (m === 'calm') return { rateMul: 0.98, pitch: 0.96, volume: 0.95 };
+      if (m === 'calm') return { rateMul: 0.98, pitch: 0.96, volume: 1.0 };
       if (m === 'serious') return { rateMul: 0.99, pitch: 0.92, volume: 1.0 };
       return { rateMul: 1.0, pitch: 1.0, volume: 1.0 };
     }
@@ -10249,33 +10249,30 @@ function speakWithLaps(_laps, message, opts) {
 let __oneTapUnlockLastAt = 0;
 
 function scheduleOneTapUnlock() {
-  // iOS/WebKit: a veces el TTS queda "mudo" tras sleep/background.
-  // Queremos 1 tap para reactivar, PERO sin robarle el tap a los botones (no preventDefault/stopPropagation).
+  // iOS/WebKit: a veces el TTS queda mudo tras sleep/background.
+  // Sencillo: armamos 1 click para intentar unlock, SIN tragarnos el toque.
   try { if (__oneTapUnlockArmed) return; } catch(e) {}
   try { __oneTapUnlockArmed = true; } catch(e) {}
 
-  const handler = (ev) => {
+  const handler = () => {
     try { __oneTapUnlockArmed = false; __oneTapUnlockLastAt = Date.now(); } catch(e) {}
     if (!pendingAutoVoiceUnlock) return;
 
-    // Este tap cuenta como gesto: abrimos WebAudio + intentamos unlock TTS.
     try { __userGestureUnlocked = true; } catch(e) {}
     try { ensureAudioCtx(); } catch(e) {}
     try { hardUnlockAudioPipe(); } catch(e) {}
 
-    // Intento de desbloqueo (no toca el toggle de VOZ; eso lo decide el boton).
     try { unlockTTSOnce('one-tap'); } catch(e) {}
-    try { forceTtsRecover('one-tap'); } catch(e) {}
 
-    // Si siguio bloqueado, armamos otro tap (sin tragarnos el toque).
+    // Si sigue bloqueado, dejamos pendingAutoVoiceUnlock y se rearmará donde corresponda.
     try { if (pendingAutoVoiceUnlock) scheduleOneTapUnlock(); } catch(e) {}
   };
 
-  try { window.addEventListener('pointerdown', handler, { once:true, passive:true, capture:true }); } catch(e) {}
-  try { window.addEventListener('touchstart',  handler, { once:true, passive:true, capture:true }); } catch(e) {}
+  try { window.addEventListener('click', handler, { once:true, passive:true }); } catch(e) {}
 }
 
 // Unlock TTS en iOS/WebKit: requiere gesto del usuario.
+
 // Nota: NO uses cancel() aqui - en iPhone mata el "primer speak" y obliga a dar 20 taps.
 let __ttsUnlockedOnce = false;
     let __ttsCancelShieldUntil = 0; // evita cancelar mientras se esta desbloqueando (iPhone)
@@ -10332,7 +10329,7 @@ function unlockTTSOnce(reason = '') {
         u.rate = clampNum((isFinite(ttsRate) ? ttsRate : 1.5), 0.8, 2.0);
         u.pitch = 1.0;
         // Casi inaudible: desbloquea sin gritarte "AUDIO LISTO" cada vez.
-        u.volume = 0.35;
+        u.volume = 1.0;
 
         try {
           u.onstart = () => {
