@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.48 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.49 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.48</title>
+  <title>AI_Spotter_TRM_v0.0.2.49</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -5105,6 +5105,25 @@ body {
 }
 </style>
 
+
+<style id="header-compat-fix">
+/* v0.0.2.49 - header compatibility hardening */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* Avoid fixed-height traps (especially iOS with large text / dynamic viewport) */
+.app-header { height: auto !important; max-height: none !important; }
+
+/* Flex children must be allowed to shrink, otherwise text forces overflow */
+.header-actions-row, .header-actions { flex-wrap: wrap !important; }
+.header-actions-row > *, .header-actions > * { min-width: 0; }
+
+/* Keep long subtitles from pushing out of the container */
+.header-title-sub, .raceSubtitle, #raceSubtitle { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Ensure header can position debug badge safely */
+.app-header { position: relative; }
+</style>
+
 </head>
 <body class="skin-pro skin-vicpulse">
   <div class="app">
@@ -5130,7 +5149,7 @@ body {
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.48</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.49</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5726,7 +5745,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.48";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.49";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -18154,7 +18173,7 @@ handleVoiceAndBeeps();
 }
 
 
-/* v0.0.2.48 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
+/* v0.0.2.49 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
 html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .app-header,
 .app-header.live-on,
@@ -18245,6 +18264,64 @@ html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
       </div>
     </div>
   </div>
+
+
+<script id="layout-guard">
+/* LayoutGuard - shows a small badge if the header overflows (useful for iOS Pro/Max and large-text settings) */
+(function(){
+  try {
+    const html = document.documentElement;
+    const header = document.querySelector('.app-header');
+    if (!header) return;
+
+    const badge = document.createElement('div');
+    badge.id = 'layoutGuardBadge';
+    badge.style.cssText = [
+      'position:absolute',
+      'right:8px',
+      'bottom:6px',
+      'z-index:9999',
+      'padding:3px 6px',
+      'border-radius:999px',
+      'font-size:11px',
+      'font-weight:800',
+      'letter-spacing:0.2px',
+      'background:rgba(255,0,0,0.85)',
+      'color:#fff',
+      'box-shadow:0 2px 10px rgba(0,0,0,0.45)',
+      'display:none',
+      'pointer-events:none'
+    ].join(';');
+    badge.textContent = 'HDR OVERFLOW';
+    header.appendChild(badge);
+
+    const check = () => {
+      const overW = (header.scrollWidth - header.clientWidth) > 1;
+      const overH = (header.scrollHeight - header.clientHeight) > 1;
+      if (overW || overH) {
+        html.classList.add('layout-overflow');
+        badge.style.display = 'inline-block';
+        badge.textContent = overW && overH ? 'HDR OVR W+H' : (overW ? 'HDR OVR W' : 'HDR OVR H');
+      } else {
+        html.classList.remove('layout-overflow');
+        badge.style.display = 'none';
+      }
+    };
+
+    const rafCheck = () => requestAnimationFrame(check);
+    window.addEventListener('resize', rafCheck, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', rafCheck, { passive: true });
+      window.visualViewport.addEventListener('scroll', rafCheck, { passive: true });
+    }
+    document.addEventListener('DOMContentLoaded', () => setTimeout(check, 200));
+    setTimeout(check, 500);
+    setInterval(check, 2500);
+  } catch(e) {
+    // no-op
+  }
+})();
+</script>
 
 </body>
 </html>
