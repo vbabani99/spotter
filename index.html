@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.47 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.48 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.47</title>
+  <title>AI_Spotter_TRM_v0.0.2.48</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -5109,10 +5109,10 @@ body {
 <body class="skin-pro skin-vicpulse">
   <div class="app">
     <div class="top-banner-placeholder" aria-hidden="true"><img class="top-banner-logo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" /></div>
-<header class="app-header live-off" style="height:165px;min-height:165px;max-height:165px;">
+<header class="app-header live-off">
 <div class="header-stack">
         <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">AI Spotter TRM</span></div>
-        <div class="header-title-sub" id="raceSubtitle">Turbo Racing Mxico - x-vic!</div>
+        <div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div>
         
       </div>
 
@@ -5130,7 +5130,7 @@ body {
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.47</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.48</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5726,7 +5726,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.47";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.48";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10277,63 +10277,6 @@ function scheduleOneTapUnlock() {
 let __ttsUnlockedOnce = false;
     let __ttsCancelShieldUntil = 0; // evita cancelar mientras se esta desbloqueando (iPhone)
 
-// Confirmacion inmediata en gesto (iPhone): evita que el boton prenda "en silencio".
-function ttsConfirmNow(text = 'Audio listo') {
-  try {
-    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
-    const synth = window.speechSynthesis;
-    const msg = String(text || '').trim() || 'Audio listo';
-
-    // Esto cuenta como gesto de usuario
-    try { __userGestureUnlocked = true; } catch(e) {}
-    try { ensureAudioCtx(); } catch(e) {}
-    try { hardUnlockAudioPipe(); } catch(e) {}
-
-    // Resume suave
-    try { if (typeof synth.resume === 'function') synth.resume(); } catch(e) {}
-
-    // Cancel solo si habia algo hablando/pendiente (evita matar el primer speak en iOS).
-    try {
-      if ((synth.speaking || synth.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) {
-        __ttsCancelShieldUntil = Date.now() + 900;
-        if (typeof synth.cancel === 'function') synth.cancel();
-        if (typeof synth.resume === 'function') synth.resume();
-      }
-    } catch(e) {}
-
-    const u = new SpeechSynthesisUtterance(msg);
-    u.lang = 'es-MX';
-    u.rate = clampNum((isFinite(ttsRate) ? ttsRate : 1.5), 0.8, 2.0);
-    u.pitch = 1.0;
-    u.volume = 1.0;
-
-    try {
-      u.onstart = () => {
-        try { __ttsUnlockedOnce = true; } catch(e) {}
-        try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
-        try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
-      };
-    } catch(e) {}
-
-    // Respetar voz elegida (si existe)
-    try {
-      const voices = synth.getVoices ? synth.getVoices() : [];
-      if (voices && voices.length) {
-        let v = null;
-        if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
-        if (!v) v = pickDefaultVoice(voices);
-        if (v) { u.voice = v; if (v.lang) u.lang = v.lang; }
-      }
-    } catch(e) {}
-
-    synth.speak(u);
-    return true;
-  } catch(e) {
-    return false;
-  }
-}
-
-
 let __ttsUnlockInFlight = false;
 let __ttsUnlockStartedAt = 0;
 
@@ -10473,8 +10416,8 @@ function setVoiceMaster(on, opts = {}) {
       try { ensureAudioCtx(); } catch(e) {}
       if (voiceMasterEnabled && !opts.silent) {
         try { showToast('VOZ ACTIVA', 900); } catch(e) {}
-        try { playBeep('up'); } catch(e) {}
-        try { ttsConfirmNow('Audio listo'); } catch(e) {}
+        // Intento de unlock silencioso en iOS/Android (si hay gesto)
+        try { unlockTTSOnce('voice-master-on'); } catch(e) {}
       }
       if (!voiceMasterEnabled) {
         try { if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch(e) {}
@@ -10523,6 +10466,9 @@ function setVoiceMaster(on, opts = {}) {
         }
 
         setVoiceMaster(!voiceMasterEnabled, { user:true });
+
+        // Al encender: intento de unlock silencioso (si aplica)
+        try { if (voiceMasterEnabled) unlockTTSOnce('voice-btn'); } catch(e) {}
       }
 
       voiceToggleBtns.forEach(btn => {
@@ -18208,19 +18154,56 @@ handleVoiceAndBeeps();
 }
 
 
-/* v0.0.2.41: Header mas alto para que quepa titulo + botones + version */
+/* v0.0.2.48 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
+html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .app-header,
 .app-header.live-on,
 .app-header.live-off{
-  height: 170px !important;
+  height: auto !important;
   min-height: 170px !important;
-  max-height: 170px !important;
+  max-height: none !important;
+  padding-top: calc(10px + env(safe-area-inset-top)) !important;
+  overflow: clip !important;
 }
-.app-header{ overflow: visible !important; }
-.header-version-row{ margin-top: 4px !important; padding-bottom: 6px !important; }
-.header-version-row .header-version{ font-size: 11px !important; line-height: 1.1 !important; opacity: 0.95 !important; }
+@supports not (overflow: clip){
+  .app-header{ overflow: hidden !important; }
+}
 
+.app-header .header-controls,
+.app-header .header-stack,
+.app-header .header-title-main,
+.app-header .header-title-sub,
+.app-header .header-version-row{
+  min-width: 0 !important;
+}
+
+.app-header .header-actions-row{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  row-gap: 6px !important;
+}
+
+.app-header .header-title-sub{
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.app-header .header-version-row{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+@media (max-width: 420px){
+  .app-header .header-actions-row{ gap: 5px !important; row-gap: 5px !important; }
+  .app-header .header-title-main{ font-size: 18px !important; }
+}
 </style>
+
 <div class="toast" id="toast"></div>
 
 
