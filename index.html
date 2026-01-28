@@ -1,8 +1,9 @@
 <!--
-AI_Spotter_TRM_v0.0.2.62 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.63 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 - v0.0.2.60: VOZ - consolidado visibilitychange (sin duplicados), keepalive menos agresivo, recovery iOS mas limpio.
 - v0.0.2.61: VOZ - fix cola: si activas VOZ y de inmediato seleccionas piloto, ya habla sin atascarse (pump en onend de unlock).
 - v0.0.2.62: VOZ - seleccion de piloto siempre habla aunque haya silencio; en iPhone evitamos cancel() agresivo (menos taps y sin frases viejas).
+- v0.0.2.63: Consola limpia: favicon embebido (sin 404) + logs de preset solo en debug + dedupe de log.
 Fecha: 2026-01-28
 Origen: Spotter_5.0.1.html
 
@@ -60,7 +61,8 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.62</title>
+  <title>AI_Spotter_TRM_v0.0.2.63</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b10'/%3E%3Cpath d='M16 34h8l4-14 6 28 4-14h10' fill='none' stroke='%23ff2a2a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -5263,7 +5265,7 @@ html, body{ -webkit-text-size-adjust:100% !important; text-size-adjust:100% !imp
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.62</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.63</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5871,7 +5873,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.62";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.63";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -9451,7 +9453,14 @@ function __duoGuessRole(txt, key) {
 
       __lastAutoPresetType = t;
       updateConfigStatusUI();
-      try { if (source) console.log('[PresetSesion]', t, 'source=', source); } catch(e){}
+      try { if (source && document.body && document.body.classList.contains('debug')) {
+        if (!window.__psLog) window.__psLog = {t:'',ts:0};
+        const now = Date.now();
+        if (window.__psLog.t !== t || (now - window.__psLog.ts) > 600) {
+          window.__psLog.t = t; window.__psLog.ts = now;
+          console.log('[PresetSesion]', t, 'source=', source);
+        }
+      } } catch(e){}
     }
 
     // Click handlers para aplicar preset manual
