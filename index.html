@@ -1,9 +1,13 @@
 <!--
-AI_Spotter_TRM_v0.0.2.52 - Vic Skin PRO (volumen, sombras, bordes 3D) -
-Fecha: 2026-01-27
+AI_Spotter_TRM_v0.0.2.62 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+- v0.0.2.60: VOZ - consolidado visibilitychange (sin duplicados), keepalive menos agresivo, recovery iOS mas limpio.
+- v0.0.2.61: VOZ - fix cola: si activas VOZ y de inmediato seleccionas piloto, ya habla sin atascarse (pump en onend de unlock).
+- v0.0.2.62: VOZ - seleccion de piloto siempre habla aunque haya silencio; en iPhone evitamos cancel() agresivo (menos taps y sin frases viejas).
+Fecha: 2026-01-28
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.0.2.54: VOZ consolidada: un solo click handler, sin duplicados, recover iPhone simple.
 - v0.0.2.21: Q TABLA (FIX guardado) (clasificacin) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
 - v0.0.2.23: Fix UX: VOZ responde al primer toque (iOS/Android), debounced LIVE (sin parpadeo), header altura estable (sin salto). UI/TTS only.
 - v0.0.2.17: LapChart watermark restaurada (logo Vic) en fondo del canvas. UI only.
@@ -56,7 +60,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.52</title>
+  <title>AI_Spotter_TRM_v0.0.2.62</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -75,7 +79,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
 
 /* ============================================================
-   CONSOLIDATED CSS (v0.0.2.52)
+   CONSOLIDATED CSS (v0.0.2.54)
    - Original style blocks merged in source order (no behavior change intended).
    ============================================================ */
 
@@ -1038,6 +1042,8 @@ body {
       border-color: rgba(45,107,255,0.40);
       box-shadow: 0 0 12px rgba(45,107,255,0.10);
     }
+    #pilotSelect.is-loading{ opacity:0.92; filter:saturate(0.85); }
+
 
     @media (max-width: 430px){
       .btn-voice-mini { flex-basis: 58%; }
@@ -5075,835 +5081,160 @@ body {
 
 /* ---- merged block ---- */
 
-/* Logo size override (keeps aspect ratio, fills header area) */
-.header-top{ margin-bottom: 8px !important; }
-.header-logo{ width: 100% !important; display:flex !important; justify-content:center !important; align-items:center !important; overflow: visible !important; }
-.header-logo img{
-  height: 96px !important;
-  max-height: 96px !important;
-  width: auto !important;
-  max-width: min(560px, 92vw) !important;
-  object-fit: contain !important;
-}
-@media (max-width: 520px){
-  .header-logo img{
-    height: 72px !important;
-    max-height: 72px !important;
-    max-width: min(420px, 92vw) !important;
-  }
-}
 
-/* ---- merged block ---- */
 
-/* FIX v0.0.2.41: version siempre visible en header */
-.header-version-row{
-  position:absolute !important;
-  left:0 !important; right:0 !important; bottom:6px !important;
-  z-index:50 !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  gap:10px !important;
-  margin:0 !important;
-}
-.header-version-row .header-version{
-  position:static !important;
-  display:inline-block !important;
-  font-size:10px !important;
-  letter-spacing:.6px !important;
-  opacity:.86 !important;
-  color: rgba(255,255,255,0.78) !important;
-  text-shadow: 0 1px 0 rgba(0,0,0,0.45) !important;
-  pointer-events:none !important;
-}
-#appVersion{
-  font-weight:900 !important;
-  opacity:.96 !important;
-  color: rgba(255,255,255,0.90) !important;
-}
+/* ============================================================
+   HEADER CANON v0.0.2.60
+   - Limpieza: se eliminaron bloques duplicados (CANON/BULLETPROOF/OVERRIDES)
+   - Objetivo: mismo layout en iOS Safari/Chrome/Brave + Android
+   ============================================================ */
 
-/* ---- merged block ---- */
+html, body{ -webkit-text-size-adjust:100% !important; text-size-adjust:100% !important; }
 
-/* v0.0.2.52 - header compatibility hardening */
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-
-/* Avoid fixed-height traps (especially iOS with large text / dynamic viewport) */
-.app-header { height: auto !important; max-height: none !important; }
-
-/* Flex children must be allowed to shrink, otherwise text forces overflow */
-.header-actions-row, .header-actions { flex-wrap: wrap !important; }
-.header-actions-row > *, .header-actions > * { min-width: 0; }
-
-/* Keep long subtitles from pushing out of the container */
-.header-title-sub, .raceSubtitle, #raceSubtitle { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* Ensure header can position debug badge safely */
-.app-header { position: relative; }
-
-/* ---- merged block ---- */
-
-/* HEADER CANON v0.0.2.52 - iOS Safari/Chrome consistent */
-html, body {
-  -webkit-text-size-adjust: 100% !important;
-  text-size-adjust: 100% !important;
-}
-
-/* Never lock header height: allow it to grow */
-.app-header, .app-header.live-on, .app-header.live-off {
-  height: auto !important;
-  max-height: none !important;
-  min-height: 170px !important;
-}
-
-.header-actions-row {
-  position: relative !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  align-items: center !important;
-  gap: 8px !important;
-  row-gap: 8px !important;
-  padding: 0 6px !important;
-  width: 100% !important;
-}
-
-/* Live dot should not steal centering space */
-.header-actions-row .badge-live {
-  position: absolute !important;
-  left: 10px !important;
-  top: 0px !important;
-  margin: 0 !important;
-}
-
-/* Force a clean line break: row 1 = mode pill, row 2 = buttons */
-.header-actions-row .hdr-break {
-  flex-basis: 100% !important;
-  height: 0 !important;
-}
-
-.header-actions-row .header-mode-row {
-  flex: 0 1 auto !important;
-  margin: 0 auto !important;
-}
-
-/* Buttons: consistent sizing and wrapping */
-.header-actions-row button {
-  flex: 0 0 auto !important;
-  min-width: 84px;
-}
-
-/* Subtitle truncation safety */
-.header-title-sub {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-/* ---- merged block ---- */
-
+/* Toast (mensajes flotantes) */
 .toast{ position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
-    background: rgba(0,0,0,0.72); color: rgba(255,255,255,0.92);
-    border:1px solid rgba(255,255,255,0.14); border-radius: 999px;
-    padding: 8px 14px; font-weight: 800; letter-spacing: .04em;
-    z-index: 99999; opacity:0; pointer-events:none; transition: opacity .18s ease, transform .18s ease;
-  }
-  .toast.on{ opacity:1; transform:translateX(-50%) translateY(-4px); }
-
-
-    /* --- Header layout refresh (v0.0.1.43) --- */
-    .app-header{
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: stretch !important;
-      gap: 8px !important;
-      padding: 10px 12px !important;
-      height: auto !important;
-      max-height: none !important;
-      min-height: 0 !important;
-      overflow: visible !important;
-    }
-    .app-header .header-left,
-    .app-header .header-right{
-      display: none !important;
-    }
-
-    /* Header PRO (logo arriba, titulo grande, jerarquia clara) */
-    .app-header{
-      padding: 14px 16px;
-    }
-
-    .header-top{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    .header-logo{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      height: auto;
-    }
-    .header-logo img{
-      max-height: 110px;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.55)) drop-shadow(0 0 14px rgba(0,255,163,0.18));
-    }
-
-    .header-stack{
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .header-title-main{
-      width: 100%;
-      max-width: 980px;
-      padding: 0 8px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #raceTitleText{
-      max-width: 100%;
-      width: auto;
-      flex: 1 1 auto;
-      font-size: clamp(20px, 6.2vw, 32px);
-      line-height: 1.05;
-      letter-spacing: 0.02em;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.55);
-      max-height: none;
-      -webkit-line-clamp: 3;
-    }
-
-    .header-mode-row{
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 2px;
-    }
-    .badge-mode{
-      font-size: clamp(12px, 3.4vw, 14px);
-      padding: 6px 12px;
-      border-radius: 999px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-    }
-
-    .app-header .header-title-sub{
-      width: 100%;
-      max-width: 980px;
-      font-size: clamp(12px, 3.8vw, 16px);
-      opacity: 0.92;
-      white-space: normal;
-      padding: 0 8px;
-      letter-spacing: 0.08em;
-    }
-    #raceSubtitle{
-      max-width: 100%;
-      width: auto;
-      font-size: inherit;
-    }
-
-    .header-subline{
-      width: 100%;
-      max-width: 980px;
-      font-size: clamp(12px, 3.3vw, 14px);
-      opacity: 0.92;
-      white-space: normal;
-      padding: 0 8px;
-    }
-    .header-mini{
-      width: 100%;
-      max-width: 980px;
-      font-size: clamp(11px, 3.0vw, 12px);
-      opacity: 0.72;
-      padding: 0 8px;
-    }
-
-    .header-controls{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      margin-top: 8px;
-    }
-    .header-actions-row{
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      max-width: 980px;
-    }
-
-    .header-version{
-      width: 100%;
-      text-align: center;
-      font-size: 11px;
-      opacity: 0.70;
-      padding-top: 6px;
-    }
-
-    @media (max-width: 420px){
-      .app-header{ padding: 12px 10px !important; }
-      .header-actions-row{ gap: 6px; }
-      .header-logo img{ max-height: 96px; }
-      #raceTitleText{ font-size: clamp(22px, 7.2vw, 30px); }
-      .badge-mode{ padding: 6px 10px; }
-      .app-header .header-title-sub{ letter-spacing: 0.06em; }
-    }
-
-    @media (max-width: 360px){
-      #raceTitleText{ font-size: clamp(20px, 7.8vw, 28px); }
-      .header-logo img{ max-height: 90px; }
-    }
-
-    @media (min-width: 900px){
-      .header-logo img{ max-height: 124px; }
-      #raceTitleText{ font-size: clamp(24px, 3.2vw, 34px); }
-    }
-
-
-/* v0.0.1.47 - Header compact: fixed height 250px (without breaking logic) */
-.app-header{
-  height: 250px !important;
-  min-height: 250px !important;
-  max-height: 250px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 6px !important;
-  overflow: hidden !important;
+  background: rgba(0,0,0,0.72); color: rgba(255,255,255,0.92);
+  border:1px solid rgba(255,255,255,0.14); border-radius: 999px;
+  padding: 8px 14px; font-weight: 800; letter-spacing: .04em;
+  z-index: 99999; opacity:0; pointer-events:none;
+  transition: opacity .18s ease, transform .18s ease;
 }
+.toast.on{ opacity:1; transform:translateX(-50%) translateY(-4px); }
 
-.header-top{ margin-bottom: 2px !important; }
-
-.header-logo img{
-  max-height: 80px !important;
-  width: auto !important;
-}
-
-.header-stack{
-  width: 100% !important;
-  flex: 1 1 auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 6px !important;
-  overflow: visible !important;
-  z-index: 2 !important;
-}
-
-.header-title-main{
-  margin: 0 !important;
-  line-height: 1.05 !important;
-}
-#raceTitleText{
-  font-size: clamp(14px, 4.0vw, 22px) !important;
-  letter-spacing: 0.5px !important;
-  -webkit-line-clamp: 2 !important;
-}
-
-.header-mode-row{ margin-top: 2px !important; }
-
-#raceModeRow{ width: 100% !important; display:flex !important; justify-content:center !important; z-index: 3 !important; }
-#raceModeBadge{ font-size: 12px !important; height: 28px !important; padding: 0 14px !important; background: rgba(0,0,0,0.35) !important; border-color: rgba(255,255,255,0.28) !important; color: rgba(255,255,255,0.96) !important; text-shadow: 0 2px 10px rgba(0,0,0,0.65) !important; }
-
-.header-title-sub{
-  margin-top: 0 !important;
-  font-size: clamp(10px, 2.6vw, 12px) !important;
-  line-height: 1.1 !important;
-  max-width: 100% !important;
-}
-
-.header-subline{
-  font-size: clamp(11px, 2.8vw, 13px) !important;
-  line-height: 1.15 !important;
-}
-
-.header-mini{
-  font-size: 10px !important;
-  opacity: 0.85 !important;
-}
-
-.header-controls{
-  width: 100% !important;
-  display: flex !important;
-  justify-content: center !important;
-  margin-top: 8px !important;
-  z-index: 1 !important;
-}
-
-.header-actions-row{
-  gap: 6px !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-}
-
-.header-version{
-  margin-top: auto !important;
-  padding-top: 4px !important;
-  font-size: 10px !important;
-  opacity: 0.75 !important;
-  text-align: center !important;
-}
-
-/* v0.0.1.52 - Force race mode badge visibility and contrast */
-#raceModeRow{
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  z-index: 5;
-}
-#raceModeBadge{
-  display: inline-flex !important;
-  min-height: 28px;
-  padding: 6px 14px;
-}
-
-
-/* ===== Header controls: force single row (LIVE + MODO + buttons) ===== */
-:root{
-  --hdrCtrlH: 22px;
-  --hdrCtrlFont: 9px;
-  --hdrCtrlPadX: 6px;
-  --hdrCtrlGap: 4px;
-  --hdrCtrlW: 60px;
-}
-.header-controls{
-  width: 100% !important;
-  margin-top: 6px !important;
-}
-.header-actions-row{
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  justify-content: center !important;
-  align-items: center !important;
-  gap: var(--hdrCtrlGap) !important;
-  width: 100% !important;
-  overflow: hidden !important;
-}
-.header-actions-row > *{
-  flex: 0 1 auto !important;
-  min-width: 0 !important;
-}
-.header-actions-row button.header-help{
-  height: var(--hdrCtrlH) !important;
-  padding: 0 var(--hdrCtrlPadX) !important;
-  font-size: var(--hdrCtrlFont) !important;
-  line-height: 1 !important;
-  border-radius: 12px !important;
-  white-space: nowrap !important;
-  min-width: var(--hdrCtrlW) !important;
-  width: var(--hdrCtrlW) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-#raceModeRow{
-  height: var(--hdrCtrlH) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-}
-#raceModeBadge.badge-mode{
-  height: var(--hdrCtrlH) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  padding: 0 var(--hdrCtrlPadX) !important;
-  font-size: var(--hdrCtrlFont) !important;
-  line-height: 1 !important;
-  border-radius: 12px !important;
-  white-space: nowrap !important;
-}
-#liveIndicator.badge-live{
-  height: var(--hdrCtrlH) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  padding: 0 var(--hdrCtrlPadX) !important;
-  font-size: var(--hdrCtrlFont) !important;
-  line-height: 1 !important;
-  border-radius: 12px !important;
-  white-space: nowrap !important;
-  min-width: var(--hdrCtrlW) !important;
-  width: var(--hdrCtrlW) !important;
-  justify-content: center !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-/* Kill any scaling that could hide controls */
-.app-header .header-controls{ transform: none !important; }
-
-@media (max-width: 420px){
-  :root{
-    --hdrCtrlH: 26px;
-    --hdrCtrlFont: 12px;
-    --hdrCtrlPadX: 10px;
-    --hdrCtrlGap: 6px;
-  }
-  .header-actions-row{
-    justify-content: flex-start !important;
-    padding: 0 6px !important;
-  }
-}
-/* ===== /Header controls ===== */
-
-
-/* v0.0.1.69 tweak: header-stack 50px, keep subtitle visible */
-.header-stack{height:50px !important; max-height:50px !important; overflow:visible !important;}
-#raceTitleText{font-size: clamp(14px, 4.0vw, 22px) !important; line-height:1.05 !important;}
-#raceSubtitle{font-size: 9px !important; line-height:1.0 !important; margin-top:-4px !important; opacity:0.78 !important;}
-.header-controls{margin-top:6px !important;}
-.header-actions-row{gap:6px !important;}
-
-
-/* v0.0.1.78 - tighten header-title-sub to 8px height */
-.header-title-sub{
-  height:8px !important;
-  min-height:8px !important;
-  line-height:8px !important;
-  overflow:hidden !important;
-  margin:0 !important;
-  padding:0 !important;
-  display:block !important;
-}
-
-/* ---- LOGO OVERRIDE (v0.0.1.96) ---- */
-.header-logo img{
-  width: auto !important;
-  height: 96px !important;
-  max-height: 96px !important;
-  max-width: 95% !important;
-  object-fit: contain !important;
-}
-@media (max-width: 520px){
-  .header-logo img{
-    height: 72px !important;
-    max-height: 72px !important;
-    max-width: 96% !important;
-  }
-}
-
-
-/* ====== v0.0.2.12 logo fit (no crop, bigger, moved down) ====== */
-.app-header .header-logo{
-  height: 110px !important;
-  min-height: 110px !important;
-  overflow: visible !important; /* allow full logo, no clipping */
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding-top: 6px !important;
-}
-.app-header .header-logo img{
-  width: min(620px, 96%) !important;
-  height: 100% !important;
-  max-height: none !important;
-  max-width: none !important;
-  object-fit: contain !important; /* never crop */
-  transform: translateY(10px) scale(1.00) !important; /* move down 10px */
-  transform-origin: center center !important;
-  filter: drop-shadow(0 0 10px rgba(0,0,0,0.35)) !important;
-}
-@media (max-width: 520px){
-  .app-header .header-logo{
-    height: 84px !important;
-    min-height: 84px !important;
-    padding-top: 4px !important;
-  }
-  .app-header .header-logo img{
-    width: 96% !important;
-    transform: translateY(8px) scale(1.00) !important;
-  }
-}
-
-/* v0.0.2.12 - Header: altura estable (sin salto al cambiar LIVE) */
-.app-header{
-  height: 165px !important;
-  min-height: 165px !important;
-  max-height: 165px !important;
-  padding: 12px 14px !important;
-}
-.app-header.live-on,
-.app-header.live-off{
-  height: 165px !important;
-  min-height: 165px !important;
-  max-height: 165px !important;
-}
-.header-stack{ flex: 0 0 auto !important; }
-.header-controls{ margin-top: 6px !important; }
-.header-version{ padding-top: 4px !important; }
-
-
-/* =========================
-   Q TABLA (Clasificacin) - UI only
-   ========================= */
-.header-help.header-qtable{ letter-spacing: .35px; font-weight: 900; }
-
-#qualiBackdrop .manual-panel{
-  width: min(880px, 100%);
-  padding: 10px;
-  border-radius: 16px;
-}
-#qualiBackdrop .manual-title{ font-size: 15px; }
-#qualiBackdrop .manual-sub{ font-size: 10.5px; }
-
-#qualiBackdrop .qmeta{ display:flex; flex-wrap:wrap; gap:6px; margin: 0 0 8px 0; }
-#qualiBackdrop .qchip{
-  display:inline-flex; align-items:center; gap:6px;
-  padding: 5px 9px; font-size: 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(148,163,184,0.22);
-  background: rgba(0,0,0,0.18);
-  color: var(--text-main);
-  font-weight: 900;
-}
-#qualiBackdrop .qsel{
-  padding: 5px 7px; font-size: 11px;
-  border-radius: 10px;
-  border: 1px solid rgba(148,163,184,0.22);
-  background: rgba(0,0,0,0.22);
-  color: var(--text-main);
-  outline: none;
-}
-#qualiBackdrop .qtable-wrap{
-  overflow:auto;
-  max-height: 60vh;
-  border-radius: 12px;
-  border: 1px solid rgba(148,163,184,0.14);
-  background: rgba(0,0,0,0.14);
-}
-#qualiBackdrop .qtable{
-  font-size: 11px;
-  min-width: 720px;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-#qualiBackdrop .qtable th, #qualiBackdrop .qtable td{
-  padding: 6px 7px;
-  vertical-align: top;
-}
-#qualiBackdrop .qtable th{
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: rgba(8,10,15,0.96);
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(148,163,184,0.18);
-}
-#qualiBackdrop .qtable tbody tr:nth-child(even) td{
-  background: rgba(255,255,255,0.015);
-}
-#qualiBackdrop .qcol-pos{ width: 46px; }
-#qualiBackdrop .qcol-name{ width: 210px; }
-#qualiBackdrop .qcol-q{ width: 58px; }
-#qualiBackdrop .qcol-laps{ width: 82px; }
-#qualiBackdrop .qcol-time{ width: 128px; }
-#qualiBackdrop .qmain{ white-space: nowrap; }
-#qualiBackdrop .qtag{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: .3px;
-  border: 1px solid rgba(255,122,24,0.35);
-  background: rgba(255,122,24,0.10);
-  color: rgba(242,245,255,0.95);
-  margin-bottom: 3px;
-}
-#qualiBackdrop td.qcell-best{
-  background: rgba(0, 255, 160, 0.07);
-  box-shadow: inset 2px 0 0 rgba(0,255,160,0.55);
-}
-#qualiBackdrop td.qcell-empty{
-  color: rgba(163,173,189,0.65);
-}
-
-
-/* =========================
-   HARD OVERRIDES v0.0.2.26
-   - Corrige "brinco" del header y recortes en iPhone 12
-   - Ajusta header-mode-row sin scale (wrap responsive)
-   - Top banner siempre responsivo (no desaparece)
-========================= */
-.top-banner-placeholder{
-  width: 440px !important;
-  max-width: 440px !important;
-  min-width: 440px !important;
-  height: 145px !important;
-  margin: 10px auto 8px auto !important;
-  background: rgba(8,10,15,0.55) !important;
-  border: 1px solid rgba(255,255,255,0.12) !important;
-  border-radius: 18px !important;
-  box-shadow: 0 12px 34px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.05) !important;
-  overflow: hidden !important;
-  backdrop-filter: blur(6px) !important;
-}
-
-@media (max-width: 460px){
-  .top-banner-placeholder{
-    width: min(440px, 100%) !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }
-}
-
-.top-banner-placeholder .top-banner-logo{
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain !important;
-  display:block !important;
-}
-
-/* Header: misma altura siempre (evita que abra grande y luego se encoja) */
+/* Header: nunca height fijo (iOS Pro/Max + texto grande) */
 .app-header,
 .app-header.live-on,
 .app-header.live-off{
-  height: 165px !important;
-  min-height: 165px !important;
-  max-height: 165px !important;
-}
-
-/* El modo/controles se adaptan al ancho real, sin transform que recorta */
-.app-header .header-mode-row{
-  transform: none !important;
-  margin: 0 !important;
-  width: 100% !important;
+  position: relative !important;
   display:flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 6px 8px !important;
-  overflow: visible !important;
-}
-
-/* En pantallas chicas: reduce gap y permite 2 renglones sin cortar */
-@media (max-width: 420px){
-  .app-header .header-mode-row{ gap: 5px 6px !important; }
-  .app-header .header-mode-row .btn-pill,
-  .app-header .header-mode-row .spotter-btn{
-    padding: 7px 10px !important;
-    min-width: 64px !important;
-  }
-}
-
-
-/* ===== HOTFIX v0.0.2.41: responsive header rows (no scale, no cut) ===== */
-.app-header .header-mode-row{
-  transform: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 6px 8px !important;
-}
-.app-header .header-controls{
-  transform: none !important;
-  margin-top: 0 !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 6px 8px !important;
-}
-.app-header .header-actions-row{
-  flex-wrap: wrap !important;
-  row-gap: 6px !important;
-}
-@media (max-width: 420px){
-  .app-header .header-controls .btn{ padding: 6px 10px !important; }
-  .app-header .header-mode-row .badge-mode{ font-size: 10px !important; }
-}
-
-
-/* v0.0.2.52 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
-html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-.app-header,
-.app-header.live-on,
-.app-header.live-off{
-  height: auto !important;
-  min-height: 170px !important;
-  max-height: none !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap: 8px !important;
+  height:auto !important;
+  max-height:none !important;
+  min-height:170px !important;
   padding-top: calc(10px + env(safe-area-inset-top)) !important;
+  padding-right: 16px !important;
+  padding-left: 16px !important;
+  padding-bottom: 10px !important;
   overflow: clip !important;
 }
 @supports not (overflow: clip){
   .app-header{ overflow: hidden !important; }
 }
 
-.app-header .header-controls,
-.app-header .header-stack,
-.app-header .header-title-main,
-.app-header .header-title-sub,
-.app-header .header-version-row{
-  min-width: 0 !important;
+/* Viejos paneles laterales fuera */
+.app-header .header-left,
+.app-header .header-right{ display:none !important; }
+
+/* Logo centrado y estable */
+.header-top{ display:flex !important; justify-content:center !important; align-items:center !important; margin-bottom: 6px !important; }
+.header-logo{ width:100% !important; display:flex !important; justify-content:center !important; align-items:center !important; overflow:visible !important; }
+.header-logo img{
+  height: 92px !important;
+  max-height: 92px !important;
+  width:auto !important;
+  max-width: min(560px, 92vw) !important;
+  object-fit: contain !important;
+}
+@media (max-width: 520px){
+  .header-logo img{ height: 72px !important; max-height: 72px !important; max-width: min(420px, 92vw) !important; }
 }
 
-.app-header .header-actions-row{
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 6px !important;
-  row-gap: 6px !important;
+/* Stack: titulos centrados */
+.header-stack{ display:flex !important; flex-direction:column !important; align-items:center !important; text-align:center !important; gap: 6px !important; min-width:0 !important; }
+.header-title-main{ width:100% !important; max-width:980px !important; padding:0 8px !important; display:flex !important; justify-content:center !important; align-items:center !important; }
+#raceTitleText{
+  max-width:100% !important;
+  width:auto !important;
+  flex: 1 1 auto !important;
+  font-size: clamp(20px, 6.2vw, 32px) !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.02em !important;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.55) !important;
 }
 
-.app-header .header-title-sub{
+/* Subtitulo: una linea, con elipsis para evitar overflow */
+.header-title-sub,
+#raceSubtitle{
+  width:100% !important;
+  max-width:980px !important;
+  padding:0 8px !important;
+  font-size: clamp(12px, 3.8vw, 16px) !important;
+  opacity: .92 !important;
+  letter-spacing: 0.08em !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
 
-.app-header .header-version-row{
-  display: flex !important;
+/* Subline y mini: permitimos wrap */
+.header-subline,
+.header-mini{ width:100% !important; max-width:980px !important; padding:0 8px !important; min-width:0 !important; }
+
+/* Controls: fila del modo + fila botones */
+.header-controls{ display:flex !important; justify-content:center !important; align-items:center !important; width:100% !important; margin-top: 6px !important; }
+.header-actions-row{
+  position: relative !important;
+  display:flex !important;
   flex-wrap: wrap !important;
+  justify-content: center !important;
   align-items: center !important;
-  gap: 6px !important;
+  align-content: center !important;
+  gap: 8px !important;
+  row-gap: 8px !important;
+  width: 100% !important;
+  max-width: 980px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+/* Live dot: absoluto, no rompe centrado */
+.header-actions-row .badge-live{
+  position:absolute !important;
+  left:10px !important;
+  top:0px !important;
+  margin:0 !important;
+}
+
+/* Row 1 = modo pill, Row 2 = botones */
+.header-actions-row .header-mode-row{ flex: 0 1 auto !important; margin: 0 auto !important; }
+.header-actions-row .hdr-break{ flex-basis:100% !important; height:0 !important; }
+
+/* Botones: no estirar y no wrap de texto */
+.header-actions-row button.header-help{
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  min-width: 84px !important;
 }
 
 @media (max-width: 420px){
-  .app-header .header-actions-row{ gap: 5px !important; row-gap: 5px !important; }
-  .app-header .header-title-main{ font-size: 18px !important; }
+  .header-actions-row{ gap: 6px !important; row-gap: 6px !important; }
+  .header-actions-row button.header-help{ min-width: 64px !important; }
 }
 
-
-/* --- FINAL HEADER OVERRIDES (iOS Safari stability) --- */
-html, body{
-  -webkit-text-size-adjust: 100% !important;
-  text-size-adjust: 100% !important;
-}
-
-/* Center button rows always (Safari was forcing flex-start somewhere) */
-.app-header .header-actions-row{
-  justify-content: center !important;
-  align-content: center !important;
+/* Version row: en flujo normal (no absoluto) */
+.header-version-row{
+  position: static !important;
+  width: 100% !important;
+  display:flex !important;
+  justify-content:center !important;
+  align-items:center !important;
   flex-wrap: wrap !important;
-  padding: 0 !important;
-  row-gap: 8px !important;
+  gap: 10px !important;
+  margin-top: 8px !important;
+  padding-bottom: 2px !important;
 }
-
-/* Buttons: never stretch, never wrap text */
-.app-header .header-actions-row button.header-help{
-  flex: 0 0 auto !important;
-  white-space: nowrap !important;
+.header-version-row .header-version{
+  display:inline-block !important;
+  font-size: 10px !important;
+  letter-spacing: .6px !important;
+  opacity: .86 !important;
+  color: rgba(255,255,255,0.78) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45) !important;
+  pointer-events:none !important;
 }
-
-/* Make sure the version row never overlaps controls */
-.app-header .header-controls{ margin-bottom: 2px !important; }
-.app-header .header-version-row{ margin-top: 2px !important; }
+#appVersion{ font-weight: 900 !important; opacity: .96 !important; color: rgba(255,255,255,0.90) !important; }
 
 </style>
 </head>
@@ -5932,7 +5263,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.52</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.62</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6245,7 +5576,7 @@ html, body{
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.52</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.54</div>
           <div class="manual-sub">Gua rpida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -6339,7 +5670,7 @@ html, body{
 
 
 // ============================================================
-// CONSOLIDATED JS (v0.0.2.52)
+// CONSOLIDATED JS (v0.0.2.56)
 // - All inline scripts merged in source order.
 // - Wrapped with init guard to avoid double-binding listeners.
 // ============================================================
@@ -6540,7 +5871,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.52";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.62";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -7283,6 +6614,84 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.52";
     const appHeader      = document.querySelector('.app-header');
 
     const pilotSelect     = document.getElementById('pilotSelect');
+
+    // Pilot Select UX: iOS Safari a veces tarda en poblar la lista al iniciar.
+    // - Muestra placeholder "Cargando pilotos..."
+    // - Restaura una lista cacheada (si existe) para no dejar el selector vacio
+    // - Reintenta poblar en background hasta que llegue classification
+    function setPilotSelectLoading(on, msg){
+      try{
+        const sel = pilotSelect || document.getElementById('pilotSelect');
+        if(!sel) return;
+        if(on){
+          sel.classList.add('is-loading');
+          sel.disabled = false;
+          sel.innerHTML = '';
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = msg || 'Cargando pilotos...';
+          sel.appendChild(opt);
+        } else {
+          sel.classList.remove('is-loading');
+          sel.disabled = false;
+        }
+      }catch(e){}
+    }
+
+    function restorePilotOptionsCache(){
+      try{
+        const sel = pilotSelect || document.getElementById('pilotSelect');
+        if(!sel) return false;
+        const raw = (localStorage.getItem('aiSpotterPilotOptionsCache') || '').trim();
+        if(!raw) return false;
+        const cache = JSON.parse(raw);
+        if(!cache || !Array.isArray(cache.options) || cache.options.length < 2) return false;
+        sel.innerHTML = '';
+        cache.options.forEach(o=>{
+          const opt = document.createElement('option');
+          opt.value = String(o.value||'');
+          opt.textContent = String(o.label||'');
+          sel.appendChild(opt);
+        });
+        return true;
+      }catch(e){ return false; }
+    }
+
+    function initPilotSelectUIOnce(){
+      try{
+        const sel = pilotSelect || document.getElementById('pilotSelect');
+        if(!sel) return; // DOM aun no listo
+        if (window.__pilotSelectUIInitDone) return;
+        window.__pilotSelectUIInitDone = true;
+
+        const hadCache = restorePilotOptionsCache();
+        if(!hadCache) setPilotSelectLoading(true, 'Cargando pilotos...');
+
+        // Reintentos suaves (Safari a veces tarda en el primer tick del feed)
+        let tries = 0;
+        const t = setInterval(()=>{
+          tries++;
+          try{
+            if (raceData && Array.isArray(raceData.classification) && raceData.classification.length){
+              try { updatePilotOptions(); } catch(e) {}
+              setPilotSelectLoading(false);
+              clearInterval(t);
+              return;
+            }
+          }catch(e){}
+          // Hint opcional (silencioso si showToast aun no existe)
+          if (tries === 8){
+            try { if (typeof showToast === 'function') showToast('Cargando pilotos...', 1200); } catch(e) {}
+          }
+          if (tries > 40) clearInterval(t);
+        }, 450);
+      }catch(e){}
+    }
+
+    // Arranque (si el DOM aun no existe, DOMContentLoaded lo activara)
+    try { initPilotSelectUIOnce(); } catch(e) {}
+    document.addEventListener('DOMContentLoaded', () => { try { initPilotSelectUIOnce(); } catch(e) {} });
+
 
     // Botones VOZ (desktop + mini)
     const voiceToggleBtns = Array.from(document.querySelectorAll('[data-voice-toggle]'));
@@ -10862,7 +10271,17 @@ function enqueueSpeech(text, opts = {}) {
         if (interrupt) {
           speechQueue.length = 0;
           speechSpeaking = false;
-          try { if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch (e) {}
+          try {
+            const ios = (typeof isIOSWebKit === 'function' && isIOSWebKit());
+            const shield = (__ttsCancelShieldUntil && Date.now() <= __ttsCancelShieldUntil);
+            const unlock = (__ttsUnlockInFlight === true || pendingAutoVoiceUnlock === true);
+            if (!ios && !shield && !unlock) {
+              window.speechSynthesis.cancel();
+            } else {
+              // iOS: evita cancel() agresivo - puede romper el audio o pedir muchos taps.
+              try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(ex) {}
+            }
+          } catch (e) {}
         }
 
         const baseRate = (Number.isFinite(ttsRate) ? ttsRate : 1.5);
@@ -11082,7 +10501,9 @@ function scheduleOneTapUnlock() {
     try { if (pendingAutoVoiceUnlock) scheduleOneTapUnlock(); } catch(e) {}
   };
 
-  try { window.addEventListener('click', handler, { once:true, passive:true }); } catch(e) {}
+  try { window.addEventListener('pointerdown', handler, { once:true, passive:true, capture:true }); } catch(e) {}
+  try { window.addEventListener('touchend', handler, { once:true, passive:true, capture:true }); } catch(e) {}
+  try { window.addEventListener('click', handler, { once:true, passive:true, capture:true }); } catch(e) {}
 }
 
 // Unlock TTS en iOS/WebKit: requiere gesto del usuario.
@@ -11093,6 +10514,7 @@ let __ttsUnlockedOnce = false;
 
 let __ttsUnlockInFlight = false;
 let __ttsUnlockStartedAt = 0;
+let __ttsUnlockCooldownUntil = 0; // anti spam unlock (iOS)
 
 function unlockTTSOnce(reason = '') {
       try {
@@ -11108,6 +10530,10 @@ function unlockTTSOnce(reason = '') {
         }
 
         const now = Date.now();
+
+        // Cooldown corto: evita spam por doble tap o eventos combinados (iOS)
+        try { if (__ttsUnlockCooldownUntil && now < __ttsUnlockCooldownUntil) return false; } catch(e) {}
+        try { __ttsUnlockCooldownUntil = now + 800; } catch(e) {}
 
         // Anti-spam: evita 20 taps que disparen 20 unlocks en paralelo.
         try {
@@ -11143,7 +10569,7 @@ function unlockTTSOnce(reason = '') {
         u.rate = clampNum((isFinite(ttsRate) ? ttsRate : 1.5), 0.8, 2.0);
         u.pitch = 1.0;
         // Casi inaudible: desbloquea sin gritarte "AUDIO LISTO" cada vez.
-        u.volume = 1.0;
+        u.volume = 0.01;
 
         try {
           u.onstart = () => {
@@ -11168,7 +10594,12 @@ function unlockTTSOnce(reason = '') {
           try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
         };
 
-        try { u.onend = () => { if (!didStart) finishFail(); }; } catch(e) {}
+        try { u.onend = () => {
+          try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
+          if (!didStart) { finishFail(); return; }
+          // Si el usuario ya encolo mensajes (ej. al seleccionar piloto), al terminar el unlock drenamos la cola.
+          try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 60); } catch(e) {}
+        }; } catch(e) {}
         try { u.onerror = () => { finishFail(); }; } catch(e) {}
 
         // Respetar voz elegida (si existe)
@@ -11229,7 +10660,6 @@ function setVoiceMaster(on, opts = {}) {
       // unlock audio (seleccionar piloto cuenta como gesto)
       try { ensureAudioCtx(); } catch(e) {}
       if (voiceMasterEnabled && !opts.silent) {
-        try { showToast('VOZ ACTIVA', 900); } catch(e) {}
         // Intento de unlock silencioso en iOS/Android (si hay gesto)
         try { unlockTTSOnce('voice-master-on'); } catch(e) {}
       }
@@ -11245,9 +10675,11 @@ function setVoiceMaster(on, opts = {}) {
 }
     }
 
-      // VOZ: respuesta inmediata al primer toque (iOS/Android).
-      // - Usamos pointerdown/touchstart para evitar retrasos y taps perdidos.
-      // - Si el motor se bloqueo por idle/background, aqui solo reactivamos (sin apagar).
+      
+      // VOZ: modulo consolidado (v0.0.2.54)
+      // - Un solo flujo de activacion
+      // - iPhone: confirmacion inmediata al tocar el boton
+      // - Sin listeners duplicados
       let __lastVoiceTapAt = 0;
 
       function __voiceBtnNeedsUnlock(){
@@ -11257,60 +10689,49 @@ function setVoiceMaster(on, opts = {}) {
         }catch(e){ return !!pendingAutoVoiceUnlock; }
       }
 
-      function __onVoiceToggle(ev){
-        try{ if (ev && ev.preventDefault) ev.preventDefault(); }catch(e){}
-        try{ if (ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
-
-        const now = Date.now();
-        if (now - __lastVoiceTapAt < 320) return;
-        __lastVoiceTapAt = now;
-
-        // Esto cuenta como gesto de usuario
-        try { __userGestureUnlocked = true; } catch(e) {}
-        try { ensureAudioCtx(); } catch(e) {}
-
-        // Si esta ON pero bloqueado, solo reactivamos (no toggle OFF)
-        if (voiceMasterEnabled && __voiceBtnNeedsUnlock()){
-          // No limpies needs-unlock aqui. Se limpia solo cuando el motor realmente arranca (onstart).
-          try { unlockTTSOnce('voice-btn-recover'); } catch(e) {}
-          try { forceTtsRecover('voice-btn-recover'); } catch(e) {}
-          try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 120); } catch(e) {}
-          try { showToast('Reactivando audio...', 900); } catch(e) {}
-          return;
-        }
-
-        setVoiceMaster(!voiceMasterEnabled, { user:true });
-
-        // Al encender: intento de unlock silencioso (si aplica)
-        try { if (voiceMasterEnabled) unlockTTSOnce('voice-btn'); } catch(e) {}
-      }
-
-      voiceToggleBtns.forEach(btn => {
+      function __bindVoiceButtonOnce(btn){
+        try{
+          if (!btn) return;
+          if (btn.dataset && btn.dataset.voiceBound === '1') return;
+          if (btn.dataset) btn.dataset.voiceBound = '1';
+        }catch(e){}
         try { btn.style.touchAction = 'manipulation'; } catch(e) {}
 
-        // iPhone: usar CLICK (mas confiable para destrabar TTS).
-        // Otros: pointerdown/touchstart para respuesta rapida y evitar doble toggle.
-        try {
-          const isIOS = (() => {
-            try {
-              return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            } catch(e) { return false; }
-          })();
+        btn.addEventListener('click', (ev) => {
+          try { if (ev && ev.preventDefault) ev.preventDefault(); } catch(e){}
+          const now = Date.now();
+          if (now - __lastVoiceTapAt < 280) return;
+          __lastVoiceTapAt = now;
 
-          const evName = (isIOS ? 'click' : (window.PointerEvent ? 'pointerdown' : 'touchstart'));
-          btn.addEventListener(evName, __onVoiceToggle, { passive:false });
+          // Gesto de usuario (iOS)
+          try { __userGestureUnlocked = true; } catch(e) {}
+          try { ensureAudioCtx(); } catch(e) {}
 
-          // Evita doble toggle por click fantasma SOLO cuando el handler principal no es click
-          if (evName !== 'click') {
-            try { btn.addEventListener('click', (ev)=>{ try{ev.preventDefault();}catch(e){} }, { passive:false }); } catch(e) {}
+          // Si esta ON pero bloqueado: solo reactivar (no toggle OFF)
+          if (voiceMasterEnabled && __voiceBtnNeedsUnlock()) {
+            try { unlockTTSOnce('voice-btn-recover'); } catch(e) {}
+            try { showToast('Reactivando audio...', 900); } catch(e) {}
+            try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
+            return;
           }
-        } catch(e) {
-          try { btn.addEventListener('click', __onVoiceToggle, { passive:false }); } catch(e2) {}
-        }
-      });
-}
 
-      // Sync UI del boton VOZ con el estado real al cargar (evita clicks extra)
+          // Toggle normal
+          try { setVoiceMaster(!voiceMasterEnabled, { user:true }); } catch(e) {}
+
+          // Al encender: confirmacion inmediata
+          if (voiceMasterEnabled) {
+            try { unlockTTSOnce('voice-btn-on'); } catch(e) {}
+          } else {
+            try { pendingAutoVoiceUnlock = false; } catch(e) {}
+          }
+        }, { passive:false });
+      }
+
+      try { voiceToggleBtns.forEach(__bindVoiceButtonOnce); } catch(e) {}
+
+    }
+
+// Sync UI del boton VOZ con el estado real al cargar (evita clicks extra)
       try { setVoiceMaster(voiceMasterEnabled, { silent:true }); } catch(e) {}
 
       // Boton BASICO (solo seguimiento). No existe modo manual: el spotter decide todo.
@@ -11726,24 +11147,55 @@ function toFixedFloor(value, decimals = 0) {
     }
 
     // Reenganche al volver al tab (Chrome puede soltar wake lock)
+    // - Handler unico (evita duplicados con el modulo VOZ)
+    // - iOS: al volver de sleep/background, TTS puede quedar mudo hasta un tap
     let __visHiddenAt = 0;
+    let __lastUnlockToastAt = 0;
+
+    function __isIOSLike(){
+      try {
+        const ua = navigator.userAgent || '';
+        const mt = navigator.maxTouchPoints || 0;
+        return (/iPad|iPhone|iPod/i.test(ua) || (/Macintosh/i.test(ua) && mt > 1));
+      } catch(e){ return false; }
+    }
+
+    function __markTtsNeedsUnlock(msg, minToastGapMs){
+      try {
+        if (!voiceMasterEnabled) return;
+        pendingAutoVoiceUnlock = true;
+        try { __ttsBlockedSince = Date.now(); } catch(e) {}
+        try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+
+        if (msg) {
+          const gap = Math.max(1200, Number(minToastGapMs)||0);
+          const now = Date.now();
+          if (!__lastUnlockToastAt || (now - __lastUnlockToastAt) > gap) {
+            __lastUnlockToastAt = now;
+            try { if (typeof showToast === 'function') showToast(msg, 2200); } catch(e) {}
+          }
+        }
+        try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
+      } catch(e) {}
+    }
+
     document.addEventListener('visibilitychange', async () => {
       try {
         if (document.visibilityState === 'hidden') {
           __visHiddenAt = Date.now();
 
-          // iPhone: al apagar pantalla, el motor de voz puede quedar "bloqueado".
+          // iPhone: al apagar pantalla, el motor de voz puede quedar "bloqueado"
           if (voiceMasterEnabled) {
             try { __ttsUnlockedOnce = false; } catch(e) {}
             try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
-            try { pendingAutoVoiceUnlock = true; } catch(e) {}
-            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+            try { __markTtsNeedsUnlock(null, 0); } catch(e) {}
           }
           return;
         }
 
         if (document.visibilityState === 'visible') {
           const awayMs = __visHiddenAt ? (Date.now() - __visHiddenAt) : 0;
+          __visHiddenAt = 0;
 
           // forzar refresh inmediato al regresar
           try { loadRaceFromFirebase(); } catch(e) {}
@@ -11757,20 +11209,21 @@ function toFixedFloor(value, decimals = 0) {
             }
           } catch(e) {}
 
-          // Recovery TTS: en iPhone a veces se rompe aunque hayas estado fuera poquito.
           if (voiceMasterEnabled) {
-            try { __ttsUnlockedOnce = false; } catch(e) {}
+            // Soft resume
             try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
             try { confirmVoiceButtons && confirmVoiceButtons(); } catch(e) {}
-            try { pendingAutoVoiceUnlock = true; } catch(e) {}
-            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
-            try {
-              const msg = (awayMs > 3000)
-                ? 'Volviste. Un tap y el audio revive.'
-                : 'Si el iPhone se quedo mudo, toca una vez.';
-              showToast(msg, 2200);
-            } catch(e) {}
-            try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
+
+            // iOS: requiere gesto para reactivar
+            if (__isIOSLike()) {
+              const msg = (awayMs > 8000) ? 'Toca una vez para reactivar audio' : null;
+              __markTtsNeedsUnlock(msg, 9000);
+            } else {
+              // No iOS: intentamos seguir sin molestar
+              try { pendingAutoVoiceUnlock = false; } catch(e) {}
+              try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+              try { pumpSpeechQueue(); } catch(e) {}
+            }
           }
         }
       } catch(e) {}
@@ -11798,10 +11251,11 @@ function toFixedFloor(value, decimals = 0) {
         try {
           if (!backgroundModeEnabled) return;
           if (!voiceMasterEnabled) return;
+          if (pendingAutoVoiceUnlock) return;
           try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
           try { ensureAudioCtx(); } catch(e) {}
         } catch(e) {}
-      }, 4000);
+      }, 9000);
     }
     startBgKeepAlive();
 
@@ -13393,7 +12847,7 @@ function computeSessionBestMs() {
 
     function updatePilotOptions() {
       if (isSelectingPilot) { pendingPilotOptionsUpdate = true; return; }
-      if (!raceData || !Array.isArray(raceData.classification)) return;
+      if (!raceData || !Array.isArray(raceData.classification) || !raceData.classification.length) { try { setPilotSelectLoading(true, 'Cargando pilotos...'); } catch(e) {} return; }
       const currentKey = selectedPilotKey;
 
       const signature = raceData.classification
@@ -13429,6 +12883,9 @@ function computeSessionBestMs() {
         const label = (num ? ('#' + num + ' - ') : '') + name;
         options.push({ value: key, label });
       });
+
+      try { localStorage.setItem('aiSpotterPilotOptionsCache', JSON.stringify({ ts: Date.now(), raceName: String((raceData && raceData.raceName) || ''), options })); } catch(e) {}
+      try { setPilotSelectLoading(false); } catch(e) {}
 
       pilotSelect.innerHTML = '';
       options.forEach(optData => {
@@ -13610,7 +13067,7 @@ function selectPilotByKey(key, opts = {}) {
           try { renderAutoTop3MiniGrid(); } catch(e) {}
           if (p && p.pos && p.pos > 0) { startPosForSelected = p.pos; lastNetGainValue = 0; }
           if (announce && p && voiceMasterEnabled) {
-            speakText('Siguiendo a ' + safeRacerName(p.racerName));
+            speakText('Siguiendo a ' + safeRacerName(p.racerName), { key: `follow_select_${k || selectedPilotKey || 'pilot'}`, priority: 92, interrupt: true, dedupe: true, allowInSilence: true, user: true });
           }
         }
 
