@@ -1,10 +1,10 @@
 <!--
-AI_Spotter_TRM_v0.0.2.50 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.51 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.0.2.21: Q TABLA (FIX guardado) (clasificacin) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
+- v0.0.2.21: Q TABLA (FIX guardado) (clasificación) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
 - v0.0.2.23: Fix UX: VOZ responde al primer toque (iOS/Android), debounced LIVE (sin parpadeo), header altura estable (sin salto). UI/TTS only.
 - v0.0.2.17: LapChart watermark restaurada (logo Vic) en fondo del canvas. UI only.
 - v0.0.1.99: Logo header ajustado -5% (reduce height de 88px a 84px) manteniendo 'cover' para recorte del aire.
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.50</title>
+  <title>AI_Spotter_TRM_v0.0.2.51</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <style>
     html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
@@ -5107,7 +5107,7 @@ body {
 
 
 <style id="header-compat-fix">
-/* v0.0.2.50 - header compatibility hardening */
+/* v0.0.2.51 - header compatibility hardening */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Avoid fixed-height traps (especially iOS with large text / dynamic viewport) */
@@ -5124,6 +5124,67 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .app-header { position: relative; }
 </style>
 
+
+<style id="hdr-canon-0_0_2_51">
+/* HEADER CANON v0.0.2.51 - iOS Safari/Chrome consistent */
+html, body {
+  -webkit-text-size-adjust: 100% !important;
+  text-size-adjust: 100% !important;
+}
+
+/* Never lock header height: allow it to grow */
+.app-header, .app-header.live-on, .app-header.live-off {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 170px !important;
+}
+
+.header-actions-row {
+  position: relative !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+  row-gap: 8px !important;
+  padding: 0 6px !important;
+  width: 100% !important;
+}
+
+/* Live dot should not steal centering space */
+.header-actions-row .badge-live {
+  position: absolute !important;
+  left: 10px !important;
+  top: 0px !important;
+  margin: 0 !important;
+}
+
+/* Force a clean line break: row 1 = mode pill, row 2 = buttons */
+.header-actions-row .hdr-break {
+  flex-basis: 100% !important;
+  height: 0 !important;
+}
+
+.header-actions-row .header-mode-row {
+  flex: 0 1 auto !important;
+  margin: 0 auto !important;
+}
+
+/* Buttons: consistent sizing and wrapping */
+.header-actions-row button {
+  flex: 0 0 auto !important;
+  min-width: 84px;
+}
+
+/* Subtitle truncation safety */
+.header-title-sub {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+</style>
 </head>
 <body class="skin-pro skin-vicpulse">
   <div class="app">
@@ -5141,15 +5202,16 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
             <span class="badge-live-dot"></span>
             </div>
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
+          <div class="hdr-break"></div>
           <button class="header-help header-auto" id="autoSkinBtn" type="button" title="Auto-skin">AUTO</button>
           <button class="header-help header-skin" id="skinBtn" type="button" title="Skin Vic's Pulse Timing">VIC</button>
-          <button class="header-help header-qtable" id="qTableBtn" type="button" title="Q TABLA (clasificacin)">Q TABLA</button>
+          <button class="header-help header-qtable" id="qTableBtn" type="button" title="Q TABLA (clasificación)">Q TABLA</button>
           <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
         </div>
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.50</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.51</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5462,7 +5524,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.41</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.51</div>
           <div class="manual-sub">Gua rpida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -5745,7 +5807,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.50";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.51";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -5980,7 +6042,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.50";
             return;
           } else {
             // Manga: anunciar cierre + Top3 y luego silencio
-            try { __autoAnnounceTop3Summary(r, 'Termin la clasificacin'); } catch(e) {}
+            try { __autoAnnounceTop3Summary(r, 'Termin la clasificación'); } catch(e) {}
             __autoPhase = 'FINISHED';
             __autoCloseStartedMs = now;
             return;
@@ -6081,7 +6143,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.50";
         const top = rows.slice(0,3);
         if (!top.length) return;
 
-        let head = forcedLabel ? String(forcedLabel) : (isManga ? 'Termin la clasificacin.' : 'Carrera terminada.');
+        let head = forcedLabel ? String(forcedLabel) : (isManga ? 'Termin la clasificación.' : 'Carrera terminada.');
         if (!head.endsWith('.')) head += '.';
 
         const part = (row, idx) => {
@@ -8613,7 +8675,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
     // BASIC (Seguimiento) - estabilidad de posicion para evitar jitter/flip-flop
     const basicPosStability = { lastSeenPos: null, candidatePos: null, candidateCount: 0, pendingStablePos: null, lastAnnouncedStablePos: null };
 
-// MANGA (clasificacin) - estabilidad de posicin para evitar "flip-flop" por salida escalonada
+// MANGA (clasificación) - estabilidad de posicin para evitar "flip-flop" por salida escalonada
     const mangaPosStability = { lastSeenPos: null, stablePos: null, stableCount: 0, lastAnnouncedStablePos: null };
     const mangaPosSettle = { active:false, lap:0, dueAt:0, samples:[], lastComputedPos:null };
 
@@ -9497,7 +9559,7 @@ let ttsRate = detectDefaultTtsRate();
           [/\bbsico\b/gi, 'b\xe1sico'],
           [/\bclasificaci[o\xf3]n\b/gi, 'clasificaci\xf3n'],
           [/\bclasificacion\b/gi, 'clasificaci\xf3n'],
-          [/\bclasificacin\b/gi, 'clasificaci\xf3n'],
+          [/\bclasificación\b/gi, 'clasificaci\xf3n'],
           [/\bposicion\b/gi, 'posici\xf3n'],
           [/\bposicin\b/gi, 'posici\xf3n'],
           [/\bultima\b/gi, '\xfaltima'],
@@ -10283,7 +10345,7 @@ function scheduleOneTapUnlock() {
 
     try { unlockTTSOnce('one-tap'); } catch(e) {}
 
-    // Si sigue bloqueado, dejamos pendingAutoVoiceUnlock y se rearmará donde corresponda.
+    // Si sigue bloqueado, dejamos pendingAutoVoiceUnlock y se rearmar donde corresponda.
     try { if (pendingAutoVoiceUnlock) scheduleOneTapUnlock(); } catch(e) {}
   };
 
@@ -11564,7 +11626,7 @@ try {
         ctx.fill();
       };
 
-      // best sesin (Opcin B: desde clasificacin visible)
+      // best sesin (Opcin B: desde clasificación visible)
       const sessionBestMs = computeSessionBestMs ? computeSessionBestMs() : 0;
 
       // errores grandes (rojo): +0.8s vs media o +0.9s vs best (lo que aplique)
@@ -12226,7 +12288,7 @@ let autoNarratorState = {
 // pairKey -> { lastSec, lastSec2, lastMs, lastLap, lastMentionMs }
 let autoPairState = new Map();
 
-// MANGA (clasificacin): seguimiento de pole/best lap sin saturar
+// MANGA (clasificación): seguimiento de pole/best lap sin saturar
 let autoQualiState = {
   bestOverallMs: null,
   bestOverallKey: '',
@@ -14093,7 +14155,7 @@ function autoBuildStoryCandidate(args) {
       ],
 
       qualiBest: [
-        (c) => 'En clasificacin, ' + c.pilot + ' marca ' + c.best + '.',
+        (c) => 'En clasificación, ' + c.pilot + ' marca ' + c.best + '.',
         (c) => 'Tiempo fuerte en quali: ' + c.pilot + ' ' + c.best + '.',
         (c) => 'Clasificacin: ' + c.pilot + ' mejora con ' + c.best + '.',
         (c) => 'Queda el registro. ' + c.pilot + ' con ' + c.best + '.',
@@ -15328,7 +15390,7 @@ if ((voiceSettings.pelea || voiceSettings.attack || voiceSettings.defense) && ba
   if (sc) addCand(sc);
 }
 
-// ====== MANGA (clasificacin): pole/best lap (menos ruido, ms sustancia)
+// ====== MANGA (clasificación): pole/best lap (menos ruido, ms sustancia)
 if (isMangaSess) {
   const wantBest = !!vs.bestlap;
   const wantPoleFight = !!(vs.bestlap || vs.pelea);
@@ -16580,7 +16642,7 @@ let label = 'MODO -';
 
 // =========================
 // FIN DE SESIN (por duracin)
-// - MANGA: 3:00 -> "Termin la clasificacin"
+// - MANGA: 3:00 -> "Termin la clasificación"
 // - FINAL: segn modo (A=6:00, otras=4:00) -> "Carrera terminada" + posicin + resumen
 // Dispara SOLO cuando tu tiempo total cruza el lmite EN UNA NUEVA VUELTA.
 // =========================
@@ -16624,7 +16686,7 @@ function buildSessionFinishMessage(row) {
   const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
   const totalMs = getRowTotalMs(row) || 0;
 
-  let msg = isManga ? 'Termin la clasificacin.' : 'Carrera terminada.';
+  let msg = isManga ? 'Termin la clasificación.' : 'Carrera terminada.';
 
   // Resultado (si sabemos posicin)
   if (posNum > 0) msg += ' P' + posNum + '.';
@@ -16956,7 +17018,7 @@ function checkSessionFinishOnLap() {
             return; // ignorar tick cero
           }
         } catch(e) {}
-        // Q TABLA: snapshot de clasificacin (UI only)
+        // Q TABLA: snapshot de clasificación (UI only)
         try { recordQualiSnapshotIfNeeded(rawRace); } catch(e) {}
 raceData = normalizeRaceData(rawRace);
         updateLapHistoryAll();
@@ -18173,7 +18235,7 @@ handleVoiceAndBeeps();
 }
 
 
-/* v0.0.2.50 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
+/* v0.0.2.51 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
 html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .app-header,
 .app-header.live-on,
@@ -18254,7 +18316,7 @@ html, body{
 
   <!-- Q TABLA (Clasificacin) -->
   <div class="manual-backdrop" id="qualiBackdrop" aria-hidden="true">
-    <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Tabla general de clasificacin">
+    <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Tabla general de clasificación">
       <div class="manual-top">
         <div>
           <div class="manual-title">Clasificacin del da</div>
