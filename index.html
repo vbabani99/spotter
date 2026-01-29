@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.64 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.65 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 - v0.0.2.60: VOZ - consolidado visibilitychange (sin duplicados), keepalive menos agresivo, recovery iOS mas limpio.
 - v0.0.2.61: VOZ - fix cola: si activas VOZ y de inmediato seleccionas piloto, ya habla sin atascarse (pump en onend de unlock).
 - v0.0.2.62: VOZ - seleccion de piloto siempre habla aunque haya silencio; en iPhone evitamos cancel() agresivo (menos taps y sin frases viejas).
@@ -61,7 +61,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.64</title>
+  <title>AI_Spotter_TRM_v0.0.2.65</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b10'/%3E%3Cpath d='M16 34h8l4-14 6 28 4-14h10' fill='none' stroke='%23ff2a2a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
@@ -5265,7 +5265,7 @@ html, body{ -webkit-text-size-adjust:100% !important; text-size-adjust:100% !imp
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.64</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.65</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5877,7 +5877,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.64";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.65";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -5907,7 +5907,8 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.64";
     let __autoLastActivityMs = 0;
     let __autoLastMaxLap = 0;
     let __autoLastMaxTotalMs = 0;
-    let __autoActiveKeys = new Set(); // pilotos que ya "arrancaron" (laps>0 o time>0)
+    let __autoActiveKeys = new Set();
+// pilotos que ya "arrancaron" (laps>0 o time>0)
 
     let __autoDbg = { phase:'IDLE', maxLap:0, maxTotalMs:0, dur:0, isFinal:false, idleMs:0, trend:'?' };
 
@@ -5956,6 +5957,27 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.64";
         __autoLastMaxLap = 0;
         __autoLastMaxTotalMs = 0;
         __autoActiveKeys = new Set();
+
+        // Limpieza de voz al detectar carrera nueva: evita hablar mensajes de la carrera anterior
+        try {
+          if (typeof window !== 'undefined' && window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') {
+            const ss = window.speechSynthesis;
+            if ((ss.speaking || ss.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) ss.cancel();
+          }
+        } catch(e){}
+        try {
+          if (typeof speechQueue !== 'undefined' && speechQueue && typeof speechQueue.length === 'number') speechQueue.length = 0;
+        } catch(e){}
+        try { if (typeof speechSpeaking !== 'undefined') speechSpeaking = false; } catch(e){}
+        try { if (typeof lastSpokenKeyAt !== 'undefined' && lastSpokenKeyAt && lastSpokenKeyAt.clear) lastSpokenKeyAt.clear(); } catch(e){}
+        try { if (typeof pendingAutoVoiceUnlock !== 'undefined') pendingAutoVoiceUnlock = false; } catch(e){}
+        try { if (typeof __ttsBlockedSince !== 'undefined') __ttsBlockedSince = 0; } catch(e){}
+        try {
+          if (typeof voiceToggleBtns !== 'undefined' && voiceToggleBtns && voiceToggleBtns.forEach) {
+            voiceToggleBtns.forEach(b => b && b.classList && b.classList.remove('needs-unlock'));
+          }
+        } catch(e){}
+
       } catch(e) {}
     }
 
@@ -10327,9 +10349,10 @@ function enqueueSpeech(text, opts = {}) {
         if (pendingAutoVoiceUnlock) return;
 
     // Drop any queued items from a previous race (stale announcements)
-    while (speechQueue.length && speechQueue[0] && (speechQueue[0].gen != null) && speechQueue[0].gen !== __raceGen) {
-      speechQueue.shift();
-    }
+        for (let i = speechQueue.length - 1; i >= 0; i--) {
+          const it = speechQueue[i];
+          if (it && it.gen != null && it.gen !== __raceGen) speechQueue.splice(i, 1);
+        }
 
         const next = speechQueue.shift();
         if (!next) return;
@@ -10407,40 +10430,11 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
 
         window.speechSynthesis.speak(u);
 
-        // Start-guard: si no arranca en ~1.2s, suele ser bloqueo de TTS (iOS/Android tras auto-lock o background).
-        // Importante: NO drenamos la cola. Dejamos el mensaje en espera y pedimos un tap para reactivar.
-        try {
-          if (__ttsStartGuard) { clearTimeout(__ttsStartGuard); __ttsStartGuard = 0; }
-          __ttsStartGuard = setTimeout(() => {
-            try {
-              if (__ttsDidStart) return;
-              // Intento de recuperacion suave
-              try {
-                if (!pendingAutoVoiceUnlock && window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') {
-                  const ss = window.speechSynthesis;
-                  if ((ss.speaking || ss.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) ss.cancel();
-                }
-              } catch(e) {}
-              speechSpeaking = false;
+              
 
-              // Reinsertar el mismo mensaje al frente (no se pierde)
-              try {
-                speechQueue.unshift(next);
-                speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
-              } catch(e) {}
+        // (start-guard removido: sin reinsert/needs-unlock por timeout)
 
-              // En iOS suele requerir gesto nuevo tras idle: marcamos "needs-unlock" y avisamos
-              try { pendingAutoVoiceUnlock = true; } catch(e) {}
-              try { __ttsBlockedSince = Date.now(); } catch(e) {}
-              try { __pruneQueueDuringBlock(); } catch(e) {}
-              try { __ttsUnlockedOnce = false; } catch(e) {}
-              try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
-              try { showToast('Toca la pantalla para reactivar audio', 1800); } catch(e) {}
-              try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
-            } catch(e) {}
-          }, 1200);
-        } catch(e) {}
-      } catch (e) {
+} catch (e) {
         console.error('pumpSpeechQueue', e);
         speechSpeaking = false;
       }
@@ -10500,28 +10494,33 @@ function speakWithLaps(_laps, message, opts) {
 let __oneTapUnlockLastAt = 0;
 
 function scheduleOneTapUnlock() {
-  // iOS/WebKit: a veces el TTS queda mudo tras sleep/background.
-  // Sencillo: armamos 1 click para intentar unlock, SIN tragarnos el toque.
-  try { if (__oneTapUnlockArmed) return; } catch(e) {}
-  try { __oneTapUnlockArmed = true; } catch(e) {}
+  // iOS/Safari: si el TTS se bloquea (sleep/background), pedimos 1 tap y reintentamos UNLOCK.
+  try {
+    if (scheduleOneTapUnlock._armed) return;
+    scheduleOneTapUnlock._armed = true;
 
-  const handler = () => {
-    try { __oneTapUnlockArmed = false; __oneTapUnlockLastAt = Date.now(); } catch(e) {}
-    if (!pendingAutoVoiceUnlock) return;
+    const handler = () => {
+      try {
+        scheduleOneTapUnlock._armed = false;
+        try { document.removeEventListener('touchstart', handler, true); } catch(e) {}
+        try { document.removeEventListener('pointerdown', handler, true); } catch(e) {}
 
-    try { __userGestureUnlocked = true; } catch(e) {}
-    try { ensureAudioCtx(); } catch(e) {}
-    try { hardUnlockAudioPipe(); } catch(e) {}
+        // Solo reintenta si hay voz activa o si estabamos esperando unlock
+        if (!voiceMasterEnabled && !pendingAutoVoiceUnlock) return;
 
-    try { unlockTTSOnce('one-tap'); } catch(e) {}
+        const ok = unlockTTSOnce('one-tap');
+        if (ok) {
+          try { pendingAutoVoiceUnlock = false; } catch(e) {}
+          try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+          try { pumpSpeechQueue(); } catch(e) {}
+        }
+      } catch(e) {}
+    };
 
-    // Si sigue bloqueado, dejamos pendingAutoVoiceUnlock y se rearmar donde corresponda.
-    try { if (pendingAutoVoiceUnlock) scheduleOneTapUnlock(); } catch(e) {}
-  };
-
-  try { window.addEventListener('pointerdown', handler, { once:true, passive:true, capture:true }); } catch(e) {}
-  try { window.addEventListener('touchend', handler, { once:true, passive:true, capture:true }); } catch(e) {}
-  try { window.addEventListener('click', handler, { once:true, passive:true, capture:true }); } catch(e) {}
+    // capture=true para agarrar el primer tap sin comernos el UI
+    try { document.addEventListener('touchstart', handler, { capture: true, passive: true }); } catch(e) { try { document.addEventListener('touchstart', handler, true); } catch(e2) {} }
+    try { document.addEventListener('pointerdown', handler, { capture: true, passive: true }); } catch(e) { try { document.addEventListener('pointerdown', handler, true); } catch(e2) {} }
+  } catch(e) { try { scheduleOneTapUnlock._armed = false; } catch(e2) {} }
 }
 
 // Unlock TTS en iOS/WebKit: requiere gesto del usuario.
@@ -10534,131 +10533,63 @@ let __ttsUnlockInFlight = false;
 let __ttsUnlockStartedAt = 0;
 let __ttsUnlockCooldownUntil = 0; // anti spam unlock (iOS)
 
-function unlockTTSOnce(reason = '') {
-      try {
-        if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
-        if (!voiceMasterEnabled) return false;
+function unlockTTSOnce(origin) {
+  // Un solo intento por gesto de usuario. En iOS el TTS puede requerir re-desbloqueo tras idle/sleep.
+  try {
+    if (__ttsUnlockedOnce && !pendingAutoVoiceUnlock) return true;
+    if (!window.speechSynthesis) return false;
 
-        // Si ya se desbloqueo en esta sesion, solo reanuda y sigue.
-        if (__ttsUnlockedOnce) {
-          try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
-          try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
-          try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
-          return true;
-        }
+    // Debe venir de un gesto de usuario
+    try {
+      if (!__userGestureUnlocked) return false;
+    } catch(e) {}
 
-        const now = Date.now();
+    // Si la voz esta apagada, no forzamos (evita sorpresas)
+    if (!voiceMasterEnabled) return false;
 
-        // Cooldown corto: evita spam por doble tap o eventos combinados (iOS)
-        try { if (__ttsUnlockCooldownUntil && now < __ttsUnlockCooldownUntil) return false; } catch(e) {}
-        try { __ttsUnlockCooldownUntil = now + 800; } catch(e) {}
+    // Cancelar pendiente previo (iOS a veces se queda en "pending")
+    try {
+      const ss = window.speechSynthesis;
+      if ((ss.speaking || ss.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) ss.cancel();
+    } catch(e) {}
 
-        // Anti-spam: evita 20 taps que disparen 20 unlocks en paralelo.
-        try {
-          if (__ttsUnlockInFlight && (now - (__ttsUnlockStartedAt || 0)) < 1800) return false;
-        } catch(e) {}
+    // Reanudamos por si estaba pausado
+    try { window.speechSynthesis.resume(); } catch(e) {}
 
-        try { __ttsUnlockInFlight = true; __ttsUnlockStartedAt = now; } catch(e) {}
-
-        // Gesto de usuario + WebAudio (iOS)
-        try { __userGestureUnlocked = true; } catch(e) {}
-        try { ensureAudioCtx(); } catch(e) {}
-        try { hardUnlockAudioPipe(); } catch(e) {}
-
-        const synth = window.speechSynthesis;
-
-        // Resume suave
-        try { if (typeof synth.resume === 'function') synth.resume(); } catch(e) {}
-
-        // NO canceles siempre: en iPhone a veces lo empeora.
-        // Solo si estaba hablando o pendiente.
-        try {
-          if ((synth.speaking || synth.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) {
-            __ttsCancelShieldUntil = Date.now() + 1200;
-            if (typeof synth.cancel === 'function') synth.cancel();
-            if (typeof synth.resume === 'function') synth.resume();
-          }
-        } catch(e) {}
-
-        let didStart = false;
-
-        const __audibleUnlock = (reason==='voice-btn-on' || reason==='voice-master-on' || reason==='pilot-select' || reason==='visibility-recover');
-        const u = new SpeechSynthesisUtterance(__audibleUnlock ? (reason==='visibility-recover' ? 'Audio listo' : 'Listo') : 'Audio listo');
-        u.lang = 'es-MX';
-        u.rate = clampNum((isFinite(ttsRate) ? ttsRate : 1.5), 0.8, 2.0);
-        u.pitch = 1.0;
-        // Desbloqueo: audible solo cuando viene de un gesto real del usuario.
-        u.volume = __audibleUnlock ? 0.6 : 0.01;
-
-        try {
-          u.onstart = () => {
-            didStart = true;
-            try { __ttsUnlockedOnce = true; } catch(e) {}
-            try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
-
-            // Ahora SI: ya arranco el motor, limpiamos estado de bloqueo.
-            try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
-            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
-
-            try { showToast('Audio listo', 1200); } catch(e) {}
-            try { pumpSpeechQueue(); } catch(e) {}
-          };
-        } catch(e) {}
-
-        const finishFail = () => {
-          try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
-          // Seguimos marcando bloqueo: requiere otro tap
-          try { pendingAutoVoiceUnlock = true; } catch(e) {}
-          try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
-          try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
-        };
-
-        try { u.onend = () => {
-          try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
-          if (!didStart) { finishFail(); return; }
-          // Si el usuario ya encolo mensajes (ej. al seleccionar piloto), al terminar el unlock drenamos la cola.
-          try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 60); } catch(e) {}
-        }; } catch(e) {}
-        try { u.onerror = () => { finishFail(); }; } catch(e) {}
-
-        // Respetar voz elegida (si existe)
-        try {
-          const voices = synth.getVoices ? synth.getVoices() : [];
-          if (voices && voices.length) {
-            let v = null;
-            if (chosenVoiceURI) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
-            if (!v) v = pickDefaultVoice(voices);
-            if (v) {
-              u.voice = v;
-              if (v.lang) u.lang = v.lang;
-            }
-          }
-        } catch(e) {}
-
-        try {
-          synth.speak(u);
-        } catch(e) {
-          try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(ex) {}
-          return false;
-        }
-
-        // Watchdog: si no arranca rapido, marcamos bloqueo y pedimos otro tap.
-        try {
-          setTimeout(() => {
-            try {
-              if (__ttsUnlockedOnce) return;
-              if (didStart) return;
-              finishFail();
-            } catch(e) {}
-          }, 900);
-        } catch(e) {}
-
-        return true;
-      } catch (e) {
-        try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(ex) {}
-        return false;
+    const u = new SpeechSynthesisUtterance('Audio listo');
+    try {
+      const vname = (voiceSettings && voiceSettings.voiceName) ? String(voiceSettings.voiceName) : '';
+      if (vname) {
+        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+        const v = voices.find(x => x && x.name === vname);
+        if (v) u.voice = v;
       }
+      u.lang = (voiceSettings && voiceSettings.lang) ? String(voiceSettings.lang) : 'es-MX';
+      u.rate = (voiceSettings && voiceSettings.rate) ? Number(voiceSettings.rate) : 1.0;
+    } catch(e) {}
+
+    try {
+      u.onstart = () => { try { __ttsDidStart = true; } catch(e) {} };
+      u.onend = () => { try { __ttsUnlockedOnce = true; pendingAutoVoiceUnlock = false; } catch(e) {} };
+      u.onerror = () => { try { __ttsUnlockedOnce = false; } catch(e) {} };
+    } catch(e) {}
+
+    // Disparar
+    try {
+      __ttsDidStart = false;
+      window.speechSynthesis.speak(u);
+      // Si arranco, ya. Si no, el one-tap handler lo reintenta.
+      __ttsUnlockedOnce = true;
+      pendingAutoVoiceUnlock = false;
+      try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+      return true;
+    } catch(e) {
+      return false;
     }
+  } catch(e) {
+    return false;
+  }
+}
 
 
 function setVoiceMaster(on, opts = {}) {
@@ -10723,9 +10654,6 @@ function setVoiceMaster(on, opts = {}) {
       const now = Date.now();
       if (now - __lastVoiceTapAt < 250) return;
       __lastVoiceTapAt = now;
-      try { if (ev && ev.preventDefault) ev.preventDefault(); } catch(e) {}
-      try { if (ev && ev.stopPropagation) ev.stopPropagation(); } catch(e) {}
-
       const next = !voiceMasterEnabled;
       setVoiceMaster(next, {silent:false, origin: origin || 'voice-btn'});
       if (next) unlockTTSOnce('voice-btn-on');
