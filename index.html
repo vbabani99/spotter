@@ -5887,7 +5887,11 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.72";
     let __autoIntroSig = '';
     let __autoIntroDoneKeys = new Set();
     let __autoIntroRetryAt = 0;
-    let __autoFinishSig = '';
+        let __autoIntroEnqueuedAt = 0;
+    let __autoIntroAttempts = 0;
+    const __AUTO_INTRO_MAX_ATTEMPTS = 2; // evita spam infinito
+    const __AUTO_INTRO_HOLDOFF_MS = 60000; // 60s
+let __autoFinishSig = '';
     let __autoFinishPrevByKey = new Map();
     let __autoFinishAnnouncedByKey = new Set();
     let __autoFinishPhase = false;
@@ -5962,7 +5966,6 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.72";
         try {
           if (typeof window !== 'undefined' && window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') {
             const ss = window.speechSynthesis;
-    try { ss.getVoices && ss.getVoices(); } catch (e) {}
             if ((ss.speaking || ss.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) ss.cancel();
           }
         } catch(e){}
@@ -6290,7 +6293,12 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.72";
         const introKey = 'auto_intro_title_' + rn;
         const now = Date.now();
 
-        // Si ya anunciamos exitosamente este titulo, no repetir
+        
+        // Anti-spam: si por algun bug no se marca 'done', limitamos reintentos
+        if (rn === __autoIntroSig) {
+          if (__autoIntroAttempts >= __AUTO_INTRO_MAX_ATTEMPTS && (now - (__autoIntroEnqueuedAt || 0)) < __AUTO_INTRO_HOLDOFF_MS) return;
+        }
+// Si ya anunciamos exitosamente este titulo, no repetir
         if (rn === __autoIntroSig && __autoIntroDoneKeys && __autoIntroDoneKeys.has(introKey)) return;
 
         // Si aun no se ha podido anunciar (TTS ocupado/errores), reintentar con cooldown corto
@@ -6303,6 +6311,8 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.72";
           __autoIntroSig = rn;
           try { __autoResetLifecycle(rn); } catch(e) {}
           try { __autoIntroDoneKeys.clear(); } catch(e) { __autoIntroDoneKeys = new Set(); }
+                  __autoIntroEnqueuedAt = 0;
+          __autoIntroAttempts = 0;
         }
 
         __autoIntroRetryAt = now + 3000;
@@ -6411,6 +6421,14 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.72";
           dedupe: true,
           maxAgeMs: 60000
         });
+
+        // Marcamos como anunciado en el momento de encolar para evitar que se repita el titulo en bucle
+        try {
+          __autoIntroEnqueuedAt = now;
+          __autoIntroAttempts = (__autoIntroAttempts || 0) + 1;
+          if (__autoIntroDoneKeys) __autoIntroDoneKeys.add(introKey);
+        } catch(e) {}
+
       } catch(e) {}
     }
 
@@ -10267,19 +10285,11 @@ function enqueueSpeech(text, opts = {}) {
 
         const now = Date.now();
         const key = String(opts.key || '').trim() || clean; // dedupe por texto si no hay key
-
-        // Anti-loop: evita repetir el mismo mensaje cada tick (aunque ya haya salido de la cola)
-        // - cooldownMs (si viene) manda
-        // - si no viene, usamos minRepeatMs por key (default 2500ms)
-        const cooldownMsRaw = (opts.cooldownMs != null) ? Number(opts.cooldownMs) : null;
-        const minRepeatMsRaw = (opts.minRepeatMs != null) ? Number(opts.minRepeatMs) : 8000;
-        const cooldownMs = (cooldownMsRaw != null && isFinite(cooldownMsRaw)) ? Math.max(0, cooldownMsRaw) : 0;
-        const minRepeatMs = (minRepeatMsRaw != null && isFinite(minRepeatMsRaw)) ? Math.max(0, minRepeatMsRaw) : 0;
-
-        const last = lastSpokenKeyAt.get(key) || 0;
-        const gate = (cooldownMs > 0) ? cooldownMs : minRepeatMs;
-        if (gate > 0 && (now - last) < gate) return;
-
+        const cooldownMs = Number(opts.cooldownMs || 0) || 0;
+        if (cooldownMs > 0) {
+          const last = lastSpokenKeyAt.get(key) || 0;
+          if (now - last < cooldownMs) return;
+        }
         const priority = Number.isFinite(opts.priority) ? opts.priority : 0;
         const interrupt = !!opts.interrupt;
         const dedupe = (opts.dedupe !== false);
@@ -10333,7 +10343,7 @@ function enqueueSpeech(text, opts = {}) {
         const pr = prosodyFromMood(mood);
         const rate = clampNum((opts.rate != null ? opts.rate : (baseRate * (pr.rateMul || 1.0))), 0.6, 2.2);
         const pitch = clampNum((opts.pitch != null ? opts.pitch : (pr.pitch != null ? pr.pitch : 1.0)), 0.5, 2.0);
-        const volume = clampNum((opts.volume != null ? opts.volume : 1.0), 0.0, 1.0);
+        const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
         const postDelayMs = clampNum((opts.postDelayMs != null ? Number(opts.postDelayMs) : 0), 0, 2000);
         speechQueue.push({ text: clean, key, priority, ts: now, gen: __raceGen, rate, pitch, volume, postDelayMs, voiceURI: (opts && (opts.voiceURI || opts.voiceUri)) || '' });
         try { if (pendingAutoVoiceUnlock) __pruneQueueDuringBlock(); } catch(e) {}
@@ -10359,13 +10369,6 @@ function enqueueSpeech(text, opts = {}) {
     // Permitimos SOLO mensajes esenciales (accion del usuario / criticos).
     if (pendingAutoVoiceUnlock) {
       try {
-        const ios = (typeof isIOSWebKit === 'function' && isIOSWebKit());
-        if (ios && !__ttsUnlockedOnce) {
-          // En iOS bloqueado, NO consumas cola (si intentas hablar, el mensaje se pierde).
-          __markTtsNeedsUnlock('Toca una vez para activar audio', 6000);
-          scheduleOneTapUnlock();
-          return;
-        }
         const idxEss = speechQueue.findIndex(it => it && __isEssentialSpeech(it, it.key, it.priority));
         if (idxEss < 0) return;
         if (idxEss > 0) speechQueue.splice(0, idxEss);
@@ -10446,7 +10449,6 @@ function enqueueSpeech(text, opts = {}) {
 
     u.onstart = () => {
       didStart = true;
-      try { lastSpokenKeyAt.set(next.key, Date.now()); } catch (e) {}
       clearStartGuard();
       try { __ttsBlockedSince = 0; } catch (e) {}
       try { pendingAutoVoiceUnlock = false; } catch (e) {}
@@ -10466,14 +10468,8 @@ function enqueueSpeech(text, opts = {}) {
       try {
         if (typeof __isIOSLike === 'function' && __isIOSLike()) {
           pendingAutoVoiceUnlock = true;
-          // Re-encola el mensaje para no perderlo cuando iOS bloquea el TTS tras sleep/tab-switch
-          try {
-            next.tries = (next.tries || 0) + 1;
-            if (next.tries <= 2) speechQueue.unshift(next);
-          } catch (e) {}
           __markTtsNeedsUnlock('Toca una vez para reactivar audio', 6000);
           scheduleOneTapUnlock();
-          return;
         }
       } catch (e) {}
       setTimeout(pumpSpeechQueue, 0);
@@ -10668,17 +10664,6 @@ function unlockTTSOnce(origin) {
 
           // Intento de speak
           ss.speak(u);
-    // iOS a veces no dispara onstart; si ya esta hablando, lo tomamos como unlock
-    setTimeout(() => {
-      try {
-        if (!__ttsDidStart && ss.speaking) {
-          __ttsDidStart = true;
-          __ttsUnlockedOnce = true;
-          pendingAutoVoiceUnlock = false;
-          __clearTtsNeedsUnlock();
-        }
-      } catch (e) {}
-    }, 250);
 
           // IMPORTANTE: no limpiamos "pending" aqui; solo en onstart
           return true;
@@ -10715,24 +10700,8 @@ function setVoiceMaster(on, opts = {}) {
           try { speechSpeaking = false; } catch(e) {}
           try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
         } else {
-          // Encendido: arranque limpio (evita backlog / "carrera anterior" / loops)
-          try { speechQueue.length = 0; } catch (e) {}
-          try { speechSpeaking = false; } catch (e) {}
-          try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch (e) {}
-
-          try {
-            const ios = (typeof isIOSWebKit === 'function' && isIOSWebKit());
-            // En iOS, no drenamos cola hasta tener unlock real (si no, se "pierde" el mensaje)
-            if (ios && (!__ttsUnlockedOnce || pendingAutoVoiceUnlock)) {
-              pendingAutoVoiceUnlock = true;
-              try { __markTtsNeedsUnlock('Toca una vez para activar audio', 6000); } catch (e) {}
-              try { scheduleOneTapUnlock(); } catch (e) {}
-            } else {
-              setTimeout(() => { try { pumpSpeechQueue(); } catch (e) {} }, 80);
-            }
-          } catch (e) {
-            try { setTimeout(() => { try { pumpSpeechQueue(); } catch (e) {} }, 80); } catch (e2) {}
-          }
+          // Encendido: NO canceles en este punto (iPhone se queda mudo). Solo drena cola.
+          try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 80); } catch(e) {}
         }
       }
 
