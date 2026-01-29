@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.75 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.91 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.75</title>
+  <title>AI_Spotter_TRM_v0.0.2.91</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -75,7 +75,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
 
 /* ============================================================
-   CONSOLIDATED CSS (v0.0.2.74)
+   CONSOLIDATED CSS (v0.0.2.91)
    - Original style blocks merged in source order (no behavior change intended).
    ============================================================ */
 
@@ -615,7 +615,7 @@ body {
       box-shadow: 0 0 12px rgba(0,229,255,0.25);
    
       /* SIZE_70 */
-      font-size: 4px;
+      font-size: 11px;
       line-height: 1;
       padding: 1px 3px;
       gap: 2px;
@@ -1294,8 +1294,8 @@ body {
   gap: 6px;
 
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
   min-height: 30px;
 }
 
@@ -4265,9 +4265,22 @@ body {
     /* v0.0.0.92 - header-actions-row: reducir botones al 50% (tamano + letra) y forzar texto blanco */
 /* v0.0.0.90 - header-logo: alinear logo a la izquierda */
 .header-actions-row .header-help{
-  font-size: 6px !important;
-  padding: 4px 6px !important;
-  min-height: 17px;
+  font-size: 9px !important;
+  padding: 0 16px !important;
+  height: 20px;
+  min-width: 72px;
+  width: auto !important;
+  max-width: none !important;
+  box-sizing: border-box;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
   line-height: 1;
   color: #ffffff !important;
 }
@@ -4623,7 +4636,7 @@ body {
 /* Panel info tipo broadcast */
 .header-info-panel{
   width: 100% !important;
-  max-width: 440px !important;
+  max-width: 438px !important;
   padding: 6px 10px !important;
   border-radius: 12px !important;
   border: 1px solid rgba(255,255,255,0.12) !important;
@@ -4661,12 +4674,13 @@ body {
 
 /* Botones homogeneos compactos */
 :root{
-  --hdrCtrlH: 20px;
-  --hdrCtrlFont: 8px;
+  --hdrCtrlH: 14px;
+  --hdrCtrlW: 82px;
   --hdrCtrlPadX: 6px;
-  --hdrCtrlGap: 6px;
-  --hdrCtrlW: 56px;
+  --hdrCtrlFont: 8px;
+  --hdrCtrlGap: 4px;
 }
+
 .header-actions-row > *{ flex: 0 0 auto !important; }
 .badge-live,
 .header-actions-row button,
@@ -4680,6 +4694,15 @@ body {
   border-radius: 999px !important;
 }
 .badge-live{ justify-content:center !important; }
+
+/* Fix: allow long PRO button labels (Q TABLA, MANUAL) without truncation */
+.header-actions-row button.btn-pro{
+  width:auto !important;
+  min-width: var(--hdrCtrlW) !important;
+  max-width:none !important;
+}
+
+.header-actions-row button.btn-pro .t{ white-space:nowrap; }
 .badge-live span:last-child{ font-weight: 900 !important; letter-spacing: 0.08em !important; }
 #raceModeRow{ display:flex !important; align-items:center !important; justify-content:center !important; }
 
@@ -4699,17 +4722,17 @@ body {
 @media (max-width: 430px){
   #raceTitleText{ font-size: clamp(16px, 5.6vw, 22px) !important; -webkit-line-clamp: 2 !important; }
   .header-actions-row{ max-width: 100% !important; }
-  :root{ --hdrCtrlW: 52px; --hdrCtrlH: 19px; --hdrCtrlFont: 8px; }
+  :root{ --hdrCtrlW: 82px; --hdrCtrlH: 14px; --hdrCtrlFont: 8px; }
 }
 /* ===== end header pro ===== */
 
 /* === v0.0.1.65 Header PRO: control bar homognea + modo visible + versin sin encimarse === */
 :root{
   --hdrCtrlH: 14px;
-  --hdrCtrlW: 54px;
-  --hdrCtrlPadX: 8px;
-  --hdrCtrlFont: 9px;
-  --hdrCtrlGap: 5px;
+  --hdrCtrlW: 82px;
+  --hdrCtrlPadX: 6px;
+  --hdrCtrlFont: 8px;
+  --hdrCtrlGap: 4px;
 }
 
 .header-actions-row{
@@ -4993,7 +5016,7 @@ body {
   border-radius: 999px !important;
   white-space: nowrap !important;
   overflow: visible !important;
-  text-overflow: clip !important;
+  text-overflow: visible !important;
 }
 
 /* Limpia overrides viejos que lo encogian demasiado */
@@ -5011,25 +5034,80 @@ body {
 }
 
 
-/* Top empty container placeholder (reserved area) */
+/* Top banner (logo) */
 .top-banner-placeholder{
-  display:block;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:flex-start;
+  gap: 6px;
   flex: 0 0 auto;
-  width: 440px;
-  height: 145px;
-  margin: 10px auto 8px auto;
+  width: min(438px, 92vw);
+  margin: 6px auto 6px auto;
   background: transparent;
 }
 
 .top-banner-placeholder img.top-banner-logo{
   width: 100%;
-  height: 100%;
+  max-width: 438px;
+  height: auto;
+  max-height: 168px;
+  aspect-ratio: 438 / 168;
   display: block;
   object-fit: contain;
   pointer-events: none;
 }
 
+/* Banner subtitle row (between logo block and app-header) */
+.banner-subtitle-row{
+  width: min(440px, 96vw);
+  margin: 0 auto 8px auto;
+  text-align: center;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  pointer-events:none;
+}
+.banner-subtitle-row .header-title-sub{
+  height: auto !important;
+  overflow: visible !important;
+  white-space: nowrap;
+  display:block;
+  color: rgba(255,255,255,0.96);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.75);
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.42);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+}
 
+
+
+
+
+
+/* Subtitle moved under logo */
+.top-banner-placeholder .header-title-sub{
+  width: 100%;
+  max-width: min(440px, 96vw);
+  text-align:center;
+  margin: 0 !important;
+  padding: 0 !important;
+
+  /* override legacy 8px clamp (v0.0.1.78) */
+  height: auto !important;
+  min-height: 0 !important;
+  line-height: 1.15 !important;
+  overflow: visible !important;
+
+  font-size: 11px !important;
+  letter-spacing: 0.10em !important;
+  opacity: 0.90 !important;
+}
+.top-banner-placeholder #raceSubtitle{
+  margin-top: 2px !important;   /* no negative shove under the logo */
+}
 
 /* Main header height requirement */
 .app-header.live-on{
@@ -5126,7 +5204,7 @@ body {
 
 /* ---- merged block ---- */
 
-/* v0.0.2.74 - header compatibility hardening */
+/* v0.0.2.91 - header compatibility hardening */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Avoid fixed-height traps (especially iOS with large text / dynamic viewport) */
@@ -5144,7 +5222,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* ---- merged block ---- */
 
-/* HEADER CANON v0.0.2.74 - iOS Safari/Chrome consistent */
+/* HEADER CANON v0.0.2.91 - iOS Safari/Chrome consistent */
 html, body {
   -webkit-text-size-adjust: 100% !important;
   text-size-adjust: 100% !important;
@@ -5225,10 +5303,7 @@ html, body {
       min-height: 0 !important;
       overflow: visible !important;
     }
-    .app-header .header-left,
-    .app-header .header-right{
-      display: none !important;
-    }
+    .app-header .header-left, .app-header .header-right { display: flex; align-items: center; gap: 8px; }
 
     /* Header PRO (logo arriba, titulo grande, jerarquia clara) */
     .app-header{
@@ -5477,12 +5552,13 @@ html, body {
 
 /* ===== Header controls: force single row (LIVE + MODO + buttons) ===== */
 :root{
-  --hdrCtrlH: 22px;
-  --hdrCtrlFont: 9px;
+  --hdrCtrlH: 14px;
+  --hdrCtrlW: 82px;
   --hdrCtrlPadX: 6px;
+  --hdrCtrlFont: 8px;
   --hdrCtrlGap: 4px;
-  --hdrCtrlW: 60px;
 }
+
 .header-controls{
   width: 100% !important;
   margin-top: 6px !important;
@@ -5550,12 +5626,14 @@ html, body {
 
 @media (max-width: 420px){
   :root{
-    --hdrCtrlH: 26px;
-    --hdrCtrlFont: 12px;
-    --hdrCtrlPadX: 10px;
-    --hdrCtrlGap: 6px;
-  }
-  .header-actions-row{
+  --hdrCtrlH: 14px;
+  --hdrCtrlW: 82px;
+  --hdrCtrlPadX: 6px;
+  --hdrCtrlFont: 8px;
+  --hdrCtrlGap: 4px;
+}
+
+.header-actions-row{
     justify-content: flex-start !important;
     padding: 0 6px !important;
   }
@@ -5744,10 +5822,10 @@ html, body {
    - Top banner siempre responsivo (no desaparece)
 ========================= */
 .top-banner-placeholder{
-  width: 440px !important;
-  max-width: 440px !important;
-  min-width: 440px !important;
-  height: 145px !important;
+  width: min(438px, 96vw) !important;
+  max-width: 438px !important;
+  min-width: 0 !important;
+  height: 168px !important;
   margin: 10px auto 8px auto !important;
   background: rgba(8,10,15,0.55) !important;
   border: 1px solid rgba(255,255,255,0.12) !important;
@@ -5759,7 +5837,7 @@ html, body {
 
 @media (max-width: 460px){
   .top-banner-placeholder{
-    width: min(440px, 100%) !important;
+    width: min(438px, 96vw) !important;
     max-width: 100% !important;
     min-width: 0 !important;
   }
@@ -5832,7 +5910,7 @@ html, body {
 }
 
 
-/* v0.0.2.74 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
+/* v0.0.2.91 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
 html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .app-header,
 .app-header.live-on,
@@ -5841,10 +5919,10 @@ html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   min-height: 170px !important;
   max-height: none !important;
   padding-top: calc(10px + env(safe-area-inset-top)) !important;
-  overflow: clip !important;
+  overflow: visible !important;
 }
 @supports not (overflow: clip){
-  .app-header{ overflow: hidden !important; }
+  .app-header{ overflow: visible !important; }
 }
 
 .app-header .header-controls,
@@ -5937,6 +6015,13 @@ html, body{
   --proAccentGreen: #35ff7a;
 }
 
+
+/* PRO header buttons sizing (fit all on mobile) */
+@media (max-width: 520px){
+  .app-header .header-actions-row{ gap: 6px !important; }
+  .app-header .header-actions-row .btn-pro{ padding: 8px 10px !important; font-size: 12px !important; }
+  .app-header .header-actions-row .btn-pro .ico{ width: 11px !important; height: 11px !important; margin-right: 6px !important; }
+}
 .app-header .header-actions-row .btn-pro{
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
@@ -6035,17 +6120,75 @@ html, body{
   }
 }
 
+
+
+/* =========================
+   PATCH v0.0.2.91
+   Fix: raceSubtitle under logo visible
+   Cause: HARD OVERRIDES forced logo to 100% height and overflow hidden
+   Scope: UI only, no JS changes
+========================= */
+.top-banner-placeholder{
+  display:flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  height: auto !important;
+  min-height: 110px !important;
+  padding: 10px 12px 8px 12px !important;
+  overflow: visible !important;
+}
+.top-banner-placeholder .top-banner-logo,
+.top-banner-placeholder img.top-banner-logo{
+  width: min(438px, 96vw);
+  height: auto;
+  max-height: 168px;
+  aspect-ratio: 438 / 168;
+  margin: 0 auto 12px;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.top-banner-placeholder #raceSubtitle{
+  display:block !important;
+  height:auto !important;
+  min-height: 0 !important;
+  line-height: 1.15 !important;
+  margin-top: 2px !important;
+  padding: 0 !important;
+  color: rgba(255,255,255,0.92) !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.65) !important;
+}
+
+
+/* responsive header-left/right */
+@media (max-width: 520px){
+  .app-header .header-left, .app-header .header-right { display: none !important; }
+}
+
+/* v0.0.2.91 - FIX: evitar recorte de texto en botones del header (Q TABLA / MANUAL) */
+.header-actions-row .header-help{
+  width: auto !important;
+  max-width: none !important;
+  min-width: 74px !important;
+  padding: 0 16px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
 </style>
 </head>
 <body class="skin-pro skin-vicpulse">
   <div class="app">
-    <div class="top-banner-placeholder" aria-hidden="true"><img class="top-banner-logo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" /></div>
+    <div class="top-banner-placeholder" aria-hidden="false"><img class="top-banner-logo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" />
+</div>
+    <div class="banner-subtitle-row"><div class="header-title-sub" id="raceSubtitle">Turbo Racing Mxico - x-vic!</div></div>
 <header class="app-header live-off">
 <div class="header-stack">
         <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">AI Spotter TRM</span></div>
-        <div class="header-title-sub" id="raceSubtitle">Turbo Racing Mxico - x-vic!</div>
-        
-      </div>
+        </div>
 
       <div class="header-controls">
         <div class="header-actions-row">
@@ -6054,15 +6197,15 @@ html, body{
             </div>
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
           <div class="hdr-break"></div>
-          <button class="header-help header-auto btn-pro" id="autoSkinBtn" type="button" title="Auto-skin" data-kind="auto"><span class="ico"></span>AUTO</button>
-          <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Skin Vic's Pulse Timing" data-kind="vic"><span class="ico"></span>VIC</button>
-          <button class="header-help header-qtable btn-pro" id="qTableBtn" type="button" title="Q TABLA (clasificacin)" data-kind="qtabla"><span class="ico"></span>Q TABLA</button>
-          <button class="header-help btn-pro" id="manualBtn" type="button" title="Manual y ayuda" data-kind="manual"><span class="ico"></span>MANUAL</button>
+          <button class="header-help header-auto btn-pro" id="autoSkinBtn" type="button" title="Auto-skin" data-kind="auto"><span class="ico"></span>&#x1F916;</button>
+          <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Skin Vic's Pulse Timing" data-kind="vic"><span class="ico"></span>VIC &#x1F40A;</button>
+          <button class="header-help header-qtable btn-pro" id="qTableBtn" type="button" title="Q TABLA (clasificacin)" data-kind="qtabla"><span class="ico"></span>&#x1F4CA;</button>
+          <button class="header-help btn-pro" id="manualBtn" type="button" title="Manual y ayuda" data-kind="manual"><span class="ico"></span>&#x1F4D6;</button>
         </div>
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.75</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.91</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6375,7 +6518,7 @@ html, body{
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.74</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.91</div>
           <div class="manual-sub">Gua rpida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -6507,7 +6650,7 @@ html, body{
 
 
 // ============================================================
-// CONSOLIDATED JS (v0.0.2.74)
+// CONSOLIDATED JS (v0.0.2.91)
 // - All inline scripts merged in source order.
 // - Wrapped with init guard to avoid double-binding listeners.
 // ============================================================
@@ -6708,7 +6851,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.75";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.91";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -12013,7 +12156,7 @@ function toFixedFloor(value, decimals = 0) {
           } catch(e) {}
 
           if (voiceMasterEnabled) {
-            // Desktop/Android: NO forzar "needs-unlock" (si no, se queda mudo al cambiar de pestaña)
+            // Desktop/Android: NO forzar "needs-unlock" (si no, se queda mudo al cambiar de pestaa)
             try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
             try { confirmVoiceButtons && confirmVoiceButtons(); } catch(e) {}
 
