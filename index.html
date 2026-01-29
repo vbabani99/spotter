@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.65 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.66 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 - v0.0.2.60: VOZ - consolidado visibilitychange (sin duplicados), keepalive menos agresivo, recovery iOS mas limpio.
 - v0.0.2.61: VOZ - fix cola: si activas VOZ y de inmediato seleccionas piloto, ya habla sin atascarse (pump en onend de unlock).
 - v0.0.2.62: VOZ - seleccion de piloto siempre habla aunque haya silencio; en iPhone evitamos cancel() agresivo (menos taps y sin frases viejas).
@@ -61,7 +61,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.65</title>
+  <title>AI_Spotter_TRM_v0.0.2.66</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b10'/%3E%3Cpath d='M16 34h8l4-14 6 28 4-14h10' fill='none' stroke='%23ff2a2a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
@@ -5265,7 +5265,7 @@ html, body{ -webkit-text-size-adjust:100% !important; text-size-adjust:100% !imp
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.65</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.66</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5877,7 +5877,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.65";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.66";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -9001,7 +9001,7 @@ function loadVoiceSettings() {
     try{
       const _unlock = () => { __userGestureUnlocked = true; };
       ['pointerdown','touchstart','keydown','click'].forEach(ev=>{
-        window.addEventListener(ev, _unlock, { once:true, passive:true });
+        window.addEventListener(ev, _unlock, { once:true, passive:true, capture:true });
       });
     }catch(e){}
 
@@ -10501,7 +10501,9 @@ function scheduleOneTapUnlock() {
 
     const handler = () => {
       try {
-        scheduleOneTapUnlock._armed = false;
+                try { __userGestureUnlocked = true; } catch(e) {}
+        try { ensureAudioCtx(); } catch(e) {}
+scheduleOneTapUnlock._armed = false;
         try { document.removeEventListener('touchstart', handler, true); } catch(e) {}
         try { document.removeEventListener('pointerdown', handler, true); } catch(e) {}
 
@@ -10651,12 +10653,21 @@ function setVoiceMaster(on, opts = {}) {
     let __lastVoicePointerAt = 0;
 
     const __onVoiceGesture = (ev, origin) => {
-      const now = Date.now();
+            try { __userGestureUnlocked = true; } catch(e) {}
+      try { ensureAudioCtx(); } catch(e) {}
+const now = Date.now();
       if (now - __lastVoiceTapAt < 250) return;
       __lastVoiceTapAt = now;
       const next = !voiceMasterEnabled;
       setVoiceMaster(next, {silent:false, origin: origin || 'voice-btn'});
-      if (next) unlockTTSOnce('voice-btn-on');
+      if (next) {
+        const ok = unlockTTSOnce('voice-btn-on');
+        if (!ok) {
+          try { pendingAutoVoiceUnlock = true; } catch(e) {}
+          try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+          try { scheduleOneTapUnlock(); } catch(e) {}
+        }
+      }
     };
 
     try { btn.style.touchAction = 'manipulation'; } catch(e) {}
@@ -12938,6 +12949,9 @@ function showToast(msg, ms=1400){
 }
 
 function selectPilotByKey(key, opts = {}) {
+          try { if (opts && (opts.source==='select' || opts.source==='input')) { __userGestureUnlocked = true; } } catch(e) {}
+          try { if (opts && (opts.source==='select' || opts.source==='input')) { ensureAudioCtx(); } } catch(e) {}
+
           const k = (key || '').toLowerCase().trim();
           const announce = (opts.announce !== false);
 
