@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.73 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.74 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.73</title>
+  <title>AI_Spotter_TRM_v0.0.2.74</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -75,7 +75,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
 
 /* ============================================================
-   CONSOLIDATED CSS (v0.0.2.73)
+   CONSOLIDATED CSS (v0.0.2.74)
    - Original style blocks merged in source order (no behavior change intended).
    ============================================================ */
 
@@ -5126,7 +5126,7 @@ body {
 
 /* ---- merged block ---- */
 
-/* v0.0.2.73 - header compatibility hardening */
+/* v0.0.2.74 - header compatibility hardening */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Avoid fixed-height traps (especially iOS with large text / dynamic viewport) */
@@ -5144,7 +5144,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* ---- merged block ---- */
 
-/* HEADER CANON v0.0.2.73 - iOS Safari/Chrome consistent */
+/* HEADER CANON v0.0.2.74 - iOS Safari/Chrome consistent */
 html, body {
   -webkit-text-size-adjust: 100% !important;
   text-size-adjust: 100% !important;
@@ -5832,7 +5832,7 @@ html, body {
 }
 
 
-/* v0.0.2.73 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
+/* v0.0.2.74 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
 html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .app-header,
 .app-header.live-on,
@@ -5934,7 +5934,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.73</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.74</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6247,7 +6247,7 @@ html, body{
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.73</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.74</div>
           <div class="manual-sub">Gua rpida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -6330,7 +6330,45 @@ html, body{
 </div>
   </div>
 
-  <!-- Debug panel (solo en modo debug) -->
+  
+  <!-- Q TABLA modal -->
+  <div class="manual-backdrop" id="qualiBackdrop" aria-hidden="true">
+    <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Q Tabla">
+      <div class="manual-top">
+        <div>
+          <div class="manual-title">Q TABLA</div>
+          <div class="manual-sub">Clasificacion guardada por Q - se actualiza en vivo</div>
+        </div>
+        <button class="manual-close" id="qualiCloseBtn" type="button">Cerrar</button>
+      </div>
+
+      <div class="qmeta" id="qualiMeta">
+        <span class="qchip" id="qualiMetaEvent">Evento: -</span>
+        <span class="qchip" id="qualiMetaDate">Fecha: -</span>
+        <span class="qchip" id="qualiMetaSessions">Sesiones: -</span>
+        <span class="qchip">
+          Vista:
+          <select class="qsel" id="qualiViewSel">
+            <option value="best">Mejor por piloto</option>
+            <option value="byq">Por Q (comparativo)</option>
+          </select>
+        </span>
+      </div>
+
+      <div class="qtable-wrap" role="region" aria-label="Tabla de Clasificacion">
+        <table class="qtable" aria-label="Q Tabla">
+          <thead id="qualiThead"></thead>
+          <tbody id="qualiTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="manual-tip" style="margin-top:8px;">
+        Tip: si no ves datos, abre una Clasificacion (Q) y deja que caigan 2-3 vueltas.
+      </div>
+    </div>
+  </div>
+
+<!-- Debug panel (solo en modo debug) -->
   <div id="speechLogPanel" class="speechlog">
     <div class="speechlog-title">VOZ (ltimos mensajes)</div>
     <div id="speechLogList" class="speechlog-list"></div>
@@ -6341,7 +6379,7 @@ html, body{
 
 
 // ============================================================
-// CONSOLIDATED JS (v0.0.2.73)
+// CONSOLIDATED JS (v0.0.2.74)
 // - All inline scripts merged in source order.
 // - Wrapped with init guard to avoid double-binding listeners.
 // ============================================================
@@ -6542,7 +6580,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.73";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.74";
     const APP_LABEL = APP_NAME;
 
     // =========================
