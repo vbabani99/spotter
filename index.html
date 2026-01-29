@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.92 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.93 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.92</title>
+  <title>AI_Spotter_TRM_v0.0.2.93</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -75,7 +75,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
 
 /* ============================================================
-   CONSOLIDATED CSS (v0.0.2.92)
+   CONSOLIDATED CSS (v0.0.2.93)
    - Original style blocks merged in source order (no behavior change intended).
    ============================================================ */
 
@@ -162,7 +162,7 @@ html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
       /* Badge MODO theme */
       --mode-bg-manga: linear-gradient(135deg, rgba(221,20,19,.86), rgba(90,26,31,.72));
       --mode-bg-final: linear-gradient(135deg, rgba(221,20,19,.95), rgba(234,234,236,.10));
-      /* finalA se queda dorado (bandera de campeon) */
+      /* finalA se queda dorado (bandera de campeón) */
     }
 
     
@@ -5204,7 +5204,7 @@ body {
 
 /* ---- merged block ---- */
 
-/* v0.0.2.92 - header compatibility hardening */
+/* v0.0.2.93 - header compatibility hardening */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Avoid fixed-height traps (especially iOS with large text / dynamic viewport) */
@@ -5222,7 +5222,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* ---- merged block ---- */
 
-/* HEADER CANON v0.0.2.92 - iOS Safari/Chrome consistent */
+/* HEADER CANON v0.0.2.93 - iOS Safari/Chrome consistent */
 html, body {
   -webkit-text-size-adjust: 100% !important;
   text-size-adjust: 100% !important;
@@ -5910,7 +5910,7 @@ html, body {
 }
 
 
-/* v0.0.2.92 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
+/* v0.0.2.93 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
 html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .app-header,
 .app-header.live-on,
@@ -6123,7 +6123,7 @@ html, body{
 
 
 /* =========================
-   PATCH v0.0.2.92
+   PATCH v0.0.2.93
    Fix: raceSubtitle under logo visible
    Cause: HARD OVERRIDES forced logo to 100% height and overflow hidden
    Scope: UI only, no JS changes
@@ -6168,7 +6168,7 @@ html, body{
   .app-header .header-left, .app-header .header-right { display: none !important; }
 }
 
-/* v0.0.2.92 - FIX: evitar recorte de texto en botones del header (Q TABLA / MANUAL) */
+/* v0.0.2.93 - FIX: evitar recorte de texto en botones del header (Q TABLA / MANUAL) */
 .header-actions-row .header-help{
   width: auto !important;
   max-width: none !important;
@@ -6205,7 +6205,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.92</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.93</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6518,7 +6518,7 @@ html, body{
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.92</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.93</div>
           <div class="manual-sub">Gua rpida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -6650,7 +6650,7 @@ html, body{
 
 
 // ============================================================
-// CONSOLIDATED JS (v0.0.2.92)
+// CONSOLIDATED JS (v0.0.2.93)
 // - All inline scripts merged in source order.
 // - Wrapped with init guard to avoid double-binding listeners.
 // ============================================================
@@ -6851,7 +6851,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.92";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.93";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -17836,7 +17836,7 @@ function buildSessionFinishMessage(row) {
 
   // Resumen extra para finales cuando hay podio
   if (isFinal && posNum > 0) {
-    if (posNum === 1) msg += ' Felicidades, campen.';
+    if (posNum === 1) msg += ' Felicidades, campeón.';
     else if (posNum === 2) msg += ' Segundo lugar. Podio.';
     else if (posNum === 3) msg += ' Tercer lugar. Podio.';
     else if (posNum <= 10) msg += ' Top 10. Buen cierre.';
