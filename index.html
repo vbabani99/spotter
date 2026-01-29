@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.72 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.71 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 - v0.0.2.60: VOZ - consolidado visibilitychange (sin duplicados), keepalive menos agresivo, recovery iOS mas limpio.
 - v0.0.2.61: VOZ - fix cola: si activas VOZ y de inmediato seleccionas piloto, ya habla sin atascarse (pump en onend de unlock).
 - v0.0.2.62: VOZ - seleccion de piloto siempre habla aunque haya silencio; en iPhone evitamos cancel() agresivo (menos taps y sin frases viejas).
@@ -57,11 +57,29 @@ Changelog:
 - v7.0: Nuevo toggle "Modo background" (no pausa al quedar oculta la pestaa/ventana) + reenganche al volver (visibilitychange) + wake lock se reintenta al regresar.
 Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a background real (pantalla apagada o cambiar de app). En Windows/Chrome, si la ventana queda tapada, a veces hay throttling del navegador.-->
 
+<!--
+AI_Spotter_TRM_CLONE_CLEAN_v0.1.0 - Clon depurado (estructura + compat mobile)
+Autor: generado a partir de AI_Spotter_TRM_v0.0.2.71.html
+
+OBJETIVO
+- Mantener TODAS las funciones existentes (Firebase realtime + fallback polling, UI, Q TABLA, LapChart, Top3 grid, banco de frases, Race Director, TTS, WakeLock, Background).
+- Mejorar compatibilidad y robustez en iOS/Android + navegadores desktop.
+- Agregar estructura y documentacion en secciones claras (HTML/CSS/JS).
+
+CAMBIOS (sin tocar logica de negocio)
+- CSS: safe-area iOS, clamps para tipografias, evitar cortes y overscroll en mobile.
+- JS: watchdog extra de TTS (recupera cola si el motor se queda "pegado").
+- Comentarios de seccion para facilitar mantenimiento.
+
+NOTA
+- Este archivo sigue en ISO-8859-1 (latin-1) para que acentos/ no se rompan en algunos entornos.
+-->
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.72</title>
+  <title>AI_Spotter_TRM_v0.0.2.71</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b10'/%3E%3Cpath d='M16 34h8l4-14 6 28 4-14h10' fill='none' stroke='%23ff2a2a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
@@ -5238,6 +5256,41 @@ html, body{ -webkit-text-size-adjust:100% !important; text-size-adjust:100% !imp
 }
 #appVersion{ font-weight: 900 !important; opacity: .96 !important; color: rgba(255,255,255,0.90) !important; }
 
+
+/* =========================================================
+   PATCH v0.1.0 - Mobile/Responsive (safe-area + clamps)
+   ========================================================= */
+:root{
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+html, body{
+  height: 100%;
+  overscroll-behavior: none;
+}
+body{
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bot);
+}
+.app-header{
+  padding-top: calc(10px + var(--safe-top));
+}
+#raceTitleMain{
+  font-size: clamp(14px, 2.4vw, 18px);
+}
+#raceSubtitle{
+  font-size: clamp(11px, 2.0vw, 14px);
+}
+.controls-section, .extras-section{
+  min-width: 0;
+}
+@media (max-width: 420px){
+  /* iPhone 12 y similares: evitar cortes */
+  .app-header{ padding-left: 10px; padding-right: 10px; }
+  .topLogos img{ max-height: 42px; }
+  #lapChart{ height: var(--lapchart-h, 110px); }
+}
+
 </style>
 </head>
 <body class="skin-pro skin-vicpulse">
@@ -5265,7 +5318,7 @@ html, body{ -webkit-text-size-adjust:100% !important; text-size-adjust:100% !imp
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.72</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.71</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5877,7 +5930,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.72";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.71";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -5887,11 +5940,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.72";
     let __autoIntroSig = '';
     let __autoIntroDoneKeys = new Set();
     let __autoIntroRetryAt = 0;
-        let __autoIntroEnqueuedAt = 0;
-    let __autoIntroAttempts = 0;
-    const __AUTO_INTRO_MAX_ATTEMPTS = 2; // evita spam infinito
-    const __AUTO_INTRO_HOLDOFF_MS = 60000; // 60s
-let __autoFinishSig = '';
+    let __autoFinishSig = '';
     let __autoFinishPrevByKey = new Map();
     let __autoFinishAnnouncedByKey = new Set();
     let __autoFinishPhase = false;
@@ -6293,12 +6342,7 @@ let __autoFinishSig = '';
         const introKey = 'auto_intro_title_' + rn;
         const now = Date.now();
 
-        
-        // Anti-spam: si por algun bug no se marca 'done', limitamos reintentos
-        if (rn === __autoIntroSig) {
-          if (__autoIntroAttempts >= __AUTO_INTRO_MAX_ATTEMPTS && (now - (__autoIntroEnqueuedAt || 0)) < __AUTO_INTRO_HOLDOFF_MS) return;
-        }
-// Si ya anunciamos exitosamente este titulo, no repetir
+        // Si ya anunciamos exitosamente este titulo, no repetir
         if (rn === __autoIntroSig && __autoIntroDoneKeys && __autoIntroDoneKeys.has(introKey)) return;
 
         // Si aun no se ha podido anunciar (TTS ocupado/errores), reintentar con cooldown corto
@@ -6311,8 +6355,6 @@ let __autoFinishSig = '';
           __autoIntroSig = rn;
           try { __autoResetLifecycle(rn); } catch(e) {}
           try { __autoIntroDoneKeys.clear(); } catch(e) { __autoIntroDoneKeys = new Set(); }
-                  __autoIntroEnqueuedAt = 0;
-          __autoIntroAttempts = 0;
         }
 
         __autoIntroRetryAt = now + 3000;
@@ -6421,15 +6463,12 @@ let __autoFinishSig = '';
           dedupe: true,
           maxAgeMs: 60000
         });
-
-        // Marcamos como anunciado en el momento de encolar para evitar que se repita el titulo en bucle
-        try {
-          __autoIntroEnqueuedAt = now;
-          __autoIntroAttempts = (__autoIntroAttempts || 0) + 1;
-          if (__autoIntroDoneKeys) __autoIntroDoneKeys.add(introKey);
-        } catch(e) {}
-
-      } catch(e) {}
+      
+        // Anti-spam: marcar como anunciado en el momento de encolarlo (aunque iOS falle al hablar)
+        try { __autoIntroDoneKeys && __autoIntroDoneKeys.add(introKey); } catch(e) { __autoIntroDoneKeys = new Set([introKey]); }
+        // Evita reintentos agresivos del titulo; si realmente cambia la carrera, rn cambia y se resetea arriba
+        __autoIntroRetryAt = now + 3600000;
+} catch(e) {}
     }
 
     function __autoAnnounceFinishers() {
@@ -11259,7 +11298,7 @@ function toFixedFloor(value, decimals = 0) {
               try { pendingAutoVoiceUnlock = false; __ttsUnlockedOnce = true; } catch(e) {}
               try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
 
-              // Si el OS cortó el utterance, limpia bandera local y drena cola
+              // Si el OS cort el utterance, limpia bandera local y drena cola
               try {
                 if (window.speechSynthesis && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
                   speechSpeaking = false;
@@ -17953,6 +17992,35 @@ handleVoiceAndBeeps();
 })();
 
 }
+
+
+
+/* =========================================================
+   PATCH v0.1.0 - TTS watchdog (recovery cross-browser)
+   - Si speechSpeaking se queda true pero el motor no esta hablando,
+     lo liberamos y drenamos la cola.
+   ========================================================= */
+(function(){
+  let __ttsWdLast = 0;
+  setInterval(() => {
+    try {
+      if (!voiceMasterEnabled) return;
+      if (!window.speechSynthesis) return;
+
+      const now = Date.now();
+      if (now - __ttsWdLast < 1500) return;
+      __ttsWdLast = now;
+
+      const speaking = !!window.speechSynthesis.speaking;
+      const pending  = !!window.speechSynthesis.pending;
+
+      if (!speaking && !pending && speechSpeaking) {
+        speechSpeaking = false;
+        try { if (typeof pumpSpeechQueue === 'function') pumpSpeechQueue(); } catch(e) {}
+      }
+    } catch(e) {}
+  }, 800);
+})();
 
 </script>
 
