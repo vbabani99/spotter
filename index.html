@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.71 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.72 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 - v0.0.2.60: VOZ - consolidado visibilitychange (sin duplicados), keepalive menos agresivo, recovery iOS mas limpio.
 - v0.0.2.61: VOZ - fix cola: si activas VOZ y de inmediato seleccionas piloto, ya habla sin atascarse (pump en onend de unlock).
 - v0.0.2.62: VOZ - seleccion de piloto siempre habla aunque haya silencio; en iPhone evitamos cancel() agresivo (menos taps y sin frases viejas).
@@ -61,7 +61,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.71</title>
+  <title>AI_Spotter_TRM_v0.0.2.72</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b10'/%3E%3Cpath d='M16 34h8l4-14 6 28 4-14h10' fill='none' stroke='%23ff2a2a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
@@ -5265,7 +5265,7 @@ html, body{ -webkit-text-size-adjust:100% !important; text-size-adjust:100% !imp
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.71</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.72</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5877,7 +5877,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.71";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.72";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -5962,6 +5962,7 @@ const APP_NAME = "AI_Spotter_TRM_v0.0.2.71";
         try {
           if (typeof window !== 'undefined' && window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') {
             const ss = window.speechSynthesis;
+    try { ss.getVoices && ss.getVoices(); } catch (e) {}
             if ((ss.speaking || ss.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) ss.cancel();
           }
         } catch(e){}
@@ -10266,11 +10267,19 @@ function enqueueSpeech(text, opts = {}) {
 
         const now = Date.now();
         const key = String(opts.key || '').trim() || clean; // dedupe por texto si no hay key
-        const cooldownMs = Number(opts.cooldownMs || 0) || 0;
-        if (cooldownMs > 0) {
-          const last = lastSpokenKeyAt.get(key) || 0;
-          if (now - last < cooldownMs) return;
-        }
+
+        // Anti-loop: evita repetir el mismo mensaje cada tick (aunque ya haya salido de la cola)
+        // - cooldownMs (si viene) manda
+        // - si no viene, usamos minRepeatMs por key (default 2500ms)
+        const cooldownMsRaw = (opts.cooldownMs != null) ? Number(opts.cooldownMs) : null;
+        const minRepeatMsRaw = (opts.minRepeatMs != null) ? Number(opts.minRepeatMs) : 8000;
+        const cooldownMs = (cooldownMsRaw != null && isFinite(cooldownMsRaw)) ? Math.max(0, cooldownMsRaw) : 0;
+        const minRepeatMs = (minRepeatMsRaw != null && isFinite(minRepeatMsRaw)) ? Math.max(0, minRepeatMsRaw) : 0;
+
+        const last = lastSpokenKeyAt.get(key) || 0;
+        const gate = (cooldownMs > 0) ? cooldownMs : minRepeatMs;
+        if (gate > 0 && (now - last) < gate) return;
+
         const priority = Number.isFinite(opts.priority) ? opts.priority : 0;
         const interrupt = !!opts.interrupt;
         const dedupe = (opts.dedupe !== false);
@@ -10324,7 +10333,7 @@ function enqueueSpeech(text, opts = {}) {
         const pr = prosodyFromMood(mood);
         const rate = clampNum((opts.rate != null ? opts.rate : (baseRate * (pr.rateMul || 1.0))), 0.6, 2.2);
         const pitch = clampNum((opts.pitch != null ? opts.pitch : (pr.pitch != null ? pr.pitch : 1.0)), 0.5, 2.0);
-        const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
+        const volume = clampNum((opts.volume != null ? opts.volume : 1.0), 0.0, 1.0);
         const postDelayMs = clampNum((opts.postDelayMs != null ? Number(opts.postDelayMs) : 0), 0, 2000);
         speechQueue.push({ text: clean, key, priority, ts: now, gen: __raceGen, rate, pitch, volume, postDelayMs, voiceURI: (opts && (opts.voiceURI || opts.voiceUri)) || '' });
         try { if (pendingAutoVoiceUnlock) __pruneQueueDuringBlock(); } catch(e) {}
@@ -10350,6 +10359,13 @@ function enqueueSpeech(text, opts = {}) {
     // Permitimos SOLO mensajes esenciales (accion del usuario / criticos).
     if (pendingAutoVoiceUnlock) {
       try {
+        const ios = (typeof isIOSWebKit === 'function' && isIOSWebKit());
+        if (ios && !__ttsUnlockedOnce) {
+          // En iOS bloqueado, NO consumas cola (si intentas hablar, el mensaje se pierde).
+          __markTtsNeedsUnlock('Toca una vez para activar audio', 6000);
+          scheduleOneTapUnlock();
+          return;
+        }
         const idxEss = speechQueue.findIndex(it => it && __isEssentialSpeech(it, it.key, it.priority));
         if (idxEss < 0) return;
         if (idxEss > 0) speechQueue.splice(0, idxEss);
@@ -10430,6 +10446,7 @@ function enqueueSpeech(text, opts = {}) {
 
     u.onstart = () => {
       didStart = true;
+      try { lastSpokenKeyAt.set(next.key, Date.now()); } catch (e) {}
       clearStartGuard();
       try { __ttsBlockedSince = 0; } catch (e) {}
       try { pendingAutoVoiceUnlock = false; } catch (e) {}
@@ -10449,8 +10466,14 @@ function enqueueSpeech(text, opts = {}) {
       try {
         if (typeof __isIOSLike === 'function' && __isIOSLike()) {
           pendingAutoVoiceUnlock = true;
+          // Re-encola el mensaje para no perderlo cuando iOS bloquea el TTS tras sleep/tab-switch
+          try {
+            next.tries = (next.tries || 0) + 1;
+            if (next.tries <= 2) speechQueue.unshift(next);
+          } catch (e) {}
           __markTtsNeedsUnlock('Toca una vez para reactivar audio', 6000);
           scheduleOneTapUnlock();
+          return;
         }
       } catch (e) {}
       setTimeout(pumpSpeechQueue, 0);
@@ -10645,6 +10668,17 @@ function unlockTTSOnce(origin) {
 
           // Intento de speak
           ss.speak(u);
+    // iOS a veces no dispara onstart; si ya esta hablando, lo tomamos como unlock
+    setTimeout(() => {
+      try {
+        if (!__ttsDidStart && ss.speaking) {
+          __ttsDidStart = true;
+          __ttsUnlockedOnce = true;
+          pendingAutoVoiceUnlock = false;
+          __clearTtsNeedsUnlock();
+        }
+      } catch (e) {}
+    }, 250);
 
           // IMPORTANTE: no limpiamos "pending" aqui; solo en onstart
           return true;
@@ -10681,8 +10715,24 @@ function setVoiceMaster(on, opts = {}) {
           try { speechSpeaking = false; } catch(e) {}
           try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
         } else {
-          // Encendido: NO canceles en este punto (iPhone se queda mudo). Solo drena cola.
-          try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 80); } catch(e) {}
+          // Encendido: arranque limpio (evita backlog / "carrera anterior" / loops)
+          try { speechQueue.length = 0; } catch (e) {}
+          try { speechSpeaking = false; } catch (e) {}
+          try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch (e) {}
+
+          try {
+            const ios = (typeof isIOSWebKit === 'function' && isIOSWebKit());
+            // En iOS, no drenamos cola hasta tener unlock real (si no, se "pierde" el mensaje)
+            if (ios && (!__ttsUnlockedOnce || pendingAutoVoiceUnlock)) {
+              pendingAutoVoiceUnlock = true;
+              try { __markTtsNeedsUnlock('Toca una vez para activar audio', 6000); } catch (e) {}
+              try { scheduleOneTapUnlock(); } catch (e) {}
+            } else {
+              setTimeout(() => { try { pumpSpeechQueue(); } catch (e) {} }, 80);
+            }
+          } catch (e) {
+            try { setTimeout(() => { try { pumpSpeechQueue(); } catch (e) {} }, 80); } catch (e2) {}
+          }
         }
       }
 
