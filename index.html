@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.63 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.64 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 - v0.0.2.60: VOZ - consolidado visibilitychange (sin duplicados), keepalive menos agresivo, recovery iOS mas limpio.
 - v0.0.2.61: VOZ - fix cola: si activas VOZ y de inmediato seleccionas piloto, ya habla sin atascarse (pump en onend de unlock).
 - v0.0.2.62: VOZ - seleccion de piloto siempre habla aunque haya silencio; en iPhone evitamos cancel() agresivo (menos taps y sin frases viejas).
@@ -61,7 +61,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.63</title>
+  <title>AI_Spotter_TRM_v0.0.2.64</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b10'/%3E%3Cpath d='M16 34h8l4-14 6 28 4-14h10' fill='none' stroke='%23ff2a2a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
@@ -5265,7 +5265,7 @@ html, body{ -webkit-text-size-adjust:100% !important; text-size-adjust:100% !imp
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.63</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.64</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5682,6 +5682,10 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
 } else {
   window.__AI_SPOTTER_TRM_INIT__ = true;
 
+  // Race generation: increments on each detected new race to drop stale queued work
+  let __raceGen = 0;
+
+
 /*
 ====================================================================
 DOCUMENTACION TECNICA - AI Spotter TRM (v0.0.0.29)
@@ -5873,7 +5877,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.63";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.64";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10300,7 +10304,7 @@ function enqueueSpeech(text, opts = {}) {
         const pitch = clampNum((opts.pitch != null ? opts.pitch : (pr.pitch != null ? pr.pitch : 1.0)), 0.5, 2.0);
         const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
         const postDelayMs = clampNum((opts.postDelayMs != null ? Number(opts.postDelayMs) : 0), 0, 2000);
-        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: (opts && (opts.voiceURI || opts.voiceUri)) || '' });
+        speechQueue.push({ text: clean, key, priority, ts: now, gen: __raceGen, rate, pitch, volume, postDelayMs, voiceURI: (opts && (opts.voiceURI || opts.voiceUri)) || '' });
         try { if (pendingAutoVoiceUnlock) __pruneQueueDuringBlock(); } catch(e) {}
         try { pushSpeechLog({ text: clean, key, priority }); } catch(e) {}
         // prioridad desc, FIFO por tiempo
@@ -10321,6 +10325,11 @@ function enqueueSpeech(text, opts = {}) {
 
         // Si el TTS esta bloqueado y esperando tap, no intentes hablar (evita loops y 20 taps).
         if (pendingAutoVoiceUnlock) return;
+
+    // Drop any queued items from a previous race (stale announcements)
+    while (speechQueue.length && speechQueue[0] && (speechQueue[0].gen != null) && speechQueue[0].gen !== __raceGen) {
+      speechQueue.shift();
+    }
 
         const next = speechQueue.shift();
         if (!next) return;
@@ -10573,12 +10582,13 @@ function unlockTTSOnce(reason = '') {
 
         let didStart = false;
 
-        const u = new SpeechSynthesisUtterance('Audio listo');
+        const __audibleUnlock = (reason==='voice-btn-on' || reason==='voice-master-on' || reason==='pilot-select' || reason==='visibility-recover');
+        const u = new SpeechSynthesisUtterance(__audibleUnlock ? (reason==='visibility-recover' ? 'Audio listo' : 'Listo') : 'Audio listo');
         u.lang = 'es-MX';
         u.rate = clampNum((isFinite(ttsRate) ? ttsRate : 1.5), 0.8, 2.0);
         u.pitch = 1.0;
-        // Casi inaudible: desbloquea sin gritarte "AUDIO LISTO" cada vez.
-        u.volume = 0.01;
+        // Desbloqueo: audible solo cuando viene de un gesto real del usuario.
+        u.volume = __audibleUnlock ? 0.6 : 0.01;
 
         try {
           u.onstart = () => {
@@ -10590,7 +10600,7 @@ function unlockTTSOnce(reason = '') {
             try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
             try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
 
-            try { showToast('Audio listo', 900); } catch(e) {}
+            try { showToast('Audio listo', 1200); } catch(e) {}
             try { pumpSpeechQueue(); } catch(e) {}
           };
         } catch(e) {}
@@ -10706,34 +10716,26 @@ function setVoiceMaster(on, opts = {}) {
         }catch(e){}
         try { btn.style.touchAction = 'manipulation'; } catch(e) {}
 
-        btn.addEventListener('click', (ev) => {
-          try { if (ev && ev.preventDefault) ev.preventDefault(); } catch(e){}
-          const now = Date.now();
-          if (now - __lastVoiceTapAt < 280) return;
-          __lastVoiceTapAt = now;
+        // iOS/Safari: pointer/touch es mas confiable que click (que llega tarde o doble)
+    let __lastVoicePointerAt = 0;
 
-          // Gesto de usuario (iOS)
-          try { __userGestureUnlocked = true; } catch(e) {}
-          try { ensureAudioCtx(); } catch(e) {}
+    const __onVoiceGesture = (ev, origin) => {
+      const now = Date.now();
+      if (now - __lastVoiceTapAt < 250) return;
+      __lastVoiceTapAt = now;
+      try { if (ev && ev.preventDefault) ev.preventDefault(); } catch(e) {}
+      try { if (ev && ev.stopPropagation) ev.stopPropagation(); } catch(e) {}
 
-          // Si esta ON pero bloqueado: solo reactivar (no toggle OFF)
-          if (voiceMasterEnabled && __voiceBtnNeedsUnlock()) {
-            try { unlockTTSOnce('voice-btn-recover'); } catch(e) {}
-            try { showToast('Reactivando audio...', 900); } catch(e) {}
-            try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
-            return;
-          }
+      const next = !voiceMasterEnabled;
+      setVoiceMaster(next, {silent:false, origin: origin || 'voice-btn'});
+      if (next) unlockTTSOnce('voice-btn-on');
+    };
 
-          // Toggle normal
-          try { setVoiceMaster(!voiceMasterEnabled, { user:true }); } catch(e) {}
+    try { btn.style.touchAction = 'manipulation'; } catch(e) {}
 
-          // Al encender: confirmacion inmediata
-          if (voiceMasterEnabled) {
-            try { unlockTTSOnce('voice-btn-on'); } catch(e) {}
-          } else {
-            try { pendingAutoVoiceUnlock = false; } catch(e) {}
-          }
-        }, { passive:false });
+    btn.addEventListener('pointerdown', (ev)=>{ __lastVoicePointerAt = Date.now(); __onVoiceGesture(ev, 'voice-btn-pointer'); }, { passive:false });
+    btn.addEventListener('touchend', (ev)=>{ __lastVoicePointerAt = Date.now(); __onVoiceGesture(ev, 'voice-btn-touch'); }, { passive:false });
+    btn.addEventListener('click', (ev)=>{ const now=Date.now(); if (now-__lastVoicePointerAt < 800) return; __onVoiceGesture(ev, 'voice-btn-click'); }, { passive:false });
       }
 
       try { voiceToggleBtns.forEach(__bindVoiceButtonOnce); } catch(e) {}
@@ -17176,6 +17178,14 @@ function checkSessionFinishOnLap() {
           sessionFinishAnnounced = false;
           sessionFinishPrevByKey = new Map();
           lastRaceName = newRaceName;
+
+          // Limpieza dura de voz al cambiar de carrera (evita hablar de la carrera anterior)
+          __raceGen++;
+          try { speechQueue.length = 0; } catch(e) {}
+          try { speechSpeaking = false; } catch(e) {}
+          try { lastSpokenKeyAt && lastSpokenKeyAt.clear && lastSpokenKeyAt.clear(); } catch(e) {}
+          try { if (!isIOSWebKit() && window.speechSynthesis && window.speechSynthesis.cancel) window.speechSynthesis.cancel(); } catch(e) {}
+
 
           // Auto-skin por sesion (MANGA vs FINAL)
           try { maybeApplyAutoThemeByRaceName(newRaceName); } catch(e) {}
