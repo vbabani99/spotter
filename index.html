@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.74 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.75 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -56,7 +56,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.74</title>
+  <title>AI_Spotter_TRM_v0.0.2.75</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -5907,6 +5907,134 @@ html, body{
 .app-header .header-controls{ margin-bottom: 2px !important; }
 .app-header .header-version-row{ margin-top: 2px !important; }
 
+
+/* =========================
+   PRO HEADER BUTTONS - UI ONLY
+   (No cambia JS, voz, unlock iOS ni dedupe)
+   ========================= */
+:root{
+  --proBtnH: 34px;
+  --proBtnR: 12px;
+  --proBtnPadX: 10px;
+  --proBtnFont: 12px;
+
+  --proBgA: #0b0f16;
+  --proBgB: #121a26;
+
+  --proStrokeA: rgba(255,255,255,.14);
+  --proStrokeB: rgba(255,255,255,.06);
+
+  --proTxt: rgba(255,255,255,.92);
+  --proTxtDim: rgba(255,255,255,.75);
+
+  --proShadow: 0 10px 24px rgba(0,0,0,.55);
+  --proGlow: 0 0 0 3px rgba(255,255,255,.06);
+
+  --proAccentCyan: #00e5ff;
+  --proAccentPurple: #a855f7;
+  --proAccentRed: #ff355d;
+  --proAccentAmber: #ffb020;
+  --proAccentGreen: #35ff7a;
+}
+
+.app-header .header-actions-row .btn-pro{
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+
+  height: var(--proBtnH);
+  padding: 0 var(--proBtnPadX);
+  border-radius: var(--proBtnR);
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap: 7px;
+
+  font-size: var(--proBtnFont);
+  line-height: 1;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  font-weight: 800;
+
+  color: var(--proTxt);
+  border: 1px solid var(--proStrokeA);
+  background: linear-gradient(180deg, var(--proBgB), var(--proBgA));
+  box-shadow: var(--proShadow);
+
+  position: relative;
+  transform: translateZ(0);
+  user-select: none;
+  cursor: pointer;
+  will-change: transform, filter;
+}
+
+.app-header .header-actions-row .btn-pro:active{
+  transform: translateY(1px);
+  filter: brightness(1.05);
+}
+
+.app-header .header-actions-row .btn-pro::before{
+  content:"";
+  position:absolute;
+  inset: 1px;
+  border-radius: calc(var(--proBtnR) - 1px);
+  border: 1px solid var(--proStrokeB);
+  pointer-events:none;
+}
+
+.app-header .header-actions-row .btn-pro::after{
+  content:"";
+  position:absolute;
+  left: 8px;
+  right: 8px;
+  top: 6px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,.20), rgba(255,255,255,0));
+  opacity: .55;
+  pointer-events:none;
+}
+
+@media (hover:hover){
+  .app-header .header-actions-row .btn-pro:hover{
+    filter: brightness(1.10);
+  }
+}
+
+/* Mini "dot" de acento (sin emojis, iOS safe) */
+.app-header .header-actions-row .btn-pro .ico{
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.25);
+  box-shadow: 0 0 10px rgba(255,255,255,.10);
+  flex: 0 0 auto;
+}
+
+/* Acentos por boton */
+.app-header .header-actions-row .btn-pro[data-kind="auto"] .ico{ background: var(--proAccentPurple); }
+.app-header .header-actions-row .btn-pro[data-kind="vic"] .ico{ background: var(--proAccentRed); }
+.app-header .header-actions-row .btn-pro[data-kind="qtabla"] .ico{ background: var(--proAccentCyan); }
+.app-header .header-actions-row .btn-pro[data-kind="manual"] .ico{ background: var(--proAccentAmber); }
+.app-header .header-actions-row .btn-pro[data-kind="man"] .ico{ background: var(--proAccentGreen); }
+
+/* ON/ACTIVE (respeta clases existentes y aria-pressed si ya se usa) */
+.app-header .header-actions-row .btn-pro.active,
+.app-header .header-actions-row .btn-pro.on,
+.app-header .header-actions-row .btn-pro.is-on,
+.app-header .header-actions-row .btn-pro[aria-pressed="true"]{
+  border-color: rgba(255,255,255,.20);
+  box-shadow: var(--proShadow), var(--proGlow);
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .app-header .header-actions-row .btn-pro{
+    transition: none !important;
+  }
+}
+
 </style>
 </head>
 <body class="skin-pro skin-vicpulse">
@@ -5926,15 +6054,15 @@ html, body{
             </div>
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
           <div class="hdr-break"></div>
-          <button class="header-help header-auto" id="autoSkinBtn" type="button" title="Auto-skin">AUTO</button>
-          <button class="header-help header-skin" id="skinBtn" type="button" title="Skin Vic's Pulse Timing">VIC</button>
-          <button class="header-help header-qtable" id="qTableBtn" type="button" title="Q TABLA (clasificacin)">Q TABLA</button>
-          <button class="header-help" id="manualBtn" type="button" title="Manual y ayuda">MANUAL</button>
+          <button class="header-help header-auto btn-pro" id="autoSkinBtn" type="button" title="Auto-skin" data-kind="auto"><span class="ico"></span>AUTO</button>
+          <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Skin Vic's Pulse Timing" data-kind="vic"><span class="ico"></span>VIC</button>
+          <button class="header-help header-qtable btn-pro" id="qTableBtn" type="button" title="Q TABLA (clasificacin)" data-kind="qtabla"><span class="ico"></span>Q TABLA</button>
+          <button class="header-help btn-pro" id="manualBtn" type="button" title="Manual y ayuda" data-kind="manual"><span class="ico"></span>MANUAL</button>
         </div>
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.74</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.75</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6580,7 +6708,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.74";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.75";
     const APP_LABEL = APP_NAME;
 
     // =========================
