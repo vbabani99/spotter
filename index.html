@@ -1,5 +1,5 @@
 <!--
-AI_Spotter_TRM_v0.0.2.69 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+AI_Spotter_TRM_v0.0.2.71 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 - v0.0.2.60: VOZ - consolidado visibilitychange (sin duplicados), keepalive menos agresivo, recovery iOS mas limpio.
 - v0.0.2.61: VOZ - fix cola: si activas VOZ y de inmediato seleccionas piloto, ya habla sin atascarse (pump en onend de unlock).
 - v0.0.2.62: VOZ - seleccion de piloto siempre habla aunque haya silencio; en iPhone evitamos cancel() agresivo (menos taps y sin frases viejas).
@@ -61,7 +61,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.69</title>
+  <title>AI_Spotter_TRM_v0.0.2.71</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b10'/%3E%3Cpath d='M16 34h8l4-14 6 28 4-14h10' fill='none' stroke='%23ff2a2a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
@@ -5265,7 +5265,7 @@ html, body{ -webkit-text-size-adjust:100% !important; text-size-adjust:100% !imp
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.69</div>
+        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.71</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -5877,7 +5877,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.69";
+const APP_NAME = "AI_Spotter_TRM_v0.0.2.71";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10339,106 +10339,137 @@ function enqueueSpeech(text, opts = {}) {
     }
 
     function pumpSpeechQueue() {
-      try {
-        if (!voiceMasterEnabled) return;
-        if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
-
-        if (speechSpeaking || window.speechSynthesis.speaking) return;
-
-        // Si el TTS esta bloqueado y esperando tap, no intentes hablar (evita loops y 20 taps).
-        if (pendingAutoVoiceUnlock) return;
-
-    // Drop any queued items from a previous race (stale announcements)
-        for (let i = speechQueue.length - 1; i >= 0; i--) {
-          const it = speechQueue[i];
-          if (it && it.gen != null && it.gen !== __raceGen) speechQueue.splice(i, 1);
-        }
-
-        const next = speechQueue.shift();
-        if (!next) return;
-
-        const u = new SpeechSynthesisUtterance(normalizeTtsText(next.text));
-        let __ttsDidStart = false;
-        try {
-          u.onstart = () => {
-            __ttsDidStart = true;
-            try { if (__ttsStartGuard) { clearTimeout(__ttsStartGuard); __ttsStartGuard = 0; } } catch(e) {}
-          };
-        } catch(e) {}
-        u.lang = 'es-MX';
-        u.rate = (next.rate != null ? next.rate : (isFinite(ttsRate) ? ttsRate : 1.5));
-        u.pitch = (next.pitch != null ? next.pitch : 1.0);
-        u.volume = (next.volume != null ? next.volume : 1.0);
-
-        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-        if (voices && voices.length) {
-          
-let v = null;
-
-// DUO web/desktop: alterna Sabina/Raul por frase (fallback a SINGLE si no estan ambas)
-if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
   try {
-    let role = __duoGuessRole(next.text, next.key);
-    if (__duoLastRole && role === __duoLastRole) role = (role === 'raul' ? 'sabina' : 'raul');
-    const wanted = (role === 'raul') ? __duoVoiceRaulURI : __duoVoiceSabinaURI;
-    const dv = voices.find(x => (x.voiceURI || x.name) === wanted);
-    if (dv) { v = dv; __duoLastRole = role; }
-  } catch (e) {}
-}
-          // Auto voice override (per-message), used by Auto Locutor rotation
-          if (!v && next && next.voiceURI) {
-            try { v = voices.find(x => (x.voiceURI || x.name) === next.voiceURI); } catch(e) {}
-          }
-          if (!v && chosenVoiceURI && !(next && next.voiceURI)) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
-          if (!v) v = pickDefaultVoice(voices);
-          if (v) {
-            u.voice = v;
-            if (v.lang) u.lang = v.lang;
-          }
+    if (!voiceMasterEnabled) return;
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+
+    // Si ya esta hablando, no empujar otra frase
+    if (speechSpeaking || window.speechSynthesis.speaking) return;
+
+    // Si el TTS esta bloqueado y esperando tap (iOS tras sleep), evitar backlog.
+    // Permitimos SOLO mensajes esenciales (accion del usuario / criticos).
+    if (pendingAutoVoiceUnlock) {
+      try {
+        const idxEss = speechQueue.findIndex(it => it && __isEssentialSpeech(it, it.key, it.priority));
+        if (idxEss < 0) return;
+        if (idxEss > 0) speechQueue.splice(0, idxEss);
+      } catch (e) { return; }
+    }
+
+    // Drop queued items from a previous race (stale announcements)
+    try {
+      for (let i = speechQueue.length - 1; i >= 0; i--) {
+        const it = speechQueue[i];
+        if (it && it.gen != null && it.gen !== __raceGen) speechQueue.splice(i, 1);
+      }
+    } catch (e) {}
+
+    const next = speechQueue.shift();
+    if (!next) return;
+
+    const u = new SpeechSynthesisUtterance(normalizeTtsText(next.text));
+    u.lang = 'es-MX';
+    u.rate = (next.rate != null ? next.rate : (isFinite(ttsRate) ? ttsRate : 1.5));
+    u.pitch = (next.pitch != null ? next.pitch : 1.0);
+    u.volume = (next.volume != null ? next.volume : 1.0);
+
+    // Elegir voz
+    try {
+      const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+      if (voices && voices.length) {
+        let v = null;
+
+        // DUO web/desktop: alterna Sabina/Raul por frase (fallback a SINGLE si no estan ambas)
+        if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
+          try {
+            let role = __duoGuessRole(next.text, next.key);
+            if (__duoLastRole && role === __duoLastRole) role = (role === 'raul' ? 'sabina' : 'raul');
+            const wanted = (role === 'raul') ? __duoVoiceRaulURI : __duoVoiceSabinaURI;
+            const dv = voices.find(x => (x.voiceURI || x.name) === wanted);
+            if (dv) { v = dv; __duoLastRole = role; }
+          } catch (e) {}
         }
 
-        speechSpeaking = true;
+        // Auto voice override (per-message), used by Auto Locutor rotation
+        if (!v && next && next.voiceURI) {
+          try { v = voices.find(x => (x.voiceURI || x.name) === next.voiceURI); } catch (e) {}
+        }
 
-        const clearWd = () => {
-          if (speechWatchdog) { clearTimeout(speechWatchdog); speechWatchdog = 0; }
-        };
-        clearWd();
-        speechWatchdog = setTimeout(() => {
-          // watchdog anti-freeze (iOS/Chrome a veces se queda "hablando")
-          try { if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch (e) {}
-          speechSpeaking = false;
-          pumpSpeechQueue();
-        }, 15000);
+        if (!v && chosenVoiceURI && !(next && next.voiceURI)) {
+          try { v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI); } catch (e) {}
+        }
 
-        u.onend = () => {
-          clearWd();
-          speechSpeaking = false;
-          try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_title_') === 0) { __autoIntroDoneKeys.add(next.key); } } catch(e) {}
-          lastSpokenKeyAt.set(next.key, Date.now());
-          const d = Number(next.postDelayMs || 0) || 0;
-          if (d > 0) setTimeout(pumpSpeechQueue, d);
-          else pumpSpeechQueue();
-        };
-        u.onerror = () => {
-          clearWd();
-          speechSpeaking = false;
-          lastSpokenKeyAt.set(next.key, Date.now());
-          const d = Number(next.postDelayMs || 0) || 0;
-          if (d > 0) setTimeout(pumpSpeechQueue, d);
-          else pumpSpeechQueue();
-        };
+        if (!v) v = pickDefaultVoice(voices);
 
-        window.speechSynthesis.speak(u);
-
-              
-
-        // (start-guard removido: sin reinsert/needs-unlock por timeout)
-
-} catch (e) {
-        console.error('pumpSpeechQueue', e);
-        speechSpeaking = false;
+        if (v) {
+          u.voice = v;
+          if (v.lang) u.lang = v.lang;
+        }
       }
-    }
+    } catch (e) {}
+
+    speechSpeaking = true;
+
+    let didStart = false;
+    let startGuard = 0;
+
+    const clearStartGuard = () => {
+      try { if (startGuard) { clearTimeout(startGuard); startGuard = 0; } } catch (e) {}
+    };
+    const clearWatchdog = () => {
+      try { if (speechWatchdog) { clearTimeout(speechWatchdog); speechWatchdog = 0; } } catch (e) {}
+    };
+
+    const finish = () => {
+      clearStartGuard();
+      clearWatchdog();
+      speechSpeaking = false;
+      try { if (window.speechSynthesis && window.speechSynthesis.paused) window.speechSynthesis.resume(); } catch (e) {}
+      setTimeout(pumpSpeechQueue, 0);
+    };
+
+    u.onstart = () => {
+      didStart = true;
+      clearStartGuard();
+      try { __ttsBlockedSince = 0; } catch (e) {}
+      try { pendingAutoVoiceUnlock = false; } catch (e) {}
+      try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch (e) {}
+    };
+    u.onend = finish;
+    u.onerror = finish;
+
+    // Si no inicia, evita freeze silencioso y recupera rapido
+    startGuard = setTimeout(() => {
+      if (didStart) return;
+      try { __ttsBlockedSince = Date.now(); } catch (e) {}
+      try {
+        if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel();
+      } catch (e) {}
+      speechSpeaking = false;
+      try {
+        if (typeof __isIOSLike === 'function' && __isIOSLike()) {
+          pendingAutoVoiceUnlock = true;
+          __markTtsNeedsUnlock('Toca una vez para reactivar audio', 6000);
+          scheduleOneTapUnlock();
+        }
+      } catch (e) {}
+      setTimeout(pumpSpeechQueue, 0);
+    }, 1200);
+
+    clearWatchdog();
+    speechWatchdog = setTimeout(() => {
+      try {
+        if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel();
+      } catch (e) {}
+      speechSpeaking = false;
+      setTimeout(pumpSpeechQueue, 0);
+    }, 12000);
+
+    window.speechSynthesis.speak(u);
+  } catch (e) {
+    try { speechSpeaking = false; } catch (ee) {}
+  }
+}
 
     function speakText(text, opts) {
       enqueueSpeech(text, opts || {});
@@ -11172,7 +11203,7 @@ function toFixedFloor(value, decimals = 0) {
               try { __markTtsNeedsUnlock(null, 0); } catch(e) {}
             } else {
               // Desktop/Android: no pedimos unlock, solo evitamos que la cola se quede "congelada"
-              try { if (window.speechSynthesis && typeof window.speechSynthesis.pause === 'function') window.speechSynthesis.pause(); } catch(e) {}
+              try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') window.speechSynthesis.cancel(); } catch(e) {}
               try { speechSpeaking = false; } catch(e) {}
               try { if (__ttsStartGuard) { clearTimeout(__ttsStartGuard); __ttsStartGuard = 0; } } catch(e) {}
             }
@@ -11197,7 +11228,8 @@ function toFixedFloor(value, decimals = 0) {
           } catch(e) {}
 
           if (voiceMasterEnabled) {
-            try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+            try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') window.speechSynthesis.cancel(); } catch(e) {}
+            try { speechSpeaking = false; } catch(e) {}
             try { confirmVoiceButtons && confirmVoiceButtons(); } catch(e) {}
 
             if (isIOS) {
@@ -11232,7 +11264,7 @@ function toFixedFloor(value, decimals = 0) {
           try {
             if (!voiceMasterEnabled) return;
             if (__isIOSLike()) return;
-            try { if (window.speechSynthesis && typeof window.speechSynthesis.pause === 'function') window.speechSynthesis.pause(); } catch(e) {}
+            try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') window.speechSynthesis.cancel(); } catch(e) {}
             try { speechSpeaking = false; } catch(e) {}
           } catch(e) {}
         }, { passive:true });
@@ -11241,7 +11273,8 @@ function toFixedFloor(value, decimals = 0) {
           try {
             if (!voiceMasterEnabled) return;
             if (__isIOSLike()) return;
-            try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+            try { if (window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') window.speechSynthesis.cancel(); } catch(e) {}
+            try { speechSpeaking = false; } catch(e) {}
             try { pendingAutoVoiceUnlock = false; __ttsUnlockedOnce = true; } catch(e) {}
             try {
               if (window.speechSynthesis && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
