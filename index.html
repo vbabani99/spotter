@@ -1,6 +1,7 @@
 
 <!--
-AI_Spotter_TRM_v0.0.2.98 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.02 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+v0.3.02: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
@@ -57,7 +58,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="ISO-8859-1" />
-  <title>AI_Spotter_TRM_v0.0.2.98</title>
+  <title>vics_Smart_Spotter_v0.3.02</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -76,7 +77,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 
 
 /* ============================================================
-   CONSOLIDATED CSS (v0.0.2.98)
+   CONSOLIDATED CSS (v0.3.02)
    - Original style blocks merged in source order (no behavior change intended).
    ============================================================ */
 
@@ -5205,7 +5206,7 @@ body {
 
 /* ---- merged block ---- */
 
-/* v0.0.2.98 - header compatibility hardening */
+/* v0.0.2.99 - header compatibility hardening */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Avoid fixed-height traps (especially iOS with large text / dynamic viewport) */
@@ -5223,7 +5224,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* ---- merged block ---- */
 
-/* HEADER CANON v0.0.2.98 - iOS Safari/Chrome consistent */
+/* HEADER CANON v0.0.2.99 - iOS Safari/Chrome consistent */
 html, body {
   -webkit-text-size-adjust: 100% !important;
   text-size-adjust: 100% !important;
@@ -5911,7 +5912,7 @@ html, body {
 }
 
 
-/* v0.0.2.98 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
+/* v0.0.2.99 - HEADER BULLETPROOF (iOS Pro/Max + texto grande) */
 html{ -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .app-header,
 .app-header.live-on,
@@ -6124,7 +6125,7 @@ html, body{
 
 
 /* =========================
-   PATCH v0.0.2.98
+   PATCH v0.0.2.99
    Fix: raceSubtitle under logo visible
    Cause: HARD OVERRIDES forced logo to 100% height and overflow hidden
    Scope: UI only, no JS changes
@@ -6169,7 +6170,7 @@ html, body{
   .app-header .header-left, .app-header .header-right { display: none !important; }
 }
 
-/* v0.0.2.98 - FIX: evitar recorte de texto en botones del header (Q TABLA / MANUAL) */
+/* v0.0.2.99 - FIX: evitar recorte de texto en botones del header (Q TABLA / MANUAL) */
 .header-actions-row .header-help{
   width: auto !important;
   max-width: none !important;
@@ -6198,7 +6199,7 @@ html, body{
             </div>
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
           <div class="hdr-break"></div>
-          <button class="header-help header-auto btn-pro" id="autoSkinBtn" type="button" title="Auto-skin" data-kind="auto"><span class="ico"></span>&#x1F916;</button>
+          <button class="header-help header-auto btn-pro" id="autoSkinBtn" type="button" title="Auto-skin" data-kind="auto"><span class="ico"></span>&#x1F916;<span class="lbl" id="autoSkinLbl">AUTO</span></button>
           <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Skin Vic's Pulse Timing" data-kind="vic">VIC</button>
           <button class="header-help header-qtable btn-pro" id="qTableBtn" type="button" title="Q TABLA (clasificacin)" data-kind="qtabla"><span class="ico"></span>&#x1F4CA;</button>
           <button class="header-help btn-pro" id="manualBtn" type="button" title="Manual y ayuda" data-kind="manual"><span class="ico"></span>&#x1F4D6;</button>
@@ -6206,7 +6207,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">AI_Spotter_TRM_v0.0.2.98</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.02</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6519,7 +6520,7 @@ html, body{
     <div class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual del Spotter">
       <div class="manual-top">
         <div>
-          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.98</div>
+          <div class="manual-title">Manual - AI Spotter TRM v0.0.2.99</div>
           <div class="manual-sub">Gua rpida. Chrome recomendado. En memoria de Vic 2023-2025.</div>
         </div>
         <button class="manual-close" id="manualCloseBtn" type="button">Cerrar</button>
@@ -6651,7 +6652,7 @@ html, body{
 
 
 // ============================================================
-// CONSOLIDATED JS (v0.0.2.98)
+// CONSOLIDATED JS (v0.3.02)
 // - All inline scripts merged in source order.
 // - Wrapped with init guard to avoid double-binding listeners.
 // ============================================================
@@ -6852,7 +6853,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "AI_Spotter_TRM_v0.0.2.98";
+const APP_NAME = "vics_Smart_Spotter_v0.3.02";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -8127,13 +8128,13 @@ try{
 
     function refreshAutoSkinUI(){
       if (!autoSkinBtn) return;
-      autoSkinBtn.textContent = autoSkinEnabled ? 'AUTO' : 'MAN';
+      const lbl = document.getElementById('autoSkinLbl');
+      if (lbl) lbl.textContent = autoSkinEnabled ? 'AUTO' : 'MAN';
       autoSkinBtn.classList.toggle('active', !!autoSkinEnabled);
       autoSkinBtn.title = autoSkinEnabled
         ? 'Auto-skin: ON (MANGA->BLUE, FINAL->AMBR)'
         : 'Auto-skin: OFF (manual)';
-      // Mantener title del tema consistente
-      try{ if (skinBtn) skinBtn.title = 'Tema: ' + (skinBtn.textContent||'VIC') + ' [' + __skinModeLabel() + ']'; }catch(e){}
+      try{ if (skinBtn) skinBtn.title = 'Tema: ' + (skinBtn.textContent||'VIC') + (autoSkinEnabled ? ' [AUTO]' : ' [MAN]'); }catch(e){}
     }
 
 
@@ -8214,24 +8215,9 @@ try{
       autoSkinBtn.addEventListener('click', ()=>{ toggleAutoSkin(); });
     }
 
-    // Boton TEMA: click = siguiente tema (manual), long-press 700ms = alterna AUTO/MANUAL.
+    // Boton TEMA: click = siguiente tema (manual). AUTO se controla solo con el boton AUTO.
     if (skinBtn){
-      let lpTimer = null;
-      let lpFired = false;
-      const clearLP = ()=>{ if (lpTimer){ clearTimeout(lpTimer); lpTimer=null; } };
-      skinBtn.addEventListener('pointerdown', ()=>{
-        lpFired = false;
-        clearLP();
-        lpTimer = setTimeout(()=>{ lpFired = true; toggleAutoSkin(); }, 700);
-      });
-      skinBtn.addEventListener('pointerup', clearLP);
-      skinBtn.addEventListener('pointerleave', clearLP);
-      skinBtn.addEventListener('click', (e)=>{
-        if (lpFired){ e.preventDefault(); e.stopPropagation(); return; }
-        nextTheme();
-      });
-      // Right-click (desktop) tambien alterna AUTO/MANUAL
-      skinBtn.addEventListener('contextmenu', (e)=>{ e.preventDefault(); toggleAutoSkin(); });
+      skinBtn.addEventListener('click', ()=>{ nextTheme(); });
     }
     const manualBackdrop  = document.getElementById('manualBackdrop');
     const manualCloseBtn  = document.getElementById('manualCloseBtn');
@@ -10669,7 +10655,9 @@ let ttsRate = detectDefaultTtsRate();
     let speechWatchdog = 0;
     const lastSpokenKeyAt = new Map();
     const lastSpokenTextAt = new Map();
-let __ttsStartGuard = 0; // si el utterance no arranca, no drenar cola (iOS/Android post-idle)
+let __ttsStartGuard = 0;
+    let __ttsStartGuardFails = 0; // conteo de fallos de arranque (para no exigir tap a la primera)
+ // si el utterance no arranca, no drenar cola (iOS/Android post-idle)
 
     
     // =========================
@@ -11330,7 +11318,19 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         if (speechSpeaking || window.speechSynthesis.speaking) return;
 
         // Si el TTS esta bloqueado y esperando tap, no intentes hablar (evita loops y 20 taps).
-        if (pendingAutoVoiceUnlock) return;
+        // Pero si estamos en primer plano y ya se desbloqueo antes, auto-recupera sin exigir tap.
+        if (pendingAutoVoiceUnlock) {
+          try {
+            const vis = (document && document.visibilityState) ? document.visibilityState : 'visible';
+            if (vis === 'visible' && __ttsUnlockedOnce) {
+              pendingAutoVoiceUnlock = false;
+              __ttsBlockedSince = 0;
+              try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+            } else {
+              return;
+            }
+          } catch(e) { return; }
+        }
 
         const next = speechQueue.shift();
         if (!next) return;
@@ -11432,16 +11432,32 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
                 speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
               } catch(e) {}
 
-              // En iOS suele requerir gesto nuevo tras idle: marcamos "needs-unlock" y avisamos
-              try { pendingAutoVoiceUnlock = true; } catch(e) {}
-              try { __ttsBlockedSince = Date.now(); } catch(e) {}
-              try { __pruneQueueDuringBlock(); } catch(e) {}
-              try { __ttsUnlockedOnce = false; } catch(e) {}
-              try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
-              try { showToast('Toca la pantalla para reactivar audio', 1800); } catch(e) {}
+              // Si el utterance no arranco, reintenta antes de pedir tap (primer plano debe auto-recuperar).
+              try { __ttsStartGuardFails = (__ttsStartGuardFails || 0) + 1; } catch(e) {}
+              try {
+                const vis = (document && document.visibilityState) ? document.visibilityState : 'visible';
+                const canAutoRecover = (vis === 'visible' && __ttsUnlockedOnce);
+                if (canAutoRecover && __ttsStartGuardFails <= 2) {
+                  // Recuperacion suave: reanuda + re-pump sin bloquear UI
+                  try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+                  try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+                  try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+                  try { setTimeout(() => pumpSpeechQueue(), 120); } catch(e) {}
+                } else {
+                  // En iOS puede requerir gesto nuevo tras idle: marcamos needs-unlock y avisamos
+                  try { pendingAutoVoiceUnlock = true; } catch(e) {}
+                  try { __ttsBlockedSince = Date.now(); } catch(e) {}
+                  try { __pruneQueueDuringBlock(); } catch(e) {}
+                  try { __ttsUnlockedOnce = false; } catch(e) {}
+                  try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+                  try { showToast('Toca la pantalla para reactivar audio', 1800); } catch(e) {}
+                }
+              } catch(e) {
+                try { pendingAutoVoiceUnlock = true; } catch(_e) {}
+              }
               try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
             } catch(e) {}
-          }, 1200);
+          }, 3500);
         } catch(e) {}
       } catch (e) {
         console.error('pumpSpeechQueue', e);
@@ -11588,6 +11604,7 @@ function unlockTTSOnce(reason = '') {
         try {
           u.onstart = () => {
             didStart = true;
+            try { __ttsStartGuardFails = 0; } catch(e) {}
             try { __ttsUnlockedOnce = true; } catch(e) {}
             try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
 
@@ -18264,7 +18281,14 @@ raceData = normalizeRaceData(rawRace);
           updatePilotOptions();
         }
         if (selectedPilotKey) {
-          const p = raceData.classification.find(r => getPilotKey(r) === selectedPilotKey);
+          let p = raceData.classification.find(r => getPilotKey(r) === selectedPilotKey) || null;
+
+          // Si el piloto guardado ya no existe en esta carrera, volvemos a Auto Locutor
+          if (!p) {
+            try { selectPilotByKey('', { announce:true, source:'auto-clear' }); } catch(e) {}
+            p = null;
+          }
+
           renderPilotCard(p || null);
           try { renderAutoTop3MiniGrid(); } catch(e) {}
           try { checkSessionFinishOnLap(); } catch(e) {}
@@ -18392,10 +18416,14 @@ handleVoiceAndBeeps();
       let s = raw.trim();
       if (!s) return '';
 
-      // Si viene con separadores tipo " - ", tomamos el prefijo (usualmente el evento/pista).
-      // Si no, usamos toda la cadena y limpiamos tokens de sesin.
+      // Si viene con separadores tipo " - ", a veces el prefijo es el EVENTO (OK),
+      // pero otras veces el prefijo es "CLASIFICACION" (malo). Solo recortamos si el prefijo
+      // NO parece ser un tipo de sesion.
       const dashIdx = s.indexOf(' - ');
-      if (dashIdx > 2) s = s.slice(0, dashIdx).trim();
+      if (dashIdx > 2){
+        const pref = s.slice(0, dashIdx).trim();
+        if (!/^(CLASIFIC|MANGA|FINAL)\b/i.test(pref)) s = pref;
+      }
 
       // Q / Manga / Serie suelen cambiar: quitarlos para que la key permanezca estable
       let k = s;
@@ -18736,7 +18764,7 @@ handleVoiceAndBeeps();
           }
           out += `</tr>`;
         }
-        tbody.innerHTML = out || `<tr><td colspan="${4+sessionKeys.length}" class="qcell-empty">Sin datos an</td></tr>`;
+        tbody.innerHTML = out || `<tr><td colspan="${4+sessionKeys.length}" class="qcell-empty">Sin datos aun</td></tr>`;
         return;
       }
 
@@ -18767,7 +18795,7 @@ handleVoiceAndBeeps();
           <td>${qEscapeHtml(b)}</td>
         </tr>`;
       }
-      tbody.innerHTML = out || `<tr><td colspan="6" class="qcell-empty">Sin datos an</td></tr>`;
+      tbody.innerHTML = out || `<tr><td colspan="6" class="qcell-empty">Sin datos aun</td></tr>`;
     }
 
     function openQuali(){
