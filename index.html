@@ -1,11 +1,13 @@
 
 <!--
-vics_Smart_Spotter_v0.3.28 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.31 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-31
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.3.31: FIX SyntaxError (token inesperado) + Q TABLA - Best Lap ahora SIEMPRE conserva el mejor valor plausible del feed aunque no cambie el tiempo total (anti valores locos) + tooltip con fuente de BL -
+- v0.3.29: Q TABLA - Best Lap ahora toma el valor mas confiable del feed (anti 0:00.xxx, soporte ms/seg/us) + mas color por columnas + blindaje extra TTS (anti 'ghost speaking' en primer plano) -
 - v0.3.28: Q TABLA - Best Lap arreglado (usa valor del feed, fix segundos vs ms) + color/contraste en tabla.
 - v0.3.27: Manual rehecho (Q TABLA: Mejor por piloto / Por Q + tips iPhone/PC + troubleshooting).
 - v0.0.2.21: Q TABLA (FIX guardado) (clasificacin) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
@@ -60,7 +62,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.28</title>
+  <title>vics_Smart_Spotter_v0.3.31</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -5833,10 +5835,24 @@ html, body {
   color: rgba(242,245,255,0.95);
   margin-bottom: 3px;
 }
-#qualiBackdrop td.qcell-best{
-  background: rgba(0, 255, 160, 0.07);
-  box-shadow: inset 2px 0 0 rgba(0,255,160,0.55);
+#qualiBackdrop td.qcell-bestlap{
+  background: rgba(216,170,255,0.05);
 }
+#qualiBackdrop td.qcell-best{
+  background: rgba(216,170,255,0.09);
+  box-shadow: inset 2px 0 0 rgba(216,170,255,0.55);
+}
+#qualiBackdrop td.qcell-laps{
+  background: rgba(56,189,248,0.06);
+  box-shadow: inset 2px 0 0 rgba(56,189,248,0.45);
+}
+#qualiBackdrop td.qcell-time{
+  background: rgba(251,191,36,0.05);
+  box-shadow: inset 2px 0 0 rgba(251,191,36,0.35);
+}
+#qualiBackdrop .qtable th:nth-child(4){ color: rgba(56,189,248,0.95); }
+#qualiBackdrop .qtable th:nth-child(5){ color: rgba(251,191,36,0.95); }
+#qualiBackdrop .qtable th:nth-child(6){ color: rgba(216,170,255,0.96); }
 #qualiBackdrop td.qcell-empty{
   color: rgba(163,173,189,0.65);
 }
@@ -6278,7 +6294,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.28</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.31</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6592,7 +6608,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.28). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.31). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -7009,7 +7025,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.28";
+const APP_NAME = "vics_Smart_Spotter_v0.3.31";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10849,13 +10865,32 @@ let ttsRate = detectDefaultTtsRate();
               if (pendingAutoVoiceUnlock && __kaIOS) return;
               if (!window.speechSynthesis) return;
 
+      try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
               // Mantén vivo el motor
               try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
               try { if (typeof window.speechSynthesis.getVoices === 'function') window.speechSynthesis.getVoices(); } catch(e) {}
 
-              // Si hay cola y se quedó atorado, empuja
+              // Anti-freeze TTS (primer plano): Chrome a veces se queda en "speaking=true" fantasma.
               try {
-                if (speechQueue && speechQueue.length && !speechSpeaking && !window.speechSynthesis.speaking) {
+                const ss = window.speechSynthesis;
+                const now = Date.now();
+                const lastEv = (__ttsLastEventAt || 0);
+
+                // speaking fantasma: el browser dice speaking, pero no hay actividad real y nuestra bandera no esta en speaking
+                if (ss && ss.speaking && !speechSpeaking && lastEv && (now - lastEv) > 4500) {
+                  try { if (!__ttsCancelShieldUntil || now > __ttsCancelShieldUntil) ss.cancel(); } catch(e) {}
+                  __ttsLastEventAt = now;
+                }
+
+                // bandera interna atorada
+                if (speechSpeaking && ss && !ss.speaking && lastEv && (now - lastEv) > 4500) {
+                  speechSpeaking = false;
+                }
+              } catch(e) {}
+
+              // Si hay cola y no esta hablando, empuja
+              try {
+                if (speechQueue && speechQueue.length && !speechSpeaking && !(window.speechSynthesis && window.speechSynthesis.speaking)) {
                   pumpSpeechQueue();
                 }
               } catch(e) {}
@@ -10888,6 +10923,11 @@ let ttsRate = detectDefaultTtsRate();
     const lastSpokenTextAt = new Map();
 let __ttsStartGuard = 0;
     let __ttsStartGuardFails = 0; // conteo de fallos de arranque (para no exigir tap a la primera)
+    let __ttsLastEventAt = 0;
+    let __ttsLastStartAt = 0;
+    let __ttsLastEndAt = 0;
+    let __ttsLastSpeakCallAt = 0;
+    let __ttsCurrentText = '';
  // si el utterance no arranca, no drenar cola (iOS/Android post-idle)
 
     
@@ -11546,7 +11586,21 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         if (!voiceMasterEnabled) return;
         if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
 
-        if (speechSpeaking || window.speechSynthesis.speaking) return;
+        // Guard + recovery: Chrome a veces se queda en "speaking=true" fantasma y deja de sacar cola.
+        const __ss = window.speechSynthesis;
+        if (speechSpeaking) return;
+        if (__ss && __ss.speaking){
+          const now = Date.now();
+          const lastEv = (__ttsLastEventAt || 0);
+          // Si no hay actividad reciente, es speaking fantasma: cancela y reintenta
+          if (lastEv && (now - lastEv) > 4500) {
+            try { if (!__ttsCancelShieldUntil || now > __ttsCancelShieldUntil) __ss.cancel(); } catch(e){}
+            __ttsLastEventAt = now;
+            speechSpeaking = false;
+            setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 50);
+          }
+          return;
+        }
 
         // Si el TTS esta bloqueado y esperando tap, no intentes hablar (evita loops y 20 taps).
         // Pero si estamos en primer plano y ya se desbloqueo antes, auto-recupera sin exigir tap.
@@ -11566,11 +11620,13 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         const next = speechQueue.shift();
         if (!next) return;
 
+        try { __ttsLastSpeakCallAt = Date.now(); __ttsLastEventAt = __ttsLastSpeakCallAt; __ttsCurrentText = (next.text || ''); } catch(e) {}
         const u = new SpeechSynthesisUtterance(normalizeTtsText(next.text));
         let __ttsDidStart = false;
         try {
           u.onstart = () => {
             __ttsDidStart = true;
+        try { __ttsLastStartAt = Date.now(); __ttsLastEventAt = __ttsLastStartAt; } catch(e) {}
                         try { __ttsStartGuardFails = 0; } catch(e) {}
 try { if (__ttsStartGuard) { clearTimeout(__ttsStartGuard); __ttsStartGuard = 0; } } catch(e) {}
           };
@@ -11614,6 +11670,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
         };
         clearWd();
         speechWatchdog = setTimeout(() => {
+          try { __ttsLastEventAt = Date.now(); } catch(e) {}
           // watchdog anti-freeze (iOS/Chrome a veces se queda "hablando")
           try { if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch (e) {}
           speechSpeaking = false;
@@ -11621,6 +11678,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
         }, 15000);
 
         u.onend = () => {
+        try { __ttsLastEndAt = Date.now(); __ttsLastEventAt = __ttsLastEndAt; } catch(e) {}
           clearWd();
           speechSpeaking = false;
                     try { __ttsStartGuardFails = 0; } catch(e) {}
@@ -11632,6 +11690,7 @@ try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_t
           else pumpSpeechQueue();
         };
         u.onerror = () => {
+        try { __ttsLastEventAt = Date.now(); } catch(e) {}
           clearWd();
           speechSpeaking = false;
                     try { __ttsStartGuardFails = 0; } catch(e) {}
@@ -18934,6 +18993,16 @@ handleVoiceAndBeeps();
         if (!store.bestByPilot || typeof store.bestByPilot !== 'object') store.bestByPilot = {};
         if (!store.aliasByName || typeof store.aliasByName !== 'object') store.aliasByName = {};
 
+// SANITIZA legacy: Best Lap absurdos guardados por versiones viejas (ej. 0:00.007)
+try{
+  const isOkBL = (ms)=>{ ms = Number(ms)||0; return ms >= 5000 && ms <= 60000; };
+  for (const k of Object.keys(store.bestByPilot || {})){
+    const r = store.bestByPilot[k];
+    if (!r) continue;
+    if (r.bestMs && !isOkBL(r.bestMs)) { r.bestMs = 0; r.bestRaw = ''; r.bestKey = ''; }
+  }
+}catch(e){}
+
         // MIGRACION: antes se usaba racerNumber como llave (se pisaban pilotos entre mangas).
         // Re-construimos bestByPilot desde sessions usando SOLO racerName.
         const km = String(store._pilotKeyMode || '');
@@ -18994,6 +19063,98 @@ handleVoiceAndBeeps();
       return false;
     }
 
+        // ---------------------------------
+        // Q TABLA - Best Lap (del feed, sin calcular)
+        // - Soporta ms / segundos / microsegundos y strings tipo "0:09.103"
+        // - Filtra valores absurdos tipo 0:00.007 y evita agarrar "bestLap" cuando parece ser indice de vuelta
+        // ---------------------------------
+        function __q_parseBestToMs(v){
+          try{
+            if (v == null) return 0;
+            if (typeof v === 'number'){
+              if (!isFinite(v) || v <= 0) return 0;
+              // microsegundos (ej 9103000)
+              if (v > 600000 && v < 60000000) return Math.round(v / 1000);
+              // segundos (ej 9.103)
+              if (v < 60) return Math.round(v * 1000);
+              // ms directos (ej 9103)
+              if (v >= 1000 && v < 600000) return Math.round(v);
+              // fallback: si viene 60..999, tratamos como segundos (raro)
+              if (v < 1000) return Math.round(v * 1000);
+              return Math.round(v);
+            }
+            const s0 = String(v || '').trim();
+            if (!s0) return 0;
+            const s = s0.replace(/,/g, '.');
+            if (s.includes(':')) {
+              const ms = parseTimeToMs(s);
+              return (isFinite(ms) && ms > 0) ? ms : 0;
+            }
+            const num = Number(s);
+            if (isFinite(num)) return __q_parseBestToMs(num);
+            const ms2 = parseTimeToMs(s);
+            return (isFinite(ms2) && ms2 > 0) ? ms2 : 0;
+          }catch(e){ return 0; }
+        }
+        function __q_isPlausibleBestMs(ms){
+          return (ms >= 5000 && ms <= 60000); // 5s..60s (Turbo Racing 1/76 tipico 8-20s)
+        }
+        function __q_looksLikeLapIndex(v, laps){
+          try{
+            if (!laps || laps <= 0) return false;
+            // numero entero <= laps suele ser indice, no tiempo
+            if (typeof v === 'number' && isFinite(v) && Number.isInteger(v) && v > 0 && v <= laps && v <= 200) return true;
+            if (typeof v === 'string'){
+              const s = v.trim();
+              if (!s) return false;
+              if (/^\d+$/.test(s)){
+                const n = parseInt(s,10);
+                if (isFinite(n) && n > 0 && n <= laps && n <= 200) return true;
+              }
+            }
+          }catch(e){}
+          return false;
+        }
+        function __q_pickBestLapFromFeedRow(r, laps){
+          try{
+            if (!r) return { ms:0, raw:'', key:'' };
+    
+            const entries = [
+          ['bestLapTimeMs', r.bestLapTimeMs],
+          ['bestLapMs', r.bestLapMs],
+          ['bestMs', r.bestMs],
+          ['fastestLapMs', r.fastestLapMs],
+          ['bestLapTime', r.bestLapTime],
+          ['fastestLap', r.fastestLap],
+          ['bestTimeMs', r.bestTimeMs],
+          ['bestTime', r.bestTime],
+          ['best', r.best],
+          ['bestlap', r.bestlap],
+          ['best_lap', r.best_lap],
+          ['bl', r.bl],
+          ['BL', r.BL],
+          ['bestLap', r.bestLap]
+        ];
+    
+            // Pass 1: evitar indices tipo "7" cuando hay laps>=7 (comun en algunos feeds)
+            for (const [k,v] of entries){
+              if (__q_looksLikeLapIndex(v, laps)) continue;
+              const ms = __q_parseBestToMs(v);
+              if (__q_isPlausibleBestMs(ms)) return { ms, raw: (v!=null? v:''), key:k };
+            }
+    
+            // Pass 2: si no hubo nada plausible, aceptamos el primer ms razonable (>=1000) para no dejar guion
+            for (const [k,v] of entries){
+              const ms = __q_parseBestToMs(v);
+              if (ms >= 1000) return { ms, raw: (v!=null? v:''), key:k };
+            }
+    
+            return { ms:0, raw:'', key:'' };
+          }catch(e){
+            return { ms:0, raw:'', key:'' };
+          }
+        }
+
     function recordQualiSnapshotIfNeeded(raw){
       try{
         if (!raw || !raw.raceName || !Array.isArray(raw.classification)) return;
@@ -19029,32 +19190,12 @@ handleVoiceAndBeeps();
           if (typeof timeRaw === 'number') timeMsParsed = timeRaw;
           else timeMsParsed = parseTimeToMs(timeRaw);
           const timeMs = (isFinite(timeMsParsed) && timeMsParsed > 0) ? timeMsParsed : Number.MAX_SAFE_INTEGER;
+          const __bestLapPick = __q_pickBestLapFromFeedRow(r, laps);
+          const bestRaw = (__bestLapPick && __bestLapPick.raw != null) ? __bestLapPick.raw : '';
+          const bestMs = (__bestLapPick && __bestLapPick.ms) ? __bestLapPick.ms : 0;
 
-          const bestRaw =
-            (r.bestLapTimeMs != null ? r.bestLapTimeMs :
-             (r.bestLapTime != null ? r.bestLapTime :
-              (r.bestLapMs != null ? r.bestLapMs :
-               (r.bestMs != null ? r.bestMs :
-                (r.best != null ? r.best : '')))));
-          let bestMsParsed = 0;
-          if (typeof bestRaw === 'number') {
-            // Guard: a veces 'best' viene como NUMERO DE VUELTA (indice), no tiempo.
-            // Si es entero y cae dentro de [1..laps], lo ignoramos y buscamos otros campos.
-            const isInt = Math.abs(bestRaw - Math.round(bestRaw)) < 1e-9;
-            const isLikelyLapIndex = isInt && laps > 0 && bestRaw > 0 && bestRaw <= laps && bestRaw <= 200;
-            if (isLikelyLapIndex) {
-              bestMsParsed = 0;
-            } else {
-              // En algunos feeds el best lap viene como segundos (ej. 9.103) y no como ms.
-              // Regla: si es numero menor a 1000, lo tratamos como segundos y lo convertimos a ms.
-              if (bestRaw > 0 && bestRaw < 1000) bestMsParsed = Math.round(bestRaw * 1000);
-              else bestMsParsed = Math.round(bestRaw);
-            }
-          } else {
-            bestMsParsed = parseTimeToMs(bestRaw);
-          }
-          const bestMs = (isFinite(bestMsParsed) && bestMsParsed > 0 && bestMsParsed < 600000) ? bestMsParsed : 0;
 
+          const bestKey = (__bestLapPick && __bestLapPick.key) ? __bestLapPick.key : '';
           const pilotKey = getQualiPilotKey(r, store);
           if (!pilotKey) continue;
 
@@ -19072,7 +19213,8 @@ handleVoiceAndBeeps();
               timeMs,
               timeRaw: String(timeRaw ?? ''),
               bestRaw: String(bestRaw ?? ''),
-              bestMs
+              bestMs,
+              bestKey
             });
           }
 
@@ -19087,10 +19229,26 @@ handleVoiceAndBeeps();
             timeMs,
             timeRaw: String(timeRaw ?? ''),
             bestMs,
-            bestRaw: String(bestRaw ?? '')
+            bestRaw: String(bestRaw ?? ''),
+            bestKey
           };
-          store.bestByPilot[pilotKey] = pickBetterQuali(prev, candidate);
-        }
+          const __bestPick = pickBetterQuali(prev, candidate);
+// Best Lap: conserva siempre el menor tiempo plausible aunque laps/total no mejoren
+try {
+  const pBest = (prev && __q_isPlausibleBestMs(prev.bestMs)) ? Number(prev.bestMs) : 0;
+  const cBest = (__q_isPlausibleBestMs(candidate.bestMs)) ? Number(candidate.bestMs) : 0;
+  if (cBest && (!pBest || cBest < pBest)) {
+    __bestPick.bestMs = cBest;
+    __bestPick.bestRaw = candidate.bestRaw;
+    __bestPick.bestKey = candidate.bestKey;
+  } else if (pBest && __bestPick && (!__bestPick.bestMs || !__q_isPlausibleBestMs(__bestPick.bestMs))) {
+    __bestPick.bestMs = pBest;
+    __bestPick.bestRaw = (prev && prev.bestRaw) ? prev.bestRaw : (__bestPick.bestRaw || '');
+    __bestPick.bestKey = (prev && prev.bestKey) ? prev.bestKey : (__bestPick.bestKey || '');
+  }
+} catch(e) {}
+store.bestByPilot[pilotKey] = __bestPick;
+}
 
         // Persistencia (throttle)
         const lastPersist = Number(store._lastPersist || 0) || 0;
@@ -19135,8 +19293,24 @@ handleVoiceAndBeeps();
         const nk = normalizeNameKey(it.racerName || '');
         const gk = nk ? ('P' + nk) : (String(it.pilotKey || it.racerNumber || '').trim());
         if (!gk) continue;
-        grouped[gk] = pickBetterQuali(grouped[gk], it);
-      }
+        const __prevG = grouped[gk];
+const __pickG = pickBetterQuali(__prevG, it);
+// Best Lap: conserva el menor tiempo plausible aunque el "mejor run" se defina por laps/total
+try {
+  const pBest = (__prevG && __q_isPlausibleBestMs(__prevG.bestMs)) ? Number(__prevG.bestMs) : 0;
+  const cBest = (__q_isPlausibleBestMs(it.bestMs)) ? Number(it.bestMs) : 0;
+  if (cBest && (!pBest || cBest < pBest)) {
+    __pickG.bestMs = cBest;
+    __pickG.bestRaw = it.bestRaw;
+    __pickG.bestKey = it.bestKey;
+  } else if (pBest && __pickG && (!__pickG.bestMs || !__q_isPlausibleBestMs(__pickG.bestMs))) {
+    __pickG.bestMs = pBest;
+    __pickG.bestRaw = (__prevG && __prevG.bestRaw) ? __prevG.bestRaw : (__pickG.bestRaw || '');
+    __pickG.bestKey = (__prevG && __prevG.bestKey) ? __prevG.bestKey : (__pickG.bestKey || '');
+  }
+} catch(e) {}
+grouped[gk] = __pickG;
+}
       const arr = Object.values(grouped).map(x => ({...x}));
       arr.sort((a,b)=>{
         const al = Number(a.laps || 0);
@@ -19301,13 +19475,16 @@ handleVoiceAndBeeps();
       // Vista: mejor por piloto
       const list = computeQualiList(store);
 
+
+      const __bestVals = list.map(r => Number(r.bestMs || 0)).filter(ms => isFinite(ms) && ms > 0);
+      const __minBest = __bestVals.length ? Math.min(...__bestVals) : 0;
       thead.innerHTML = `<tr>
         <th class="qcol-pos">Pos</th>
         <th class="qcol-name">Piloto</th>
         <th class="qcol-q">Q</th>
         <th class="qcol-laps">Vueltas</th>
         <th class="qcol-time">Tiempo</th>
-        <th class="qcol-time">Best Lap</th>
+        <th class="qcol-best">Best Lap</th>
       </tr>`;
 
       let out = '';
@@ -19316,13 +19493,15 @@ handleVoiceAndBeeps();
         const laps = Number(r.laps || 0);
         const t = (isFinite(r.timeMs) && r.timeMs < Number.MAX_SAFE_INTEGER) ? msToMinSec(Number(r.timeMs)) : '-';
         const b = (Number(r.bestMs||0) > 0) ? msToLapStr(Number(r.bestMs||0)) : '-';
+        const isFastestBL = (__minBest && Number(r.bestMs||0) === __minBest);
+        const bestLapCellClass = 'qcell-bestlap' + (b==='-' ? ' qcell-empty' : '') + (isFastestBL ? ' qcell-best' : '');
         out += `<tr>
           <td>${i+1}</td>
           <td>${qEscapeHtml(r.racerName || '')}</td>
           <td><span class="qtag">${qEscapeHtml(r.q || '-')}</span></td>
-          <td>${laps}</td>
-          <td class="qcell-best">${qEscapeHtml(t)}</td>
-          <td>${qEscapeHtml(b)}</td>
+          <td class=\"qcell-laps\">${laps}</td>
+          <td class=\"qcell-time\">${qEscapeHtml(t)}</td>
+          <td class=\"${bestLapCellClass}\"><span class=\"qbest\" title=\"src:${qEscapeHtml(r.bestKey||'')}\">${qEscapeHtml(b)}</span></td>
         </tr>`;
       }
       tbody.innerHTML = out || `<tr><td colspan="6" class="qcell-empty">Sin datos aun</td></tr>`;
