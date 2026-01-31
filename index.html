@@ -1,11 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.10 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.27 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.3.27: Manual rehecho (Q TABLA: Mejor por piloto / Por Q + tips iPhone/PC + troubleshooting).
 - v0.0.2.21: Q TABLA (FIX guardado) (clasificacin) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
 - v0.0.2.23: Fix UX: VOZ responde al primer toque (iOS/Android), debounced LIVE (sin parpadeo), header altura estable (sin salto). UI/TTS only.
 - v0.0.2.17: LapChart watermark restaurada (logo Vic) en fondo del canvas. UI only.
@@ -58,7 +59,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.25</title>
+  <title>vics_Smart_Spotter_v0.3.27</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6245,7 +6246,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.25</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.27</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6559,7 +6560,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida para correr sin tocar 20 botones. Aquí está lo que sí importa.</div>
+        <div class="manual-sub">Guía rápida (v0.3.27). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -6575,98 +6576,128 @@ html, body{
 
     <div class="manual-sections">
       <div class="manual-section active" data-tab="inicio">
-        <h3>Arranque en 20 segundos</h3>
+        <h3>Arranque en 60 segundos</h3>
         <div class="manual-card">
           <ol style="margin:0; padding-left: 18px;">
-            <li>Abre la app y espera 2-3 segundos a que cargue la lista.</li>
-            <li>Elige tu piloto (si no eliges, queda en modo Auto).</li>
+            <li>Abre el Spotter y espera 2-3 segundos a que llegue el primer dato.</li>
             <li>Toca <b>ACTIVAR VOZ</b> una vez.</li>
-            <li>Listo: anuncia cambios y te canta lo importante.</li>
+            <li>Si quieres seguimiento, <b>selecciona tu piloto</b>.</li>
+            <li>Si quieres menos ruido, enciende <b>BÁSICO</b>.</li>
+            <li>En clasificación, usa <b>Q TABLA</b> (botón 📊) para ver la tabla.</li>
           </ol>
-          <div class="manual-note">El piloto se guarda en tu navegador. Si refrescas y ese nombre existe, se auto-selecciona.</div>
+          <div class="manual-note">El piloto seleccionado se guarda en tu navegador. Si recargas y el nombre existe, se auto-selecciona.</div>
         </div>
 
         <h3>Dos formas de usarlo</h3>
         <div class="manual-card">
-          <b>Auto</b>: te narra la carrera (cambios, avisos generales, ritmo, pelea).<br>
-          <b>Piloto seguido</b>: el spotter se enfoca en tu piloto (posición, diferencia, presión, alertas).<br><br>
-          <div class="manual-tip">Si seleccionas piloto, evitas que Auto y Piloto hablen encima.</div>
+          <b>Auto</b>: narra lo general (carrera nueva, cambios, avisos, peleas).<br>
+          <b>Seguimiento</b>: se enfoca en tu piloto (posición, gaps, alertas).<br><br>
+          <div class="manual-tip">Regla simple: si seleccionas piloto, el spotter debe hablar menos y más directo.</div>
         </div>
 
         <h3>Reglas de oro</h3>
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
-            <li>Si la página está en primer plano, no debería callarse.</li>
-            <li>Si cambias de pestaña/ventana, al volver puede tardar un segundo en retomar.</li>
-            <li>Si el sistema acaba de arrancar, los primeros segundos pueden venir "en cero".</li>
+            <li>Una sola pestaña del Spotter. Dos pestañas = dos locutores peleando el micrófono.</li>
+            <li>Si estás en iPhone, no bloquees pantalla al inicio (primero activa la voz).</li>
+            <li>Si todo viene en ceros al arrancar, es normal: espera 1-2 vueltas reales.</li>
           </ul>
         </div>
       </div>
 
       <div class="manual-section" data-tab="botones">
-        <h3>Botones del header</h3>
+        <h3>Header: lo que sí se toca</h3>
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
-            <li><b>AUTO</b> - activa el auto-locutor.</li>
-            <li><b>VIC</b> - cambia el tema (skin) a Vic.</li>
-            <li><b>Q TABLA</b> - abre/cierra la tabla completa.</li>
-            <li><b>MANUAL</b> - abre/cierra esta guía.</li>
+            <li><b>🤖 AUTO</b> - modo automático (decide anuncios y ritmo de mensajes).</li>
+            <li><b>VIC🐊</b> - cambia el skin/tema visual a Vic.</li>
+            <li><b>📊</b> - Q TABLA (clasificación guardada).</li>
+            <li><b>📖</b> - abre/cierra este manual.</li>
           </ul>
+          <div class="manual-note">El punto LIVE y el badge MODO te dicen si el feed está vivo y qué sesión detectó.</div>
         </div>
 
         <h3>Controles principales</h3>
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
-            <li><b>ACTIVAR VOZ</b> - habilita la voz del spotter.</li>
-            <li><b>BÁSICO</b> - reduce el chatter (menos mensajes).</li>
-            <li><b>Selector de piloto</b> - cambia el piloto seguido.</li>
+            <li><b>ACTIVAR VOZ</b> - desbloquea audio del navegador.</li>
+            <li><b>BÁSICO</b> - reduce mensajes (modo concentración).</li>
+            <li><b>Selector de piloto</b> - activa seguimiento.</li>
           </ul>
-          <div class="manual-note">Si algo se siente "atorado", prueba refrescar una vez. Si persiste, cierra y vuelve a abrir.</div>
+          <div class="manual-tip">Si algo se siente atorado, refresco controlado. Mejor eso que discutir con la app en plena final.</div>
         </div>
       </div>
 
       <div class="manual-section" data-tab="voz">
-        <h3>Voz: cómo usarla sin pelearte</h3>
+        <h3>Voz en iPhone (Safari/Chrome iOS)</h3>
         <div class="manual-card">
-          <ul style="margin:0; padding-left: 18px;">
-            <li>En iPhone y algunos Android, la voz se habilita solo con un toque del usuario. Por eso existe <b>ACTIVAR VOZ</b>.</li>
-            <li>Una vez activada, debería mantenerse mientras sigas en primer plano.</li>
-            <li>Si cambias de pestaña y regresas, dale 1 segundo para retomar.</li>
-          </ul>
-          <div class="manual-tip">Si no habla: toca ACTIVAR VOZ una vez. Si sigue mudo: refresca la página.</div>
+          iOS solo permite audio si hay un gesto del usuario. Por eso existe <b>ACTIVAR VOZ</b>.
+          <ol style="margin:8px 0 0; padding-left: 18px;">
+            <li>Sube volumen y quita Silencio.</li>
+            <li>Toca <b>ACTIVAR VOZ</b> una vez con la pantalla despierta.</li>
+            <li>Luego selecciona piloto (si aplica).</li>
+            <li>No bloquees pantalla justo al arrancar.</li>
+          </ol>
+          <div class="manual-note">Si estás con Bluetooth, revisa que el audio no esté saliendo por otro dispositivo.</div>
         </div>
 
-        <h3>Qué significa lo que te dice</h3>
+        <h3>Voz en PC (Chrome/Brave/Edge)</h3>
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
-            <li><b>Posición</b> - tu lugar actual.</li>
-            <li><b>Diferencia líder</b> - cuánto falta para el P1.</li>
-            <li><b>Intervalo</b> - distancia con el de adelante/atrás.</li>
-            <li><b>Bandera azul</b> - viene líder o te alcanzan (ojo con línea).</li>
+            <li>Permite audio del sitio (candado del navegador).</li>
+            <li>Evita suspensión del sistema durante evento.</li>
+            <li>Si usas OBS, mejor cargar como Browser Source.</li>
+          </ul>
+        </div>
+
+        <h3>Segundo plano (background)</h3>
+        <div class="manual-card">
+          En web puedes mantener actividad, pero si el sistema entra en suspensión, nadie salva eso.
+          <ul style="margin:8px 0 0; padding-left: 18px;">
+            <li>Para evento: desactiva sleep y deja la pestaña viva.</li>
+            <li>Si sales y vuelves, dale 1 segundo para retomar.</li>
           </ul>
         </div>
       </div>
 
       <div class="manual-section" data-tab="qtabla">
-        <h3>Q Tabla</h3>
+        <h3>Qué es Q TABLA</h3>
         <div class="manual-card">
-          Es tu "race control" rápido: posiciones, vueltas y diferencias. Úsala para:
-          <ul style="margin:6px 0 0; padding-left: 18px;">
-            <li>Ver orden real cuando hay tráfico.</li>
-            <li>Detectar peleas (intervalos cortos).</li>
-            <li>Confirmar si el ritmo está cayendo o subiendo.</li>
+          Q TABLA es tu "race control" para <b>clasificación</b>. Guarda y muestra resultados por sesión (Q).
+          <ul style="margin:8px 0 0; padding-left: 18px;">
+            <li><b>Vista: Mejor por piloto</b> - toma el mejor resultado guardado de cada piloto.</li>
+            <li><b>Vista: Por Q</b> - te deja revisar cada Q guardada (Q1, Q2, etc).</li>
           </ul>
-          <div class="manual-note">Si ves ceros al inicio, es normal: espera a que caiga el primer dato real.</div>
+          <div class="manual-note">Los chips de arriba muestran Evento, Fecha y cuántas sesiones guardó.</div>
+        </div>
+
+        <h3>Cuándo se guarda</h3>
+        <div class="manual-card">
+          Se guarda cuando hay datos reales (vueltas o tiempos válidos). Se guarda en tu navegador (localStorage).
+          <ul style="margin:8px 0 0; padding-left: 18px;">
+            <li>Si borras datos del sitio o usas incógnito, arrancas con Q TABLA limpia.</li>
+            <li>Si está vacía, es porque aún no llegó info válida.</li>
+          </ul>
+        </div>
+
+        <h3>Lectura rápida</h3>
+        <div class="manual-card">
+          <ul style="margin:0; padding-left: 18px;">
+            <li><b>Pos</b>: posición en clasificación.</li>
+            <li><b>Best</b>: mejor vuelta del piloto.</li>
+            <li><b>Gap</b>: diferencia contra el líder.</li>
+          </ul>
+          <div class="manual-tip">Si estás buscando "quién trae ritmo", mira Best y Gap. Lo demás es chisme, pero útil.</div>
         </div>
       </div>
 
       <div class="manual-section" data-tab="basico">
         <h3>Modo BÁSICO</h3>
         <div class="manual-card">
-          BÁSICO es para correr sin "radio en modo locutor". Reduce mensajes repetidos y se enfoca en lo esencial.
-          <ul style="margin:6px 0 0; padding-left: 18px;">
+          BÁSICO es para correr sin radio tipo talk-show. Reduce mensajes repetidos y se enfoca en lo esencial.
+          <ul style="margin:8px 0 0; padding-left: 18px;">
             <li>Ideal si estás concentrado o te saturas con mucha voz.</li>
-            <li>Los avisos importantes deben seguir (carrera nueva, banderas, alertas).</li>
+            <li>Los avisos importantes deben seguir (carrera nueva, alertas).</li>
           </ul>
           <div class="manual-tip">Si quieres show TRM total, apaga BÁSICO y deja que hable.</div>
         </div>
@@ -6676,34 +6707,32 @@ html, body{
         <h3>Soluciones rápidas</h3>
         <div class="manual-card">
           <ol style="margin:0; padding-left: 18px;">
-            <li><b>No habla</b> - toca ACTIVAR VOZ. Si sigue igual: refresca.</li>
-            <li><b>Se calla en primer plano</b> - espera 2-3s. Si no regresa: refresca.</li>
-            <li><b>Al cambiar de carrera anuncia "a medias"</b> - refresca una vez y deja correr.</li>
-            <li><b>Tabla en blanco</b> - puede ser arranque con ceros. Espera el primer dato real.</li>
-            <li><b>Va raro en móvil</b> - usa pantalla activa y evita modo ahorro de energía.</li>
+            <li><b>No habla</b> - toca ACTIVAR VOZ. En iPhone, toca con la pantalla despierta.</li>
+            <li><b>Habla raro o en loop</b> - refresca una vez. Si tienes dos pestañas abiertas, cierra una.</li>
+            <li><b>Q TABLA sin datos</b> - espera 1-2 vueltas reales o revisa que el feed esté vivo.</li>
+            <li><b>Se calla al volver del background</b> - dale 1 segundo. Si no regresa: refresco controlado.</li>
           </ol>
-          <div class="manual-note">Si estás en iPhone: evita Silencio/Modo Ahorro cuando quieras voz constante.</div>
+          <div class="manual-note">Consejo de veterano: lo importante es que hable cuando lo necesitas, no que platique bonito.</div>
         </div>
 
-        <h3>Buenas prácticas TRM</h3>
+        <h3>Buenas prácticas</h3>
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
             <li>Antes de arrancar: piloto seleccionado + voz activa.</li>
-            <li>Si vas a grabar/OBS: prueba un cambio de carrera para confirmar anuncios.</li>
-            <li>Si notas lag: mejor refresco controlado que pelearte con la app en plena final.</li>
+            <li>Prueba Q TABLA en clasificación para confirmar que guardó sesiones.</li>
+            <li>Si vas a grabar: haz una prueba de carrera nueva para confirmar anuncios.</li>
           </ul>
         </div>
       </div>
     </div>
 
     <div class="manual-foot">
-      <span class="manual-tip">Meta: 0 fricción. Activa voz una vez y corre. Lo demás es show.</span>
+      <span class="manual-tip">Meta: 0 fricción. Un toque para voz y listo. El resto es ventaja competitiva.</span>
     </div>
   </div>
 </div>
 
-
-  <!-- Q TABLA modal -->
+<!-- Q TABLA modal -->
 <div class="manual-backdrop" id="qualiBackdrop" aria-hidden="true">
   <div class="manual-panel" role="dialog" aria-modal="true" aria-labelledby="qualiTitle">
     <div class="manual-top">
@@ -6948,7 +6977,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.25";
+const APP_NAME = "vics_Smart_Spotter_v0.3.27";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -18577,6 +18606,159 @@ handleVoiceAndBeeps();
     // =========================
     const QUALI_STORE_KEY = 'trm_quali_store_v1';
 
+    // =========================
+    // Q TABLA - Leader callouts (TRM)
+    // - Anuncia cambios de P1 provisional durante mangas/clasificación
+    // - Usa la tabla general (bestByPilot) como fuente de verdad
+    // =========================
+    let __qualiLeaderState = {
+      leaderKey: '',
+      leaderName: '',
+      leaderLaps: 0,
+      leaderTimeMs: 0,
+      lastAnnounceTs: 0,
+      lastImproveTs: 0,
+      lastCloseTs: 0
+    };
+
+    function __qualiRankTuple(it){
+      const laps = Number((it && it.laps) || 0) || 0;
+      const tmsRaw = Number(it && it.timeMs);
+      const timeMs = (isFinite(tmsRaw) && tmsRaw > 0 && tmsRaw < Number.MAX_SAFE_INTEGER) ? tmsRaw : Number.MAX_SAFE_INTEGER;
+      return { laps, timeMs };
+    }
+
+    function __qualiIsValidLeader(it){
+      if (!it) return false;
+      const t = __qualiRankTuple(it);
+      return (t.laps > 0) && (t.timeMs < Number.MAX_SAFE_INTEGER);
+    }
+
+    function __fmtGapMs(ms){
+      try{
+        const v = Number(ms);
+        if (!isFinite(v) || v <= 0) return '';
+        const s = v / 1000;
+        return s.toFixed(2) + ' segundos';
+      }catch(e){ return ''; }
+    }
+
+    function __maybeAnnounceQualiLeaderFromStore(raw, store){
+      try{
+        if (!raw || !store) return;
+        if (!voiceMasterEnabled) return;
+
+        // Solo mangas/clasificación
+        if (!isMangaRaceName(raw.raceName)) return;
+
+        const info = parseSessionFromRaceName(raw.raceName) || {};
+        if (String(info.type || '').toUpperCase() !== 'MANGA') return;
+
+        const list = computeQualiList(store);
+        if (!list || list.length < 1) return;
+
+        const leader = list[0];
+        if (!__qualiIsValidLeader(leader)) return;
+
+        const leaderName = String(leader.racerName || '').trim();
+        if (!leaderName) return;
+
+        const nk = normalizeNameKey(leaderName);
+        const leaderKey = nk ? ('P' + nk) : String(leader.pilotKey || leader.racerNumber || leaderName).trim();
+
+        const lT = __qualiRankTuple(leader);
+        const lLaps = lT.laps;
+        const lTimeMs = lT.timeMs;
+
+        const now = Date.now();
+
+        // Cooldowns (anti-spam)
+        const changeCooldown = 9000;
+        const improveCooldown = 14000;
+        const closeCooldown = 18000;
+
+        const prevKey = String(__qualiLeaderState.leaderKey || '');
+        const prevTime = Number(__qualiLeaderState.leaderTimeMs || 0) || 0;
+        const prevLaps = Number(__qualiLeaderState.leaderLaps || 0) || 0;
+
+        const firstTime = (!prevKey);
+
+        // 2do lugar para comentarios de pelea
+        const second = (list.length >= 2) ? list[1] : null;
+        const secondName = second ? String(second.racerName || '').trim() : '';
+        const sT = second ? __qualiRankTuple(second) : { laps: 0, timeMs: Number.MAX_SAFE_INTEGER };
+
+        // Update state ya, para evitar dobles anuncios por tormenta de snapshots
+        __qualiLeaderState.leaderKey = leaderKey;
+        __qualiLeaderState.leaderName = leaderName;
+        __qualiLeaderState.leaderLaps = lLaps;
+        __qualiLeaderState.leaderTimeMs = lTimeMs;
+
+        // Primera vez: no grites al boot
+        if (firstTime){
+          __qualiLeaderState.lastAnnounceTs = now;
+          return;
+        }
+
+        // Cambio de P1 provisional
+        const changed = (prevKey && prevKey !== leaderKey);
+        if (changed && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
+          const t = msToMinSec(lTimeMs);
+          enqueueSpeech(
+            `Atención, nueva pole provisional. ${leaderName} se pone líder con ${lLaps} vueltas en ${t}.`,
+            { key: 'quali_leader_change', cooldownMs: changeCooldown, semanticCategory: 'leader', priority: 30 }
+          );
+          __qualiLeaderState.lastAnnounceTs = now;
+
+          // Follow: pelea cerrada si aplica (misma cantidad de vueltas y gap muy chico)
+          if (second && secondName && sT.laps === lLaps){
+            const gap = sT.timeMs - lTimeMs;
+            if (isFinite(gap) && gap > 0 && gap <= 90 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
+              enqueueSpeech(
+                `Y ojo, ${secondName} está a ${__fmtGapMs(gap)} del líder.`,
+                { key: 'quali_close', cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 12 }
+              );
+              __qualiLeaderState.lastCloseTs = now;
+            }
+          }
+          return;
+        }
+
+        // Mismo líder: mejora (baja tiempo o sube vueltas)
+        const lapGain = (lLaps > prevLaps);
+        const timeDrop = (prevTime > 0 && lTimeMs < prevTime);
+        const dropMs = timeDrop ? (prevTime - lTimeMs) : 0;
+
+        if ((lapGain || (dropMs >= 40)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
+          if (lapGain){
+            enqueueSpeech(
+              `El líder aprieta. ${leaderName} sube a ${lLaps} vueltas.`,
+              { key: 'quali_leader_improve', cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 18 }
+            );
+          } else {
+            enqueueSpeech(
+              `El líder mejora. ${leaderName} baja su tiempo.`,
+              { key: 'quali_leader_improve', cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 18 }
+            );
+          }
+          __qualiLeaderState.lastImproveTs = now;
+        }
+
+        // Comentario de pelea cerrada (sin cambio de líder)
+        if (second && secondName && sT.laps === lLaps){
+          const gap = sT.timeMs - lTimeMs;
+          if (isFinite(gap) && gap > 0 && gap <= 90 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
+            enqueueSpeech(
+              `Esto está apretado. ${secondName} a ${__fmtGapMs(gap)} del líder.`,
+              { key: 'quali_close', cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 10 }
+            );
+            __qualiLeaderState.lastCloseTs = now;
+          }
+        }
+      }catch(e){}
+    }
+
+
     function qSafeJsonParse(s){
       try { return JSON.parse(s); } catch(e) { return null; }
     }
@@ -18875,6 +19057,9 @@ handleVoiceAndBeeps();
           store._lastPersist = now;
           saveQualiStore(store);
         }
+
+        // TRM: anuncio de cambio de P1 usando la tabla general
+        try{ __maybeAnnounceQualiLeaderFromStore(raw, store); }catch(e){}
 
         try{
           const bd = document.getElementById('qualiBackdrop');
