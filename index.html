@@ -1,11 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.10 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.24 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-27
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.3.24: Q TABLA - anuncia cambios de P1 provisional y comentario top2 cerrado (solo en mangas).
 - v0.0.2.21: Q TABLA (FIX guardado) (clasificacin) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
 - v0.0.2.23: Fix UX: VOZ responde al primer toque (iOS/Android), debounced LIVE (sin parpadeo), header altura estable (sin salto). UI/TTS only.
 - v0.0.2.17: LapChart watermark restaurada (logo Vic) en fondo del canvas. UI only.
@@ -58,7 +59,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.23</title>
+  <title>vics_Smart_Spotter_v0.3.24</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6245,7 +6246,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.23</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.24</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6948,7 +6949,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.23";
+const APP_NAME = "vics_Smart_Spotter_v0.3.24";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -18867,6 +18868,8 @@ handleVoiceAndBeeps();
           saveQualiStore(store);
         }
 
+        try{ maybeAnnounceQualiLeaderFromTable(store); }catch(e){}
+
         try{
           const bd = document.getElementById('qualiBackdrop');
           if (bd && bd.classList.contains('open')) renderQualiTable();
@@ -18901,6 +18904,122 @@ handleVoiceAndBeeps();
       });
       return arr;
     }
+
+    // =========================
+    // Q TABLA: anuncios de P1 provisional y comentarios usando la tabla
+    // =========================
+    let __qtableScope = '';
+    let __qtableLeaderKey = '';
+    let __qtableLeaderName = '';
+    let __qtableLeaderMs = 0;
+    let __qtableLeaderAnnounceAt = 0;
+    let __qtableHeatAnnounceAt = 0;
+
+    function __qtablePerfMs(it){
+      if (!it) return 0;
+      const b = Number(it.bestMs || 0);
+      if (isFinite(b) && b > 0) return b;
+      const t = Number(it.timeMs || 0);
+      if (isFinite(t) && t > 0 && t < Number.MAX_SAFE_INTEGER) return t;
+      return 0;
+    }
+
+    function __qtableComputeLeader(store){
+      if (!store || !store.bestByPilot) return null;
+      let best = null;
+      const vals = Object.values(store.bestByPilot || {});
+      for (const it0 of vals){
+        const it = it0 ? { ...it0 } : null;
+        if (!it) continue;
+        const ms = __qtablePerfMs(it);
+        if (!(ms > 0)) continue;
+
+        const name = String(it.racerName || '').trim();
+        if (!name) continue;
+        const key = String(it.pilotKey || '').trim() || normalizeNameKey(name);
+        if (!key) continue;
+
+        if (!best || ms < best.ms){
+          best = { key, name, ms };
+        }
+      }
+      return best;
+    }
+
+    function maybeAnnounceQualiLeaderFromTable(store){
+      try{
+        if (!voiceMasterEnabled) return;
+
+        const leader = __qtableComputeLeader(store);
+        if (!leader) return;
+
+        const scope = String(store.date || '') + '|' + String(store.raceBase || store.baseName || '');
+        if (scope && scope !== __qtableScope){
+          __qtableScope = scope;
+          __qtableLeaderKey = '';
+          __qtableLeaderName = '';
+          __qtableLeaderMs = 0;
+          __qtableLeaderAnnounceAt = 0;
+          __qtableHeatAnnounceAt = 0;
+        }
+
+        const now = Date.now();
+        const changedLeader = (__qtableLeaderKey && leader.key !== __qtableLeaderKey);
+        const improvedPole = (!!__qtableLeaderKey && leader.key === __qtableLeaderKey && __qtableLeaderMs > 0 && (leader.ms < (__qtableLeaderMs - 40)));
+
+        // Anunciar solo cuando alguien quita la P1 o cuando el mismo líder mejora fuerte.
+        if (changedLeader || improvedPole){
+          // Cooldown duro para evitar spam si llegan snapshots muy seguidos
+          if ((now - __qtableLeaderAnnounceAt) >= 5500){
+            const t = (typeof msToVoiceTime === 'function') ? msToVoiceTime(leader.ms) : '';
+            const msg = changedLeader
+              ? `Atención, nueva P1 provisional: ${leader.name}. ${t ? ('Tiempo ' + t + '.') : ''}`
+              : `Pole provisional mejora: ${leader.name}. ${t ? ('Tiempo ' + t + '.') : ''}`;
+            speakText(msg, {
+              key: 'q-leader',
+              cooldownMs: 3200,
+              priority: 7,
+              semanticCategory: 'quali',
+              semanticThreshold: 0.80,
+              semanticWindowMs: 18000
+            });
+            __qtableLeaderAnnounceAt = now;
+          }
+        }
+
+        // Memorizar estado actual (siempre)
+        __qtableLeaderKey = leader.key;
+        __qtableLeaderName = leader.name;
+        __qtableLeaderMs = leader.ms;
+
+        // Comentario rápido: Top 2 apretado (cuando hay data)
+        if ((now - __qtableHeatAnnounceAt) > 22000){
+          const vals = Object.values(store.bestByPilot || {});
+          const list = [];
+          for (const it0 of vals){
+            const it = it0 ? { ...it0 } : null;
+            if (!it) continue;
+            const ms = __qtablePerfMs(it);
+            const name = String(it.racerName || '').trim();
+            if (!name || !(ms > 0)) continue;
+            list.push({ name, ms });
+          }
+          list.sort((a,b)=>a.ms - b.ms);
+          if (list.length >= 2){
+            const d = list[1].ms - list[0].ms;
+            if (d > 0 && d <= 90){
+              const dsTxt = (d/1000).toFixed(2).replace('.', ' punto ');
+              const msg = (autoCommentatorMode === 'engineer')
+                ? `Top dos, separación de ${dsTxt} segundos.`
+                : `Está cerrado arriba: top dos a ${dsTxt}.`;
+              speakText(msg, { key: 'q-tight', cooldownMs: 20000, priority: 3, semanticCategory: 'quali' });
+              __qtableHeatAnnounceAt = now;
+            }
+          }
+        }
+      }catch(e){}
+    }
+
 
     function cellHtml(r){
       if (!r) return '<span class="qcell-empty">-</span>';
