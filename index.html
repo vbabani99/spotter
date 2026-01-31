@@ -13,7 +13,7 @@ Changelog:
 - v0.0.1.91: Limpieza editorial de textos del locutor (acentos y palabras recortadas) en RD_PHRASES y AUTO_PHRASES_PRO. Solo texto/UI.
 - v0.0.1.87: TTS PRO (ms -> segundos/dcimas/centsimas/milsimas; +V como 'ms una vuelta'; correccin de recortes en normalizador).
 - v0.0.1.79: LIVE como radio-button (solo punto verde) + MODO legible sin recortes y con color por estado.
-- v0.0.1.86: Fix TTS (P# en espaol, +V como 'ms 1 vuelta', tildes, HobbyShop MÈxico, Italia, Messina).
+- v0.0.1.86: Fix TTS (P# en espaol, +V como 'ms 1 vuelta', tildes, HobbyShop M√©xico, Italia, Messina).
 - v0.0.1.38: Auto Locutor lifecycle: actividad robusta (tiempo sube o baja) + debug strip (solo ?debug=1).
 - v0.0.1.02: Fix iPhone/pequenas pantallas - header responsivo (sin recortes) + safe-area top + logo always-fit.
 - v0.0.1.08: Fix ReferenceError (miniGridExpanded/miniGridLimit + voiceToggleBtns). Mantiene Top grid expanded como rows estilo scoreboard con INT vs anterior.
@@ -49,16 +49,16 @@ Changelog:
 - v7.5: Fix Auto Locutor: ya no depende de RD, usa POS para top3/peleas por defecto, umbral ajustado para evitar silencio, y no resetea tus voiceSettings.
 - v7.4: Auto Locutor PRO narrativo: seguimiento de pelea (focus) con contexto, tendencia de gap, y modo MANGA mejorado (pole/best lap) con menos 'robot'.
 - v7.3: Locutor mejorado: frases tipo shuffle-bag (anti repeticin real), manga batalla con nombres+gaps, y micro-variacin en Auto Locutor.
-- v7.2: UI piloto + voz: pilotSelect 2x, color por posiciÛn, gapInfo blanco grande, extras ms compacto, y clon mini de botn de voz junto al piloto.
+- v7.2: UI piloto + voz: pilotSelect 2x, color por posici√≥n, gapInfo blanco grande, extras ms compacto, y clon mini de botn de voz junto al piloto.
 - v7.1: TTS (Web Speech API) reforzado: selector de voz visible, botn de prueba, carga de voces con reintentos, y respeto a la voz elegida en la cola.
-- v7.0: Nuevo toggle "Modo background" (no pausa al quedar oculta la pestaÒa/ventana) + reenganche al volver (visibilitychange) + wake lock se reintenta al regresar.
+- v7.0: Nuevo toggle "Modo background" (no pausa al quedar oculta la pesta√±a/ventana) + reenganche al volver (visibilitychange) + wake lock se reintenta al regresar.
 Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a background real (pantalla apagada o cambiar de app). En Windows/Chrome, si la ventana queda tapada, a veces hay throttling del navegador.-->
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="ISO-8859-1" />
-  <title>vics_Smart_Spotter_v0.3.15</title>
+  <meta charset="UTF-8" />
+  <title>vics_Smart_Spotter_v0.3.16</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -164,7 +164,7 @@ html{ color-scheme: dark; -webkit-text-size-adjust: 100%; }
       /* Badge MODO theme */
       --mode-bg-manga: linear-gradient(135deg, rgba(221,20,19,.86), rgba(90,26,31,.72));
       --mode-bg-final: linear-gradient(135deg, rgba(221,20,19,.95), rgba(234,234,236,.10));
-      /* finalA se queda dorado (bandera de campeÛn) */
+      /* finalA se queda dorado (bandera de campe√≥n) */
     }
 
     
@@ -1008,7 +1008,7 @@ body {
       filter: grayscale(0.35);
     }
 
-/* Color del selector por posiciÛn */
+/* Color del selector por posici√≥n */
     #pilotSelect.pos-none {
       border-color: var(--border-soft);
       box-shadow: none;
@@ -2999,7 +2999,7 @@ body {
       letter-spacing: 0.02em;
     }
 
-    /* Flash solo en la ˙ltima vuelta (pop) - con glow por color */
+    /* Flash solo en la √∫ltima vuelta (pop) - con glow por color */
     #lastLap.flash{ transform: scale(1.28); }
     #lastLap.flash.lap-purple{ text-shadow: 0 0 14px rgba(192,132,252,0.85); }
     #lastLap.flash.lap-green{  text-shadow: 0 0 14px rgba(34,197,94,0.85); }
@@ -3334,7 +3334,7 @@ body {
       font-variant-numeric: tabular-nums;
     }
 
-    /* Pilot-timings: tipografa consistente (˙ltima se queda igual) */
+    /* Pilot-timings: tipografa consistente (√∫ltima se queda igual) */
     .pilot-timings .manga-clock{
       font-size: inherit;
       font-weight: inherit;
@@ -6224,7 +6224,7 @@ html, body{
   <div class="app">
     <div class="top-banner-placeholder" aria-hidden="false"><img class="top-banner-logo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" />
 </div>
-    <div class="banner-subtitle-row"><div class="header-title-sub" id="raceSubtitle">Turbo Racing MÈxico - x-vic!</div></div>
+    <div class="banner-subtitle-row"><div class="header-title-sub" id="raceSubtitle">Turbo Racing M√©xico - x-vic!</div></div>
 <header class="app-header live-off">
 <div class="header-stack">
         <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">AI Spotter TRM</span></div>
@@ -6245,7 +6245,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.15</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.16</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6283,15 +6283,15 @@ html, body{
           <button class="btn-secondary btn-hot btn-voice btn-voice-mini" id="voiceToggleBtnMini" data-voice-toggle type="button">
              ACTIVAR VOZ
           </button>
-          <button class="btn-secondary btn-hot btn-basic-mini" id="basicToggleBtnMini" type="button" title="Modo b·sico: solo vueltas, lap time y posiciÛn">B¡SICO</button>
+          <button class="btn-secondary btn-hot btn-basic-mini" id="basicToggleBtnMini" type="button" title="Modo b√°sico: solo vueltas, lap time y posici√≥n">B√ÅSICO</button>
         </div>
         <div class="pilot-pos-row">
           <div class="pos-pill" id="posText">P -</div>
-          <div class="pos-info" id="gapInfo">Diferencia lÌder  vueltas  estado</div>
+          <div class="pos-info" id="gapInfo">Diferencia l√≠der  vueltas  estado</div>
         </div>
         <div class="pilot-timings">
           <div class="timing-item last-lap">
-            <div class="timing-label">˙ltima</div>
+            <div class="timing-label">√∫ltima</div>
             <div class="timing-value" id="lastLap">-:--.---</div>
           </div>
           <div class="timing-item">
@@ -6357,7 +6357,7 @@ html, body{
 
         <div class="toggle-row expert-only">
           <div class="toggle-label">Modo background</div>
-          <div class="toggle-pill" id="backgroundToggle" title="Si est ON, el spotter sigue leyendo datos aunque la pestaÒa no est·l frente.">
+          <div class="toggle-pill" id="backgroundToggle" title="Si est ON, el spotter sigue leyendo datos aunque la pesta√±a no est√°l frente.">
             <div class="toggle-thumb"></div>
           </div>
         </div>
@@ -6505,7 +6505,7 @@ html, body{
       <div class="spotter-btn active" data-flag="blueflag" title="Azul: avisa lapeos/trafico (bandera azul)"><span></span>Azul</div>
       <div class="spotter-btn active" data-flag="ritmo" title="Ritmo: avisa si vienes mejorando o si te caes (comparado con tu promedio reciente)"><span></span>Ritmo +/-</div>
       <div class="spotter-btn" data-flag="estlap" title="Est: tiempo estimado al final (si el feed lo trae)"><span></span>Est</div>
-      <div class="spotter-btn" data-flag="leadergap" title="Lider: gap al lÌder, cambios de lÌder y contexto de punta"><span></span>Lider</div>
+      <div class="spotter-btn" data-flag="leadergap" title="Lider: gap al l√≠der, cambios de l√≠der y contexto de punta"><span></span>Lider</div>
       <div class="spotter-btn" data-flag="podium" title="Podio: llamadas enfocadas al Top 3 (en Finales, suele ser lo mas caliente)"><span></span>Podio</div>
     </div>
   </div>
@@ -6559,7 +6559,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">GuÌa r·pida para correr sin tocar 20 botones. AquÌ est· lo que sÌ importa.</div>
+        <div class="manual-sub">Gu√≠a r√°pida para correr sin tocar 20 botones. Aqu√≠ est√° lo que s√≠ importa.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -6569,7 +6569,7 @@ html, body{
       <button class="manual-tab" role="tab" aria-selected="false" data-tab="botones" type="button">Botones</button>
       <button class="manual-tab" role="tab" aria-selected="false" data-tab="voz" type="button">Voz</button>
       <button class="manual-tab" role="tab" aria-selected="false" data-tab="qtabla" type="button">Q Tabla</button>
-      <button class="manual-tab" role="tab" aria-selected="false" data-tab="basico" type="button">B·sico</button>
+      <button class="manual-tab" role="tab" aria-selected="false" data-tab="basico" type="button">B√°sico</button>
       <button class="manual-tab" role="tab" aria-selected="false" data-tab="problemas" type="button">Problemas</button>
     </div>
 
@@ -6589,15 +6589,15 @@ html, body{
         <h3>Dos formas de usarlo</h3>
         <div class="manual-card">
           <b>Auto</b>: te narra la carrera (cambios, avisos generales, ritmo, pelea).<br>
-          <b>Piloto seguido</b>: el spotter se enfoca en tu piloto (posiciÛn, diferencia, presiÛn, alertas).<br><br>
+          <b>Piloto seguido</b>: el spotter se enfoca en tu piloto (posici√≥n, diferencia, presi√≥n, alertas).<br><br>
           <div class="manual-tip">Si seleccionas piloto, evitas que Auto y Piloto hablen encima.</div>
         </div>
 
         <h3>Reglas de oro</h3>
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
-            <li>Si la p·gina est· en primer plano, no deberÌa callarse.</li>
-            <li>Si cambias de pestaÒa/ventana, al volver puede tardar un segundo en retomar.</li>
+            <li>Si la p√°gina est√° en primer plano, no deber√≠a callarse.</li>
+            <li>Si cambias de pesta√±a/ventana, al volver puede tardar un segundo en retomar.</li>
             <li>Si el sistema acaba de arrancar, los primeros segundos pueden venir "en cero".</li>
           </ul>
         </div>
@@ -6610,7 +6610,7 @@ html, body{
             <li><b>AUTO</b> - activa el auto-locutor.</li>
             <li><b>VIC</b> - cambia el tema (skin) a Vic.</li>
             <li><b>Q TABLA</b> - abre/cierra la tabla completa.</li>
-            <li><b>MANUAL</b> - abre/cierra esta guÌa.</li>
+            <li><b>MANUAL</b> - abre/cierra esta gu√≠a.</li>
           </ul>
         </div>
 
@@ -6618,7 +6618,7 @@ html, body{
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
             <li><b>ACTIVAR VOZ</b> - habilita la voz del spotter.</li>
-            <li><b>B¡SICO</b> - reduce el chatter (menos mensajes).</li>
+            <li><b>B√ÅSICO</b> - reduce el chatter (menos mensajes).</li>
             <li><b>Selector de piloto</b> - cambia el piloto seguido.</li>
           </ul>
           <div class="manual-note">Si algo se siente "atorado", prueba refrescar una vez. Si persiste, cierra y vuelve a abrir.</div>
@@ -6626,23 +6626,23 @@ html, body{
       </div>
 
       <div class="manual-section" data-tab="voz">
-        <h3>Voz: cÛmo usarla sin pelearte</h3>
+        <h3>Voz: c√≥mo usarla sin pelearte</h3>
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
             <li>En iPhone y algunos Android, la voz se habilita solo con un toque del usuario. Por eso existe <b>ACTIVAR VOZ</b>.</li>
-            <li>Una vez activada, deberÌa mantenerse mientras sigas en primer plano.</li>
-            <li>Si cambias de pestaÒa y regresas, dale 1 segundo para retomar.</li>
+            <li>Una vez activada, deber√≠a mantenerse mientras sigas en primer plano.</li>
+            <li>Si cambias de pesta√±a y regresas, dale 1 segundo para retomar.</li>
           </ul>
-          <div class="manual-tip">Si no habla: toca ACTIVAR VOZ una vez. Si sigue mudo: refresca la p·gina.</div>
+          <div class="manual-tip">Si no habla: toca ACTIVAR VOZ una vez. Si sigue mudo: refresca la p√°gina.</div>
         </div>
 
-        <h3>QuÈ significa lo que te dice</h3>
+        <h3>Qu√© significa lo que te dice</h3>
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
-            <li><b>PosiciÛn</b> - tu lugar actual.</li>
-            <li><b>Diferencia lÌder</b> - cu·nto falta para el P1.</li>
-            <li><b>Intervalo</b> - distancia con el de adelante/atr·s.</li>
-            <li><b>Bandera azul</b> - viene lÌder o te alcanzan (ojo con lÌnea).</li>
+            <li><b>Posici√≥n</b> - tu lugar actual.</li>
+            <li><b>Diferencia l√≠der</b> - cu√°nto falta para el P1.</li>
+            <li><b>Intervalo</b> - distancia con el de adelante/atr√°s.</li>
+            <li><b>Bandera azul</b> - viene l√≠der o te alcanzan (ojo con l√≠nea).</li>
           </ul>
         </div>
       </div>
@@ -6650,42 +6650,42 @@ html, body{
       <div class="manual-section" data-tab="qtabla">
         <h3>Q Tabla</h3>
         <div class="manual-card">
-          Es tu "race control" r·pido: posiciones, vueltas y diferencias. ⁄sala para:
+          Es tu "race control" r√°pido: posiciones, vueltas y diferencias. √ösala para:
           <ul style="margin:6px 0 0; padding-left: 18px;">
-            <li>Ver orden real cuando hay tr·fico.</li>
+            <li>Ver orden real cuando hay tr√°fico.</li>
             <li>Detectar peleas (intervalos cortos).</li>
-            <li>Confirmar si el ritmo est· cayendo o subiendo.</li>
+            <li>Confirmar si el ritmo est√° cayendo o subiendo.</li>
           </ul>
           <div class="manual-note">Si ves ceros al inicio, es normal: espera a que caiga el primer dato real.</div>
         </div>
       </div>
 
       <div class="manual-section" data-tab="basico">
-        <h3>Modo B¡SICO</h3>
+        <h3>Modo B√ÅSICO</h3>
         <div class="manual-card">
-          B¡SICO es para correr sin "radio en modo locutor". Reduce mensajes repetidos y se enfoca en lo esencial.
+          B√ÅSICO es para correr sin "radio en modo locutor". Reduce mensajes repetidos y se enfoca en lo esencial.
           <ul style="margin:6px 0 0; padding-left: 18px;">
-            <li>Ideal si est·s concentrado o te saturas con mucha voz.</li>
+            <li>Ideal si est√°s concentrado o te saturas con mucha voz.</li>
             <li>Los avisos importantes deben seguir (carrera nueva, banderas, alertas).</li>
           </ul>
-          <div class="manual-tip">Si quieres show TRM total, apaga B¡SICO y deja que hable.</div>
+          <div class="manual-tip">Si quieres show TRM total, apaga B√ÅSICO y deja que hable.</div>
         </div>
       </div>
 
       <div class="manual-section" data-tab="problemas">
-        <h3>Soluciones r·pidas</h3>
+        <h3>Soluciones r√°pidas</h3>
         <div class="manual-card">
           <ol style="margin:0; padding-left: 18px;">
             <li><b>No habla</b> - toca ACTIVAR VOZ. Si sigue igual: refresca.</li>
             <li><b>Se calla en primer plano</b> - espera 2-3s. Si no regresa: refresca.</li>
             <li><b>Al cambiar de carrera anuncia "a medias"</b> - refresca una vez y deja correr.</li>
             <li><b>Tabla en blanco</b> - puede ser arranque con ceros. Espera el primer dato real.</li>
-            <li><b>Va raro en mÛvil</b> - usa pantalla activa y evita modo ahorro de energÌa.</li>
+            <li><b>Va raro en m√≥vil</b> - usa pantalla activa y evita modo ahorro de energ√≠a.</li>
           </ol>
-          <div class="manual-note">Si est·s en iPhone: evita Silencio/Modo Ahorro cuando quieras voz constante.</div>
+          <div class="manual-note">Si est√°s en iPhone: evita Silencio/Modo Ahorro cuando quieras voz constante.</div>
         </div>
 
-        <h3>Buenas pr·cticas TRM</h3>
+        <h3>Buenas pr√°cticas TRM</h3>
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
             <li>Antes de arrancar: piloto seleccionado + voz activa.</li>
@@ -6697,7 +6697,7 @@ html, body{
     </div>
 
     <div class="manual-foot">
-      <span class="manual-tip">Meta: 0 fricciÛn. Activa voz una vez y corre. Lo dem·s es show.</span>
+      <span class="manual-tip">Meta: 0 fricci√≥n. Activa voz una vez y corre. Lo dem√°s es show.</span>
     </div>
   </div>
 </div>
@@ -6734,7 +6734,7 @@ Principios de diseno
 
 --------------------------------------------------------------------
 0) Glosario rapido
-- raceData: u˙ltimo snapshot de carrera (documento del feed) ya normalizado.
+- raceData: u√∫ltimo snapshot de carrera (documento del feed) ya normalizado.
 - classification: arreglo de pilotos (pos, nombre, lapcount, time, best, mean, gap/diff, etc).
 - currentSessionInfo: tipo de sesion detectado desde raceName (MANGA / FINAL A / FINAL B+).
 - selectedPilotKey: piloto elegido por el usuario. Si existe => modo Seguimiento.
@@ -6811,7 +6811,7 @@ Deteccion
 - Principal: diferencia de vueltas (lapDiff >= 1) o diff tipo "+1 V".
 - Anti spam:
   - cooldown global y cooldown por piloto.
-  - en Auto Locutor se puede repetir cada N vueltas del lÌder.
+  - en Auto Locutor se puede repetir cada N vueltas del l√≠der.
 
 Fraseo
 - Se usa "bandera azul" + nombre del piloto a ceder paso.
@@ -6828,7 +6828,7 @@ Funcion clave
 
 --------------------------------------------------------------------
 5) Debug y soporte
-- ?debug=1 habilita speechLog (u˙˙ltimos mensajes hablados) para diagnostico.
+- ?debug=1 habilita speechLog (u√∫√∫ltimos mensajes hablados) para diagnostico.
 - updateConfigStatusUI(): muestra estado Firebase/Feed y heartbeat.
 
 --------------------------------------------------------------------
@@ -6907,7 +6907,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.15";
+const APP_NAME = "vics_Smart_Spotter_v0.3.16";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -7342,7 +7342,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.15";
           const A = [
             'Final A. La elite en pista. Vamos a arrancar, pueden calentar.',
             'Final A. Top de pilotos. Vamos a arrancar, pueden calentar.',
-            'Final A. AquÌi se corre fino. Vamos a arrancar, pueden calentar.',
+            'Final A. Aqu√≠i se corre fino. Vamos a arrancar, pueden calentar.',
             'Final A. Puro nivel. Vamos a arrancar, pueden calentar.',
             'Final A. Los mejores, sin excusas. Vamos a arrancar, pueden calentar.',
             'Final A. Ojos al apex. Vamos a arrancar, pueden calentar.',
@@ -7352,7 +7352,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.15";
           const B = [
             'Final B. Se pone bueno. Vamos a arrancar, pueden calentar.',
             'Final B. Segunda linea de fuego. Vamos a arrancar, pueden calentar.',
-            'Final B. AquÌi se pelea de verdad. Vamos a arrancar, pueden calentar.',
+            'Final B. Aqu√≠i se pelea de verdad. Vamos a arrancar, pueden calentar.',
             'Final B. Sin regalos. Vamos a arrancar, pueden calentar.',
             'Final B. Carrera dura, manos suaves. Vamos a arrancar, pueden calentar.',
             'Final B. El podio se gana en paciencia. Vamos a arrancar, pueden calentar.',
@@ -7361,7 +7361,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.15";
           ];
           const C = [
             'Final C. Carrera con hambre. Vamos a arrancar, pueden calentar.',
-            'Final C. AquÌi todos quieren subir. Vamos a arrancar, pueden calentar.',
+            'Final C. Aqu√≠i todos quieren subir. Vamos a arrancar, pueden calentar.',
             'Final C. Cero contactos, mucha cabeza. Vamos a arrancar, pueden calentar.',
             'Final C. Limpio y constante. Vamos a arrancar, pueden calentar.',
             'Final C. Si te equivocas, pagas. Vamos a arrancar, pueden calentar.',
@@ -7441,11 +7441,11 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.15";
           __autoFinishPhase = false;
         }
 
-        // Reloj de carrera: usamos tiempo del lÌder (P1)
+        // Reloj de carrera: usamos tiempo del l√≠der (P1)
         const leader = raceData.classification.find(x => Number(x.pos) === 1) || raceData.classification[0];
         const raceClockMs = getRowTotalMs(leader) || 0;
 
-        // Entramos en fase de cierre cuando el lÌder ya pas el tiempo objetivo
+        // Entramos en fase de cierre cuando el l√≠der ya pas el tiempo objetivo
         if (raceClockMs >= dur) __autoFinishPhase = true;
         if (!__autoFinishPhase) {
           // Aun no toca, pero guardamos prevs
@@ -7479,7 +7479,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.15";
           // Solo disparar cuando sube una vuelta
           if (laps <= (prev.laps || 0)) continue;
 
-          // Condicin: cruz el lmite en la ˙ltima vuelta
+          // Condicin: cruz el lmite en la √∫ltima vuelta
           if (totalMs < dur) continue;
 
           enqueueSpeech((nm || 'Piloto') + ' finalizo.', {
@@ -8520,27 +8520,27 @@ function rdPick(variants, key) {
       minimal: {
         manga: [
           'Manga, vuelta limpia y sin errores.',
-          'Manga, vuelta limpia y sin errores. MantÈn el plan.',
+          'Manga, vuelta limpia y sin errores. Mant√©n el plan.',
           'Manga, vuelta limpia y sin errores. Sin regalar nada.',
           'Manga, vuelta limpia y sin errores. Sin prisa, sin pausa.',
           'Manga, vuelta limpia y sin errores. Control total.',
           'Manga, suma vueltas y cuida la trazada.',
-          'Manga, suma vueltas y cuida la trazada. MantÈn el plan.',
+          'Manga, suma vueltas y cuida la trazada. Mant√©n el plan.',
           'Manga, suma vueltas y cuida la trazada. Sin regalar nada.',
           'Manga, suma vueltas y cuida la trazada. Sin prisa, sin pausa.',
           'Manga, suma vueltas y cuida la trazada. Control total.',
           'Manga, ritmo estable, no te salgas.',
-          'Manga, ritmo estable, no te salgas. MantÈn el plan.',
+          'Manga, ritmo estable, no te salgas. Mant√©n el plan.',
           'Manga, ritmo estable, no te salgas. Sin regalar nada.',
           'Manga, ritmo estable, no te salgas. Sin prisa, sin pausa.',
           'Manga, ritmo estable, no te salgas. Control total.',
-          'Manga, evita tr·fico y busca aire limpio.',
-          'Manga, evita tr·fico y busca aire limpio. MantÈn el plan.',
-          'Manga, evita tr·fico y busca aire limpio. Sin regalar nada.',
-          'Manga, evita tr·fico y busca aire limpio. Sin prisa, sin pausa.',
-          'Manga, evita tr·fico y busca aire limpio. Control total.',
+          'Manga, evita tr√°fico y busca aire limpio.',
+          'Manga, evita tr√°fico y busca aire limpio. Mant√©n el plan.',
+          'Manga, evita tr√°fico y busca aire limpio. Sin regalar nada.',
+          'Manga, evita tr√°fico y busca aire limpio. Sin prisa, sin pausa.',
+          'Manga, evita tr√°fico y busca aire limpio. Control total.',
           'Manga, todo es consistencia.',
-          'Manga, todo es consistencia. MantÈn el plan.',
+          'Manga, todo es consistencia. Mant√©n el plan.',
           'Manga, todo es consistencia. Sin regalar nada.',
           'Manga, todo es consistencia. Sin prisa, sin pausa.',
           'Manga, todo es consistencia. Control total.'
@@ -8549,27 +8549,27 @@ function rdPick(variants, key) {
           'Traes a {frontNameSafe} a {frontSecStr}. Prepara el pase.',
           'Traes a {frontNameSafe} a {frontSecStr}. Ataque con calma.',
           'Traes a {frontNameSafe} a {frontSecStr}. Busca salida fuerte.',
-          'Traes a {frontNameSafe} a {frontSecStr}. Sin arriesgar de m·s.',
+          'Traes a {frontNameSafe} a {frontSecStr}. Sin arriesgar de m√°s.',
           'Traes a {frontNameSafe} a {frontSecStr}. Cuida la entrada y acelera.',
           'Traes a {frontNameSafe} a {frontSecStr}. Coloca el intento en zona segura.',
-          'Traes a {frontNameSafe} a {frontSecStr}. Un giro m·s y lo tienes.',
-          'Traes a {frontNameSafe} a {frontSecStr}. MantÈn presiÛn y el pase cae.',
+          'Traes a {frontNameSafe} a {frontSecStr}. Un giro m√°s y lo tienes.',
+          'Traes a {frontNameSafe} a {frontSecStr}. Mant√©n presi√≥n y el pase cae.',
           'Traes a {frontNameSafe} a {frontSecStr}. enf cate en la salida.',
           'Traes a {frontNameSafe} a {frontSecStr}. No te abras en la entrada.',
           'A {frontSecStr} de {frontNameSafe}. Prepara el pase.',
           'A {frontSecStr} de {frontNameSafe}. Ataque con calma.',
           'A {frontSecStr} de {frontNameSafe}. Busca salida fuerte.',
-          'A {frontSecStr} de {frontNameSafe}. Sin arriesgar de m·s.',
+          'A {frontSecStr} de {frontNameSafe}. Sin arriesgar de m√°s.',
           'A {frontSecStr} de {frontNameSafe}. Cuida la entrada y acelera.',
           'A {frontSecStr} de {frontNameSafe}. Coloca el intento en zona segura.',
-          'A {frontSecStr} de {frontNameSafe}. Un giro m·s y lo tienes.',
-          'A {frontSecStr} de {frontNameSafe}. MantÈn presiÛn y el pase cae.',
+          'A {frontSecStr} de {frontNameSafe}. Un giro m√°s y lo tienes.',
+          'A {frontSecStr} de {frontNameSafe}. Mant√©n presi√≥n y el pase cae.',
           'A {frontSecStr} de {frontNameSafe}. enf cate en la salida.',
           'A {frontSecStr} de {frontNameSafe}. No te abras en la entrada.',
           '{frontNameSafe} est cerca. Prepara el pase.',
           '{frontNameSafe} est cerca. Ataque con calma.',
           '{frontNameSafe} est cerca. Busca salida fuerte.',
-          '{frontNameSafe} est cerca. Sin arriesgar de m·s.',
+          '{frontNameSafe} est cerca. Sin arriesgar de m√°s.',
           '{frontNameSafe} est cerca. Cuida la entrada y acelera.'
         ],
         defense: [
@@ -8581,18 +8581,18 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Sin volantazos.',
           '{backNameSafe} a {backSecStr}. No te abras.',
           '{backNameSafe} a {backSecStr}. Defiende con trazada.',
-          '{backNameSafe} a {backSecStr}. Cubre lo b·sico.',
+          '{backNameSafe} a {backSecStr}. Cubre lo b√°sico.',
           '{backNameSafe} a {backSecStr}. No te desconcentres.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Cierra la puerta.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. l nea firme.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. No regales la entrada.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Protege interior.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Salida fuerte y recto.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Sin volantazos.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. No te abras.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Defiende con trazada.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Cubre lo b·sico.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. No te desconcentres.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Cierra la puerta.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. l nea firme.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. No regales la entrada.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Protege interior.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Salida fuerte y recto.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Sin volantazos.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. No te abras.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Defiende con trazada.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Cubre lo b√°sico.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. No te desconcentres.',
           'Ojo atr s con {backNameSafe}. Cierra la puerta.',
           'Ojo atr s con {backNameSafe}. l nea firme.',
           'Ojo atr s con {backNameSafe}. No regales la entrada.',
@@ -8600,53 +8600,53 @@ function rdPick(variants, key) {
           'Ojo atr s con {backNameSafe}. Salida fuerte y recto.'
         ],
         fight: [
-          'Dos frentes, cabeza frÌa.',
-          'Dos frentes, cabeza frÌa. Controla el volante.',
-          'Dos frentes, cabeza frÌa. Sin regalos.',
-          'Dos frentes, cabeza frÌa. Todo con calma.',
-          'Dos frentes, cabeza frÌa. Limpio y r·pido.',
+          'Dos frentes, cabeza fr√≠a.',
+          'Dos frentes, cabeza fr√≠a. Controla el volante.',
+          'Dos frentes, cabeza fr√≠a. Sin regalos.',
+          'Dos frentes, cabeza fr√≠a. Todo con calma.',
+          'Dos frentes, cabeza fr√≠a. Limpio y r√°pido.',
           'Pelea cerrada, cero errores.',
           'Pelea cerrada, cero errores. Controla el volante.',
           'Pelea cerrada, cero errores. Sin regalos.',
           'Pelea cerrada, cero errores. Todo con calma.',
-          'Pelea cerrada, cero errores. Limpio y r·pido.',
-          'tr·fico, no te enredes.',
-          'tr·fico, no te enredes. Controla el volante.',
-          'tr·fico, no te enredes. Sin regalos.',
-          'tr·fico, no te enredes. Todo con calma.',
-          'tr·fico, no te enredes. Limpio y r·pido.',
-          'Mucho movimiento, MantÈn la l nea.',
-          'Mucho movimiento, MantÈn la l nea. Controla el volante.',
-          'Mucho movimiento, MantÈn la l nea. Sin regalos.',
-          'Mucho movimiento, MantÈn la l nea. Todo con calma.',
-          'Mucho movimiento, MantÈn la l nea. Limpio y r·pido.',
+          'Pelea cerrada, cero errores. Limpio y r√°pido.',
+          'tr√°fico, no te enredes.',
+          'tr√°fico, no te enredes. Controla el volante.',
+          'tr√°fico, no te enredes. Sin regalos.',
+          'tr√°fico, no te enredes. Todo con calma.',
+          'tr√°fico, no te enredes. Limpio y r√°pido.',
+          'Mucho movimiento, Mant√©n la l nea.',
+          'Mucho movimiento, Mant√©n la l nea. Controla el volante.',
+          'Mucho movimiento, Mant√©n la l nea. Sin regalos.',
+          'Mucho movimiento, Mant√©n la l nea. Todo con calma.',
+          'Mucho movimiento, Mant√©n la l nea. Limpio y r√°pido.',
           'Hay pelea, prioriza la salida.',
           'Hay pelea, prioriza la salida. Controla el volante.',
           'Hay pelea, prioriza la salida. Sin regalos.',
           'Hay pelea, prioriza la salida. Todo con calma.',
-          'Hay pelea, prioriza la salida. Limpio y r·pido.'
+          'Hay pelea, prioriza la salida. Limpio y r√°pido.'
         ],
         blueflag: [
-          'Bandera azul, MantÈn l nea.',
-          'Bandera azul, MantÈn l nea. Sin drama.',
-          'Bandera azul, MantÈn l nea. Con seguridad.',
-          'Bandera azul, MantÈn l nea. Sin perder la l nea.',
-          'Bandera azul, MantÈn l nea. Todo limpio.',
+          'Bandera azul, Mant√©n l nea.',
+          'Bandera azul, Mant√©n l nea. Sin drama.',
+          'Bandera azul, Mant√©n l nea. Con seguridad.',
+          'Bandera azul, Mant√©n l nea. Sin perder la l nea.',
+          'Bandera azul, Mant√©n l nea. Todo limpio.',
           'Bandera azul, deja pasar seguro.',
           'Bandera azul, deja pasar seguro. Sin drama.',
           'Bandera azul, deja pasar seguro. Con seguridad.',
           'Bandera azul, deja pasar seguro. Sin perder la l nea.',
           'Bandera azul, deja pasar seguro. Todo limpio.',
-          'Bandera azul, no pelees la posiciÛn.',
-          'Bandera azul, no pelees la posiciÛn. Sin drama.',
-          'Bandera azul, no pelees la posiciÛn. Con seguridad.',
-          'Bandera azul, no pelees la posiciÛn. Sin perder la l nea.',
-          'Bandera azul, no pelees la posiciÛn. Todo limpio.',
-          'Bandera azul, cede sin frenar de m·s.',
-          'Bandera azul, cede sin frenar de m·s. Sin drama.',
-          'Bandera azul, cede sin frenar de m·s. Con seguridad.',
-          'Bandera azul, cede sin frenar de m·s. Sin perder la l nea.',
-          'Bandera azul, cede sin frenar de m·s. Todo limpio.',
+          'Bandera azul, no pelees la posici√≥n.',
+          'Bandera azul, no pelees la posici√≥n. Sin drama.',
+          'Bandera azul, no pelees la posici√≥n. Con seguridad.',
+          'Bandera azul, no pelees la posici√≥n. Sin perder la l nea.',
+          'Bandera azul, no pelees la posici√≥n. Todo limpio.',
+          'Bandera azul, cede sin frenar de m√°s.',
+          'Bandera azul, cede sin frenar de m√°s. Sin drama.',
+          'Bandera azul, cede sin frenar de m√°s. Con seguridad.',
+          'Bandera azul, cede sin frenar de m√°s. Sin perder la l nea.',
+          'Bandera azul, cede sin frenar de m√°s. Todo limpio.',
           'Bandera azul, facilita el pase.',
           'Bandera azul, facilita el pase. Sin drama.',
           'Bandera azul, facilita el pase. Con seguridad.',
@@ -8656,7 +8656,7 @@ function rdPick(variants, key) {
         front06: [
           '{frontNameSafe} a {frontSecStr}. Es alcanzable.',
           '{frontNameSafe} a {frontSecStr}. Ventana de pase.',
-          '{frontNameSafe} a {frontSecStr}. MantÈn la presiÛn.',
+          '{frontNameSafe} a {frontSecStr}. Mant√©n la presi√≥n.',
           '{frontNameSafe} a {frontSecStr}. Busca salida fuerte.',
           '{frontNameSafe} a {frontSecStr}. Sin desesperarte.',
           '{frontNameSafe} a {frontSecStr}. Cuida la entrada.',
@@ -8665,7 +8665,7 @@ function rdPick(variants, key) {
           '{frontNameSafe} a {frontSecStr}. Pase posible en la siguiente.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Es alcanzable.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Ventana de pase.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. MantÈn la presiÛn.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Mant√©n la presi√≥n.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Busca salida fuerte.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Sin desesperarte.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Cuida la entrada.',
@@ -8674,7 +8674,7 @@ function rdPick(variants, key) {
           'Gap corto con {frontNameSafe}: {frontSecStr}. Pase posible en la siguiente.',
           'A {frontSecStr} de {frontNameSafe}. Es alcanzable.',
           'A {frontSecStr} de {frontNameSafe}. Ventana de pase.',
-          'A {frontSecStr} de {frontNameSafe}. MantÈn la presiÛn.',
+          'A {frontSecStr} de {frontNameSafe}. Mant√©n la presi√≥n.',
           'A {frontSecStr} de {frontNameSafe}. Busca salida fuerte.',
           'A {frontSecStr} de {frontNameSafe}. Sin desesperarte.',
           'A {frontSecStr} de {frontNameSafe}. Cuida la entrada.',
@@ -8690,15 +8690,15 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Protege la trazada.',
           '{backNameSafe} a {backSecStr}. Salida fuerte.',
           '{backNameSafe} a {backSecStr}. Calma y control.',
-          'presiÛn atr s: {backNameSafe} {backSecStr}. Defiende.',
-          'presiÛn atr s: {backNameSafe} {backSecStr}. Cubre interior.',
-          'presiÛn atr s: {backNameSafe} {backSecStr}. l nea firme.',
-          'presiÛn atr s: {backNameSafe} {backSecStr}. No regales la salida.',
-          'presiÛn atr s: {backNameSafe} {backSecStr}. Sin errores.',
-          'presiÛn atr s: {backNameSafe} {backSecStr}. No te abras.',
-          'presiÛn atr s: {backNameSafe} {backSecStr}. Protege la trazada.',
-          'presiÛn atr s: {backNameSafe} {backSecStr}. Salida fuerte.',
-          'presiÛn atr s: {backNameSafe} {backSecStr}. Calma y control.',
+          'presi√≥n atr s: {backNameSafe} {backSecStr}. Defiende.',
+          'presi√≥n atr s: {backNameSafe} {backSecStr}. Cubre interior.',
+          'presi√≥n atr s: {backNameSafe} {backSecStr}. l nea firme.',
+          'presi√≥n atr s: {backNameSafe} {backSecStr}. No regales la salida.',
+          'presi√≥n atr s: {backNameSafe} {backSecStr}. Sin errores.',
+          'presi√≥n atr s: {backNameSafe} {backSecStr}. No te abras.',
+          'presi√≥n atr s: {backNameSafe} {backSecStr}. Protege la trazada.',
+          'presi√≥n atr s: {backNameSafe} {backSecStr}. Salida fuerte.',
+          'presi√≥n atr s: {backNameSafe} {backSecStr}. Calma y control.',
           '{backNameSafe} en rango: {backSecStr}. Defiende.',
           '{backNameSafe} en rango: {backSecStr}. Cubre interior.',
           '{backNameSafe} en rango: {backSecStr}. l nea firme.',
@@ -8735,31 +8735,31 @@ function rdPick(variants, key) {
           'Vas P{posNow}. Ritmo constante.'
         ],
         leader: [
-          'lÌder al frente, controla tus marcas.',
-          'lÌder al frente, controla tus marcas. Sin errores.',
-          'lÌder al frente, controla tus marcas. Limpio.',
-          'lÌder al frente, controla tus marcas. Control total.',
-          'lÌder al frente, controla tus marcas. Paso a paso.',
-          'Referencia del lÌder, no te salgas.',
-          'Referencia del lÌder, no te salgas. Sin errores.',
-          'Referencia del lÌder, no te salgas. Limpio.',
-          'Referencia del lÌder, no te salgas. Control total.',
-          'Referencia del lÌder, no te salgas. Paso a paso.',
-          'Mira al lÌder y copia la l nea.',
-          'Mira al lÌder y copia la l nea. Sin errores.',
-          'Mira al lÌder y copia la l nea. Limpio.',
-          'Mira al lÌder y copia la l nea. Control total.',
-          'Mira al lÌder y copia la l nea. Paso a paso.',
-          'El lÌder marca el ritmo, MantÈn precisin.',
-          'El lÌder marca el ritmo, MantÈn precisin. Sin errores.',
-          'El lÌder marca el ritmo, MantÈn precisin. Limpio.',
-          'El lÌder marca el ritmo, MantÈn precisin. Control total.',
-          'El lÌder marca el ritmo, MantÈn precisin. Paso a paso.',
-          'Observa al lÌder, trazada limpia.',
-          'Observa al lÌder, trazada limpia. Sin errores.',
-          'Observa al lÌder, trazada limpia. Limpio.',
-          'Observa al lÌder, trazada limpia. Control total.',
-          'Observa al lÌder, trazada limpia. Paso a paso.'
+          'l√≠der al frente, controla tus marcas.',
+          'l√≠der al frente, controla tus marcas. Sin errores.',
+          'l√≠der al frente, controla tus marcas. Limpio.',
+          'l√≠der al frente, controla tus marcas. Control total.',
+          'l√≠der al frente, controla tus marcas. Paso a paso.',
+          'Referencia del l√≠der, no te salgas.',
+          'Referencia del l√≠der, no te salgas. Sin errores.',
+          'Referencia del l√≠der, no te salgas. Limpio.',
+          'Referencia del l√≠der, no te salgas. Control total.',
+          'Referencia del l√≠der, no te salgas. Paso a paso.',
+          'Mira al l√≠der y copia la l nea.',
+          'Mira al l√≠der y copia la l nea. Sin errores.',
+          'Mira al l√≠der y copia la l nea. Limpio.',
+          'Mira al l√≠der y copia la l nea. Control total.',
+          'Mira al l√≠der y copia la l nea. Paso a paso.',
+          'El l√≠der marca el ritmo, Mant√©n precisin.',
+          'El l√≠der marca el ritmo, Mant√©n precisin. Sin errores.',
+          'El l√≠der marca el ritmo, Mant√©n precisin. Limpio.',
+          'El l√≠der marca el ritmo, Mant√©n precisin. Control total.',
+          'El l√≠der marca el ritmo, Mant√©n precisin. Paso a paso.',
+          'Observa al l√≠der, trazada limpia.',
+          'Observa al l√≠der, trazada limpia. Sin errores.',
+          'Observa al l√≠der, trazada limpia. Limpio.',
+          'Observa al l√≠der, trazada limpia. Control total.',
+          'Observa al l√≠der, trazada limpia. Paso a paso.'
         ],
         podium: [
           'Huele a podio, no te compliques.',
@@ -8804,11 +8804,11 @@ function rdPick(variants, key) {
           'Consistente, sigue as. Sin errores.',
           'Consistente, sigue as. Limpio.',
           'Consistente, sigue as. Control.',
-          'Mejorando ritmo, MantÈn.',
-          'Mejorando ritmo, MantÈn. Sin apuro.',
-          'Mejorando ritmo, MantÈn. Sin errores.',
-          'Mejorando ritmo, MantÈn. Limpio.',
-          'Mejorando ritmo, MantÈn. Control.',
+          'Mejorando ritmo, Mant√©n.',
+          'Mejorando ritmo, Mant√©n. Sin apuro.',
+          'Mejorando ritmo, Mant√©n. Sin errores.',
+          'Mejorando ritmo, Mant√©n. Limpio.',
+          'Mejorando ritmo, Mant√©n. Control.',
           'Ritmo irregular, calma y l nea.',
           'Ritmo irregular, calma y l nea. Sin apuro.',
           'Ritmo irregular, calma y l nea. Sin errores.',
@@ -8816,56 +8816,56 @@ function rdPick(variants, key) {
           'Ritmo irregular, calma y l nea. Control.'
         ],
         est: [
-          'estimaciÛn lista, MantÈn el plan.',
-          'estimaciÛn lista, MantÈn el plan. Todo limpio.',
-          'estimaciÛn lista, MantÈn el plan. Sin drama.',
-          'estimaciÛn lista, MantÈn el plan. A tu ritmo.',
-          'estimaciÛn lista, MantÈn el plan. Control total.',
-          'Ojo con la estimaciÛn, no te duermas.',
-          'Ojo con la estimaciÛn, no te duermas. Todo limpio.',
-          'Ojo con la estimaciÛn, no te duermas. Sin drama.',
-          'Ojo con la estimaciÛn, no te duermas. A tu ritmo.',
-          'Ojo con la estimaciÛn, no te duermas. Control total.',
-          'estimaciÛn estable, sigue empujando.',
-          'estimaciÛn estable, sigue empujando. Todo limpio.',
-          'estimaciÛn estable, sigue empujando. Sin drama.',
-          'estimaciÛn estable, sigue empujando. A tu ritmo.',
-          'estimaciÛn estable, sigue empujando. Control total.',
-          'estimaciÛn en marcha, cuida el ritmo.',
-          'estimaciÛn en marcha, cuida el ritmo. Todo limpio.',
-          'estimaciÛn en marcha, cuida el ritmo. Sin drama.',
-          'estimaciÛn en marcha, cuida el ritmo. A tu ritmo.',
-          'estimaciÛn en marcha, cuida el ritmo. Control total.',
-          'estimaciÛn cambia, ajusta salida.',
-          'estimaciÛn cambia, ajusta salida. Todo limpio.',
-          'estimaciÛn cambia, ajusta salida. Sin drama.',
-          'estimaciÛn cambia, ajusta salida. A tu ritmo.',
-          'estimaciÛn cambia, ajusta salida. Control total.'
+          'estimaci√≥n lista, Mant√©n el plan.',
+          'estimaci√≥n lista, Mant√©n el plan. Todo limpio.',
+          'estimaci√≥n lista, Mant√©n el plan. Sin drama.',
+          'estimaci√≥n lista, Mant√©n el plan. A tu ritmo.',
+          'estimaci√≥n lista, Mant√©n el plan. Control total.',
+          'Ojo con la estimaci√≥n, no te duermas.',
+          'Ojo con la estimaci√≥n, no te duermas. Todo limpio.',
+          'Ojo con la estimaci√≥n, no te duermas. Sin drama.',
+          'Ojo con la estimaci√≥n, no te duermas. A tu ritmo.',
+          'Ojo con la estimaci√≥n, no te duermas. Control total.',
+          'estimaci√≥n estable, sigue empujando.',
+          'estimaci√≥n estable, sigue empujando. Todo limpio.',
+          'estimaci√≥n estable, sigue empujando. Sin drama.',
+          'estimaci√≥n estable, sigue empujando. A tu ritmo.',
+          'estimaci√≥n estable, sigue empujando. Control total.',
+          'estimaci√≥n en marcha, cuida el ritmo.',
+          'estimaci√≥n en marcha, cuida el ritmo. Todo limpio.',
+          'estimaci√≥n en marcha, cuida el ritmo. Sin drama.',
+          'estimaci√≥n en marcha, cuida el ritmo. A tu ritmo.',
+          'estimaci√≥n en marcha, cuida el ritmo. Control total.',
+          'estimaci√≥n cambia, ajusta salida.',
+          'estimaci√≥n cambia, ajusta salida. Todo limpio.',
+          'estimaci√≥n cambia, ajusta salida. Sin drama.',
+          'estimaci√≥n cambia, ajusta salida. A tu ritmo.',
+          'estimaci√≥n cambia, ajusta salida. Control total.'
         ],
         bestlap: [
-          'Nueva best lap, bien ahÌ.',
-          'Nueva best lap, bien ahÌ. MantÈn l nea.',
-          'Nueva best lap, bien ahÌ. Sin emociÛn extra.',
-          'Nueva best lap, bien ahÌ. Control.',
-          'Nueva best lap, bien ahÌ. Perfecto.',
+          'Nueva best lap, bien ah√≠.',
+          'Nueva best lap, bien ah√≠. Mant√©n l nea.',
+          'Nueva best lap, bien ah√≠. Sin emoci√≥n extra.',
+          'Nueva best lap, bien ah√≠. Control.',
+          'Nueva best lap, bien ah√≠. Perfecto.',
           'Best lap, eso es.',
-          'Best lap, eso es. MantÈn l nea.',
-          'Best lap, eso es. Sin emociÛn extra.',
+          'Best lap, eso es. Mant√©n l nea.',
+          'Best lap, eso es. Sin emoci√≥n extra.',
           'Best lap, eso es. Control.',
           'Best lap, eso es. Perfecto.',
           'Best lap, rep telo.',
-          'Best lap, rep telo. MantÈn l nea.',
-          'Best lap, rep telo. Sin emociÛn extra.',
+          'Best lap, rep telo. Mant√©n l nea.',
+          'Best lap, rep telo. Sin emoci√≥n extra.',
           'Best lap, rep telo. Control.',
           'Best lap, rep telo. Perfecto.',
-          'Mejoraste best lap, MantÈn.',
-          'Mejoraste best lap, MantÈn. MantÈn l nea.',
-          'Mejoraste best lap, MantÈn. Sin emociÛn extra.',
-          'Mejoraste best lap, MantÈn. Control.',
-          'Mejoraste best lap, MantÈn. Perfecto.',
+          'Mejoraste best lap, Mant√©n.',
+          'Mejoraste best lap, Mant√©n. Mant√©n l nea.',
+          'Mejoraste best lap, Mant√©n. Sin emoci√≥n extra.',
+          'Mejoraste best lap, Mant√©n. Control.',
+          'Mejoraste best lap, Mant√©n. Perfecto.',
           'Best lap confirmada, buen trabajo.',
-          'Best lap confirmada, buen trabajo. MantÈn l nea.',
-          'Best lap confirmada, buen trabajo. Sin emociÛn extra.',
+          'Best lap confirmada, buen trabajo. Mant√©n l nea.',
+          'Best lap confirmada, buen trabajo. Sin emoci√≥n extra.',
           'Best lap confirmada, buen trabajo. Control.',
           'Best lap confirmada, buen trabajo. Perfecto.'
         ]
@@ -8873,54 +8873,54 @@ function rdPick(variants, key) {
       stratega: {
         manga: [
           'Manga, contra reloj. Busca vuelta limpia.',
-          'Manga, contra reloj. Busca vuelta limpia. MantÈn el plan.',
+          'Manga, contra reloj. Busca vuelta limpia. Mant√©n el plan.',
           'Manga, contra reloj. Busca vuelta limpia. Sin inventar.',
           'Manga, contra reloj. Busca vuelta limpia. Cero errores.',
           'Manga, contra reloj. Busca vuelta limpia. Vuelta a vuelta.',
           'Manga, suma vueltas y no te salgas.',
-          'Manga, suma vueltas y no te salgas. MantÈn el plan.',
+          'Manga, suma vueltas y no te salgas. Mant√©n el plan.',
           'Manga, suma vueltas y no te salgas. Sin inventar.',
           'Manga, suma vueltas y no te salgas. Cero errores.',
           'Manga, suma vueltas y no te salgas. Vuelta a vuelta.',
-          'Manga, ritmo constante y sin tr·fico.',
-          'Manga, ritmo constante y sin tr·fico. MantÈn el plan.',
-          'Manga, ritmo constante y sin tr·fico. Sin inventar.',
-          'Manga, ritmo constante y sin tr·fico. Cero errores.',
-          'Manga, ritmo constante y sin tr·fico. Vuelta a vuelta.',
+          'Manga, ritmo constante y sin tr√°fico.',
+          'Manga, ritmo constante y sin tr√°fico. Mant√©n el plan.',
+          'Manga, ritmo constante y sin tr√°fico. Sin inventar.',
+          'Manga, ritmo constante y sin tr√°fico. Cero errores.',
+          'Manga, ritmo constante y sin tr√°fico. Vuelta a vuelta.',
           'Manga, prioriza vuelta clara, no pelea.',
-          'Manga, prioriza vuelta clara, no pelea. MantÈn el plan.',
+          'Manga, prioriza vuelta clara, no pelea. Mant√©n el plan.',
           'Manga, prioriza vuelta clara, no pelea. Sin inventar.',
           'Manga, prioriza vuelta clara, no pelea. Cero errores.',
           'Manga, prioriza vuelta clara, no pelea. Vuelta a vuelta.',
-          'Manga, presiÛn controlada, sin riesgos.',
-          'Manga, presiÛn controlada, sin riesgos. MantÈn el plan.',
-          'Manga, presiÛn controlada, sin riesgos. Sin inventar.',
-          'Manga, presiÛn controlada, sin riesgos. Cero errores.',
-          'Manga, presiÛn controlada, sin riesgos. Vuelta a vuelta.'
+          'Manga, presi√≥n controlada, sin riesgos.',
+          'Manga, presi√≥n controlada, sin riesgos. Mant√©n el plan.',
+          'Manga, presi√≥n controlada, sin riesgos. Sin inventar.',
+          'Manga, presi√≥n controlada, sin riesgos. Cero errores.',
+          'Manga, presi√≥n controlada, sin riesgos. Vuelta a vuelta.'
         ],
         attack_front: [
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Pasa en la salida.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
-          'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Entra fuerte y sal m·s fuerte.',
+          'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Entra fuerte y sal m√°s fuerte.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Busca la l nea corta.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.',
-          'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Una vuelta m·s y lo ejecutas.',
+          'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Una vuelta m√°s y lo ejecutas.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Presiona sin regalar.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Pasa en la salida.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
-          'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Entra fuerte y sal m·s fuerte.',
+          'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Entra fuerte y sal m√°s fuerte.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Busca la l nea corta.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.',
-          'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Una vuelta m·s y lo ejecutas.',
+          'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Una vuelta m√°s y lo ejecutas.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Presiona sin regalar.',
           'Arriba est {frontNameSafe} a {frontSecStr}. Pasa en la salida.',
           'Arriba est {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
           'Arriba est {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
-          'Arriba est {frontNameSafe} a {frontSecStr}. Entra fuerte y sal m·s fuerte.',
+          'Arriba est {frontNameSafe} a {frontSecStr}. Entra fuerte y sal m√°s fuerte.',
           'Arriba est {frontNameSafe} a {frontSecStr}. Busca la l nea corta.',
           'Arriba est {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Arriba est {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.'
@@ -8953,15 +8953,15 @@ function rdPick(variants, key) {
           'A {frontSecStr} de {frontNameSafe}. Hazlo simple y limpio.'
         ],
         attack_back: [
-          'Recupera posiciÛn: {frontNameSafe} a {frontSecStr}. Pega y suelta el pase.',
-          'Recupera posiciÛn: {frontNameSafe} a {frontSecStr}. Pasa y estabiliza.',
-          'Recupera posiciÛn: {frontNameSafe} a {frontSecStr}. No pierdas tiempo, ejec talo.',
-          'Recupera posiciÛn: {frontNameSafe} a {frontSecStr}. Asegura salida y listo.',
-          'Recupera posiciÛn: {frontNameSafe} a {frontSecStr}. Sin riesgo extra, pero firme.',
-          'Recupera posiciÛn: {frontNameSafe} a {frontSecStr}. Hazlo en la entrada.',
-          'Recupera posiciÛn: {frontNameSafe} a {frontSecStr}. Corta la curva y acelera.',
-          'Recupera posiciÛn: {frontNameSafe} a {frontSecStr}. Presiona y toma la puerta.',
-          'Recupera posiciÛn: {frontNameSafe} a {frontSecStr}. Pase r·pido, sin drama.',
+          'Recupera posici√≥n: {frontNameSafe} a {frontSecStr}. Pega y suelta el pase.',
+          'Recupera posici√≥n: {frontNameSafe} a {frontSecStr}. Pasa y estabiliza.',
+          'Recupera posici√≥n: {frontNameSafe} a {frontSecStr}. No pierdas tiempo, ejec talo.',
+          'Recupera posici√≥n: {frontNameSafe} a {frontSecStr}. Asegura salida y listo.',
+          'Recupera posici√≥n: {frontNameSafe} a {frontSecStr}. Sin riesgo extra, pero firme.',
+          'Recupera posici√≥n: {frontNameSafe} a {frontSecStr}. Hazlo en la entrada.',
+          'Recupera posici√≥n: {frontNameSafe} a {frontSecStr}. Corta la curva y acelera.',
+          'Recupera posici√≥n: {frontNameSafe} a {frontSecStr}. Presiona y toma la puerta.',
+          'Recupera posici√≥n: {frontNameSafe} a {frontSecStr}. Pase r√°pido, sin drama.',
           'Oportunidad: {frontNameSafe} a {frontSecStr}. Pega y suelta el pase.',
           'Oportunidad: {frontNameSafe} a {frontSecStr}. Pasa y estabiliza.',
           'Oportunidad: {frontNameSafe} a {frontSecStr}. No pierdas tiempo, ejec talo.',
@@ -8970,7 +8970,7 @@ function rdPick(variants, key) {
           'Oportunidad: {frontNameSafe} a {frontSecStr}. Hazlo en la entrada.',
           'Oportunidad: {frontNameSafe} a {frontSecStr}. Corta la curva y acelera.',
           'Oportunidad: {frontNameSafe} a {frontSecStr}. Presiona y toma la puerta.',
-          'Oportunidad: {frontNameSafe} a {frontSecStr}. Pase r·pido, sin drama.',
+          'Oportunidad: {frontNameSafe} a {frontSecStr}. Pase r√°pido, sin drama.',
           'Tienes pase: {frontNameSafe} a {frontSecStr}. Pega y suelta el pase.',
           'Tienes pase: {frontNameSafe} a {frontSecStr}. Pasa y estabiliza.',
           'Tienes pase: {frontNameSafe} a {frontSecStr}. No pierdas tiempo, ejec talo.',
@@ -8987,7 +8987,7 @@ function rdPick(variants, key) {
           'Defiende el podio: {backNameSafe} a {backSecStr}. Cierra la puerta y acelera limpio.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. Defensa inteligente, sin error.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
-          'Defiende el podio: {backNameSafe} a {backSecStr}. No frenes de m·s.',
+          'Defiende el podio: {backNameSafe} a {backSecStr}. No frenes de m√°s.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. Hazlo predecible y firme.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Cubre interior.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. l nea dura, sin golpes.',
@@ -8996,15 +8996,15 @@ function rdPick(variants, key) {
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Cierra la puerta y acelera limpio.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Defensa inteligente, sin error.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
-          'Arriba no se regala: {backNameSafe} a {backSecStr}. No frenes de m·s.',
+          'Arriba no se regala: {backNameSafe} a {backSecStr}. No frenes de m√°s.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Hazlo predecible y firme.',
-          'presiÛn por podio: {backNameSafe} {backSecStr}. Cubre interior.',
-          'presiÛn por podio: {backNameSafe} {backSecStr}. l nea dura, sin golpes.',
-          'presiÛn por podio: {backNameSafe} {backSecStr}. Salida fuerte.',
-          'presiÛn por podio: {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
-          'presiÛn por podio: {backNameSafe} {backSecStr}. Cierra la puerta y acelera limpio.',
-          'presiÛn por podio: {backNameSafe} {backSecStr}. Defensa inteligente, sin error.',
-          'presiÛn por podio: {backNameSafe} {backSecStr}. No te abras en la entrada.'
+          'presi√≥n por podio: {backNameSafe} {backSecStr}. Cubre interior.',
+          'presi√≥n por podio: {backNameSafe} {backSecStr}. l nea dura, sin golpes.',
+          'presi√≥n por podio: {backNameSafe} {backSecStr}. Salida fuerte.',
+          'presi√≥n por podio: {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
+          'presi√≥n por podio: {backNameSafe} {backSecStr}. Cierra la puerta y acelera limpio.',
+          'presi√≥n por podio: {backNameSafe} {backSecStr}. Defensa inteligente, sin error.',
+          'presi√≥n por podio: {backNameSafe} {backSecStr}. No te abras en la entrada.'
         ],
         defense_mid: [
           '{backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
@@ -9013,8 +9013,8 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Cubre interior y acelera.',
           '{backNameSafe} a {backSecStr}. No regales la curva.',
           '{backNameSafe} a {backSecStr}. Calma, trazada limpia.',
-          '{backNameSafe} a {backSecStr}. No frenes tarde de m·s.',
-          '{backNameSafe} a {backSecStr}. MantÈn la puerta cerrada.',
+          '{backNameSafe} a {backSecStr}. No frenes tarde de m√°s.',
+          '{backNameSafe} a {backSecStr}. Mant√©n la puerta cerrada.',
           '{backNameSafe} a {backSecStr}. Control total.',
           'Te cazan: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
           'Te cazan: {backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
@@ -9022,16 +9022,16 @@ function rdPick(variants, key) {
           'Te cazan: {backNameSafe} a {backSecStr}. Cubre interior y acelera.',
           'Te cazan: {backNameSafe} a {backSecStr}. No regales la curva.',
           'Te cazan: {backNameSafe} a {backSecStr}. Calma, trazada limpia.',
-          'Te cazan: {backNameSafe} a {backSecStr}. No frenes tarde de m·s.',
-          'Te cazan: {backNameSafe} a {backSecStr}. MantÈn la puerta cerrada.',
+          'Te cazan: {backNameSafe} a {backSecStr}. No frenes tarde de m√°s.',
+          'Te cazan: {backNameSafe} a {backSecStr}. Mant√©n la puerta cerrada.',
           'Te cazan: {backNameSafe} a {backSecStr}. Control total.',
-          'presiÛn atr s con {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
-          'presiÛn atr s con {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
-          'presiÛn atr s con {backNameSafe} {backSecStr}. Defiende con l nea, no con volantazo.',
-          'presiÛn atr s con {backNameSafe} {backSecStr}. Cubre interior y acelera.',
-          'presiÛn atr s con {backNameSafe} {backSecStr}. No regales la curva.',
-          'presiÛn atr s con {backNameSafe} {backSecStr}. Calma, trazada limpia.',
-          'presiÛn atr s con {backNameSafe} {backSecStr}. No frenes tarde de m·s.'
+          'presi√≥n atr s con {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
+          'presi√≥n atr s con {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
+          'presi√≥n atr s con {backNameSafe} {backSecStr}. Defiende con l nea, no con volantazo.',
+          'presi√≥n atr s con {backNameSafe} {backSecStr}. Cubre interior y acelera.',
+          'presi√≥n atr s con {backNameSafe} {backSecStr}. No regales la curva.',
+          'presi√≥n atr s con {backNameSafe} {backSecStr}. Calma, trazada limpia.',
+          'presi√≥n atr s con {backNameSafe} {backSecStr}. No frenes tarde de m√°s.'
         ],
         defense_back: [
           'No regales: {backNameSafe} a {backSecStr}. Orden y manejo.',
@@ -9042,23 +9042,23 @@ function rdPick(variants, key) {
           'No regales: {backNameSafe} a {backSecStr}. No inventes, defiende.',
           'No regales: {backNameSafe} a {backSecStr}. l nea firme.',
           'No regales: {backNameSafe} a {backSecStr}. Sin drama, pero firme.',
-          'No regales: {backNameSafe} a {backSecStr}. MantÈn la calma.',
-          'Defiende lo b·sico: {backNameSafe} {backSecStr}. Orden y manejo.',
-          'Defiende lo b·sico: {backNameSafe} {backSecStr}. Sube ritmo sin error.',
-          'Defiende lo b·sico: {backNameSafe} {backSecStr}. Cubre interior y listo.',
-          'Defiende lo b·sico: {backNameSafe} {backSecStr}. No te abras en la entrada.',
-          'Defiende lo b·sico: {backNameSafe} {backSecStr}. Salida fuerte.',
-          'Defiende lo b·sico: {backNameSafe} {backSecStr}. No inventes, defiende.',
-          'Defiende lo b·sico: {backNameSafe} {backSecStr}. l nea firme.',
-          'Defiende lo b·sico: {backNameSafe} {backSecStr}. Sin drama, pero firme.',
-          'Defiende lo b·sico: {backNameSafe} {backSecStr}. MantÈn la calma.',
-          'presiÛn real: {backNameSafe} a {backSecStr}. Orden y manejo.',
-          'presiÛn real: {backNameSafe} a {backSecStr}. Sube ritmo sin error.',
-          'presiÛn real: {backNameSafe} a {backSecStr}. Cubre interior y listo.',
-          'presiÛn real: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
-          'presiÛn real: {backNameSafe} a {backSecStr}. Salida fuerte.',
-          'presiÛn real: {backNameSafe} a {backSecStr}. No inventes, defiende.',
-          'presiÛn real: {backNameSafe} a {backSecStr}. l nea firme.'
+          'No regales: {backNameSafe} a {backSecStr}. Mant√©n la calma.',
+          'Defiende lo b√°sico: {backNameSafe} {backSecStr}. Orden y manejo.',
+          'Defiende lo b√°sico: {backNameSafe} {backSecStr}. Sube ritmo sin error.',
+          'Defiende lo b√°sico: {backNameSafe} {backSecStr}. Cubre interior y listo.',
+          'Defiende lo b√°sico: {backNameSafe} {backSecStr}. No te abras en la entrada.',
+          'Defiende lo b√°sico: {backNameSafe} {backSecStr}. Salida fuerte.',
+          'Defiende lo b√°sico: {backNameSafe} {backSecStr}. No inventes, defiende.',
+          'Defiende lo b√°sico: {backNameSafe} {backSecStr}. l nea firme.',
+          'Defiende lo b√°sico: {backNameSafe} {backSecStr}. Sin drama, pero firme.',
+          'Defiende lo b√°sico: {backNameSafe} {backSecStr}. Mant√©n la calma.',
+          'presi√≥n real: {backNameSafe} a {backSecStr}. Orden y manejo.',
+          'presi√≥n real: {backNameSafe} a {backSecStr}. Sube ritmo sin error.',
+          'presi√≥n real: {backNameSafe} a {backSecStr}. Cubre interior y listo.',
+          'presi√≥n real: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
+          'presi√≥n real: {backNameSafe} a {backSecStr}. Salida fuerte.',
+          'presi√≥n real: {backNameSafe} a {backSecStr}. No inventes, defiende.',
+          'presi√≥n real: {backNameSafe} a {backSecStr}. l nea firme.'
         ],
         fight: [
           'Pelea viva: adelante y atr s. Prioriza salida.',
@@ -9066,33 +9066,33 @@ function rdPick(variants, key) {
           'Pelea viva: adelante y atr s. Prioriza salida. Sin riesgos tontos.',
           'Pelea viva: adelante y atr s. Prioriza salida. Salida fuerte.',
           'Pelea viva: adelante y atr s. Prioriza salida. Todo limpio.',
-          'Doble presiÛn, decide: o atacas o aseguras.',
-          'Doble presiÛn, decide: o atacas o aseguras. Plan claro.',
-          'Doble presiÛn, decide: o atacas o aseguras. Sin riesgos tontos.',
-          'Doble presiÛn, decide: o atacas o aseguras. Salida fuerte.',
-          'Doble presiÛn, decide: o atacas o aseguras. Todo limpio.',
-          'tr·fico pesado. No pierdas tiempo en tonteras.',
-          'tr·fico pesado. No pierdas tiempo en tonteras. Plan claro.',
-          'tr·fico pesado. No pierdas tiempo en tonteras. Sin riesgos tontos.',
-          'tr·fico pesado. No pierdas tiempo en tonteras. Salida fuerte.',
-          'tr·fico pesado. No pierdas tiempo en tonteras. Todo limpio.',
+          'Doble presi√≥n, decide: o atacas o aseguras.',
+          'Doble presi√≥n, decide: o atacas o aseguras. Plan claro.',
+          'Doble presi√≥n, decide: o atacas o aseguras. Sin riesgos tontos.',
+          'Doble presi√≥n, decide: o atacas o aseguras. Salida fuerte.',
+          'Doble presi√≥n, decide: o atacas o aseguras. Todo limpio.',
+          'tr√°fico pesado. No pierdas tiempo en tonteras.',
+          'tr√°fico pesado. No pierdas tiempo en tonteras. Plan claro.',
+          'tr√°fico pesado. No pierdas tiempo en tonteras. Sin riesgos tontos.',
+          'tr√°fico pesado. No pierdas tiempo en tonteras. Salida fuerte.',
+          'tr√°fico pesado. No pierdas tiempo en tonteras. Todo limpio.',
           'Dos frentes. Elige la batalla correcta.',
           'Dos frentes. Elige la batalla correcta. Plan claro.',
           'Dos frentes. Elige la batalla correcta. Sin riesgos tontos.',
           'Dos frentes. Elige la batalla correcta. Salida fuerte.',
           'Dos frentes. Elige la batalla correcta. Todo limpio.',
-          'Cuidado con el tr·fico, no regales segundos.',
-          'Cuidado con el tr·fico, no regales segundos. Plan claro.',
-          'Cuidado con el tr·fico, no regales segundos. Sin riesgos tontos.',
-          'Cuidado con el tr·fico, no regales segundos. Salida fuerte.',
-          'Cuidado con el tr·fico, no regales segundos. Todo limpio.'
+          'Cuidado con el tr√°fico, no regales segundos.',
+          'Cuidado con el tr√°fico, no regales segundos. Plan claro.',
+          'Cuidado con el tr√°fico, no regales segundos. Sin riesgos tontos.',
+          'Cuidado con el tr√°fico, no regales segundos. Salida fuerte.',
+          'Cuidado con el tr√°fico, no regales segundos. Todo limpio.'
         ],
         blueflag: [
-          'Bandera azul. lÌder encima. MantÈn l nea y deja pasar.',
-          'Bandera azul. lÌder encima. MantÈn l nea y deja pasar. Con seguridad.',
-          'Bandera azul. lÌder encima. MantÈn l nea y deja pasar. Sin perder tiempo.',
-          'Bandera azul. lÌder encima. MantÈn l nea y deja pasar. Todo limpio.',
-          'Bandera azul. lÌder encima. MantÈn l nea y deja pasar. Sin riesgos.',
+          'Bandera azul. l√≠der encima. Mant√©n l nea y deja pasar.',
+          'Bandera azul. l√≠der encima. Mant√©n l nea y deja pasar. Con seguridad.',
+          'Bandera azul. l√≠der encima. Mant√©n l nea y deja pasar. Sin perder tiempo.',
+          'Bandera azul. l√≠der encima. Mant√©n l nea y deja pasar. Todo limpio.',
+          'Bandera azul. l√≠der encima. Mant√©n l nea y deja pasar. Sin riesgos.',
           'Bandera azul. No te metas en broncas, cede seguro.',
           'Bandera azul. No te metas en broncas, cede seguro. Con seguridad.',
           'Bandera azul. No te metas en broncas, cede seguro. Sin perder tiempo.',
@@ -9117,25 +9117,25 @@ function rdPick(variants, key) {
         front06: [
           '{frontNameSafe} a {frontSecStr}. Ventana de ataque abierta.',
           '{frontNameSafe} a {frontSecStr}. Prepara maniobra.',
-          '{frontNameSafe} a {frontSecStr}. Entra fuerte, sal m·s fuerte.',
+          '{frontNameSafe} a {frontSecStr}. Entra fuerte, sal m√°s fuerte.',
           '{frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           '{frontNameSafe} a {frontSecStr}. Corta la curva y acelera.',
           '{frontNameSafe} a {frontSecStr}. Busca el error y capitaliza.',
           '{frontNameSafe} a {frontSecStr}. Ataque en zona segura.',
           '{frontNameSafe} a {frontSecStr}. Presiona sin regalar.',
-          '{frontNameSafe} a {frontSecStr}. Una vuelta m·s y lo ejecutas.',
+          '{frontNameSafe} a {frontSecStr}. Una vuelta m√°s y lo ejecutas.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Ventana de ataque abierta.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Prepara maniobra.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Entra fuerte, sal m·s fuerte.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Entra fuerte, sal m√°s fuerte.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. No dudes en la recta.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Corta la curva y acelera.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Busca el error y capitaliza.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Ataque en zona segura.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Presiona sin regalar.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Una vuelta m·s y lo ejecutas.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Una vuelta m√°s y lo ejecutas.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. Ventana de ataque abierta.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. Prepara maniobra.',
-          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Entra fuerte, sal m·s fuerte.',
+          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Entra fuerte, sal m√°s fuerte.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. Corta la curva y acelera.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. Busca el error y capitaliza.',
@@ -9160,13 +9160,13 @@ function rdPick(variants, key) {
           'Gap chico atr s: {backNameSafe} {backSecStr}. Defiende con cabeza.',
           'Gap chico atr s: {backNameSafe} {backSecStr}. No regales la curva.',
           'Gap chico atr s: {backNameSafe} {backSecStr}. Calma y control.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Defensa inteligente, sin errores.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Cubre interior y acelera.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. No abras la puerta.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Trazada firme, sin volantazo.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Defiende con cabeza.'
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Defensa inteligente, sin errores.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Cubre interior y acelera.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. No abras la puerta.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Trazada firme, sin volantazo.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Defiende con cabeza.'
         ],
         pos: [
           'Ahora P{posNow}. Reacciona: l nea limpia y salida fuerte.',
@@ -9196,31 +9196,31 @@ function rdPick(variants, key) {
           'Vas P{posNow}. Orden y gas.'
         ],
         leader: [
-          'lÌder al frente. Usa referencia y no te desesperes.',
-          'lÌder al frente. Usa referencia y no te desesperes. Plan claro.',
-          'lÌder al frente. Usa referencia y no te desesperes. Vuelta a vuelta.',
-          'lÌder al frente. Usa referencia y no te desesperes. Control total.',
-          'lÌder al frente. Usa referencia y no te desesperes. Salida fuerte.',
-          'El lÌder marca la pauta. Copia frenada y salida.',
-          'El lÌder marca la pauta. Copia frenada y salida. Plan claro.',
-          'El lÌder marca la pauta. Copia frenada y salida. Vuelta a vuelta.',
-          'El lÌder marca la pauta. Copia frenada y salida. Control total.',
-          'El lÌder marca la pauta. Copia frenada y salida. Salida fuerte.',
-          'Mide al lÌder. Tu carrera es precisin.',
-          'Mide al lÌder. Tu carrera es precisin. Plan claro.',
-          'Mide al lÌder. Tu carrera es precisin. Vuelta a vuelta.',
-          'Mide al lÌder. Tu carrera es precisin. Control total.',
-          'Mide al lÌder. Tu carrera es precisin. Salida fuerte.',
-          'lÌder al frente. No persigas, ejecuta.',
-          'lÌder al frente. No persigas, ejecuta. Plan claro.',
-          'lÌder al frente. No persigas, ejecuta. Vuelta a vuelta.',
-          'lÌder al frente. No persigas, ejecuta. Control total.',
-          'lÌder al frente. No persigas, ejecuta. Salida fuerte.',
-          'lÌder adelante. Tu vuelta, tu plan.',
-          'lÌder adelante. Tu vuelta, tu plan. Plan claro.',
-          'lÌder adelante. Tu vuelta, tu plan. Vuelta a vuelta.',
-          'lÌder adelante. Tu vuelta, tu plan. Control total.',
-          'lÌder adelante. Tu vuelta, tu plan. Salida fuerte.'
+          'l√≠der al frente. Usa referencia y no te desesperes.',
+          'l√≠der al frente. Usa referencia y no te desesperes. Plan claro.',
+          'l√≠der al frente. Usa referencia y no te desesperes. Vuelta a vuelta.',
+          'l√≠der al frente. Usa referencia y no te desesperes. Control total.',
+          'l√≠der al frente. Usa referencia y no te desesperes. Salida fuerte.',
+          'El l√≠der marca la pauta. Copia frenada y salida.',
+          'El l√≠der marca la pauta. Copia frenada y salida. Plan claro.',
+          'El l√≠der marca la pauta. Copia frenada y salida. Vuelta a vuelta.',
+          'El l√≠der marca la pauta. Copia frenada y salida. Control total.',
+          'El l√≠der marca la pauta. Copia frenada y salida. Salida fuerte.',
+          'Mide al l√≠der. Tu carrera es precisin.',
+          'Mide al l√≠der. Tu carrera es precisin. Plan claro.',
+          'Mide al l√≠der. Tu carrera es precisin. Vuelta a vuelta.',
+          'Mide al l√≠der. Tu carrera es precisin. Control total.',
+          'Mide al l√≠der. Tu carrera es precisin. Salida fuerte.',
+          'l√≠der al frente. No persigas, ejecuta.',
+          'l√≠der al frente. No persigas, ejecuta. Plan claro.',
+          'l√≠der al frente. No persigas, ejecuta. Vuelta a vuelta.',
+          'l√≠der al frente. No persigas, ejecuta. Control total.',
+          'l√≠der al frente. No persigas, ejecuta. Salida fuerte.',
+          'l√≠der adelante. Tu vuelta, tu plan.',
+          'l√≠der adelante. Tu vuelta, tu plan. Plan claro.',
+          'l√≠der adelante. Tu vuelta, tu plan. Vuelta a vuelta.',
+          'l√≠der adelante. Tu vuelta, tu plan. Control total.',
+          'l√≠der adelante. Tu vuelta, tu plan. Salida fuerte.'
         ],
         podium: [
           'Podio posible. Prioriza consistencia y no te enredes.',
@@ -9233,11 +9233,11 @@ function rdPick(variants, key) {
           'Ests peleando podio. Manejo fino, cero regalos. Control.',
           'Ests peleando podio. Manejo fino, cero regalos. Limpio.',
           'Ests peleando podio. Manejo fino, cero regalos. Firme.',
-          'Podio cerca. Paciencia en el tr·fico.',
-          'Podio cerca. Paciencia en el tr·fico. Sin riesgos tontos.',
-          'Podio cerca. Paciencia en el tr·fico. Control.',
-          'Podio cerca. Paciencia en el tr·fico. Limpio.',
-          'Podio cerca. Paciencia en el tr·fico. Firme.',
+          'Podio cerca. Paciencia en el tr√°fico.',
+          'Podio cerca. Paciencia en el tr√°fico. Sin riesgos tontos.',
+          'Podio cerca. Paciencia en el tr√°fico. Control.',
+          'Podio cerca. Paciencia en el tr√°fico. Limpio.',
+          'Podio cerca. Paciencia en el tr√°fico. Firme.',
           'Zona de podio. Salida manda.',
           'Zona de podio. Salida manda. Sin riesgos tontos.',
           'Zona de podio. Salida manda. Control.',
@@ -9250,11 +9250,11 @@ function rdPick(variants, key) {
           'Podio en juego. No inventes en la entrada. Firme.'
         ],
         trend: [
-          'Ritmo subiendo. MantÈn la presiÛn.',
-          'Ritmo subiendo. MantÈn la presiÛn. Vuelta a vuelta.',
-          'Ritmo subiendo. MantÈn la presiÛn. Control total.',
-          'Ritmo subiendo. MantÈn la presiÛn. Sin errores.',
-          'Ritmo subiendo. MantÈn la presiÛn. Plan claro.',
+          'Ritmo subiendo. Mant√©n la presi√≥n.',
+          'Ritmo subiendo. Mant√©n la presi√≥n. Vuelta a vuelta.',
+          'Ritmo subiendo. Mant√©n la presi√≥n. Control total.',
+          'Ritmo subiendo. Mant√©n la presi√≥n. Sin errores.',
+          'Ritmo subiendo. Mant√©n la presi√≥n. Plan claro.',
           'Ritmo baj. Corrige trazada y salida.',
           'Ritmo baj. Corrige trazada y salida. Vuelta a vuelta.',
           'Ritmo baj. Corrige trazada y salida. Control total.',
@@ -9277,31 +9277,31 @@ function rdPick(variants, key) {
           'Ritmo irregular. Vuelve al plan. Plan claro.'
         ],
         est: [
-          'estimaciÛn en marcha. No te desconcentres.',
-          'estimaciÛn en marcha. No te desconcentres. Control.',
-          'estimaciÛn en marcha. No te desconcentres. Sin drama.',
-          'estimaciÛn en marcha. No te desconcentres. Limpio.',
-          'estimaciÛn en marcha. No te desconcentres. Plan claro.',
-          'La estimaciÛn cambi. Ajusta y sigue.',
-          'La estimaciÛn cambi. Ajusta y sigue. Control.',
-          'La estimaciÛn cambi. Ajusta y sigue. Sin drama.',
-          'La estimaciÛn cambi. Ajusta y sigue. Limpio.',
-          'La estimaciÛn cambi. Ajusta y sigue. Plan claro.',
-          'estimaciÛn estable. MantÈn ritmo limpio.',
-          'estimaciÛn estable. MantÈn ritmo limpio. Control.',
-          'estimaciÛn estable. MantÈn ritmo limpio. Sin drama.',
-          'estimaciÛn estable. MantÈn ritmo limpio. Limpio.',
-          'estimaciÛn estable. MantÈn ritmo limpio. Plan claro.',
-          'estimaciÛn lista. No regales la salida.',
-          'estimaciÛn lista. No regales la salida. Control.',
-          'estimaciÛn lista. No regales la salida. Sin drama.',
-          'estimaciÛn lista. No regales la salida. Limpio.',
-          'estimaciÛn lista. No regales la salida. Plan claro.',
-          'estimaciÛn marcada. Control de riesgo.',
-          'estimaciÛn marcada. Control de riesgo. Control.',
-          'estimaciÛn marcada. Control de riesgo. Sin drama.',
-          'estimaciÛn marcada. Control de riesgo. Limpio.',
-          'estimaciÛn marcada. Control de riesgo. Plan claro.'
+          'estimaci√≥n en marcha. No te desconcentres.',
+          'estimaci√≥n en marcha. No te desconcentres. Control.',
+          'estimaci√≥n en marcha. No te desconcentres. Sin drama.',
+          'estimaci√≥n en marcha. No te desconcentres. Limpio.',
+          'estimaci√≥n en marcha. No te desconcentres. Plan claro.',
+          'La estimaci√≥n cambi. Ajusta y sigue.',
+          'La estimaci√≥n cambi. Ajusta y sigue. Control.',
+          'La estimaci√≥n cambi. Ajusta y sigue. Sin drama.',
+          'La estimaci√≥n cambi. Ajusta y sigue. Limpio.',
+          'La estimaci√≥n cambi. Ajusta y sigue. Plan claro.',
+          'estimaci√≥n estable. Mant√©n ritmo limpio.',
+          'estimaci√≥n estable. Mant√©n ritmo limpio. Control.',
+          'estimaci√≥n estable. Mant√©n ritmo limpio. Sin drama.',
+          'estimaci√≥n estable. Mant√©n ritmo limpio. Limpio.',
+          'estimaci√≥n estable. Mant√©n ritmo limpio. Plan claro.',
+          'estimaci√≥n lista. No regales la salida.',
+          'estimaci√≥n lista. No regales la salida. Control.',
+          'estimaci√≥n lista. No regales la salida. Sin drama.',
+          'estimaci√≥n lista. No regales la salida. Limpio.',
+          'estimaci√≥n lista. No regales la salida. Plan claro.',
+          'estimaci√≥n marcada. Control de riesgo.',
+          'estimaci√≥n marcada. Control de riesgo. Control.',
+          'estimaci√≥n marcada. Control de riesgo. Sin drama.',
+          'estimaci√≥n marcada. Control de riesgo. Limpio.',
+          'estimaci√≥n marcada. Control de riesgo. Plan claro.'
         ],
         bestlap: [
           'Best lap confirmada. Ahora rep tela sin riesgo.',
@@ -9309,11 +9309,11 @@ function rdPick(variants, key) {
           'Best lap confirmada. Ahora rep tela sin riesgo. Limpio.',
           'Best lap confirmada. Ahora rep tela sin riesgo. Plan claro.',
           'Best lap confirmada. Ahora rep tela sin riesgo. Vuelta a vuelta.',
-          'Mejoraste best lap. sostÈn el ritmo.',
-          'Mejoraste best lap. sostÈn el ritmo. Sin riesgos.',
-          'Mejoraste best lap. sostÈn el ritmo. Limpio.',
-          'Mejoraste best lap. sostÈn el ritmo. Plan claro.',
-          'Mejoraste best lap. sostÈn el ritmo. Vuelta a vuelta.',
+          'Mejoraste best lap. sost√©n el ritmo.',
+          'Mejoraste best lap. sost√©n el ritmo. Sin riesgos.',
+          'Mejoraste best lap. sost√©n el ritmo. Limpio.',
+          'Mejoraste best lap. sost√©n el ritmo. Plan claro.',
+          'Mejoraste best lap. sost√©n el ritmo. Vuelta a vuelta.',
           'Best lap. No te emociones, repite.',
           'Best lap. No te emociones, repite. Sin riesgos.',
           'Best lap. No te emociones, repite. Limpio.',
@@ -9324,38 +9324,38 @@ function rdPick(variants, key) {
           'Best lap. Buen trabajo, ahora consistencia. Limpio.',
           'Best lap. Buen trabajo, ahora consistencia. Plan claro.',
           'Best lap. Buen trabajo, ahora consistencia. Vuelta a vuelta.',
-          'Nueva best lap. MantÈn la l nea.',
-          'Nueva best lap. MantÈn la l nea. Sin riesgos.',
-          'Nueva best lap. MantÈn la l nea. Limpio.',
-          'Nueva best lap. MantÈn la l nea. Plan claro.',
-          'Nueva best lap. MantÈn la l nea. Vuelta a vuelta.'
+          'Nueva best lap. Mant√©n la l nea.',
+          'Nueva best lap. Mant√©n la l nea. Sin riesgos.',
+          'Nueva best lap. Mant√©n la l nea. Limpio.',
+          'Nueva best lap. Mant√©n la l nea. Plan claro.',
+          'Nueva best lap. Mant√©n la l nea. Vuelta a vuelta.'
         ]
       },
       coach: {
         manga: [
           'Manga: vuelta limpia. Respira y aprieta.',
           'Manga: vuelta limpia. Respira y aprieta. T  puedes.',
-          'Manga: vuelta limpia. Respira y aprieta. MantÈn el plan.',
+          'Manga: vuelta limpia. Respira y aprieta. Mant√©n el plan.',
           'Manga: vuelta limpia. Respira y aprieta. Sin presionarte.',
           'Manga: vuelta limpia. Respira y aprieta. Paso a paso.',
           'Manga: sin errores. Cada meta cuenta.',
           'Manga: sin errores. Cada meta cuenta. T  puedes.',
-          'Manga: sin errores. Cada meta cuenta. MantÈn el plan.',
+          'Manga: sin errores. Cada meta cuenta. Mant√©n el plan.',
           'Manga: sin errores. Cada meta cuenta. Sin presionarte.',
           'Manga: sin errores. Cada meta cuenta. Paso a paso.',
           'Manga: constancia. No persigas fantasmas.',
           'Manga: constancia. No persigas fantasmas. T  puedes.',
-          'Manga: constancia. No persigas fantasmas. MantÈn el plan.',
+          'Manga: constancia. No persigas fantasmas. Mant√©n el plan.',
           'Manga: constancia. No persigas fantasmas. Sin presionarte.',
           'Manga: constancia. No persigas fantasmas. Paso a paso.',
           'Manga: manos suaves, l nea firme.',
           'Manga: manos suaves, l nea firme. T  puedes.',
-          'Manga: manos suaves, l nea firme. MantÈn el plan.',
+          'Manga: manos suaves, l nea firme. Mant√©n el plan.',
           'Manga: manos suaves, l nea firme. Sin presionarte.',
           'Manga: manos suaves, l nea firme. Paso a paso.',
           'Manga: aire limpio y ritmo estable.',
           'Manga: aire limpio y ritmo estable. T  puedes.',
-          'Manga: aire limpio y ritmo estable. MantÈn el plan.',
+          'Manga: aire limpio y ritmo estable. Mant√©n el plan.',
           'Manga: aire limpio y ritmo estable. Sin presionarte.',
           'Manga: aire limpio y ritmo estable. Paso a paso.'
         ],
@@ -9367,7 +9367,7 @@ function rdPick(variants, key) {
           'Vas alcanzando a {frontNameSafe}. Paciencia, el pase llega.',
           'Vas alcanzando a {frontNameSafe}. No fuerces la entrada.',
           'Vas alcanzando a {frontNameSafe}. Busca aire limpio y ejecuta.',
-          'Vas alcanzando a {frontNameSafe}. Un giro m·s y cae.',
+          'Vas alcanzando a {frontNameSafe}. Un giro m√°s y cae.',
           'Vas alcanzando a {frontNameSafe}. Con calma y precisin.',
           'Vas alcanzando a {frontNameSafe}. Sin prisa tonta.',
           'A {frontSecStr} de {frontNameSafe}. Entra suave, sal fuerte.',
@@ -9377,7 +9377,7 @@ function rdPick(variants, key) {
           'A {frontSecStr} de {frontNameSafe}. Paciencia, el pase llega.',
           'A {frontSecStr} de {frontNameSafe}. No fuerces la entrada.',
           'A {frontSecStr} de {frontNameSafe}. Busca aire limpio y ejecuta.',
-          'A {frontSecStr} de {frontNameSafe}. Un giro m·s y cae.',
+          'A {frontSecStr} de {frontNameSafe}. Un giro m√°s y cae.',
           'A {frontSecStr} de {frontNameSafe}. Con calma y precisin.',
           'A {frontSecStr} de {frontNameSafe}. Sin prisa tonta.',
           '{frontNameSafe} est cerca. Entra suave, sal fuerte.',
@@ -9387,8 +9387,8 @@ function rdPick(variants, key) {
           '{frontNameSafe} est cerca. Paciencia, el pase llega.'
         ],
         defense: [
-          'Te viene {backNameSafe}. MantÈn tu l nea y acelera limpio.',
-          'Te viene {backNameSafe}. Puerta cerrada, sin frenar de m·s.',
+          'Te viene {backNameSafe}. Mant√©n tu l nea y acelera limpio.',
+          'Te viene {backNameSafe}. Puerta cerrada, sin frenar de m√°s.',
           'Te viene {backNameSafe}. Protege interior.',
           'Te viene {backNameSafe}. Defiende con trazada, no con golpes.',
           'Te viene {backNameSafe}. Salida fuerte, manos suaves.',
@@ -9397,8 +9397,8 @@ function rdPick(variants, key) {
           'Te viene {backNameSafe}. Todo limpio.',
           'Te viene {backNameSafe}. Sin errores.',
           'Te viene {backNameSafe}. Calma, lo tienes.',
-          '{backNameSafe} a {backSecStr}. MantÈn tu l nea y acelera limpio.',
-          '{backNameSafe} a {backSecStr}. Puerta cerrada, sin frenar de m·s.',
+          '{backNameSafe} a {backSecStr}. Mant√©n tu l nea y acelera limpio.',
+          '{backNameSafe} a {backSecStr}. Puerta cerrada, sin frenar de m√°s.',
           '{backNameSafe} a {backSecStr}. Protege interior.',
           '{backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
           '{backNameSafe} a {backSecStr}. Salida fuerte, manos suaves.',
@@ -9407,8 +9407,8 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Todo limpio.',
           '{backNameSafe} a {backSecStr}. Sin errores.',
           '{backNameSafe} a {backSecStr}. Calma, lo tienes.',
-          'Ojo atr s con {backNameSafe}. MantÈn tu l nea y acelera limpio.',
-          'Ojo atr s con {backNameSafe}. Puerta cerrada, sin frenar de m·s.',
+          'Ojo atr s con {backNameSafe}. Mant√©n tu l nea y acelera limpio.',
+          'Ojo atr s con {backNameSafe}. Puerta cerrada, sin frenar de m√°s.',
           'Ojo atr s con {backNameSafe}. Protege interior.',
           'Ojo atr s con {backNameSafe}. Defiende con trazada, no con golpes.',
           'Ojo atr s con {backNameSafe}. Salida fuerte, manos suaves.'
@@ -9418,27 +9418,27 @@ function rdPick(variants, key) {
           'Hay pelea. Prioriza salida y cero errores. T  puedes.',
           'Hay pelea. Prioriza salida y cero errores. Paso a paso.',
           'Hay pelea. Prioriza salida y cero errores. Sin drama.',
-          'Hay pelea. Prioriza salida y cero errores. Limpio y r·pido.',
-          'Dos frentes. Cabeza frÌa, trazada limpia.',
-          'Dos frentes. Cabeza frÌa, trazada limpia. T  puedes.',
-          'Dos frentes. Cabeza frÌa, trazada limpia. Paso a paso.',
-          'Dos frentes. Cabeza frÌa, trazada limpia. Sin drama.',
-          'Dos frentes. Cabeza frÌa, trazada limpia. Limpio y r·pido.',
-          'tr·fico. No te enganches, s  inteligente.',
-          'tr·fico. No te enganches, s  inteligente. T  puedes.',
-          'tr·fico. No te enganches, s  inteligente. Paso a paso.',
-          'tr·fico. No te enganches, s  inteligente. Sin drama.',
-          'tr·fico. No te enganches, s  inteligente. Limpio y r·pido.',
-          'MantÈn la calma, el pase llega.',
-          'MantÈn la calma, el pase llega. T  puedes.',
-          'MantÈn la calma, el pase llega. Paso a paso.',
-          'MantÈn la calma, el pase llega. Sin drama.',
-          'MantÈn la calma, el pase llega. Limpio y r·pido.',
+          'Hay pelea. Prioriza salida y cero errores. Limpio y r√°pido.',
+          'Dos frentes. Cabeza fr√≠a, trazada limpia.',
+          'Dos frentes. Cabeza fr√≠a, trazada limpia. T  puedes.',
+          'Dos frentes. Cabeza fr√≠a, trazada limpia. Paso a paso.',
+          'Dos frentes. Cabeza fr√≠a, trazada limpia. Sin drama.',
+          'Dos frentes. Cabeza fr√≠a, trazada limpia. Limpio y r√°pido.',
+          'tr√°fico. No te enganches, s  inteligente.',
+          'tr√°fico. No te enganches, s  inteligente. T  puedes.',
+          'tr√°fico. No te enganches, s  inteligente. Paso a paso.',
+          'tr√°fico. No te enganches, s  inteligente. Sin drama.',
+          'tr√°fico. No te enganches, s  inteligente. Limpio y r√°pido.',
+          'Mant√©n la calma, el pase llega.',
+          'Mant√©n la calma, el pase llega. T  puedes.',
+          'Mant√©n la calma, el pase llega. Paso a paso.',
+          'Mant√©n la calma, el pase llega. Sin drama.',
+          'Mant√©n la calma, el pase llega. Limpio y r√°pido.',
           'No todo es ahora, cuida el coche.',
           'No todo es ahora, cuida el coche. T  puedes.',
           'No todo es ahora, cuida el coche. Paso a paso.',
           'No todo es ahora, cuida el coche. Sin drama.',
-          'No todo es ahora, cuida el coche. Limpio y r·pido.'
+          'No todo es ahora, cuida el coche. Limpio y r√°pido.'
         ],
         blueflag: [
           'Bandera azul. Deja pasar sin perder la l nea.',
@@ -9469,8 +9469,8 @@ function rdPick(variants, key) {
         ],
         front06: [
           'Buen cierre con {frontNameSafe}. Si te abre, vas.',
-          'Buen cierre con {frontNameSafe}. MantÈn presiÛn.',
-          'Buen cierre con {frontNameSafe}. Una vuelta m·s y lo tienes.',
+          'Buen cierre con {frontNameSafe}. Mant√©n presi√≥n.',
+          'Buen cierre con {frontNameSafe}. Una vuelta m√°s y lo tienes.',
           'Buen cierre con {frontNameSafe}. Cuida la salida.',
           'Buen cierre con {frontNameSafe}. No fuerces la entrada.',
           'Buen cierre con {frontNameSafe}. Con calma, el pase llega.',
@@ -9478,8 +9478,8 @@ function rdPick(variants, key) {
           'Buen cierre con {frontNameSafe}. Salida fuerte.',
           'Buen cierre con {frontNameSafe}. Aprovecha el error.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Si te abre, vas.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. MantÈn presiÛn.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Una vuelta m·s y lo tienes.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Mant√©n presi√≥n.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Una vuelta m√°s y lo tienes.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Cuida la salida.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. No fuerces la entrada.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Con calma, el pase llega.',
@@ -9487,8 +9487,8 @@ function rdPick(variants, key) {
           'Gap corto con {frontNameSafe}: {frontSecStr}. Salida fuerte.',
           'Gap corto con {frontNameSafe}: {frontSecStr}. Aprovecha el error.',
           'A {frontSecStr} de {frontNameSafe}. Si te abre, vas.',
-          'A {frontSecStr} de {frontNameSafe}. MantÈn presiÛn.',
-          'A {frontSecStr} de {frontNameSafe}. Una vuelta m·s y lo tienes.',
+          'A {frontSecStr} de {frontNameSafe}. Mant√©n presi√≥n.',
+          'A {frontSecStr} de {frontNameSafe}. Una vuelta m√°s y lo tienes.',
           'A {frontSecStr} de {frontNameSafe}. Cuida la salida.',
           'A {frontSecStr} de {frontNameSafe}. No fuerces la entrada.',
           'A {frontSecStr} de {frontNameSafe}. Con calma, el pase llega.',
@@ -9504,15 +9504,15 @@ function rdPick(variants, key) {
           '{backNameSafe} est encima. Respira y acelera limpio.',
           '{backNameSafe} est encima. Cubre interior.',
           '{backNameSafe} est encima. Todo limpio.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. l nea firme y salida fuerte.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Sin errores, lo aguantas.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Calma y control.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Puerta cerrada.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Respira y acelera limpio.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Cubre interior.',
-          'presiÛn atr s: {backNameSafe} a {backSecStr}. Todo limpio.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. l nea firme y salida fuerte.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Sin errores, lo aguantas.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Calma y control.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Puerta cerrada.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Respira y acelera limpio.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Cubre interior.',
+          'presi√≥n atr s: {backNameSafe} a {backSecStr}. Todo limpio.',
           '{backNameSafe} en rango: {backSecStr}. Defiende con trazada, no con golpes.',
           '{backNameSafe} en rango: {backSecStr}. l nea firme y salida fuerte.',
           '{backNameSafe} en rango: {backSecStr}. Sin errores, lo aguantas.',
@@ -9540,74 +9540,74 @@ function rdPick(variants, key) {
           'Vas P{posNow}. Sin errores.',
           'Vas P{posNow}. Busca aire limpio.',
           'Vas P{posNow}. Salida fuerte.',
-          'posiciÛn P{posNow}. Respira, vuelve al plan.',
-          'posiciÛn P{posNow}. Calma y ritmo.',
-          'posiciÛn P{posNow}. Trazada limpia.',
-          'posiciÛn P{posNow}. A trabajar, vuelta a vuelta.',
-          'posiciÛn P{posNow}. No te desconcentres.',
-          'posiciÛn P{posNow}. T  puedes, sigue.',
-          'posiciÛn P{posNow}. Sin errores.'
+          'posici√≥n P{posNow}. Respira, vuelve al plan.',
+          'posici√≥n P{posNow}. Calma y ritmo.',
+          'posici√≥n P{posNow}. Trazada limpia.',
+          'posici√≥n P{posNow}. A trabajar, vuelta a vuelta.',
+          'posici√≥n P{posNow}. No te desconcentres.',
+          'posici√≥n P{posNow}. T  puedes, sigue.',
+          'posici√≥n P{posNow}. Sin errores.'
         ],
         leader: [
-          'El lÌder marca el ritmo. T  marca tu l nea.',
-          'El lÌder marca el ritmo. T  marca tu l nea. T  puedes.',
-          'El lÌder marca el ritmo. T  marca tu l nea. Paso a paso.',
-          'El lÌder marca el ritmo. T  marca tu l nea. Sin errores.',
-          'El lÌder marca el ritmo. T  marca tu l nea. Control.',
-          'Referencia del lÌder, sin obsesionarte.',
-          'Referencia del lÌder, sin obsesionarte. T  puedes.',
-          'Referencia del lÌder, sin obsesionarte. Paso a paso.',
-          'Referencia del lÌder, sin obsesionarte. Sin errores.',
-          'Referencia del lÌder, sin obsesionarte. Control.',
-          'lÌder al frente. enf cate en tus marcas.',
-          'lÌder al frente. enf cate en tus marcas. T  puedes.',
-          'lÌder al frente. enf cate en tus marcas. Paso a paso.',
-          'lÌder al frente. enf cate en tus marcas. Sin errores.',
-          'lÌder al frente. enf cate en tus marcas. Control.',
-          'Observa al lÌder y aprende la trazada.',
-          'Observa al lÌder y aprende la trazada. T  puedes.',
-          'Observa al lÌder y aprende la trazada. Paso a paso.',
-          'Observa al lÌder y aprende la trazada. Sin errores.',
-          'Observa al lÌder y aprende la trazada. Control.',
-          'lÌder adelante. Paciencia y consistencia.',
-          'lÌder adelante. Paciencia y consistencia. T  puedes.',
-          'lÌder adelante. Paciencia y consistencia. Paso a paso.',
-          'lÌder adelante. Paciencia y consistencia. Sin errores.',
-          'lÌder adelante. Paciencia y consistencia. Control.'
+          'El l√≠der marca el ritmo. T  marca tu l nea.',
+          'El l√≠der marca el ritmo. T  marca tu l nea. T  puedes.',
+          'El l√≠der marca el ritmo. T  marca tu l nea. Paso a paso.',
+          'El l√≠der marca el ritmo. T  marca tu l nea. Sin errores.',
+          'El l√≠der marca el ritmo. T  marca tu l nea. Control.',
+          'Referencia del l√≠der, sin obsesionarte.',
+          'Referencia del l√≠der, sin obsesionarte. T  puedes.',
+          'Referencia del l√≠der, sin obsesionarte. Paso a paso.',
+          'Referencia del l√≠der, sin obsesionarte. Sin errores.',
+          'Referencia del l√≠der, sin obsesionarte. Control.',
+          'l√≠der al frente. enf cate en tus marcas.',
+          'l√≠der al frente. enf cate en tus marcas. T  puedes.',
+          'l√≠der al frente. enf cate en tus marcas. Paso a paso.',
+          'l√≠der al frente. enf cate en tus marcas. Sin errores.',
+          'l√≠der al frente. enf cate en tus marcas. Control.',
+          'Observa al l√≠der y aprende la trazada.',
+          'Observa al l√≠der y aprende la trazada. T  puedes.',
+          'Observa al l√≠der y aprende la trazada. Paso a paso.',
+          'Observa al l√≠der y aprende la trazada. Sin errores.',
+          'Observa al l√≠der y aprende la trazada. Control.',
+          'l√≠der adelante. Paciencia y consistencia.',
+          'l√≠der adelante. Paciencia y consistencia. T  puedes.',
+          'l√≠der adelante. Paciencia y consistencia. Paso a paso.',
+          'l√≠der adelante. Paciencia y consistencia. Sin errores.',
+          'l√≠der adelante. Paciencia y consistencia. Control.'
         ],
         podium: [
-          'Podio posible. MantÈn cabeza frÌa.',
-          'Podio posible. MantÈn cabeza frÌa. Paso a paso.',
-          'Podio posible. MantÈn cabeza frÌa. Sin drama.',
-          'Podio posible. MantÈn cabeza frÌa. Control.',
-          'Podio posible. MantÈn cabeza frÌa. Limpio y r·pido.',
+          'Podio posible. Mant√©n cabeza fr√≠a.',
+          'Podio posible. Mant√©n cabeza fr√≠a. Paso a paso.',
+          'Podio posible. Mant√©n cabeza fr√≠a. Sin drama.',
+          'Podio posible. Mant√©n cabeza fr√≠a. Control.',
+          'Podio posible. Mant√©n cabeza fr√≠a. Limpio y r√°pido.',
           'Zona de podio. Todo limpio.',
           'Zona de podio. Todo limpio. Paso a paso.',
           'Zona de podio. Todo limpio. Sin drama.',
           'Zona de podio. Todo limpio. Control.',
-          'Zona de podio. Todo limpio. Limpio y r·pido.',
+          'Zona de podio. Todo limpio. Limpio y r√°pido.',
           'Podio en juego. No fuerces.',
           'Podio en juego. No fuerces. Paso a paso.',
           'Podio en juego. No fuerces. Sin drama.',
           'Podio en juego. No fuerces. Control.',
-          'Podio en juego. No fuerces. Limpio y r·pido.',
+          'Podio en juego. No fuerces. Limpio y r√°pido.',
           'Por el trofeo. Trazada firme.',
           'Por el trofeo. Trazada firme. Paso a paso.',
           'Por el trofeo. Trazada firme. Sin drama.',
           'Por el trofeo. Trazada firme. Control.',
-          'Por el trofeo. Trazada firme. Limpio y r·pido.',
+          'Por el trofeo. Trazada firme. Limpio y r√°pido.',
           'Podio cerca. Cuida la salida.',
           'Podio cerca. Cuida la salida. Paso a paso.',
           'Podio cerca. Cuida la salida. Sin drama.',
           'Podio cerca. Cuida la salida. Control.',
-          'Podio cerca. Cuida la salida. Limpio y r·pido.'
+          'Podio cerca. Cuida la salida. Limpio y r√°pido.'
         ],
         trend: [
-          'Ritmo mejorando. MantÈn.',
-          'Ritmo mejorando. MantÈn. T  puedes.',
-          'Ritmo mejorando. MantÈn. Paso a paso.',
-          'Ritmo mejorando. MantÈn. Sin errores.',
-          'Ritmo mejorando. MantÈn. Control.',
+          'Ritmo mejorando. Mant√©n.',
+          'Ritmo mejorando. Mant√©n. T  puedes.',
+          'Ritmo mejorando. Mant√©n. Paso a paso.',
+          'Ritmo mejorando. Mant√©n. Sin errores.',
+          'Ritmo mejorando. Mant√©n. Control.',
           'Ritmo baj. Ajusta y sigue.',
           'Ritmo baj. Ajusta y sigue. T  puedes.',
           'Ritmo baj. Ajusta y sigue. Paso a paso.',
@@ -9630,48 +9630,48 @@ function rdPick(variants, key) {
           'Ritmo irregular. Respira y repite. Control.'
         ],
         est: [
-          'estimaciÛn lista. MantÈn el plan.',
-          'estimaciÛn lista. MantÈn el plan. T  puedes.',
-          'estimaciÛn lista. MantÈn el plan. Sin drama.',
-          'estimaciÛn lista. MantÈn el plan. Limpio.',
-          'estimaciÛn lista. MantÈn el plan. Control.',
-          'estimaciÛn cambi. Ajusta y sigue.',
-          'estimaciÛn cambi. Ajusta y sigue. T  puedes.',
-          'estimaciÛn cambi. Ajusta y sigue. Sin drama.',
-          'estimaciÛn cambi. Ajusta y sigue. Limpio.',
-          'estimaciÛn cambi. Ajusta y sigue. Control.',
-          'estimaciÛn estable. No te desconcentres.',
-          'estimaciÛn estable. No te desconcentres. T  puedes.',
-          'estimaciÛn estable. No te desconcentres. Sin drama.',
-          'estimaciÛn estable. No te desconcentres. Limpio.',
-          'estimaciÛn estable. No te desconcentres. Control.',
-          'estimaciÛn marcada. Todo limpio.',
-          'estimaciÛn marcada. Todo limpio. T  puedes.',
-          'estimaciÛn marcada. Todo limpio. Sin drama.',
-          'estimaciÛn marcada. Todo limpio. Limpio.',
-          'estimaciÛn marcada. Todo limpio. Control.',
-          'estimaciÛn ok. Paso a paso.',
-          'estimaciÛn ok. Paso a paso. T  puedes.',
-          'estimaciÛn ok. Paso a paso. Sin drama.',
-          'estimaciÛn ok. Paso a paso. Limpio.',
-          'estimaciÛn ok. Paso a paso. Control.'
+          'estimaci√≥n lista. Mant√©n el plan.',
+          'estimaci√≥n lista. Mant√©n el plan. T  puedes.',
+          'estimaci√≥n lista. Mant√©n el plan. Sin drama.',
+          'estimaci√≥n lista. Mant√©n el plan. Limpio.',
+          'estimaci√≥n lista. Mant√©n el plan. Control.',
+          'estimaci√≥n cambi. Ajusta y sigue.',
+          'estimaci√≥n cambi. Ajusta y sigue. T  puedes.',
+          'estimaci√≥n cambi. Ajusta y sigue. Sin drama.',
+          'estimaci√≥n cambi. Ajusta y sigue. Limpio.',
+          'estimaci√≥n cambi. Ajusta y sigue. Control.',
+          'estimaci√≥n estable. No te desconcentres.',
+          'estimaci√≥n estable. No te desconcentres. T  puedes.',
+          'estimaci√≥n estable. No te desconcentres. Sin drama.',
+          'estimaci√≥n estable. No te desconcentres. Limpio.',
+          'estimaci√≥n estable. No te desconcentres. Control.',
+          'estimaci√≥n marcada. Todo limpio.',
+          'estimaci√≥n marcada. Todo limpio. T  puedes.',
+          'estimaci√≥n marcada. Todo limpio. Sin drama.',
+          'estimaci√≥n marcada. Todo limpio. Limpio.',
+          'estimaci√≥n marcada. Todo limpio. Control.',
+          'estimaci√≥n ok. Paso a paso.',
+          'estimaci√≥n ok. Paso a paso. T  puedes.',
+          'estimaci√≥n ok. Paso a paso. Sin drama.',
+          'estimaci√≥n ok. Paso a paso. Limpio.',
+          'estimaci√≥n ok. Paso a paso. Control.'
         ],
         bestlap: [
-          'Best lap. Bien ahÌ, repite con calma.',
-          'Best lap. Bien ahÌ, repite con calma. Paso a paso.',
-          'Best lap. Bien ahÌ, repite con calma. Control.',
-          'Best lap. Bien ahÌ, repite con calma. Sin errores.',
-          'Best lap. Bien ahÌ, repite con calma. Limpio.',
+          'Best lap. Bien ah√≠, repite con calma.',
+          'Best lap. Bien ah√≠, repite con calma. Paso a paso.',
+          'Best lap. Bien ah√≠, repite con calma. Control.',
+          'Best lap. Bien ah√≠, repite con calma. Sin errores.',
+          'Best lap. Bien ah√≠, repite con calma. Limpio.',
           'Nueva best lap. Buen trabajo.',
           'Nueva best lap. Buen trabajo. Paso a paso.',
           'Nueva best lap. Buen trabajo. Control.',
           'Nueva best lap. Buen trabajo. Sin errores.',
           'Nueva best lap. Buen trabajo. Limpio.',
-          'Best lap confirmada. MantÈn.',
-          'Best lap confirmada. MantÈn. Paso a paso.',
-          'Best lap confirmada. MantÈn. Control.',
-          'Best lap confirmada. MantÈn. Sin errores.',
-          'Best lap confirmada. MantÈn. Limpio.',
+          'Best lap confirmada. Mant√©n.',
+          'Best lap confirmada. Mant√©n. Paso a paso.',
+          'Best lap confirmada. Mant√©n. Control.',
+          'Best lap confirmada. Mant√©n. Sin errores.',
+          'Best lap confirmada. Mant√©n. Limpio.',
           'Mejoraste best lap. Control total.',
           'Mejoraste best lap. Control total. Paso a paso.',
           'Mejoraste best lap. Control total. Control.',
@@ -9721,7 +9721,7 @@ function rdMakeMangaBattleText(kind, c, mode) {
     'Manga. {frontNameSafe} a {frontSecStr}. Cero errores, aprieta.',
     'Manga. {frontNameSafe} a {frontSecStr}. Dos vueltas as y lo tienes.',
     'Manga. Vas por {frontNameSafe}. Gap {frontSecStr}.',
-    'Manga. {frontNameSafe} est· tiro. {frontSecStr}.',
+    'Manga. {frontNameSafe} est√° tiro. {frontSecStr}.',
     'Manga. Se ve el rebufo. {frontNameSafe} {frontSecStr}.',
     'Manga. Ojo con {frontNameSafe}. {frontSecStr}.',
     'Manga. Paciencia y traccin. {frontNameSafe} {frontSecStr}.',
@@ -9838,7 +9838,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
     // BASIC (Seguimiento) - estabilidad de posicion para evitar jitter/flip-flop
     const basicPosStability = { lastSeenPos: null, candidatePos: null, candidateCount: 0, pendingStablePos: null, lastAnnouncedStablePos: null };
 
-// MANGA (clasificacin) - estabilidad de posiciÛn para evitar "flip-flop" por salida escalonada
+// MANGA (clasificacin) - estabilidad de posici√≥n para evitar "flip-flop" por salida escalonada
     const mangaPosStability = { lastSeenPos: null, stablePos: null, stableCount: 0, lastAnnouncedStablePos: null };
     const mangaPosSettle = { active:false, lap:0, dueAt:0, samples:[], lastComputedPos:null };
 
@@ -9887,7 +9887,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
           mangaPosSettle.lastComputedPos = stable;
           mangaPosSettle.active = false;
           if (!stable) return;
-          // Solo anunciamos si cambi contra la ˙ltima posiciÛn estable anunciada
+          // Solo anunciamos si cambi contra la √∫ltima posici√≥n estable anunciada
           if (mangaPosStability.lastAnnouncedStablePos === stable) return;
           pendingPosChange = {
             pos: stable,
@@ -9929,7 +9929,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
       // + = cae (peor), - = sube (mejor)
       const drop = (from && to) ? (to - from) : (delta || 0);
 
-      // Si cae 2+ lugares, debounce 1.5s y anuncia solo la posiciÛn final (evita metralleta)
+      // Si cae 2+ lugares, debounce 1.5s y anuncia solo la posici√≥n final (evita metralleta)
       if (drop >= 2) {
         posDropDebounceLatest = to;
         if (!posDropDebounceTimer) {
@@ -10019,7 +10019,7 @@ function loadVoiceSettings() {
 
 
      // Silent audio keep-alive (Chrome/desktop):
-     // - Mantiene el AudioContext "running" con una seÔøΩal inaudible.
+     // - Mantiene el AudioContext "running" con una se√Ø¬ø¬Ωal inaudible.
      // - Ayuda a que el TTS no se "duerma" cuando el tab queda en background.
      // Nota: requiere gesto previo (ya cubierto por __userGestureUnlocked).
      let __silentKeepAlive = { osc:null, gain:null, started:false };
@@ -10033,7 +10033,7 @@ function loadVoiceSettings() {
          const now = audioCtx.currentTime;
          const osc = audioCtx.createOscillator();
          const gain = audioCtx.createGain();
-         // Ultra bajo, inaudible en la prÔøΩctica
+         // Ultra bajo, inaudible en la pr√Ø¬ø¬Ωctica
          gain.gain.setValueAtTime(0.000001, now);
          osc.type = 'sine';
          osc.frequency.setValueAtTime(18, now); // sub-audio
@@ -10331,7 +10331,7 @@ function __duoGuessRole(txt, key) {
         if (!basicToggleBtnMini) return;
         basicToggleBtnMini.disabled = false;
         basicToggleBtnMini.classList.toggle('active', !!basicModeEnabled);
-        basicToggleBtnMini.textContent = (basicModeEnabled ? 'B¡SICO ON' : 'B¡SICO');
+        basicToggleBtnMini.textContent = (basicModeEnabled ? 'B√ÅSICO ON' : 'B√ÅSICO');
       }catch(e){}
     }
 
@@ -10759,17 +10759,17 @@ let __ttsStartGuard = 0;
         s = s.replace(/\b(\d+)\s*ms\b/gi, (m, n) => __msToSpeech(n));
 
         // Diccionario r\xe1pido de tildes y pronunciaci\xf3n (TTS)
-        // - evita lecturas raras por falta de acento ("basico") o por encoding/recortes (ej. "lÌder", "lnea")
+        // - evita lecturas raras por falta de acento ("basico") o por encoding/recortes (ej. "l√≠der", "lnea")
         const __dict = [
           [/\bbasico\b/gi, 'b\xe1sico'],
-          [/\bb·sico\b/gi, 'b\xe1sico'],
+          [/\bb√°sico\b/gi, 'b\xe1sico'],
           [/\bclasificaci[o\xf3]n\b/gi, 'clasificaci\xf3n'],
-          [/\bclasificaciÛn\b/gi, 'clasificaci\xf3n'],
+          [/\bclasificaci√≥n\b/gi, 'clasificaci\xf3n'],
           [/\bclasificacin\b/gi, 'clasificaci\xf3n'],
           [/\bposicion\b/gi, 'posici\xf3n'],
-          [/\bposiciÛn\b/gi, 'posici\xf3n'],
-          [/\bu˙ltima\b/gi, '\xfa˙ltima'],
-          [/\b˙ltima\b/gi, '\xfa˙ltima'],
+          [/\bposici√≥n\b/gi, 'posici\xf3n'],
+          [/\bu√∫ltima\b/gi, '\xfa√∫ltima'],
+          [/\b√∫ltima\b/gi, '\xfa√∫ltima'],
           [/\blider\b/gi, 'l\xedder'],
           [/\blder\b/gi, 'l\xedder'],
           [/\bmas\b/gi, 'm\xe1s'],
@@ -11046,7 +11046,7 @@ function clampNum(v, lo, hi){
 const __semMem = new Map();
 const __semStop = new Set([
   'el','la','los','las','un','una','unos','unas','de','del','al','y','o','a','en','por','para','con','sin','que','se','su','sus',
-  'tu','tus','mi','mis','ya','va','vamos','ahi','aquÌ','ok','bien','dale','ahora','solo','muy','mas','menos','uno','dos','tres',
+  'tu','tus','mi','mis','ya','va','vamos','ahi','aqu√≠','ok','bien','dale','ahora','solo','muy','mas','menos','uno','dos','tres',
   'p','pos','posicion','vueltas','vuelta','lap','laps','seg','segundos','segundo','ms'
 ]);
 
@@ -11121,7 +11121,7 @@ function __inferSemCategoryFromKey(key){
   if (k.startsWith('lap_') || k.includes('lastlap') || k.includes('lap')) return 'lap';
   if (k.includes('attack') || k.includes('ataque') || k.includes('defense') || k.includes('defensa') || k.includes('fight') || k.includes('duel')) return 'battle';
   if (k.includes('gap') || k.includes('interval')) return 'gaps';
-  if (k.includes('leader') || k.includes('lÌder')) return 'leader';
+  if (k.includes('leader') || k.includes('l√≠der')) return 'leader';
   if (k.includes('best') || k.includes('record')) return 'bestlap';
   if (k.includes('session_finish')) return 'finish';
   return '';
@@ -11210,7 +11210,7 @@ function __isEssentialSpeech(opts, key, priority){
     const k = String(key||'').toLowerCase();
     const cat = String((opts && (opts.semanticCategory || opts.category)) || '').toLowerCase();
     if (cat === 'ess' || cat === 'system' || cat === 'critical') return true;
-    if (k.includes('blue') || k.includes('bandera') || k.includes('leader') || k.includes('lÌder') || k.includes('finish') || k.includes('cuadros') || k.includes('podium')) return true;
+    if (k.includes('blue') || k.includes('bandera') || k.includes('leader') || k.includes('l√≠der') || k.includes('finish') || k.includes('cuadros') || k.includes('podium')) return true;
     if (k.includes('tts_test') || k.includes('unlock') || k.includes('audio listo')) return true;
     return false;
   }catch(e){ return false; }
@@ -11243,7 +11243,7 @@ function __flushSpeechQueueStale(maxAgeMs = 8000){
 
 function __pruneQueueDuringBlock(){
   try{
-    // Conserva criticos + solo los u˙˙ltimos no-criticos (para que NO vomite al reactivar)
+    // Conserva criticos + solo los u√∫√∫ltimos no-criticos (para que NO vomite al reactivar)
     const critical = [];
     const nonCrit = [];
     for (const it of (speechQueue || [])){
@@ -11527,7 +11527,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
     let __lastLapsPrefixAt = 0;
 
 function speakWithLaps(_laps, message, opts) {
-      // Prefijo de LAPS (opcional): si "Vueltas" est·pagado, no digas "10 vueltas..."
+      // Prefijo de LAPS (opcional): si "Vueltas" est√°pagado, no digas "10 vueltas..."
       const msg = String(message || '').trim();
       const allowPrefix = !!(voiceSettings && voiceSettings.saylaps);
 
@@ -11537,7 +11537,7 @@ function speakWithLaps(_laps, message, opts) {
       }
 
       // Regla: no decir "Vuelta X" ni el nmero de vuelta.
-      // AquÌ s leemos LAPS primero (como siempre), y metemos coma para pausar antes del mensaje.
+      // Aqu√≠ s leemos LAPS primero (como siempre), y metemos coma para pausar antes del mensaje.
       let prefix = '';
       const laps = (_laps == null) ? null : Number(_laps);
       const __now = Date.now();
@@ -11596,7 +11596,7 @@ function scheduleOneTapUnlock() {
 
 // Unlock TTS en iOS/WebKit: requiere gesto del usuario.
 
-// Nota: NO uses cancel() aquÌ - en iPhone mata el "primer speak" y obliga a dar 20 taps.
+// Nota: NO uses cancel() aqu√≠ - en iPhone mata el "primer speak" y obliga a dar 20 taps.
 let __ttsUnlockedOnce = false;
     let __ttsCancelShieldUntil = 0; // evita cancelar mientras se esta desbloqueando (iPhone)
 
@@ -11757,7 +11757,7 @@ function setVoiceMaster(on, opts = {}) {
 
       // VOZ: respuesta inmediata al primer toque (iOS/Android).
       // - Usamos pointerdown/touchstart para evitar retrasos y taps perdidos.
-      // - Si el motor se bloqueo por idle/background, aquÌ solo reactivamos (sin apagar).
+      // - Si el motor se bloqueo por idle/background, aqu√≠ solo reactivamos (sin apagar).
       let __lastVoiceTapAt = 0;
 
       function __voiceBtnNeedsUnlock(){
@@ -11781,7 +11781,7 @@ function setVoiceMaster(on, opts = {}) {
 
         // Si esta ON pero bloqueado, solo reactivamos (no toggle OFF)
         if (voiceMasterEnabled && __voiceBtnNeedsUnlock()){
-          // No limpies needs-unlock aquÌ. Se limpia solo cuando el motor realmente arranca (onstart).
+          // No limpies needs-unlock aqu√≠. Se limpia solo cuando el motor realmente arranca (onstart).
           try { unlockTTSOnce('voice-btn-recover'); } catch(e) {}
           try { forceTtsRecover('voice-btn-recover'); } catch(e) {}
           try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 120); } catch(e) {}
@@ -11828,7 +11828,7 @@ function setVoiceMaster(on, opts = {}) {
       try {
         basicToggleBtnMini.addEventListener('click', () => {
           try {
-            // Permitir B¡SICO en cualquier modo (AUTO/FOLLOW)
+            // Permitir B√ÅSICO en cualquier modo (AUTO/FOLLOW)
             
             basicModeEnabled = !basicModeEnabled;
             try { prefSet('basicModeEnabled', basicModeEnabled ? '1' : '0'); } catch(e) {}
@@ -11888,7 +11888,7 @@ function setVoiceMaster(on, opts = {}) {
     const toggleAllMsgsBtn = document.getElementById('toggleAllMsgsBtn');
 
     // =========================
-    // Presets r·pidos (RD PRO limpio / RD SHOW)
+    // Presets r√°pidos (RD PRO limpio / RD SHOW)
     // - Ajusta los mismos toggles del spotter (lo que el RD usa para decidir que narrar).
     // =========================
     const presetRdProBtn  = document.getElementById('presetRdProBtn');
@@ -12271,7 +12271,7 @@ function toFixedFloor(value, decimals = 0) {
           } catch(e) {}
 
           if (voiceMasterEnabled) {
-            // Desktop/Android: NO forzar "needs-unlock" (si no, se queda mudo al cambiar de pestaÒa)
+            // Desktop/Android: NO forzar "needs-unlock" (si no, se queda mudo al cambiar de pesta√±a)
             try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
             try { confirmVoiceButtons && confirmVoiceButtons(); } catch(e) {}
 
@@ -13253,7 +13253,7 @@ function drawLapChartTop3Auto(){
         }
         ctx.stroke();
 
-        // dot ˙ltima vuelta
+        // dot √∫ltima vuelta
         const jLast = len - 1;
         const tL = (s.tms && s.tms[jLast]) ? s.tms[jLast] : 0;
         const fracL = xMax ? Math.max(0, Math.min(1, tL / xMax)) : 0;
@@ -13273,7 +13273,7 @@ function drawLapChartTop3Auto(){
       try{
         const leader = top[0];
         const lapsLabel = leader && leader.lapcount != null ? leader.lapcount : '-';
-        lapChartMetaEl.title = `Top 3 (auto) - ˙ltimo dibujo: P1 laps ${lapsLabel}`;
+        lapChartMetaEl.title = `Top 3 (auto) - √∫ltimo dibujo: P1 laps ${lapsLabel}`;
       }catch(e){}
     }
 
@@ -13331,7 +13331,7 @@ function drawLapChartTop3Auto(){
         let secondsTxt = '';
         if (!isNaN(secIntPart)) secondsTxt += numeroATexto0a999(secIntPart);
         if (secDecStr !== '000') {
-          // AquÌ usamos dÌgitos separados para que no se coma ceros.
+          // Aqu√≠ usamos d√≠gitos separados para que no se coma ceros.
           secondsTxt = secondsTxt ? `${secondsTxt} punto ${d1} ${d2} ${d3}` : `cero punto ${d1} ${d2} ${d3}`;
         }
         if (!secondsTxt) secondsTxt = 'cero';
@@ -13432,7 +13432,7 @@ let meanMs = parseTimeToMs(meanTimeRaw);
           const prevLaps = Number(prev.lapcount) || 0;
           if (lap > prevLaps && totalMs > prev.time) {
             lastMs = totalMs - prev.time;
-            // registrar evento de paso por meta para lgica de bandera azul (˙ltimo paso por piloto)
+            // registrar evento de paso por meta para lgica de bandera azul (√∫ltimo paso por piloto)
             if (!lastPassEvents || typeof lastPassEvents.set !== 'function') {
               lastPassEvents = new Map();
             }
@@ -13674,7 +13674,7 @@ function resetAutoNarratorState() {
     function renderPilotCard(p) {
       if (!p) {
         pilotNameEl.textContent = 'Auto Locutor';
-      // En Auto Locutor, mostrar vueltas del lÌder
+      // En Auto Locutor, mostrar vueltas del l√≠der
       let leaderLap = 0;
       try {
         if (raceData && Array.isArray(raceData.classification) && raceData.classification.length) {
@@ -13689,7 +13689,7 @@ function resetAutoNarratorState() {
       } catch(e) { leaderLap = 0; }
       pilotMetaEl.textContent = String(leaderLap || 0) + ' v';
         posTextEl.textContent   = 'P -';
-        gapInfoEl.textContent   = 'Diferencia lÌder  vueltas  estado';
+        gapInfoEl.textContent   = 'Diferencia l√≠der  vueltas  estado';
         lastLapEl.textContent   = '-:--.---';
         bestLapEl.textContent   = '-:--.---';
         meanLapEl.textContent   = '-:--.---';
@@ -13716,7 +13716,7 @@ function resetAutoNarratorState() {
       if (gapText) partes.push(`Diferencia ${gapText}`);
       if (p.lapcount != null) partes.push(`${p.lapcount} vueltas`);
       if (totalStr && totalStr !== '-:--.---') partes.push(`Total ${totalStr}`);
-      gapInfoEl.textContent = partes.join('  ') || 'Diferencia lÌder  vueltas  estado';
+      gapInfoEl.textContent = partes.join('  ') || 'Diferencia l√≠der  vueltas  estado';
 
       const key = getPilotKey(p);
       const hist = lapHistory.get(key) || { lastLapcount: 0, times: [] };
@@ -13839,7 +13839,7 @@ function refreshSessionBestCache() {
       }
     }
 
-    // 3) ˙ltimo recurso: raceData.bestLapTime (sin dueo seguro)
+    // 3) √∫ltimo recurso: raceData.bestLapTime (sin dueo seguro)
     if ((!best || best <= 0) && raceData && typeof raceData.bestLapTime !== 'undefined') {
       const fb = normalizeLapMs(normalizeIncomingLapValue(raceData.bestLapTime));
       if (fb) {
@@ -14052,8 +14052,8 @@ function computeSessionBestMs() {
 
         
         // =========================
-        // Persistencia: u˙ltimo piloto seleccionado
-        // - Guarda y restaura automaticamente la u˙ltima seleccion (por dispositivo)
+        // Persistencia: u√∫ltimo piloto seleccionado
+        // - Guarda y restaura automaticamente la u√∫ltima seleccion (por dispositivo)
         // - Si el piloto no existe en la carrera actual, no selecciona nada
         // =========================
         function restoreLastPilotSelectionIfNeeded() {
@@ -14651,7 +14651,7 @@ function updateBlueFlagFromPassEvents() {
         const laperName = (best.laper && (best.laper.racerName || best.laper.name || best.laper.pilotName)) || '';
         const laperNameClean = String(laperName).replace(/\s+/g,' ').trim();
         if (!laperNameClean) return;
-        const who = (laperPos === 1) ? ('el lÌder P1 ' + laperNameClean) : ('P' + laperPos + ' ' + laperNameClean);
+        const who = (laperPos === 1) ? ('el l√≠der P1 ' + laperNameClean) : ('P' + laperPos + ' ' + laperNameClean);
 
         pendingBlueFlagForPilotKey = selectedPilotKey;
         pendingBlueFlagMessage = isFinal
@@ -14765,7 +14765,7 @@ function updateBlueFlagFromPassEvents() {
 
     const commentatorAutoCfg = {
       // Calma por defecto: el Auto Locutor solo debe hablar cuando hay "accin real"
-      // (cambios de posiciÛn, lÌder, peleas cerradas, best lap/pole en mangas).
+      // (cambios de posici√≥n, l√≠der, peleas cerradas, best lap/pole en mangas).
       minIntervalMs: 11000,
       windowMs: 60000,
       maxMsgsInWindow: 3,
@@ -15097,7 +15097,7 @@ function autoFocusMsg(stage, c, style) {
   const connectors = {
     pro: [
       'Ojo con esto.',
-      'Atencion aquÌ.',
+      'Atencion aqu√≠.',
       'Se calienta la cosa.',
       'Dato clave.',
       'Esto se mueve.',
@@ -15118,7 +15118,7 @@ function autoFocusMsg(stage, c, style) {
       'Lectura de ritmo.',
       'Numero mata chisme.',
       'Datos en corto.',
-      'AquÌi hay delta.',
+      'Aqu√≠i hay delta.',
       'Lo que importa.'
     ],
     narrativo: [
@@ -15287,8 +15287,8 @@ function autoBuildStoryCandidate(args) {
 
     const AUTO_PHRASES_PRO = {
       leaderChange: [
-        (c) => 'Cambio de lÌder. ' + c.winner + ' toma P1. ' + c.loser + ' queda P2.',
-        (c) => 'Cambio de lÌder: ' + c.winner + ' se pone al frente. ' + c.loser + ' a perseguir.',
+        (c) => 'Cambio de l√≠der. ' + c.winner + ' toma P1. ' + c.loser + ' queda P2.',
+        (c) => 'Cambio de l√≠der: ' + c.winner + ' se pone al frente. ' + c.loser + ' a perseguir.',
         (c) => 'Nueva punta. P1 ' + c.winner + '. P2 ' + c.loser + '.',
         (c) => c.winner + ' recupera la punta. ' + c.loser + ' baja a segundo.',
         (c) => 'Intercambio en P1. ' + c.winner + ' adelante. ' + c.loser + ' segundo.',
@@ -15304,11 +15304,11 @@ function autoBuildStoryCandidate(args) {
       pass: [
         (c) => 'Rebase confirmado. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
         (c) => c.winner + ' ejecuta el pase y asegura P' + c.newPos + '. ' + c.loser + ' baja a P' + c.oldPos + '.',
-        (c) => 'Cambio de posiciÛn. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' queda P' + c.oldPos + '.',
+        (c) => 'Cambio de posici√≥n. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' queda P' + c.oldPos + '.',
         (c) => 'Movimiento limpio: ' + c.winner + ' por delante. Ahora P' + c.newPos + '.',
         (c) => 'Pase hecho. ' + c.winner + ' gana el lugar en P' + c.newPos + '.',
         (c) => 'Rebase con calma. ' + c.winner + ' se instala en P' + c.newPos + '.',
-        (c) => 'PosiciÛn ganada: ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' pierde el sitio.',
+        (c) => 'Posici√≥n ganada: ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' pierde el sitio.',
         (c) => 'Se concreta el intercambio. ' + c.winner + ' arriba a P' + c.newPos + '.',
         (c) => 'Adelantamiento al conteo. ' + c.winner + ' sube. ' + c.loser + ' baja.',
         (c) => 'P' + c.newPos + ' cambia de manos. ' + c.winner + ' toma la plaza.',
@@ -15446,27 +15446,27 @@ function autoBuildStoryCandidate(args) {
 
     const AUTO_PHRASES_PICANTE = {
       leaderChange: [
-        (c) => 'Cambio de lÌder. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
-        (c) => 'Cambio de lÌder. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
-        (c) => 'Cambio de lÌder. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
-        (c) => 'Cambio de lÌder. P1 ' + c.winner + '. P2 ' + c.loser + '.',
-        (c) => 'Cambio de lÌder. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
-        (c) => 'Cambio de lÌder. ' + c.winner + ' al frente. ' + c.loser + ' con presin encima.',
-        (c) => 'Cambio de lÌder. ' + c.loser + ' pierde la punta. ' + c.winner + ' lÌder.',
+        (c) => 'Cambio de l√≠der. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
+        (c) => 'Cambio de l√≠der. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
+        (c) => 'Cambio de l√≠der. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
+        (c) => 'Cambio de l√≠der. P1 ' + c.winner + '. P2 ' + c.loser + '.',
+        (c) => 'Cambio de l√≠der. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
+        (c) => 'Cambio de l√≠der. ' + c.winner + ' al frente. ' + c.loser + ' con presin encima.',
+        (c) => 'Cambio de l√≠der. ' + c.loser + ' pierde la punta. ' + c.winner + ' l√≠der.',
         (c) => 'Nuevo jefe en pista. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
         (c) => 'Nuevo jefe en pista. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
         (c) => 'Nuevo jefe en pista. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
         (c) => 'Nuevo jefe en pista. P1 ' + c.winner + '. P2 ' + c.loser + '.',
         (c) => 'Nuevo jefe en pista. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
         (c) => 'Nuevo jefe en pista. ' + c.winner + ' al frente. ' + c.loser + ' con presin encima.',
-        (c) => 'Nuevo jefe en pista. ' + c.loser + ' pierde la punta. ' + c.winner + ' lÌder.',
+        (c) => 'Nuevo jefe en pista. ' + c.loser + ' pierde la punta. ' + c.winner + ' l√≠der.',
         (c) => 'Se volte la tortilla. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
         (c) => 'Se volte la tortilla. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
         (c) => 'Se volte la tortilla. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
         (c) => 'Se volte la tortilla. P1 ' + c.winner + '. P2 ' + c.loser + '.',
         (c) => 'Se volte la tortilla. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
         (c) => 'Se volte la tortilla. ' + c.winner + ' al frente. ' + c.loser + ' con presin encima.',
-        (c) => 'Se volte la tortilla. ' + c.loser + ' pierde la punta. ' + c.winner + ' lÌder.',
+        (c) => 'Se volte la tortilla. ' + c.loser + ' pierde la punta. ' + c.winner + ' l√≠der.',
         (c) => 'Golpe en la punta. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
         (c) => 'Golpe en la punta. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
         (c) => 'Golpe en la punta. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
@@ -15530,27 +15530,27 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Podio al rojo vivo, P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
         (c) => 'Podio al rojo vivo, P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
         (c) => 'Podio al rojo vivo, P' + c.pos + '. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'Podio al rojo vivo, P' + c.pos + '. Gap ' + c.sec + '. AquÌ se gana con cabeza fra.',
+        (c) => 'Podio al rojo vivo, P' + c.pos + '. Gap ' + c.sec + '. Aqu√≠ se gana con cabeza fra.',
         (c) => 'Podio al rojo vivo, P' + c.pos + '. ' + c.attacker + ' ya se asom. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' vale trofeo. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' vale trofeo. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
         (c) => 'P' + c.pos + ' vale trofeo. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' vale trofeo. Gap ' + c.sec + '. AquÌ se gana con cabeza fra.',
+        (c) => 'P' + c.pos + ' vale trofeo. Gap ' + c.sec + '. Aqu√≠ se gana con cabeza fra.',
         (c) => 'P' + c.pos + ' vale trofeo. ' + c.attacker + ' ya se asom. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' de podio. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' de podio. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
         (c) => 'P' + c.pos + ' de podio. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' de podio. Gap ' + c.sec + '. AquÌ se gana con cabeza fra.',
+        (c) => 'P' + c.pos + ' de podio. Gap ' + c.sec + '. Aqu√≠ se gana con cabeza fra.',
         (c) => 'P' + c.pos + ' de podio. ' + c.attacker + ' ya se asom. ' + c.sec + '.',
         (c) => 'Pelea de podio en P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
         (c) => 'Pelea de podio en P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
         (c) => 'Pelea de podio en P' + c.pos + '. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'Pelea de podio en P' + c.pos + '. Gap ' + c.sec + '. AquÌ se gana con cabeza fra.',
+        (c) => 'Pelea de podio en P' + c.pos + '. Gap ' + c.sec + '. Aqu√≠ se gana con cabeza fra.',
         (c) => 'Pelea de podio en P' + c.pos + '. ' + c.attacker + ' ya se asom. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con olor a podio. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con olor a podio. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con olor a podio. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' con olor a podio. Gap ' + c.sec + '. AquÌ se gana con cabeza fra.',
+        (c) => 'P' + c.pos + ' con olor a podio. Gap ' + c.sec + '. Aqu√≠ se gana con cabeza fra.',
         (c) => 'P' + c.pos + ' con olor a podio. ' + c.attacker + ' ya se asom. ' + c.sec + '.'
       ],
       closing: [
@@ -15558,25 +15558,25 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Se est cerrando P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
         (c) => 'Se est cerrando P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Se est cerrando P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Se est cerrando P' + c.pos + '. ' + c.attacker + ' ya est· ' + c.toSec + ' de ' + c.defender + '.',
+        (c) => 'Se est cerrando P' + c.pos + '. ' + c.attacker + ' ya est√° ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Se est cerrando P' + c.pos + '. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' se cocina. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'P' + c.pos + ' se cocina. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' ya est· ' + c.toSec + ' de ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' ya est√° ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Atencin en P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Atencin en P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' ya est· ' + c.toSec + ' de ' + c.defender + '.',
+        (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' ya est√° ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' ya est· ' + c.toSec + ' de ' + c.defender + '.',
+        (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' ya est√° ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' en recorte serio. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.'
       ],
@@ -15608,27 +15608,27 @@ function autoBuildStoryCandidate(args) {
         (c) => 'As est el frente: ' + c.p1 + ' al frente con ' + c.p2 + ' y ' + c.p3 + ' pegados.'
       ],
       train: [
-        (c) => 'Tren de trofeo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'AquÌ nadie respira.',
+        (c) => 'Tren de trofeo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Aqu√≠ nadie respira.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Si uno falla, se invierte todo.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Esto se decide en una curva.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Huele a rebase en cualquier momento.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Pista chica, orgullo grande.',
-        (c) => 'Tren de trofeo. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete cerrado por podio. ') + 'AquÌ nadie respira.',
+        (c) => 'Tren de trofeo. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete cerrado por podio. ') + 'Aqu√≠ nadie respira.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete cerrado por podio. ') + 'Si uno falla, se invierte todo.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete cerrado por podio. ') + 'Esto se decide en una curva.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete cerrado por podio. ') + 'Huele a rebase en cualquier momento.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Paquete: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete cerrado por podio. ') + 'Pista chica, orgullo grande.',
-        (c) => 'Tren de trofeo. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4, pegados. ') + 'AquÌ nadie respira.',
+        (c) => 'Tren de trofeo. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4, pegados. ') + 'Aqu√≠ nadie respira.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4, pegados. ') + 'Si uno falla, se invierte todo.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4, pegados. ') + 'Esto se decide en una curva.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4, pegados. ') + 'Huele a rebase en cualquier momento.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren de P2 a P4, pegados. ') + 'Pista chica, orgullo grande.',
-        (c) => 'Tren de trofeo. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos juntos por el trofeo. ') + 'AquÌ nadie respira.',
+        (c) => 'Tren de trofeo. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos juntos por el trofeo. ') + 'Aqu√≠ nadie respira.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos juntos por el trofeo. ') + 'Si uno falla, se invierte todo.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos juntos por el trofeo. ') + 'Esto se decide en una curva.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos juntos por el trofeo. ') + 'Huele a rebase en cualquier momento.',
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos juntos por el trofeo. ') + 'Pista chica, orgullo grande.',
-        (c) => 'Paquete al rojo vivo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'AquÌ nadie respira.',
+        (c) => 'Paquete al rojo vivo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Aqu√≠ nadie respira.',
         (c) => 'Paquete al rojo vivo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Si uno falla, se invierte todo.',
         (c) => 'Paquete al rojo vivo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Esto se decide en una curva.',
         (c) => 'Paquete al rojo vivo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Huele a rebase en cualquier momento.',
@@ -15687,13 +15687,13 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Cambio en P1. Swap de liderato: ' + c.winner + ' adelante.',
         (c) => 'Cambio en P1. P1 para ' + c.winner + '. ' + c.loser + ' queda detrs.',
         (c) => 'Cambio en P1. ' + c.winner + ' al frente, ' + c.loser + ' a cazar.',
-        (c) => 'Telemetra: nuevo lÌder. P1 ' + c.winner + '. P2 ' + c.loser + '.',
-        (c) => 'Telemetra: nuevo lÌder. ' + c.winner + ' pasa a P1, ' + c.loser + ' cae a P2.',
-        (c) => 'Telemetra: nuevo lÌder. ' + c.winner + ' lidera, ' + c.loser + ' queda segundo.',
-        (c) => 'Telemetra: nuevo lÌder. ' + c.winner + ' toma el mando. ' + c.loser + ' en persecucin.',
-        (c) => 'Telemetra: nuevo lÌder. Swap de liderato: ' + c.winner + ' adelante.',
-        (c) => 'Telemetra: nuevo lÌder. P1 para ' + c.winner + '. ' + c.loser + ' queda detrs.',
-        (c) => 'Telemetra: nuevo lÌder. ' + c.winner + ' al frente, ' + c.loser + ' a cazar.',
+        (c) => 'Telemetra: nuevo l√≠der. P1 ' + c.winner + '. P2 ' + c.loser + '.',
+        (c) => 'Telemetra: nuevo l√≠der. ' + c.winner + ' pasa a P1, ' + c.loser + ' cae a P2.',
+        (c) => 'Telemetra: nuevo l√≠der. ' + c.winner + ' lidera, ' + c.loser + ' queda segundo.',
+        (c) => 'Telemetra: nuevo l√≠der. ' + c.winner + ' toma el mando. ' + c.loser + ' en persecucin.',
+        (c) => 'Telemetra: nuevo l√≠der. Swap de liderato: ' + c.winner + ' adelante.',
+        (c) => 'Telemetra: nuevo l√≠der. P1 para ' + c.winner + '. ' + c.loser + ' queda detrs.',
+        (c) => 'Telemetra: nuevo l√≠der. ' + c.winner + ' al frente, ' + c.loser + ' a cazar.',
         (c) => 'Estado de carrera. P1 ' + c.winner + '. P2 ' + c.loser + '.',
         (c) => 'Estado de carrera. ' + c.winner + ' pasa a P1, ' + c.loser + ' cae a P2.',
         (c) => 'Estado de carrera. ' + c.winner + ' lidera, ' + c.loser + ' queda segundo.',
@@ -15707,20 +15707,20 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Overtake confirmado. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
         (c) => 'Overtake confirmado. Swap completado: ' + c.winner + ' por delante.',
         (c) => 'Overtake confirmado. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
-        (c) => 'Cambio de posiciÛn. ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Cambio de posiciÛn. P' + c.newPos + ' para ' + c.winner + '.',
-        (c) => 'Cambio de posiciÛn. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
-        (c) => 'Cambio de posiciÛn. Cambio en P' + c.newPos + '. ' + c.winner + ' sube.',
-        (c) => 'Cambio de posiciÛn. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
-        (c) => 'Cambio de posiciÛn. Swap completado: ' + c.winner + ' por delante.',
-        (c) => 'Cambio de posiciÛn. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
-        (c) => 'Swap de posiciÛn. ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Swap de posiciÛn. P' + c.newPos + ' para ' + c.winner + '.',
-        (c) => 'Swap de posiciÛn. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
-        (c) => 'Swap de posiciÛn. Cambio en P' + c.newPos + '. ' + c.winner + ' sube.',
-        (c) => 'Swap de posiciÛn. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
-        (c) => 'Swap de posiciÛn. Swap completado: ' + c.winner + ' por delante.',
-        (c) => 'Swap de posiciÛn. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
+        (c) => 'Cambio de posici√≥n. ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
+        (c) => 'Cambio de posici√≥n. P' + c.newPos + ' para ' + c.winner + '.',
+        (c) => 'Cambio de posici√≥n. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
+        (c) => 'Cambio de posici√≥n. Cambio en P' + c.newPos + '. ' + c.winner + ' sube.',
+        (c) => 'Cambio de posici√≥n. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
+        (c) => 'Cambio de posici√≥n. Swap completado: ' + c.winner + ' por delante.',
+        (c) => 'Cambio de posici√≥n. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
+        (c) => 'Swap de posici√≥n. ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
+        (c) => 'Swap de posici√≥n. P' + c.newPos + ' para ' + c.winner + '.',
+        (c) => 'Swap de posici√≥n. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
+        (c) => 'Swap de posici√≥n. Cambio en P' + c.newPos + '. ' + c.winner + ' sube.',
+        (c) => 'Swap de posici√≥n. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
+        (c) => 'Swap de posici√≥n. Swap completado: ' + c.winner + ' por delante.',
+        (c) => 'Swap de posici√≥n. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
         (c) => 'Movimiento de ranking. ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
         (c) => 'Movimiento de ranking. P' + c.newPos + ' para ' + c.winner + '.',
         (c) => 'Movimiento de ranking. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
@@ -15784,25 +15784,25 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Cierre en P' + c.pos + '. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.',
         (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + 's sobre ' + c.defender + '.',
         (c) => 'Cierre en P' + c.pos + '. Gap cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
-        (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' ya est· ' + c.toSec + 's.',
+        (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' ya est√° ' + c.toSec + 's.',
         (c) => 'Cierre en P' + c.pos + '. Cierre confirmado: ' + c.fromSec + 's -> ' + c.toSec + 's.',
         (c) => 'Cierre en P' + c.pos + '. Tendencia positiva: ' + c.toSec + 's.',
         (c) => 'Tendencia P' + c.pos + '. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.',
         (c) => 'Tendencia P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + 's sobre ' + c.defender + '.',
         (c) => 'Tendencia P' + c.pos + '. Gap cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
-        (c) => 'Tendencia P' + c.pos + '. ' + c.attacker + ' ya est· ' + c.toSec + 's.',
+        (c) => 'Tendencia P' + c.pos + '. ' + c.attacker + ' ya est√° ' + c.toSec + 's.',
         (c) => 'Tendencia P' + c.pos + '. Cierre confirmado: ' + c.fromSec + 's -> ' + c.toSec + 's.',
         (c) => 'Tendencia P' + c.pos + '. Tendencia positiva: ' + c.toSec + 's.',
         (c) => 'Delta en P' + c.pos + '. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.',
         (c) => 'Delta en P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + 's sobre ' + c.defender + '.',
         (c) => 'Delta en P' + c.pos + '. Gap cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
-        (c) => 'Delta en P' + c.pos + '. ' + c.attacker + ' ya est· ' + c.toSec + 's.',
+        (c) => 'Delta en P' + c.pos + '. ' + c.attacker + ' ya est√° ' + c.toSec + 's.',
         (c) => 'Delta en P' + c.pos + '. Cierre confirmado: ' + c.fromSec + 's -> ' + c.toSec + 's.',
         (c) => 'Delta en P' + c.pos + '. Tendencia positiva: ' + c.toSec + 's.',
         (c) => 'P' + c.pos + ' con recorte. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.',
         (c) => 'P' + c.pos + ' con recorte. ' + c.attacker + ' reduce a ' + c.toSec + 's sobre ' + c.defender + '.',
         (c) => 'P' + c.pos + ' con recorte. Gap cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
-        (c) => 'P' + c.pos + ' con recorte. ' + c.attacker + ' ya est· ' + c.toSec + 's.',
+        (c) => 'P' + c.pos + ' con recorte. ' + c.attacker + ' ya est√° ' + c.toSec + 's.',
         (c) => 'P' + c.pos + ' con recorte. Cierre confirmado: ' + c.fromSec + 's -> ' + c.toSec + 's.',
         (c) => 'P' + c.pos + ' con recorte. Tendencia positiva: ' + c.toSec + 's.',
         (c) => 'Gap bajando en P' + c.pos + '. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.'
@@ -15852,27 +15852,27 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Alto riesgo de swap.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Ventana de pase abierta.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Cualquier error altera la tabla.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Delta mnimo, decisin r·pida.',
+        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Delta mnimo, decisin r√°pida.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'La siguiente curva es clave.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Alto riesgo de swap.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Ventana de pase abierta.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Cualquier error altera la tabla.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Delta mnimo, decisin r·pida.',
+        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Delta mnimo, decisin r√°pida.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'La siguiente curva es clave.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'Alto riesgo de swap.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'Ventana de pase abierta.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'Cualquier error altera la tabla.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'Delta mnimo, decisin r·pida.',
+        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'Delta mnimo, decisin r√°pida.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'La siguiente curva es clave.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Alto riesgo de swap.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Ventana de pase abierta.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Cualquier error altera la tabla.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Delta mnimo, decisin r·pida.',
+        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Delta mnimo, decisin r√°pida.',
         (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'La siguiente curva es clave.',
         (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Alto riesgo de swap.',
         (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Ventana de pase abierta.',
         (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Cualquier error altera la tabla.',
-        (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Delta mnimo, decisin r·pida.',
+        (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Delta mnimo, decisin r√°pida.',
         (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'La siguiente curva es clave.'
       ]
     };
@@ -15880,7 +15880,7 @@ function autoBuildStoryCandidate(args) {
     const AUTO_PHRASES_NARRATIVO = Object.assign({}, AUTO_PHRASES_PRO, {
       // Finales: mas hilo, mas variedad, menos repeticion.
       leaderChange: [
-        (c) => 'Cambio de lÌder. ' + (c.winner||c.attacker) + ' roba P1. ' + (c.loser||c.defender) + ' cae a P2.',
+        (c) => 'Cambio de l√≠der. ' + (c.winner||c.attacker) + ' roba P1. ' + (c.loser||c.defender) + ' cae a P2.',
         (c) => 'Se volteo la pelicula. ' + (c.winner||c.attacker) + ' toma la punta. ' + (c.loser||c.defender) + ' a remar.',
         (c) => 'Swap arriba. ' + (c.winner||c.attacker) + ' manda. ' + (c.loser||c.defender) + ' queda segundo.',
         (c) => 'P1 cambia de manos. ' + (c.winner||c.attacker) + ' al frente. ' + (c.loser||c.defender) + ' no lo suelta.',
@@ -15961,7 +15961,7 @@ function autoBuildStoryCandidate(args) {
         (c) => 'P2 a P4 sin aire. Error y se voltean.',
         (c) => 'Paquete por P2-P4. Nadie regala.',
         (c) => 'Tren formado. Ojo con el toque.',
-        (c) => 'P2 a P4: aquÌ se gana con cabeza fria.',
+        (c) => 'P2 a P4: aqu√≠ se gana con cabeza fria.',
         (c) => 'Grupo compacto. Todo se decide en la proxima chicana.',
         (c) => 'Trenecito armado. El podio tiembla.',
         (c) => 'Paquete apretado. Se siente la presion.'
@@ -16053,8 +16053,8 @@ function autoDecorate(text, type, style) {
     // =========================
 // BLUE FLAG (Auto Locutor)
 // - Se anuncia solo en Auto Locutor (sin piloto seleccionado)
-// - Lgica: si el lÌder ya te sac 1 vuelta (lapDiff>=1 o gap "+1 V"), pide cortesa
-// - Anti-spam: 1 por tick, cooldown global y por piloto, y repetir mximo cada 2 vueltas del lÌder
+// - Lgica: si el l√≠der ya te sac 1 vuelta (lapDiff>=1 o gap "+1 V"), pide cortesa
+// - Anti-spam: 1 por tick, cooldown global y por piloto, y repetir mximo cada 2 vueltas del l√≠der
 // =========================
 const __autoBlueLatch = new Map(); // pilotKey -> { lastLeaderLap, lastSpeakMs }
 let __autoBlueLastGlobalMs = 0;
@@ -16164,7 +16164,7 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
       const laperPos = Number(best.laper && best.laper.pos) || 0;
       const laperName = __autoSafeName(best.laper);
       if (!laperName) continue;
-      const who = (laperPos === 1) ? ('el lÌder P1 ' + laperName) : ('P' + laperPos + ' ' + laperName);
+      const who = (laperPos === 1) ? ('el l√≠der P1 ' + laperName) : ('P' + laperPos + ' ' + laperName);
 
       const baseMsg = isFinalSess
         ? `Bandera azul. ${name}, detras viene ${who}. Abre en la recta.`
@@ -16258,13 +16258,13 @@ function handleAutoCommentator() {
         const battles = [];
         const addCand = (c) => { if (c && c.text && isFinite(c.score)) candidates.push(c); };
 
-        // ====== cambios de lÌder / posiciones
+        // ====== cambios de l√≠der / posiciones
         const leaderKey = getPilotKey(leader);
         if (leaderKey && commentatorAutoState.lastLeaderKey && leaderKey !== commentatorAutoState.lastLeaderKey) {
           if (vs.pos || vs.leadergap || vs.podium) {
             const prevLeaderName = safeRacerName((commentatorAutoState.lastLeaderKeyName || ''));
-            const winner = safeRacerName(leader.racerName) || 'el lÌder nuevo';
-            const loser = prevLeaderName || 'el lÌder anterior';
+            const winner = safeRacerName(leader.racerName) || 'el l√≠der nuevo';
+            const loser = prevLeaderName || 'el l√≠der anterior';
             const text = autoBuildMessage('leaderChange', { winner, loser });
             addCand({
               type:'leaderChange',
@@ -16277,7 +16277,7 @@ function handleAutoCommentator() {
             });
           }
         }
-        // guardar nombre del lÌder para el siguiente tick
+        // guardar nombre del l√≠der para el siguiente tick
         commentatorAutoState.lastLeaderKeyName = safeRacerName(leader && leader.racerName);
 
         // Overtakes por swap de posiciones
@@ -16305,9 +16305,9 @@ function handleAutoCommentator() {
                 // Solo narramos swaps simples (evita anunciar cosas raras y evita "P1...P1"):
                 if (loserPrevPos && loserPrevPos !== currPos) continue;
 
-                // Nueva posiciÛn del perdedor: cae al lugar de donde vena el ganador
+                // Nueva posici√≥n del perdedor: cae al lugar de donde vena el ganador
                 let loserNewPos = winnerPrevPos || (currPos + 1);
-                // Guardrail: nunca narrar que ambos quedaron en la misma posiciÛn
+                // Guardrail: nunca narrar que ambos quedaron en la misma posici√≥n
                 if (loserNewPos === currPos) loserNewPos = currPos + 1;
 
                 const winner = safeRacerName(curr.racerName) || 'un piloto';
@@ -16454,10 +16454,10 @@ const defenderName = safeRacerName(ahead.racerName) || 'el de adelante';
 const attackerName = safeRacerName(behind.racerName) || 'el de atrs';
 const secNum = sec;
 
-// Tendencia (si el atacante viene ms r·pido en la ˙ltima vuelta, pesa ms)
+// Tendencia (si el atacante viene ms r√°pido en la √∫ltima vuelta, pesa ms)
 const aLast = Number(ahead.lastTime) || 0;
 const bLast = Number(behind.lastTime) || 0;
-const attackerFaster = (aLast > 0 && bLast > 0) ? ((aLast - bLast) / 1000) : 0; // >0 = el de atrs viene ms r·pido
+const attackerFaster = (aLast > 0 && bLast > 0) ? ((aLast - bLast) / 1000) : 0; // >0 = el de atrs viene ms r√°pido
 
 const rem = autoRememberPair(pairKey, secNum, leaderLap, now);
 const trendBonus = (rem.deltaSec < -0.08) ? 0.8 : (rem.deltaSec < -0.04 ? 0.4 : 0);
@@ -16692,7 +16692,7 @@ if (isMangaSess) {
 
         if (improved && since > 10000) {
           const t = msToVoiceTime(bestMs); // ya aplica regla flat/precision
-          const txt = bestName ? (`Vuelta r·pida. ${bestName} marca ${t}`) : (`Vuelta r·pida. ${t}`);
+          const txt = bestName ? (`Vuelta r√°pida. ${bestName} marca ${t}`) : (`Vuelta r√°pida. ${t}`);
           addCand({
             type: 'qualiBest',
             score: 6.8,
@@ -16806,7 +16806,7 @@ if (isMangaSess) {
 
             const MINI_HDR = {
               pro: {
-                manga: ['Clasificacion.', 'Clasificacion en vivo.', 'Como va la clasificaciÛn.'],
+                manga: ['Clasificacion.', 'Clasificacion en vivo.', 'Como va la clasificaci√≥n.'],
                 final: ['Carrera.', 'Carrera en vivo.', 'Como va la carrera.'],
                 other: ['Seguimos.', 'Actualizacion.', 'Estado.']
               },
@@ -16821,7 +16821,7 @@ if (isMangaSess) {
                 other: ['Control.', 'Dato.', 'Info.']
               },
               narrativo: {
-                manga: ['Clasificacion.', 'Cambiamos camara. Clasificacion.', 'Vamos con la clasificaciÛn.'],
+                manga: ['Clasificacion.', 'Cambiamos camara. Clasificacion.', 'Vamos con la clasificaci√≥n.'],
                 final: ['Carrera.', 'Cambiamos camara. Carrera.', 'Vamos con la carrera.'],
                 other: ['Seguimos.', 'Cambiamos camara.', 'Atencion.']
               }
@@ -16872,7 +16872,7 @@ if (isMangaSess) {
             let msg = (header + ' ' + ((topTxt && names.length) ? (topIntro + '. ' + names.map(n => String(n)).join('. ') + '.') : (topTxt || ''))).trim();
 
             if (battleTxt) {
-              // battleTxt viene armado, pero aquÌ le damos variacion
+              // battleTxt viene armado, pero aqu√≠ le damos variacion
               try {
                 const fn = autoRandPick((MINI_BATTLE[styleMini] || MINI_BATTLE.pro), 'miniBattle:' + styleMini);
                 if (fn && typeof fn === 'function') {
@@ -17022,7 +17022,7 @@ function handleVoiceAndBeeps() {
 
       
 
-      // Track de cambios de posiciÛn en este tick
+      // Track de cambios de posici√≥n en este tick
       let posChangedTick = false;
       let posFrom = null;
       let posTo = null;
@@ -17041,15 +17041,15 @@ try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
       const isFinal = currentSessionInfo && currentSessionInfo.type === 'FINAL';
 
       // =========================
-      // 1) Detecta eventos y genera pendientes (no habla aquÌ)
+      // 1) Detecta eventos y genera pendientes (no habla aqu√≠)
       // =========================
 
-      // PosiciÛn (evento)
+      // Posici√≥n (evento)
       if (p.pos && p.pos > 0) {
         if (lastKnownPos == null) lastKnownPos = p.pos;
         if (startPosForSelected == null) startPosForSelected = p.pos;
 
-        // MANGA: estabilidad de posiciÛn (evita flip-flop en ranking por salida escalonada)
+        // MANGA: estabilidad de posici√≥n (evita flip-flop en ranking por salida escalonada)
         if (isManga) {
           const curPos = Math.floor(p.pos);
           if (mangaPosStability.lastSeenPos == null) {
@@ -17129,7 +17129,7 @@ try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
           let t = '';
           if (net > 0) t = `Vas +${Math.floor(net)}`;
           else if (net < 0) t = `Vas ${Math.floor(net)}`; // net ya es negativo
-          else t = 'Regresas a tu posiciÛn de salida';
+          else t = 'Regresas a tu posici√≥n de salida';
 
           pendingNetGain = {
             text: t,
@@ -17165,7 +17165,7 @@ try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
       if (voiceSettings.estlap) {
         const est = Number(p.estLap) || 0;
         if (est > 0) {
-          // Solo si cambi contra la ˙ltima estimacin hablada (no contra la vista)
+          // Solo si cambi contra la √∫ltima estimacin hablada (no contra la vista)
           const estInt = Math.floor(est);
           const lastInt = (lastSpokenEstLap == null) ? null : Math.floor(lastSpokenEstLap);
           const changedEnough = (lastInt == null) ? true : (Math.abs(estInt - lastInt) >= 2);
@@ -17224,7 +17224,7 @@ try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
         }
         lastAnnouncedLapcount = lapsNow;
 
-        // MANGA: ventana de asentamiento para posiciÛn (ranking por tiempo)
+        // MANGA: ventana de asentamiento para posici√≥n (ranking por tiempo)
         if (isManga && voiceSettings.pos) {
           startMangaPosSettle(lapsNow, p && p.pos != null ? p.pos : null);
         }
@@ -17305,7 +17305,7 @@ try {
       }
 
       if (pendingPosChange && voiceSettings.pos) {
-        // PosiciÛn con nombres (adelante/atrs) para que sea realmente til
+        // Posici√≥n con nombres (adelante/atrs) para que sea realmente til
         const ppos = (pendingPosChange.pos != null) ? pendingPosChange.pos : (p && p.pos ? Math.floor(p.pos) : 0);
         let extra = '';
         if (ctx && !basicModeEnabled) {
@@ -17515,7 +17515,7 @@ try {
         }
       }
 
-      // Referencia al lÌder (cada 3 vueltas)
+      // Referencia al l√≠der (cada 3 vueltas)
       if (voiceSettings.leadergap && lapsNow > 0 && ((isManga && (lapsNow % 5 === 0)) || (!isManga && (lapsNow % 3 === 0)))) {
         const leader = raceData.classification.find(r => r.pos === 1);
         if (leader && leader.time != null && p.time != null) {
@@ -17760,7 +17760,7 @@ speakBtn.addEventListener('click', () => {
       const bestTxt = bestMsFinal ? tiempoATexto(bestMsFinal) : '';
       const meanTxt = meanMsFinal ? tiempoATexto(meanMsFinal) : '';
       const gapTxt = formatoGapVueltas(p.gap);
-      let msg = `PosiciÛn ${pos}. `;
+      let msg = `Posici√≥n ${pos}. `;
       if (bestTxt) msg += `Best lap ${bestTxt}. `;
       if (meanTxt) msg += `Promedio ${meanTxt}. `;
       if (gapTxt) msg += `Diferencia ${gapTxt}. `;
@@ -17918,7 +17918,7 @@ let label = 'MODO -';
 // =========================
 // FIN DE SESIN (por duracin)
 // - MANGA: 3:00 -> "Termin la clasificacin"
-// - FINAL: segn modo (A=6:00, otras=4:00) -> "Carrera terminada" + posiciÛn + resumen
+// - FINAL: segn modo (A=6:00, otras=4:00) -> "Carrera terminada" + posici√≥n + resumen
 // Dispara SOLO cuando tu tiempo total cruza el lmite EN UNA NUEVA VUELTA.
 // =========================
 let sessionFinishSig = '';
@@ -17963,7 +17963,7 @@ function buildSessionFinishMessage(row) {
 
   let msg = isManga ? 'Termin la clasificacin.' : 'Carrera terminada.';
 
-  // Resultado (si sabemos posiciÛn)
+  // Resultado (si sabemos posici√≥n)
   if (posNum > 0) msg += ' P' + posNum + '.';
 
   // Vueltas y tiempo total (si existen)
@@ -17972,7 +17972,7 @@ function buildSessionFinishMessage(row) {
 
   // Resumen extra para finales cuando hay podio
   if (isFinal && posNum > 0) {
-    if (posNum === 1) msg += ' Felicidades, campeÛn.';
+    if (posNum === 1) msg += ' Felicidades, campe√≥n.';
     else if (posNum === 2) msg += ' Segundo lugar. Podio.';
     else if (posNum === 3) msg += ' Tercer lugar. Podio.';
     else if (posNum <= 10) msg += ' Top 10. Buen cierre.';
@@ -18000,7 +18000,7 @@ function checkSessionFinishOnLap() {
     const dur = Number(info.durationMs) || 0;
     if (!dur) return;
 
-    // Elegimos piloto seleccionado; si no hay, usamos lÌder
+    // Elegimos piloto seleccionado; si no hay, usamos l√≠der
     let row = null;
     if (selectedPilotKey) {
       row = raceData.classification.find(r => getPilotKey(r) === selectedPilotKey) || null;
@@ -18021,7 +18021,7 @@ function checkSessionFinishOnLap() {
     // Solo disparar cuando sube una vuelta
     if (laps <= (prev.laps || 0)) return;
 
-    // Condicin: cruz el lmite en la ˙ltima vuelta
+    // Condicin: cruz el lmite en la √∫ltima vuelta
     if (totalMs < dur) return;
 
     const msg = buildSessionFinishMessage(row);
@@ -18093,7 +18093,7 @@ function checkSessionFinishOnLap() {
         // Twemoji SVG codes (regional indicators)
         const pairs = [
           ['REINO UNIDO','1f1ec-1f1e7'], ['UK','1f1ec-1f1e7'], ['UNITED KINGDOM','1f1ec-1f1e7'],
-          ['M…XICO','1f1f2-1f1fd'],
+          ['M√âXICO','1f1f2-1f1fd'],
           ['COSTA RICA','1f1e8-1f1f7'],
           ['ITALIA','1f1ee-1f1f9'],
           ['EUA','1f1fa-1f1f8'], ['USA','1f1fa-1f1f8'], ['ESTADOS UNIDOS','1f1fa-1f1f8'], ['UNITED STATES','1f1fa-1f1f8'],
@@ -18385,7 +18385,7 @@ handleVoiceAndBeeps();
               setLiveStatus(false);
               return;
             }
-            // Coalesce: si llegan muchos updates por segundo, procesamos el u˙ltimo en un tick
+            // Coalesce: si llegan muchos updates por segundo, procesamos el u√∫ltimo en un tick
             __pendingSnapData = snap.data() || {};
             if (__snapScheduled) return;
             __snapScheduled = true;
