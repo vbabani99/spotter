@@ -58,7 +58,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.16</title>
+  <title>vics_Smart_Spotter_v0.3.19</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -5753,7 +5753,7 @@ html, body {
 
 
 /* =========================
-   Q TABLA (Clasificacin) - UI only
+   Q TABLA (Clasificación) - UI only
    ========================= */
 .header-help.header-qtable{ letter-spacing: .35px; font-weight: 900; }
 
@@ -6239,13 +6239,13 @@ html, body{
           <div class="hdr-break"></div>
           <button class="header-help header-auto btn-pro" id="autoSkinBtn" type="button" title="Auto-skin" data-kind="auto"><span class="ico"></span>&#x1F916;<span class="lbl" id="autoSkinLbl">AUTO</span></button>
           <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Skin Vic's Pulse Timing" data-kind="vic">VIC&#x1F40A;</button>
-          <button class="header-help header-qtable btn-pro" id="qTableBtn" type="button" title="Q TABLA (clasificacin)" data-kind="qtabla"><span class="ico"></span>&#x1F4CA;</button>
+          <button class="header-help header-qtable btn-pro" id="qTableBtn" type="button" title="Q TABLA (clasificación)" data-kind="qtabla"><span class="ico"></span>&#x1F4CA;</button>
           <button class="header-help btn-pro" id="manualBtn" type="button" title="Manual y ayuda" data-kind="manual"><span class="ico"></span>&#x1F4D6;</button>
         </div>
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.16</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.19</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6702,6 +6702,47 @@ html, body{
   </div>
 </div>
 
+
+  <!-- Q TABLA modal -->
+<div class="manual-backdrop" id="qualiBackdrop" aria-hidden="true">
+  <div class="manual-panel" role="dialog" aria-modal="true" aria-labelledby="qualiTitle">
+    <div class="manual-top">
+      <div>
+        <div class="manual-title" id="qualiTitle">Q TABLA</div>
+        <div class="manual-sub">Clasificación guardada por sesión (Q). Mejor por piloto o vista por Q.</div>
+      </div>
+      <button class="manual-close" id="qualiCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
+    </div>
+
+    <div class="qmeta" id="qualiMeta">
+      <span class="qchip" id="qualiMetaEvent">Evento: -</span>
+      <span class="qchip" id="qualiMetaDate">Fecha: -</span>
+      <span class="qchip" id="qualiMetaSessions">Sesiones: -</span>
+
+      <label class="qsel" style="margin-left:auto;">
+        Vista:
+        <select id="qualiViewSel">
+          <option value="best">Mejor por piloto</option>
+          <option value="byq">Por Q</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="qtable-wrap">
+      <table class="qtable" aria-label="Tabla de clasificación">
+        <thead id="qualiThead"></thead>
+        <tbody id="qualiTbody">
+          <tr><td colspan="6" class="qcell-empty">Sin datos aún</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="manual-foot">
+      <span class="manual-tip">Tip: si apenas arrancó la carrera y todo viene en ceros, espera 1-2 vueltas.</span>
+    </div>
+  </div>
+</div>
+
 <script id="appScript">
 
 
@@ -6907,7 +6948,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.16";
+const APP_NAME = "vics_Smart_Spotter_v0.3.19";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10722,8 +10763,8 @@ let __ttsStartGuard = 0;
 
         // Normaliza unicode (acentos) para TTS
         try { s = s.normalize('NFC'); } catch(e) {}
-        // TTS-safe: evita que algunas voces pronuncien raro "Clasificacin"
-        s = s.replace(/Clasificacin/gi, 'Clasificaci\xf3n');
+        // TTS-safe: evita que algunas voces pronuncien raro "Clasificación"
+        s = s.replace(/Clasificación/gi, 'Clasificaci\xf3n');
 
         // Unidades: "123 ms" -> segundos/d\xe9cimas/cent\xe9simas/mil\xe9simas seg\xfan corresponda
         // Nota: esto SOLO aplica cuando "ms" viene con n\xfa mero. "ms" suelto se trata como "m\xe1s" m\xe1s abajo.
@@ -15432,14 +15473,14 @@ function autoBuildStoryCandidate(args) {
       qualiBest: [
         (c) => 'En clasificacin, ' + c.pilot + ' marca ' + c.best + '.',
         (c) => 'Tiempo fuerte en quali: ' + c.pilot + ' ' + c.best + '.',
-        (c) => 'Clasificacin: ' + c.pilot + ' mejora con ' + c.best + '.',
+        (c) => 'Clasificación: ' + c.pilot + ' mejora con ' + c.best + '.',
         (c) => 'Queda el registro. ' + c.pilot + ' con ' + c.best + '.',
         (c) => 'Buen intento. ' + c.pilot + ' suelta ' + c.best + '.',
-        (c) => 'Clasificacin se mueve. ' + c.pilot + ' con ' + c.best + '.',
+        (c) => 'Clasificación se mueve. ' + c.pilot + ' con ' + c.best + '.',
         (c) => 'Queda la vuelta. ' + c.pilot + ' ' + c.best + '.',
         (c) => 'Queda el tiempo: ' + c.pilot + ' ' + c.best + '.',
         (c) => 'Ojo ese ritmo. ' + c.pilot + ' con ' + c.best + '.',
-        (c) => 'Clasificacin al detalle. ' + c.pilot + ' marca ' + c.best + '.'
+        (c) => 'Clasificación al detalle. ' + c.pilot + ' marca ' + c.best + '.'
       ]
     };
 
@@ -18445,7 +18486,7 @@ handleVoiceAndBeeps();
 
 // Best lap global: actualizado desde raceData.classification (ver refreshSessionBestCache)
     // =========================
-    // Q TABLA (Clasificacin) - UI only (NO toca lgica de carrera)
+    // Q TABLA (Clasificación) - UI only (NO toca lgica de carrera)
     // =========================
     const QUALI_STORE_KEY = 'trm_quali_store_v1';
 
@@ -18590,9 +18631,23 @@ handleVoiceAndBeeps();
     }
 
     // Guarda un snapshot por Q cuando detecta que estamos en MANGA + Qx.
+    function isMangaRaceName(raceName){
+      // Q TABLA debe guardar SOLO mangas / clasificación (nunca finales).
+      const s = String(raceName || '').toUpperCase();
+      if (!s) return false;
+      // Si dice FINAL/A MAIN/B MAIN/C MAIN, no es manga.
+      if (/(\bFINAL\b|\bA\s*MAIN\b|\bB\s*MAIN\b|\bC\s*MAIN\b)/.test(s)) return false;
+      // Señales típicas de manga/clasificación
+      if (/(\bMANGA\b|\bQUALI\b|\bCLASIF\b|\bCLASIFIC\b|\bQ\s*\d+\b|\bHEAT\b|\bROUND\b|\bRND\b)/.test(s)) return true;
+      return false;
+    }
+
     function recordQualiSnapshotIfNeeded(raw){
       try{
         if (!raw || !raw.raceName || !Array.isArray(raw.classification)) return;
+
+        // Solo mangas/clasificación
+        if (!isMangaRaceName(raw.raceName)) return;
 
         const info = parseSessionFromRaceName(raw.raceName) || {};
         if (String(info.type || '').toUpperCase() !== 'MANGA') return;
@@ -18632,7 +18687,9 @@ handleVoiceAndBeeps();
           const pilotKey = getQualiPilotKey(r, store);
           if (!pilotKey) continue;
 
-          if (laps > 0 || timeMs < Number.MAX_SAFE_INTEGER || bestMs > 0) anyReal = true;
+          const isRowReal = (laps > 0) || (timeMs < Number.MAX_SAFE_INTEGER) || (bestMs > 0);
+          if (!isRowReal) continue;
+          anyReal = true;
 
           // Snapshot rows (throttled)
           if (shouldSaveRows){
@@ -18648,7 +18705,7 @@ handleVoiceAndBeeps();
             });
           }
 
-          // Best-per-pilot (siempre)
+          // Best-per-pilot (solo si hay datos reales)
           const prev = store.bestByPilot[pilotKey];
           const candidate = {
             pilotKey,
@@ -18668,7 +18725,7 @@ handleVoiceAndBeeps();
         const lastPersist = Number(store._lastPersist || 0) || 0;
         const allowPersist = (now - lastPersist > 1200);
 
-        if (shouldSaveRows && (anyReal || !already)){
+        if (shouldSaveRows && anyReal){
           store.sessions[qid] = {
             raceName: raw.raceName,
             savedAt: now,
@@ -18676,7 +18733,7 @@ handleVoiceAndBeeps();
           };
         }
 
-        if (allowPersist || shouldSaveRows){
+        if ((allowPersist || shouldSaveRows) && anyReal){
           store._lastPersist = now;
           saveQualiStore(store);
         }
@@ -18690,7 +18747,14 @@ handleVoiceAndBeeps();
 
     function computeQualiList(store){
       if (!store || !store.bestByPilot) return [];
-      const raw = Object.values(store.bestByPilot).map(x => ({...x}));
+      const rawAll = Object.values(store.bestByPilot).map(x => ({...x}));
+      const raw = rawAll.filter(it => {
+        if (!it) return false;
+        const laps = Number(it.laps || 0) || 0;
+        const tms = Number(it.timeMs || 0);
+        const bms = Number(it.bestMs || 0) || 0;
+        return (laps > 0) || (isFinite(tms) && tms < Number.MAX_SAFE_INTEGER) || (bms > 0);
+      });
       const grouped = {};
       for (const it of raw){
         if (!it) continue;
@@ -18714,6 +18778,8 @@ handleVoiceAndBeeps();
       const laps = Number(r.laps || 0);
       const tms = Number(r.timeMs || 0);
       const bms = Number(r.bestMs || 0);
+      const tmsOk = (isFinite(tms) && tms > 0 && tms < Number.MAX_SAFE_INTEGER);
+      if ((!laps || laps <= 0) && !tmsOk && (!bms || bms <= 0)) return '<span class="qcell-empty">-</span>';
       const t = (isFinite(tms) && tms < Number.MAX_SAFE_INTEGER) ? msToMinSec(tms) : '-';
       const b = (bms > 0) ? msToMinSec(bms) : '-';
       return `<div class="qmain">${laps}v - ${qEscapeHtml(t)}</div><div class="qbest">${qEscapeHtml(b)}</div>`;
@@ -18734,11 +18800,13 @@ handleVoiceAndBeeps();
       const store = loadQualiStoreFor(rn);
 
       const sessions = (store && store.sessions) ? store.sessions : {};
-      const sessionKeys = Object.keys(sessions || {}).sort((a,b)=>{
-        const na = parseInt(String(a).replace(/\D+/g,'')) || 0;
-        const nb = parseInt(String(b).replace(/\D+/g,'')) || 0;
-        return na - nb;
-      });
+      const sessionKeys = Object.keys(sessions || {})
+        .filter((k)=> isMangaRaceName((sessions && sessions[k] && sessions[k].raceName) ? sessions[k].raceName : ''))
+        .sort((a,b)=>{
+          const na = parseInt(String(a).replace(/\D/g,'')) || 0;
+          const nb = parseInt(String(b).replace(/\D/g,'')) || 0;
+          return na - nb;
+        });
 
       const raceBase = (store && store.raceBase) ? store.raceBase : '';
       const dateKey  = (store && store.date) ? store.date : getLocalDateKey();
