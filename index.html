@@ -1,12 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.31 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.32 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-31
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.31: FIX SyntaxError (token inesperado) + Q TABLA - Best Lap ahora SIEMPRE conserva el mejor valor plausible del feed aunque no cambie el tiempo total (anti valores locos) + tooltip con fuente de BL -
+- v0.3.32: FIX SyntaxError (token inesperado) + Q TABLA - Best Lap ahora SIEMPRE conserva el mejor valor plausible del feed aunque no cambie el tiempo total (anti valores locos) + tooltip con fuente de BL -
 - v0.3.29: Q TABLA - Best Lap ahora toma el valor mas confiable del feed (anti 0:00.xxx, soporte ms/seg/us) + mas color por columnas + blindaje extra TTS (anti 'ghost speaking' en primer plano) -
 - v0.3.28: Q TABLA - Best Lap arreglado (usa valor del feed, fix segundos vs ms) + color/contraste en tabla.
 - v0.3.27: Manual rehecho (Q TABLA: Mejor por piloto / Por Q + tips iPhone/PC + troubleshooting).
@@ -62,7 +62,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.31</title>
+  <title>vics_Smart_Spotter_v0.3.32</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6294,7 +6294,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.31</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.32</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6608,7 +6608,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.31). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.32). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -7025,7 +7025,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.31";
+const APP_NAME = "vics_Smart_Spotter_v0.3.32";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10876,13 +10876,15 @@ let ttsRate = detectDefaultTtsRate();
                 const now = Date.now();
                 const lastEv = (__ttsLastEventAt || 0);
 
-                // speaking fantasma: el browser dice speaking, pero no hay actividad real y nuestra bandera no esta en speaking
-                if (ss && ss.speaking && !speechSpeaking && lastEv && (now - lastEv) > 4500) {
-                  try { if (!__ttsCancelShieldUntil || now > __ttsCancelShieldUntil) ss.cancel(); } catch(e) {}
-                  __ttsLastEventAt = now;
+                // speaking/pending fantasma: el browser dice speaking/pending, pero no hay actividad real y nuestra bandera no esta en speaking
+                if (ss && (ss.speaking || ss.pending) && !speechSpeaking && lastEv) {
+                  const thr = ss.speaking ? 9000 : 4500;
+                  if ((now - lastEv) > thr) {
+                    try { if (!__ttsCancelShieldUntil || now > __ttsCancelShieldUntil) ss.cancel(); } catch(e) {}
+                    __ttsLastEventAt = now;
+                  }
                 }
-
-                // bandera interna atorada
+// bandera interna atorada
                 if (speechSpeaking && ss && !ss.speaking && lastEv && (now - lastEv) > 4500) {
                   speechSpeaking = false;
                 }
@@ -10890,7 +10892,7 @@ let ttsRate = detectDefaultTtsRate();
 
               // Si hay cola y no esta hablando, empuja
               try {
-                if (speechQueue && speechQueue.length && !speechSpeaking && !(window.speechSynthesis && window.speechSynthesis.speaking)) {
+                if (speechQueue && speechQueue.length && !speechSpeaking && !(window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.pending))) {
                   pumpSpeechQueue();
                 }
               } catch(e) {}
@@ -11586,23 +11588,24 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         if (!voiceMasterEnabled) return;
         if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
 
-        // Guard + recovery: Chrome a veces se queda en "speaking=true" fantasma y deja de sacar cola.
+        // Guard + recovery: Chrome a veces se queda en speaking/pending fantasma y deja de sacar cola.
         const __ss = window.speechSynthesis;
         if (speechSpeaking) return;
-        if (__ss && __ss.speaking){
+
+        if (__ss && (__ss.speaking || __ss.pending)){
           const now = Date.now();
           const lastEv = (__ttsLastEventAt || 0);
-          // Si no hay actividad reciente, es speaking fantasma: cancela y reintenta
-          if (lastEv && (now - lastEv) > 4500) {
+          const thr = __ss.speaking ? 9000 : 4500;
+          // Si no hay actividad reciente, es speaking/pending fantasma: cancela y reintenta
+          if (lastEv && (now - lastEv) > thr) {
             try { if (!__ttsCancelShieldUntil || now > __ttsCancelShieldUntil) __ss.cancel(); } catch(e){}
             __ttsLastEventAt = now;
             speechSpeaking = false;
-            setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 50);
+            setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 80);
           }
           return;
         }
-
-        // Si el TTS esta bloqueado y esperando tap, no intentes hablar (evita loops y 20 taps).
+// Si el TTS esta bloqueado y esperando tap, no intentes hablar (evita loops y 20 taps).
         // Pero si estamos en primer plano y ya se desbloqueo antes, auto-recupera sin exigir tap.
         if (pendingAutoVoiceUnlock) {
           try {
@@ -19120,20 +19123,19 @@ try{
             if (!r) return { ms:0, raw:'', key:'' };
     
             const entries = [
-          ['bestLapTimeMs', r.bestLapTimeMs],
-          ['bestLapMs', r.bestLapMs],
+          // Prefer explicit ms fields first (per pilot)
           ['bestMs', r.bestMs],
+          ['bestLapMs', r.bestLapMs],
+          ['bestLapTimeMs', r.bestLapTimeMs],
           ['fastestLapMs', r.fastestLapMs],
-          ['bestLapTime', r.bestLapTime],
-          ['fastestLap', r.fastestLap],
           ['bestTimeMs', r.bestTimeMs],
+
+          // Then explicit formatted strings (per pilot)
+          ['bestTimeFmt', r.bestTimeFmt],
+          ['bestLapTimeFmt', r.bestLapTimeFmt],
+          ['bestLapTime', r.bestLapTime],
           ['bestTime', r.bestTime],
-          ['best', r.best],
-          ['bestlap', r.bestlap],
-          ['best_lap', r.best_lap],
-          ['bl', r.bl],
-          ['BL', r.BL],
-          ['bestLap', r.bestLap]
+          ['fastestLap', r.fastestLap]
         ];
     
             // Pass 1: evitar indices tipo "7" cuando hay laps>=7 (comun en algunos feeds)
