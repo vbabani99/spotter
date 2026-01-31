@@ -58,7 +58,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.19</title>
+  <title>vics_Smart_Spotter_v0.3.20</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6245,7 +6245,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.19</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.20</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6948,7 +6948,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.19";
+const APP_NAME = "vics_Smart_Spotter_v0.3.20";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10727,6 +10727,34 @@ let ttsRate = detectDefaultTtsRate();
       }, 250);
 
       window.speechSynthesis.onvoiceschanged = () => refreshVoiceList();
+
+      // Keep-alive TTS en primer plano: evita que el motor se "duerma" aunque la pantalla esté activa.
+      // Solo actúa cuando VOZ está ON, la pestaña está visible y no estamos en estado de "needs unlock".
+      try {
+        if (!__ttsKeepAliveTimer) {
+          __ttsKeepAliveTimer = setInterval(() => {
+            try {
+              const vis = (document && document.visibilityState) ? document.visibilityState : 'visible';
+              if (vis !== 'visible') return;
+              if (!voiceMasterEnabled) return;
+              if (pendingAutoVoiceUnlock) return;
+              if (!window.speechSynthesis) return;
+
+              // Mantén vivo el motor
+              try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+              try { if (typeof window.speechSynthesis.getVoices === 'function') window.speechSynthesis.getVoices(); } catch(e) {}
+
+              // Si hay cola y se quedó atorado, empuja
+              try {
+                if (speechQueue && speechQueue.length && !speechSpeaking && !window.speechSynthesis.speaking) {
+                  pumpSpeechQueue();
+                }
+              } catch(e) {}
+            } catch(e) {}
+          }, 3000);
+        }
+      } catch(e) {}
+
     }
 
     // Botn de prueba de voz (genera gesto de usuario y ayuda a iOS)
@@ -11434,7 +11462,8 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         try {
           u.onstart = () => {
             __ttsDidStart = true;
-            try { if (__ttsStartGuard) { clearTimeout(__ttsStartGuard); __ttsStartGuard = 0; } } catch(e) {}
+                        try { __ttsStartGuardFails = 0; } catch(e) {}
+try { if (__ttsStartGuard) { clearTimeout(__ttsStartGuard); __ttsStartGuard = 0; } } catch(e) {}
           };
         } catch(e) {}
         u.lang = 'es-MX';
@@ -11485,7 +11514,8 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
         u.onend = () => {
           clearWd();
           speechSpeaking = false;
-          try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_title_') === 0) { __autoIntroDoneKeys.add(next.key); } } catch(e) {}
+                    try { __ttsStartGuardFails = 0; } catch(e) {}
+try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_title_') === 0) { __autoIntroDoneKeys.add(next.key); } } catch(e) {}
           lastSpokenKeyAt.set(next.key, Date.now());
           try { lastSpokenTextAt.set(next.text, Date.now()); } catch(e) {}
           const d = Number(next.postDelayMs || 0) || 0;
@@ -11495,7 +11525,8 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
         u.onerror = () => {
           clearWd();
           speechSpeaking = false;
-          lastSpokenKeyAt.set(next.key, Date.now());
+                    try { __ttsStartGuardFails = 0; } catch(e) {}
+lastSpokenKeyAt.set(next.key, Date.now());
           try { lastSpokenTextAt.set(next.text, Date.now()); } catch(e) {}
           const d = Number(next.postDelayMs || 0) || 0;
           if (d > 0) setTimeout(pumpSpeechQueue, d);
@@ -11531,7 +11562,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
               try {
                 const vis = (document && document.visibilityState) ? document.visibilityState : 'visible';
                 const canAutoRecover = (vis === 'visible' && __ttsUnlockedOnce);
-                if (canAutoRecover && __ttsStartGuardFails <= 2) {
+                if (canAutoRecover && __ttsStartGuardFails <= 6) {
                   // Recuperacion suave: reanuda + re-pump sin bloquear UI
                   try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
                   try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
@@ -11542,7 +11573,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
                   try { pendingAutoVoiceUnlock = true; } catch(e) {}
                   try { __ttsBlockedSince = Date.now(); } catch(e) {}
                   try { __pruneQueueDuringBlock(); } catch(e) {}
-                  try { __ttsUnlockedOnce = false; } catch(e) {}
+                  try { const vis2 = (document && document.visibilityState) ? document.visibilityState : 'visible'; if (vis2 !== 'visible') __ttsUnlockedOnce = false; } catch(e) {}
                   try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
                   try { showToast('Toca la pantalla para reactivar audio', 1800); } catch(e) {}
                 }
