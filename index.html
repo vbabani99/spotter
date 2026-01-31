@@ -1,11 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.27 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.28 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
-Fecha: 2026-01-27
+Fecha: 2026-01-31
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.3.28: Q TABLA - Best Lap arreglado (usa valor del feed, fix segundos vs ms) + color/contraste en tabla.
 - v0.3.27: Manual rehecho (Q TABLA: Mejor por piloto / Por Q + tips iPhone/PC + troubleshooting).
 - v0.0.2.21: Q TABLA (FIX guardado) (clasificacin) - mejor resultado por piloto (best-per-pilot) guardado por da/evento. UI only.
 - v0.0.2.23: Fix UX: VOZ responde al primer toque (iOS/Android), debounced LIVE (sin parpadeo), header altura estable (sin salto). UI/TTS only.
@@ -59,7 +60,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.27</title>
+  <title>vics_Smart_Spotter_v0.3.28</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -5841,6 +5842,37 @@ html, body {
 }
 
 
+#qualiBackdrop .qtable td{
+  border-bottom: 1px solid rgba(148,163,184,0.08);
+}
+#qualiBackdrop .qtable tbody tr:hover td{
+  background: rgba(255,255,255,0.03);
+}
+#qualiBackdrop .qtable tbody tr:nth-child(1) td:nth-child(-n+2){
+  background: rgba(255, 215, 0, 0.06);
+}
+#qualiBackdrop .qtable tbody tr:nth-child(2) td:nth-child(-n+2){
+  background: rgba(220, 220, 220, 0.045);
+}
+#qualiBackdrop .qtable tbody tr:nth-child(3) td:nth-child(-n+2){
+  background: rgba(205, 127, 50, 0.05);
+}
+#qualiBackdrop .qtable tbody tr:nth-child(-n+3) td:first-child{
+  font-weight: 950;
+}
+#qualiBackdrop .qtable tbody tr:nth-child(1) td:first-child{ color: rgba(255,215,0,0.95); }
+#qualiBackdrop .qtable tbody tr:nth-child(2) td:first-child{ color: rgba(230,230,230,0.95); }
+#qualiBackdrop .qtable tbody tr:nth-child(3) td:first-child{ color: rgba(205,127,50,0.95); }
+
+#qualiBackdrop .qbest{
+  margin-top: 2px;
+  font-weight: 950;
+  letter-spacing: .2px;
+  color: rgba(216, 170, 255, 0.96);
+  text-shadow: 0 0 10px rgba(216,170,255,0.12);
+}
+
+
 /* =========================
    HARD OVERRIDES v0.0.2.26
    - Corrige "brinco" del header y recortes en iPhone 12
@@ -6246,7 +6278,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.27</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.28</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6560,7 +6592,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.27). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.28). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -6977,7 +7009,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.27";
+const APP_NAME = "vics_Smart_Spotter_v0.3.28";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -18998,10 +19030,29 @@ handleVoiceAndBeeps();
           else timeMsParsed = parseTimeToMs(timeRaw);
           const timeMs = (isFinite(timeMsParsed) && timeMsParsed > 0) ? timeMsParsed : Number.MAX_SAFE_INTEGER;
 
-          const bestRaw = (r.best != null ? r.best : (r.bestLapTime != null ? r.bestLapTime : (r.bestLap != null ? r.bestLap : (r.bestLapMs != null ? r.bestLapMs : (r.bestMs != null ? r.bestMs : '')))));
+          const bestRaw =
+            (r.bestLapTimeMs != null ? r.bestLapTimeMs :
+             (r.bestLapTime != null ? r.bestLapTime :
+              (r.bestLapMs != null ? r.bestLapMs :
+               (r.bestMs != null ? r.bestMs :
+                (r.best != null ? r.best : '')))));
           let bestMsParsed = 0;
-          if (typeof bestRaw === 'number') bestMsParsed = bestRaw;
-          else bestMsParsed = parseTimeToMs(bestRaw);
+          if (typeof bestRaw === 'number') {
+            // Guard: a veces 'best' viene como NUMERO DE VUELTA (indice), no tiempo.
+            // Si es entero y cae dentro de [1..laps], lo ignoramos y buscamos otros campos.
+            const isInt = Math.abs(bestRaw - Math.round(bestRaw)) < 1e-9;
+            const isLikelyLapIndex = isInt && laps > 0 && bestRaw > 0 && bestRaw <= laps && bestRaw <= 200;
+            if (isLikelyLapIndex) {
+              bestMsParsed = 0;
+            } else {
+              // En algunos feeds el best lap viene como segundos (ej. 9.103) y no como ms.
+              // Regla: si es numero menor a 1000, lo tratamos como segundos y lo convertimos a ms.
+              if (bestRaw > 0 && bestRaw < 1000) bestMsParsed = Math.round(bestRaw * 1000);
+              else bestMsParsed = Math.round(bestRaw);
+            }
+          } else {
+            bestMsParsed = parseTimeToMs(bestRaw);
+          }
           const bestMs = (isFinite(bestMsParsed) && bestMsParsed > 0 && bestMsParsed < 600000) ? bestMsParsed : 0;
 
           const pilotKey = getQualiPilotKey(r, store);
@@ -19095,6 +19146,20 @@ handleVoiceAndBeeps();
       });
       return arr;
     }
+    function msToLapStr(ms){
+      const m = Number(ms || 0);
+      if (!isFinite(m) || m <= 0) return '-';
+      const mm = Math.round(m);
+      // Para lap times, si es menor a 1 minuto mostramos solo segundos.mmm (ej. 9.103)
+      if (mm < 60000){
+        const s = Math.floor(mm / 1000);
+        const rem = mm - s * 1000;
+        return `${s}.${String(rem).padStart(3,'0')}`;
+      }
+      return msToMinSec(mm);
+    }
+
+
 
     function cellHtml(r){
       if (!r) return '<span class="qcell-empty">-</span>';
@@ -19104,7 +19169,7 @@ handleVoiceAndBeeps();
       const tmsOk = (isFinite(tms) && tms > 0 && tms < Number.MAX_SAFE_INTEGER);
       if ((!laps || laps <= 0) && !tmsOk && (!bms || bms <= 0)) return '<span class="qcell-empty">-</span>';
       const t = (isFinite(tms) && tms < Number.MAX_SAFE_INTEGER) ? msToMinSec(tms) : '-';
-      const b = (bms > 0) ? msToMinSec(bms) : '-';
+      const b = (bms > 0) ? msToLapStr(bms) : '-';
       return `<div class="qmain">${laps}v - ${qEscapeHtml(t)}</div><div class="qbest">${qEscapeHtml(b)}</div>`;
     }
 
@@ -19250,7 +19315,7 @@ handleVoiceAndBeeps();
         const r = list[i];
         const laps = Number(r.laps || 0);
         const t = (isFinite(r.timeMs) && r.timeMs < Number.MAX_SAFE_INTEGER) ? msToMinSec(Number(r.timeMs)) : '-';
-        const b = (Number(r.bestMs||0) > 0) ? msToMinSec(Number(r.bestMs||0)) : '-';
+        const b = (Number(r.bestMs||0) > 0) ? msToLapStr(Number(r.bestMs||0)) : '-';
         out += `<tr>
           <td>${i+1}</td>
           <td>${qEscapeHtml(r.racerName || '')}</td>
