@@ -58,7 +58,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.20</title>
+  <title>vics_Smart_Spotter_v0.3.23</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6238,14 +6238,14 @@ html, body{
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
           <div class="hdr-break"></div>
           <button class="header-help header-auto btn-pro" id="autoSkinBtn" type="button" title="Auto-skin" data-kind="auto"><span class="ico"></span>&#x1F916;<span class="lbl" id="autoSkinLbl">AUTO</span></button>
-          <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Skin Vic's Pulse Timing" data-kind="vic">VIC&#x1F40A;</button>
+          <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Tema: VIC [AUTO]" data-kind="vic">VIC🐊</button>
           <button class="header-help header-qtable btn-pro" id="qTableBtn" type="button" title="Q TABLA (clasificación)" data-kind="qtabla"><span class="ico"></span>&#x1F4CA;</button>
           <button class="header-help btn-pro" id="manualBtn" type="button" title="Manual y ayuda" data-kind="manual"><span class="ico"></span>&#x1F4D6;</button>
         </div>
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.20</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.23</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6948,7 +6948,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.20";
+const APP_NAME = "vics_Smart_Spotter_v0.3.23";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -8227,26 +8227,72 @@ try{
       if (lbl) lbl.textContent = autoSkinEnabled ? 'AUTO' : 'MAN';
       autoSkinBtn.classList.toggle('active', !!autoSkinEnabled);
       autoSkinBtn.title = autoSkinEnabled
-        ? 'Auto-skin: ON (MANGA->BLUE, FINAL->AMBR)'
+        ? 'Auto-skin: ON (LIBRE->ICE, MANGA->BLUE, FINAL A->AMBR, FINAL B->PURP, FINAL C->LIME)'
         : 'Auto-skin: OFF (manual)';
       try{ if (skinBtn) skinBtn.title = 'Tema: ' + (skinBtn.textContent||'VIC') + (autoSkinEnabled ? ' [AUTO]' : ' [MAN]'); }catch(e){}
     }
 
 
+    function getSessionInfoFromRaceName(raceName){
+      const s0 = String(raceName || '');
+      const s = s0.toUpperCase().replace(/\s+/g,' ').trim();
+      const out = { kind: 'unknown', main: null, raw: s0 };
+      if (!s) return out;
+
+      // Entrenamiento / libre
+      if (/(\bLIBRE\b|ENTRENAMIENTO|PRACTICE|TRAINING|WARM\s?UP)/.test(s)){
+        out.kind = 'training';
+        return out;
+      }
+
+      // Finales (A/B/C)
+      if (/(\bFINAL\b|A\s?MAIN|B\s?MAIN|C\s?MAIN|MAIN\s?A|MAIN\s?B|MAIN\s?C|A\-MAIN|B\-MAIN|C\-MAIN)/.test(s)){
+        out.kind = 'final';
+        if (/(FINAL\s*A|A\s?MAIN|MAIN\s?A|A\-MAIN)/.test(s)) out.main = 'A';
+        else if (/(FINAL\s*B|B\s?MAIN|MAIN\s?B|B\-MAIN)/.test(s)) out.main = 'B';
+        else if (/(FINAL\s*C|C\s?MAIN|MAIN\s?C|C\-MAIN)/.test(s)) out.main = 'C';
+        return out;
+      }
+
+      // Manga / clasificación (Q)
+      if (/(\bMANGA\b|CLASIF|CLASIFICACI|\bQUALI\b|\bQ\d+\b|\bHEAT\b|\bROUND\b)/.test(s)){
+        out.kind = 'manga';
+        return out;
+      }
+
+      return out;
+    }
+
     function getAutoThemeForSessionInfo(info){
-      const t = String((info && info.type) || '').toUpperCase();
-      if (t === 'MANGA' || t === 'QUALI') return 'blue';
-      if (t.startsWith('FINAL')) return 'amber';
+      const k = String((info && info.kind) || '').toLowerCase();
+      const m = String((info && info.main) || '').toUpperCase();
+
+      // Mapa AUTO (lo que pediste):
+      // Entrenamiento/LIBRE -> ICE
+      // Manga/Clasificación -> BLUE
+      // Final A -> AMBR
+      // Final B -> PURP
+      // Final C -> LIME
+      if (k === 'training') return 'ice';
+      if (k === 'manga') return 'blue';
+      if (k === 'final'){
+        if (m === 'A') return 'amber';
+        if (m === 'B') return 'purple';
+        if (m === 'C') return 'lime';
+        return 'carbon';
+      }
       return null;
     }
 
     function maybeApplyAutoThemeByRaceName(raceName, force=false){
       if ((!autoSkinEnabled) && (!force)) return;
       if (!raceName) return;
+
       let info = null;
-      try { info = detectSessionFromRaceName(String(raceName)); } catch(e) {}
+      try { info = getSessionInfoFromRaceName(String(raceName)); } catch(e) { info = null; }
       const rec = getAutoThemeForSessionInfo(info);
       if (!rec) return;
+
       try { prefSet(THEME_KEY, rec); } catch(e) {}
       applyTheme(rec);
     }
@@ -8254,11 +8300,12 @@ try{
     function toggleAutoSkin(){
       autoSkinEnabled = !autoSkinEnabled;
       try{ prefSet(AUTO_SKIN_KEY, autoSkinEnabled ? '1' : '0'); }catch(e){}
+
       // Al prender AUTO, aplica el recomendado segun la carrera actual.
       try{ if (typeof lastRaceName !== 'undefined' && lastRaceName) maybeApplyAutoThemeByRaceName(lastRaceName, true); }catch(e){}
       refreshAutoSkinUI();
     }
-;
+
 
     function applyTheme(key){
       const found = THEMES.find(t => t.key === key) || THEMES[0];
@@ -18565,14 +18612,39 @@ handleVoiceAndBeeps();
       return k || raw.trim();
     }
     function getQualiIdFromRaceName(raceName){
+      // Key para Q TABLA:
+      // - Siempre incluye Q#
+      // - Si la carrera trae "Manga A/B/C/D" lo agrega para NO pisar Q1A vs Q1B
+      // - Si trae "Serie #" lo agrega para NO pisar series diferentes
       try{
         const info = parseSessionFromRaceName(raceName) || {};
         const q = String(info.q || '').trim();
-        if (q) return 'Q' + q;
+        if (q){
+          let key = 'Q' + q;
+          const type = String(info.type || '').toUpperCase();
+          const main = String(info.main || '').toUpperCase();
+          const serie = String(info.serie || '').trim();
+          if (type === 'MANGA' && main && /^[A-D]$/.test(main)) key += main;
+          if (serie && /^\d+$/.test(serie)) key += ('S' + serie);
+          return key;
+        }
       }catch(e){}
-      const m = String(raceName||'').match(/Q(\d+)(?=[\.\s-])/i);
-      return m ? ('Q' + m[1]) : '';
+
+      // Fallback simple por regex
+      const s = String(raceName||'').toUpperCase();
+      const qm = s.match(/\bQ\s*(\d+)\b/);
+      if (!qm) return '';
+      let key = 'Q' + qm[1];
+
+      const mm = s.match(/\bMANGA\s*([A-D])\b/);
+      if (mm && mm[1]) key += String(mm[1]).toUpperCase();
+
+      const sm = s.match(/\bSERIE\s*(\d+)\b/);
+      if (sm && sm[1]) key += ('S' + sm[1]);
+
+      return key;
     }
+
 
     function normalizeNameKey(v){
       if (v == null) return '';
@@ -18610,29 +18682,16 @@ handleVoiceAndBeeps();
     }
 
     function getQualiPilotKey(r, store){
+      // IMPORTANTE:
+      // En el feed, racerNumber puede reiniciarse por Manga/Grupo (Q1A vs Q1B),
+      // si lo usamos como llave se "pisan" pilotos y la tabla queda incompleta.
+      // Para Q TABLA usamos SOLO racerName (normalizado) como llave estable.
       const nameKey = getQualiNameKey(r);
-      const numKey  = getQualiNumberKey(r);
-
+      if (!nameKey) return '';
       if (store){
-        if (!store.aliasByName || typeof store.aliasByName !== 'object') store.aliasByName = {};
         if (!store.bestByPilot || typeof store.bestByPilot !== 'object') store.bestByPilot = {};
       }
-
-      if (numKey){
-        if (store && nameKey && !store.aliasByName[nameKey]) store.aliasByName[nameKey] = numKey;
-
-        if (store && nameKey){
-          const legacyKey = 'P' + nameKey;
-          if (legacyKey !== numKey && store.bestByPilot[legacyKey]) {
-            store.bestByPilot[numKey] = pickBetterQuali(store.bestByPilot[numKey], store.bestByPilot[legacyKey]);
-            try { delete store.bestByPilot[legacyKey]; } catch(e) {}
-          }
-        }
-        return numKey;
-      }
-
-      if (store && nameKey && store.aliasByName[nameKey]) return store.aliasByName[nameKey];
-      return nameKey ? ('P' + nameKey) : '';
+      return 'P' + nameKey;
     }
 
     function loadQualiStoreFor(raceName){
@@ -18642,7 +18701,7 @@ handleVoiceAndBeeps();
       if (!store || typeof store !== 'object') store = null;
 
       if (!store || store.date !== today || store.raceBase !== raceBase) {
-        store = { date: today, raceBase, sessions: {}, bestByPilot: {}, aliasByName: {} };
+        store = { date: today, raceBase, sessions: {}, bestByPilot: {}, aliasByName: {}, _pilotKeyMode: 'name' };
         try {
           if (typeof lsSet === 'function') lsSet(QUALI_STORE_KEY, JSON.stringify(store));
           else localStorage.setItem(QUALI_STORE_KEY, JSON.stringify(store));
@@ -18651,6 +18710,45 @@ handleVoiceAndBeeps();
         if (!store.sessions || typeof store.sessions !== 'object') store.sessions = {};
         if (!store.bestByPilot || typeof store.bestByPilot !== 'object') store.bestByPilot = {};
         if (!store.aliasByName || typeof store.aliasByName !== 'object') store.aliasByName = {};
+
+        // MIGRACION: antes se usaba racerNumber como llave (se pisaban pilotos entre mangas).
+        // Re-construimos bestByPilot desde sessions usando SOLO racerName.
+        const km = String(store._pilotKeyMode || '');
+        if (km !== 'name') {
+          const rebuilt = {};
+          try{
+            const keys = Object.keys(store.sessions || {});
+            for (const qid of keys){
+              const sess = store.sessions[qid];
+              const rows = (sess && Array.isArray(sess.rows)) ? sess.rows : [];
+              for (const row of rows){
+                if (!row) continue;
+                const nm = String(row.racerName || '').trim();
+                const nk = normalizeNameKey(nm);
+                if (!nk) continue;
+                const k = 'P' + nk;
+                const cand = {
+                  pilotKey: k,
+                  q: qid,
+                  racerNumber: row.racerNumber ?? '',
+                  racerName: nm,
+                  laps: Number(row.laps || 0) || 0,
+                  timeMs: Number(row.timeMs || Number.MAX_SAFE_INTEGER),
+                  timeRaw: String(row.timeRaw ?? ''),
+                  bestMs: Number(row.bestMs || 0) || 0,
+                  bestRaw: String(row.bestRaw ?? '')
+                };
+                rebuilt[k] = pickBetterQuali(rebuilt[k], cand);
+              }
+            }
+          }catch(e){}
+          store.bestByPilot = rebuilt;
+          store._pilotKeyMode = 'name';
+          try{
+            if (typeof lsSet === 'function') lsSet(QUALI_STORE_KEY, JSON.stringify(store));
+            else localStorage.setItem(QUALI_STORE_KEY, JSON.stringify(store));
+          }catch(e){}
+        }
       }
       return store;
     }
@@ -18834,9 +18932,29 @@ handleVoiceAndBeeps();
       const sessionKeys = Object.keys(sessions || {})
         .filter((k)=> isMangaRaceName((sessions && sessions[k] && sessions[k].raceName) ? sessions[k].raceName : ''))
         .sort((a,b)=>{
-          const na = parseInt(String(a).replace(/\D/g,'')) || 0;
-          const nb = parseInt(String(b).replace(/\D/g,'')) || 0;
-          return na - nb;
+          const parseKey = (k)=>{
+            const s = String(k||'').toUpperCase();
+            const qn = parseInt((s.match(/\d+/)||['0'])[0],10) || 0;
+            const mainM = s.match(/Q\d+([A-D])\b/);
+            const main = (mainM && mainM[1]) ? mainM[1] : '';
+            const serieM = s.match(/S(\d+)\b/);
+            const serie = (serieM && serieM[1]) ? (parseInt(serieM[1],10)||0) : 0;
+            return { qn, main, serie };
+          };
+          const pa = parseKey(a);
+          const pb = parseKey(b);
+
+          if (pa.qn !== pb.qn) return pa.qn - pb.qn;
+
+          // Orden A,B,C,D (vacío al final)
+          const ord = (c)=> c ? (('ABCD'.indexOf(c) + 1) || 99) : 99;
+          const oa = ord(pa.main);
+          const ob = ord(pb.main);
+          if (oa !== ob) return oa - ob;
+
+          if (pa.serie !== pb.serie) return pa.serie - pb.serie;
+
+          return String(a).localeCompare(String(b));
         });
 
       const raceBase = (store && store.raceBase) ? store.raceBase : '';
