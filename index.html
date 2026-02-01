@@ -1,12 +1,16 @@
 
 <!--
-vics_Smart_Spotter_v0.3.32 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.41 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-31
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.32: FIX SyntaxError (token inesperado) + Q TABLA - Best Lap ahora SIEMPRE conserva el mejor valor plausible del feed aunque no cambie el tiempo total (anti valores locos) + tooltip con fuente de BL -
+- v0.3.41: FIX BÁSICO en AUTO (ya no se queda mudo) - canta P1: vueltas + última vuelta + 'Nuevo líder' si cambia. Manual alineado.
+- v0.3.37: FIX SyntaxError (try/catch cerrado + cierre init-guard) - vuelve a cargar sin errores.
+- v0.3.36: FIX pageshow/pagehide consolidado (no perder reenganche al volver) + audit TTS/Q TABLA/manual/doc.
+- v0.3.36: AUDIT general (dedupe listeners, declara timers TTS, resume duplicado eliminado) + Q TABLA Best Lap usa SOLO bestMs/bestLapMs del feed (sin indices) + manual alineado + doc.
+- v0.3.33: FIX SyntaxError (token inesperado) + Q TABLA - Best Lap ahora SIEMPRE conserva el mejor valor plausible del feed aunque no cambie el tiempo total (anti valores locos) + tooltip con fuente de BL -
 - v0.3.29: Q TABLA - Best Lap ahora toma el valor mas confiable del feed (anti 0:00.xxx, soporte ms/seg/us) + mas color por columnas + blindaje extra TTS (anti 'ghost speaking' en primer plano) -
 - v0.3.28: Q TABLA - Best Lap arreglado (usa valor del feed, fix segundos vs ms) + color/contraste en tabla.
 - v0.3.27: Manual rehecho (Q TABLA: Mejor por piloto / Por Q + tips iPhone/PC + troubleshooting).
@@ -62,7 +66,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.32</title>
+  <title>vics_Smart_Spotter_v0.3.41</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -830,6 +834,24 @@ body {
       border-radius: 999px;
       background-color: #bbf7d0;
     }
+
+    .badge-voice-dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: #ef4444;
+      box-shadow: 0 0 10px rgba(239,68,68,0.65);
+    }
+    .badge-voice-dot.voice-on{
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34,197,94,0.85);
+    }
+    .badge-voice-dot.voice-off{
+      background: #ef4444;
+      box-shadow: 0 0 10px rgba(239,68,68,0.65);
+    }
+
 
     .badge-live.live-off {
       background: #4b5563;
@@ -6281,8 +6303,9 @@ html, body{
 
       <div class="header-controls">
         <div class="header-actions-row">
-          <div class="badge-live live-off" id="liveIndicator">
+          <div class="badge-live live-off" id="liveIndicator" title="LIVE / VOZ">
             <span class="badge-live-dot"></span>
+            <span class="badge-voice-dot voice-off" id="voiceStatusDot" aria-label="Voz OFF" title="Voz OFF"></span>
             </div>
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
           <div class="hdr-break"></div>
@@ -6294,7 +6317,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.32</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.41</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6332,7 +6355,7 @@ html, body{
           <button class="btn-secondary btn-hot btn-voice btn-voice-mini" id="voiceToggleBtnMini" data-voice-toggle type="button">
              ACTIVAR VOZ
           </button>
-          <button class="btn-secondary btn-hot btn-basic-mini" id="basicToggleBtnMini" type="button" title="Modo básico: solo vueltas, lap time y posición">BÁSICO</button>
+          <button class="btn-secondary btn-hot btn-basic-mini" id="basicToggleBtnMini" type="button" title="Modo básico: solo vueltas, lap time y posición (AUTO y FOLLOW)">BÁSICO</button>
         </div>
         <div class="pilot-pos-row">
           <div class="pos-pill" id="posText">P -</div>
@@ -6608,7 +6631,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.32). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.41). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -6662,7 +6685,7 @@ html, body{
             <li><b>📊</b> - Q TABLA (clasificación guardada).</li>
             <li><b>📖</b> - abre/cierra este manual.</li>
           </ul>
-          <div class="manual-note">El punto LIVE y el badge MODO te dicen si el feed está vivo y qué sesión detectó.</div>
+          <div class="manual-note">El punto LIVE (verde/gris) dice si el feed está vivo. El punto VOZ (verde/rojo) te dice si la voz está OK u OFF. El badge MODO muestra la sesión detectada.</div>
         </div>
 
         <h3>Controles principales</h3>
@@ -6686,7 +6709,7 @@ html, body{
             <li>Luego selecciona piloto (si aplica).</li>
             <li>No bloquees pantalla justo al arrancar.</li>
           </ol>
-          <div class="manual-note">Si estás con Bluetooth, revisa que el audio no esté saliendo por otro dispositivo.</div>
+          <div class="manual-note">Si estás con Bluetooth, revisa que el audio no esté saliendo por otro dispositivo. El punto VOZ junto al LIVE: verde = OK, rojo = OFF (o requiere toque).</div>
         </div>
 
         <h3>Voz en PC (Chrome/Brave/Edge)</h3>
@@ -6710,6 +6733,10 @@ html, body{
 
       <div class="manual-section" data-tab="qtabla">
         <h3>Qué es Q TABLA</h3>
+        <p style="margin-top:8px; color: var(--text-muted);">
+          Nota: el <b>Best Lap</b> que ves en Q TABLA viene directo del feed (por piloto, <code>bestMs</code>/<code>bestLapMs</code>). No se calcula.
+        </p>
+
         <div class="manual-card">
           Q TABLA es tu "race control" para <b>clasificación</b>. Guarda y muestra resultados por sesión (Q).
           <ul style="margin:8px 0 0; padding-left: 18px;">
@@ -6742,12 +6769,13 @@ html, body{
       <div class="manual-section" data-tab="basico">
         <h3>Modo BÁSICO</h3>
         <div class="manual-card">
-          BÁSICO es para correr sin radio tipo talk-show. Reduce mensajes repetidos y se enfoca en lo esencial.
+          BÁSICO es para correr con casco puesto: menos choro, más vueltas.
           <ul style="margin:8px 0 0; padding-left: 18px;">
-            <li>Ideal si estás concentrado o te saturas con mucha voz.</li>
-            <li>Los avisos importantes deben seguir (carrera nueva, alertas).</li>
+            <li>En <b>AUTO</b>: solo P1 (vueltas + última vuelta). Si cambia el líder, lo dice.</li>
+            <li>En <b>FOLLOW</b>: solo tu piloto (vueltas + última vuelta + posición estable).</li>
+            <li>Sin peleas, sin gaps, sin azul, sin resúmenes largos.</li>
           </ul>
-          <div class="manual-tip">Si quieres show TRM total, apaga BÁSICO y deja que hable.</div>
+          <div class="manual-tip">Si quieres el show completo, apaga BÁSICO y deja que hable.</div>
         </div>
       </div>
 
@@ -7025,7 +7053,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.32";
+const APP_NAME = "vics_Smart_Spotter_v0.3.41";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10449,19 +10477,19 @@ function __duoGuessRole(txt, key) {
       }
     };
 
-    function _applyBasicOverride(sess){
-      // Solo aplica en Seguimiento
+    function _applyBasicOverride(sess, mode){
+      // Aplica en AUTO y FOLLOW. En FOLLOW incluye POS; en AUTO solo deja lo esencial.
       try{
         if (!basicModeEnabled) return false;
-        if (__modeBucket() !== 'FOLLOW') return false;
+        const bmode = mode || __modeBucket();
 
         const next = { ...DEFAULT_VOICE_SETTINGS };
         // Siempre activo
         next.laps = true;
         // BASICO ultra limpio:
-        // - Solo last lap (siempre) + posicion (solo cambios estables)
+        // - Solo last lap (siempre) + posicion (solo en FOLLOW, cambios estables)
         // - Cero extras: no azul, no gaps, no best, no contexto.
-        next.pos = true;
+        next.pos = true; // BÁSICO también en AUTO (reporta P1)
         next.gaps = false;
         next.leadergap = false;
         next.blueflag = false;
@@ -10505,9 +10533,33 @@ function __duoGuessRole(txt, key) {
         const sess = __sessionBucket(sessionInfo);
         const mode = __modeBucket();
         const prof = (AI_SMART_PROFILES[mode] && AI_SMART_PROFILES[mode][sess]) ? AI_SMART_PROFILES[mode][sess] : null;
-        if (!prof) return;
 
-        // Base: preset por sesin (mantiene UI/labels coherentes)
+        // 1) BASICO manda - debe funcionar aun si no hay perfil listo.
+        if (basicModeEnabled) {
+          try { _applyBasicOverride(sess, mode); } catch(e) {}
+          try { applyVoiceSettingsToButtons(); } catch(e) {}
+          try { if (typeof updateSessionPresetUI === 'function') updateSessionPresetUI(sess); } catch(e) {}
+          try { if (typeof updateSessionNowUI === 'function') updateSessionNowUI(); } catch(e) {}
+          try { _updateBasicBtnUI(); } catch(e) {}
+          return;
+        }
+
+        // 2) Si no hay perfil, fallback a defaults (evita quedarse "atorado" en BASICO al apagarlo).
+        if (!prof) {
+          try { applySessionPresetFull(sess, 'smart'); } catch(e) {}
+          try { applyDecimalPrecision(2); } catch(e) {}
+          try { setRaceDirectorMode('minimal'); } catch(e) {}
+          try { setAutoCommentatorMode('pro'); } catch(e) {}
+          try { raceDirectorEnabled = true; } catch(e) {}
+          try { voiceSettings = { ...DEFAULT_VOICE_SETTINGS }; } catch(e) {}
+          try { applyVoiceSettingsToButtons(); } catch(e) {}
+          try { if (typeof updateSessionPresetUI === 'function') updateSessionPresetUI(sess); } catch(e) {}
+          try { if (typeof updateSessionNowUI === 'function') updateSessionNowUI(); } catch(e) {}
+          try { _updateBasicBtnUI(); } catch(e) {}
+          return;
+        }
+
+        // Base: preset por sesion (mantiene UI/labels coherentes)
         try { applySessionPresetFull(sess, 'smart'); } catch(e) {}
 
         // Overrides por modo
@@ -10529,20 +10581,10 @@ function __duoGuessRole(txt, key) {
         try { if (typeof updateSessionPresetUI === 'function') updateSessionPresetUI(sess); } catch(e) {}
         try { if (typeof updateSessionNowUI === 'function') updateSessionNowUI(); } catch(e) {}
 
-        // BASICO override (solo seguimiento)
-        let basicApplied = false;
-        try { basicApplied = _applyBasicOverride(sess); } catch(e) {}
+        // BASICO override (solo si esta activo) - aqui ya seria false, pero dejamos la llamada por seguridad
+        try { _applyBasicOverride(sess, mode); } catch(e) {}
         try { applyVoiceSettingsToButtons(); } catch(e) {}
         try { _updateBasicBtnUI(); } catch(e) {}
-
-        // Etiqueta de estado (para que el usuario sepa que pasa sin botones)
-        try{
-          const modeTxt = (mode === 'FOLLOW') ? 'Seguimiento' : 'Auto';
-          const sessTxt = (sess === 'FINAL') ? 'Final' : (sess === 'MANGA' ? 'Manga' : 'Train');
-          const el = document.getElementById('modeBadge');
-          const extra = (basicApplied ? ' - BASICO' : '');
-          if (el) el.textContent = modeTxt + ' - ' + sessTxt + extra;
-        }catch(e){}
       }catch(e){}
     }
 
@@ -10692,6 +10734,10 @@ function __duoGuessRole(txt, key) {
     }
 
 // ===== Voces (solo espaol) + rotacin Auto Locutor =====
+    // Timers/flags globales (evita globals implícitos por parches)
+    let __ttsKeepAliveTimer = 0;
+    let __ttsCancelShieldUntil = 0;
+
     let autoVoiceRotateEnabled = true; // ON por default
     let __autoVoicePool = [];
     let __autoVoiceIdx = 0;
@@ -10866,8 +10912,6 @@ let ttsRate = detectDefaultTtsRate();
               if (!window.speechSynthesis) return;
 
       try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
-              // Mantén vivo el motor
-              try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
               try { if (typeof window.speechSynthesis.getVoices === 'function') window.speechSynthesis.getVoices(); } catch(e) {}
 
               // Anti-freeze TTS (primer plano): Chrome a veces se queda en "speaking=true" fantasma.
@@ -11854,6 +11898,24 @@ let __ttsUnlockedOnce = false;
 let __ttsUnlockInFlight = false;
 let __ttsUnlockStartedAt = 0;
 
+function updateVoiceStatusDot(){
+  try{
+    const dot = document.getElementById('voiceStatusDot');
+    if (!dot) return;
+
+    const needsUnlock = (typeof pendingAutoVoiceUnlock !== 'undefined' && pendingAutoVoiceUnlock) ||
+                        (typeof voiceToggleBtns !== 'undefined' && voiceToggleBtns && voiceToggleBtns.some(b => b.classList.contains('needs-unlock')));
+
+    const ok = !!voiceMasterEnabled && !needsUnlock;
+
+    dot.classList.toggle('voice-on', ok);
+    dot.classList.toggle('voice-off', !ok);
+
+    dot.title = ok ? 'Voz OK' : (voiceMasterEnabled ? 'Voz ON - requiere toque' : 'Voz OFF');
+    dot.setAttribute('aria-label', ok ? 'Voz OK' : (voiceMasterEnabled ? 'Voz ON (requiere toque)' : 'Voz OFF'));
+  }catch(e){}
+}
+
 function unlockTTSOnce(reason = '') {
       try {
         if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
@@ -11864,6 +11926,7 @@ function unlockTTSOnce(reason = '') {
           try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
           try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
           try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+          try { updateVoiceStatusDot(); } catch(e) {}
           return true;
         }
 
@@ -11915,6 +11978,7 @@ function unlockTTSOnce(reason = '') {
             // Ahora SI: ya arranco el motor, limpiamos estado de bloqueo.
             try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
             try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+            try { updateVoiceStatusDot(); } catch(e) {}
 
             try { showToast('Audio listo', 900); } catch(e) {}
             try { pumpSpeechQueue(); } catch(e) {}
@@ -11927,6 +11991,7 @@ function unlockTTSOnce(reason = '') {
           try { pendingAutoVoiceUnlock = true; } catch(e) {}
           try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
           try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
+          try { updateVoiceStatusDot(); } catch(e) {}
         };
 
         try { u.onend = () => { if (!didStart) finishFail(); }; } catch(e) {}
@@ -11979,6 +12044,7 @@ function setVoiceMaster(on, opts = {}) {
       // Si apagamos VOZ: limpiamos todo.
       // Si prendemos VOZ: NO borres 'needs-unlock' hasta que el motor realmente arranque (onstart).
       if (!turningOn) {
+        try { __lastVoiceRecoverAttemptAt = 0; } catch(e) {}
         try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
         try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
       }
@@ -11987,6 +12053,7 @@ function setVoiceMaster(on, opts = {}) {
       try { prefSet('voiceMasterEnabled', voiceMasterEnabled ? '1' : '0'); } catch(e) {}
       try { voiceToggleBtns.forEach(b => b.classList.toggle('voice-on', voiceMasterEnabled)); } catch(e) {}
       try { voiceToggleBtns.forEach(b => b.textContent = voiceMasterEnabled ? ' VOZ ACTIVA' : ' ACTIVAR VOZ'); } catch(e) {}
+      try { updateVoiceStatusDot(); } catch(e) {}
       // unlock audio (seleccionar piloto cuenta como gesto)
       try { ensureAudioCtx(); } catch(e) {}
       if (voiceMasterEnabled && !opts.silent) {
@@ -12010,6 +12077,7 @@ function setVoiceMaster(on, opts = {}) {
       // - Usamos pointerdown/touchstart para evitar retrasos y taps perdidos.
       // - Si el motor se bloqueo por idle/background, aquí solo reactivamos (sin apagar).
       let __lastVoiceTapAt = 0;
+      let __lastVoiceRecoverAttemptAt = 0;
 
       function __voiceBtnNeedsUnlock(){
         try{
@@ -12018,33 +12086,31 @@ function setVoiceMaster(on, opts = {}) {
         }catch(e){ return !!pendingAutoVoiceUnlock; }
       }
 
-      function __onVoiceToggle(ev){
-        try{ if (ev && ev.preventDefault) ev.preventDefault(); }catch(e){}
-        try{ if (ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
-
-        const now = Date.now();
-        if (now - __lastVoiceTapAt < 320) return;
-        __lastVoiceTapAt = now;
-
-        // Esto cuenta como gesto de usuario
-        try { __userGestureUnlocked = true; } catch(e) {}
-        try { ensureAudioCtx(); } catch(e) {}
-
-        // Si esta ON pero bloqueado, solo reactivamos (no toggle OFF)
-        if (voiceMasterEnabled && __voiceBtnNeedsUnlock()){
-          // No limpies needs-unlock aquí. Se limpia solo cuando el motor realmente arranca (onstart).
-          try { unlockTTSOnce('voice-btn-recover'); } catch(e) {}
-          try { forceTtsRecover('voice-btn-recover'); } catch(e) {}
-          try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 120); } catch(e) {}
-          try { showToast('Reactivando audio...', 900); } catch(e) {}
-          return;
-        }
-
-        setVoiceMaster(!voiceMasterEnabled, { user:true });
-
-        // Al encender: intento de unlock silencioso (si aplica)
-        try { if (voiceMasterEnabled) unlockTTSOnce('voice-btn'); } catch(e) {}
-      }
+            function __onVoiceToggle(ev){
+              try{ if (ev && ev.preventDefault) ev.preventDefault(); }catch(e){}
+              try{ if (ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
+      
+              const now = Date.now();
+              if (now - __lastVoiceTapAt < 320) return;
+              __lastVoiceTapAt = now;
+      
+              // Siempre alterna ON/OFF. No te quedes "atorado" en modo recuperar.
+              try{ __userGestureUnlocked = true; }catch(e){}
+              try{ if (!__audioCtxReady) ensureAudioCtxOnce(); }catch(e){}
+      
+              const next = !voiceMasterEnabled;
+              setVoiceMaster(next, { user:true });
+      
+              if (next){
+                // Encendido: intenta desbloquear y “revivir” el motor TTS
+                try{ unlockTTSOnce('voice-btn'); }catch(e){}
+                try{ forceTtsRecover('voice-btn'); }catch(e){}
+                try{ setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 120); }catch(e){}
+              }else{
+                // Apagado: feedback corto
+                try{ showToast('VOZ OFF', 700); }catch(e){}
+              }
+            }
 
       voiceToggleBtns.forEach(btn => {
         try { btn.style.touchAction = 'manipulation'; } catch(e) {}
@@ -12073,8 +12139,10 @@ function setVoiceMaster(on, opts = {}) {
 
       // Sync UI del boton VOZ con el estado real al cargar (evita clicks extra)
       try { setVoiceMaster(voiceMasterEnabled, { silent:true }); } catch(e) {}
+      try { updateVoiceStatusDot(); } catch(e) {}
+      try { setInterval(()=>{ try{ updateVoiceStatusDot(); }catch(e){} }, 800); } catch(e) {}
 
-      // Boton BASICO (solo seguimiento). No existe modo manual: el spotter decide todo.
+      // Botón BÁSICO (AUTO y FOLLOW). Reduce el show: solo laps, última y posición.
     if (typeof basicToggleBtnMini !== 'undefined' && basicToggleBtnMini) {
       try {
         basicToggleBtnMini.addEventListener('click', () => {
@@ -12086,7 +12154,7 @@ function setVoiceMaster(on, opts = {}) {
             try { applySmartProfile(currentSessionInfo || {}, 'basic-toggle'); } catch(e) {}
             try { playBeep('tap'); } catch(e) {}
             // feedback corto (si voz activa)
-            try { if (voiceMasterEnabled) speakText(basicModeEnabled ? 'Bsico activado' : 'Bsico desactivado', { priority: 'high', dedupe: true }); } catch(e) {}
+            try { if (voiceMasterEnabled) speakText(basicModeEnabled ? 'Básico activado' : 'Básico desactivado', { priority: 'high', dedupe: true }); } catch(e) {}
           } catch(e) {}
         });
       } catch(e) {}
@@ -12550,58 +12618,37 @@ function toFixedFloor(value, decimals = 0) {
     // iOS: al volver desde sleep/bfcache, forzar reenganche de audio con un solo tap
     try {
       window.addEventListener('pageshow', () => {
-        try { if (voiceMasterEnabled && (typeof isIOSWebKit === 'function' ? isIOSWebKit() : false)) { __ttsUnlockedOnce = false; pendingAutoVoiceUnlock = true; if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } } catch(e) {}
-        try { if (wakeLockToggle && wakeLockToggle.classList.contains('active')) requestWakeLock().catch(()=>{}); } catch(e) {}
-      }, { passive:true });
-            window.addEventListener('pagehide', () => {
-        try { if (voiceMasterEnabled && (typeof isIOSWebKit === 'function' ? isIOSWebKit() : false)) { __ttsUnlockedOnce = false; pendingAutoVoiceUnlock = true; } } catch(e) {}
-      }, { passive:true });
-    } catch(e) {}
-// KeepAlive: intenta mantener TTS vivo cuando el tab queda oculto (Chrome/Android/Safari)
-    // Nota honesta: iOS puede pausar TTS si cambias de app o apagas pantalla. Para hablar "siempre",
-    // deja la app al frente y la pantalla encendida (WakeLock ya va ON).
-    let __bgKeepAliveTimer = 0;
-    function startBgKeepAlive(){
-      if (__bgKeepAliveTimer) return;
-      __bgKeepAliveTimer = setInterval(() => {
         try {
-          if (!backgroundModeEnabled) return;
-          if (!voiceMasterEnabled) return;
-          try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
-          // Si Chrome se queda pegado en background, mete un micro ciclo pause/resume
-          try {
-            if (document.hidden && window.speechSynthesis && window.speechSynthesis.speaking && typeof window.speechSynthesis.pause === 'function') {
-              window.speechSynthesis.pause();
-              window.speechSynthesis.resume();
-            }
-          } catch(e) {}
-          // Si hay cola y no esta hablando, intenta bombear
-          try {
-            if (document.hidden && !speechSpeaking && window.speechSynthesis && !window.speechSynthesis.speaking) {
-              if (typeof pumpSpeechQueue === 'function') pumpSpeechQueue();
-            }
-          } catch(e) {}
-          // Recovery suave (sin vomitar backlog)
-          try {
-            if (document.hidden && typeof forceTtsRecover === 'function') forceTtsRecover('bg_keepalive');
-          } catch(e) {}
-          try { startSilentAudioKeepAlive(); } catch(e) {}
+          const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false;
+          if (voiceMasterEnabled && isIOS) {
+            __ttsUnlockedOnce = false;
+            pendingAutoVoiceUnlock = true;
+            if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock();
+          }
         } catch(e) {}
-      }, 4000);
-    }
-    startBgKeepAlive();
-
-    try {
-      window.addEventListener('pageshow', () => {
+        try { if (wakeLockToggle && wakeLockToggle.classList.contains('active')) requestWakeLock().catch(()=>{}); } catch(e) {}
         try { startBgKeepAlive(); } catch(e) {}
         try { loadRaceFromFirebase(); } catch(e) {}
         try { if (typeof startRaceRealtime === 'function') startRaceRealtime(); } catch(e) {}
       }, { passive:true });
+
+      window.addEventListener('pagehide', () => {
+        try {
+          const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false;
+          if (voiceMasterEnabled && isIOS) {
+            __ttsUnlockedOnce = false;
+            pendingAutoVoiceUnlock = true;
+          }
+        } catch(e) {}
+      }, { passive:true });
+
+      // (Opcional) Eventos tipo app-wrapper (Cordova/Capacitor). En web normal no dispara, pero no estorba.
       window.addEventListener('resume', () => {
         try { startBgKeepAlive(); } catch(e) {}
         try { loadRaceFromFirebase(); } catch(e) {}
         try { if (typeof startRaceRealtime === 'function') startRaceRealtime(); } catch(e) {}
       }, { passive:true });
+
     } catch(e) {}
 
 // LIVE status (debounced) - evita parpadeo por lecturas intermitentes
@@ -15030,6 +15077,7 @@ function updateBlueFlagFromPassEvents() {
 
     let commentatorAutoState = {
       lastSpeakMs: 0,
+      lastBasicSpeakMs: 0,
       window: [],
       recentSig: new Map(),
       prevPosByKey: new Map(),
@@ -16399,6 +16447,7 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
       let st = __autoBlueLatch.get(rk) || {
         lastLeaderLap: -999,
         lastSpeakMs: 0,
+      lastBasicSpeakMs: 0,
         blueHits: 0,
         blueWindowMs: 0
       };
@@ -16461,9 +16510,10 @@ function handleAutoCommentator() {
         if (!voiceMasterEnabled) return;
 
         const vs = (typeof voiceSettings !== 'undefined' && voiceSettings) ? voiceSettings : {};
-        // Si el usuario apaga TODO menos laps, no inventamos
+        const isBasicAuto = !!(typeof basicModeEnabled !== 'undefined' && basicModeEnabled);
+        // Si el usuario apaga TODO menos laps, no inventamos. En BÁSICO sí hablamos (P1).
         const autoOn = !!(vs.pos || vs.podium || vs.pelea || vs.gaps || vs.leadergap || vs.bestlap || vs.estlap || vs.attack || vs.defense || vs.front06 || vs.back06 || vs.ritmo || vs.total || vs.blueflag || vs.cons10 || vs.netgain);
-        if (!autoOn) return;
+        if (!autoOn && !isBasicAuto) return;
 
         const arr = raceData.classification.slice().filter(r => r && (r.pos != null));
         // Auto Locutor: ciclo de vida (espera a que arranque, silencio al terminar)
@@ -16482,6 +16532,53 @@ function handleAutoCommentator() {
 
         const leader = arr.find(r => Number(r.pos) === 1) || arr[0];
         const leaderLap = Number(leader && leader.lapcount) || 0;
+
+        // ====== BÁSICO en AUTO: solo P1 (laps + última vuelta)
+        if (isBasicAuto) {
+          const leaderKey = getPilotKey(leader) || '';
+          const leaderName = safeRacerName(leader && leader.racerName) || 'P1';
+          const leaderChanged = (leaderKey && commentatorAutoState.lastLeaderKey && leaderKey !== commentatorAutoState.lastLeaderKey);
+          const lapAdvanced = (leaderLap > 0 && leaderLap !== (commentatorAutoState.lastLeaderLap || 0));
+
+          let lastMs = 0;
+          try {
+            lastMs = Number(leader && leader.lastLapMs) ||
+              normalizeLapMs(parseTimeToMs((leader && (leader.lastLapTime || leader.lastLap || leader.lastTime)) || 0));
+            if (!isFinite(lastMs) || lastMs < 0) lastMs = 0;
+          } catch(e) { lastMs = 0; }
+
+          const lastTxt = (lastMs > 0) ? msToMinSec(lastMs) : '';
+          const nowBasic = Date.now();
+          const sinceBasic = nowBasic - (Number(commentatorAutoState.lastBasicSpeakMs || 0) || 0);
+
+          if ((leaderChanged || lapAdvanced) && leaderLap > 0 && sinceBasic > 2500) {
+            let msg = (leaderName ? ('P1 ' + leaderName + '.') : 'P1.');
+            if (leaderChanged) msg = ('Nuevo líder. ' + msg);
+            if (lastTxt) msg = (msg + ' Última ' + lastTxt + '.');
+            speakWithLaps(leaderLap, msg, { voiceURI: nextAutoVoiceURI(), key: 'basic_auto_' + leaderKey + '_' + leaderLap, priority: 4, cooldownMs: 1200, dedupe: true, mood:'calm' });
+            commentatorAutoState.lastBasicSpeakMs = nowBasic;
+          }
+
+          commentatorAutoState.lastLeaderKey = leaderKey || commentatorAutoState.lastLeaderKey;
+          commentatorAutoState.lastLeaderKeyName = leaderName || commentatorAutoState.lastLeaderKeyName;
+          commentatorAutoState.lastLeaderLap = leaderLap || commentatorAutoState.lastLeaderLap;
+
+          // snapshot (para que al salir de BÁSICO no se vuelvan locos los pases)
+          try {
+            const prevPos = new Map();
+            const prevByPos = [];
+            for (let i = 0; i < arr.length; i++) {
+              const r = arr[i];
+              const k = getPilotKey(r);
+              const p = Number(r.pos) || (i+1);
+              if (k) { prevPos.set(k, p); prevByPos[p-1] = k; }
+            }
+            commentatorAutoState.prevPosByKey = prevPos;
+            commentatorAutoState.prevKeyByPos = prevByPos;
+          } catch(e) {}
+          return;
+        }
+
         const progress = autoRaceProgress(leaderLap);
 
 
@@ -16901,7 +16998,7 @@ const isMangaSess = (sessionType === 'MANGA' || sessionType === 'TRAIN');
 const isFinalSess = (sessionType === 'FINAL');
 
 // Auto-estilo por sesion (default): MANGA=SERIO (pro), FINALES=HYPE (narrativo)
-if (!autoModeUserOverride) {
+if (!autoModeUserOverride && !basicModeEnabled) {
   const wantMode = isFinalSess ? 'narrativo' : (isMangaSess ? 'pro' : autoCommentatorMode);
   if (wantMode && autoCommentatorMode !== wantMode) {
     autoCommentatorMode = wantMode;
@@ -19123,19 +19220,18 @@ try{
             if (!r) return { ms:0, raw:'', key:'' };
     
             const entries = [
-          // Prefer explicit ms fields first (per pilot)
+          // SOLO campos de tiempo reales del feed (NO usar bestLap/best porque a veces son índices)
           ['bestMs', r.bestMs],
           ['bestLapMs', r.bestLapMs],
           ['bestLapTimeMs', r.bestLapTimeMs],
-          ['fastestLapMs', r.fastestLapMs],
           ['bestTimeMs', r.bestTimeMs],
+          ['fastestLapMs', r.fastestLapMs],
 
-          // Then explicit formatted strings (per pilot)
+          // Strings ya formateados si existen
           ['bestTimeFmt', r.bestTimeFmt],
           ['bestLapTimeFmt', r.bestLapTimeFmt],
           ['bestLapTime', r.bestLapTime],
-          ['bestTime', r.bestTime],
-          ['fastestLap', r.fastestLap]
+          ['bestTime', r.bestTime]
         ];
     
             // Pass 1: evitar indices tipo "7" cuando hay laps>=7 (comun en algunos feeds)
@@ -19603,6 +19699,8 @@ grouped[gk] = __pickG;
     // no-op
   }
 })();
+
+
 
 }
 
