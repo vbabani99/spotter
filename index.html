@@ -1,12 +1,13 @@
 
 <!--
-vics_Smart_Spotter_v0.3.42 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.44 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-31
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.42: FIX BÁSICO en AUTO (ya no se queda mudo) - canta P1: vueltas + última vuelta + 'Nuevo líder' si cambia. Manual alineado.
+- v0.3.44: FIX banderas país (Mexico/México, acentos y ñ) - mapeo Twemoji estable.
+- v0.3.43: FIX BÁSICO en AUTO (ya no se queda mudo) - canta P1: vueltas + última vuelta + 'Nuevo líder' si cambia. Manual alineado.
 - v0.3.37: FIX SyntaxError (try/catch cerrado + cierre init-guard) - vuelve a cargar sin errores.
 - v0.3.36: FIX pageshow/pagehide consolidado (no perder reenganche al volver) + audit TTS/Q TABLA/manual/doc.
 - v0.3.36: AUDIT general (dedupe listeners, declara timers TTS, resume duplicado eliminado) + Q TABLA Best Lap usa SOLO bestMs/bestLapMs del feed (sin indices) + manual alineado + doc.
@@ -66,7 +67,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.42</title>
+  <title>vics_Smart_Spotter_v0.3.44</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6317,7 +6318,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.42</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.44</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6631,7 +6632,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.42). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.44). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -6651,9 +6652,9 @@ html, body{
         <div class="manual-card">
           <ol style="margin:0; padding-left: 18px;">
             <li>Abre el Spotter y espera 2-3 segundos a que llegue el primer dato.</li>
-            <li>Toca <b>ACTIVAR VOZ</b> una vez.</li>
+            <li><b>PC/Mac</b>: la voz suele quedar en ON sola. Si el punto VOZ está rojo, toca <b>ACTIVAR VOZ</b>. <b>iPhone/Android</b>: toca <b>ACTIVAR VOZ</b> una vez para destrabar.</li>
             <li>Si quieres seguimiento, <b>selecciona tu piloto</b>.</li>
-            <li>Si quieres menos ruido, enciende <b>BÁSICO</b>.</li>
+            <li>Si quieres menos ruido, en <b>FOLLOW</b> enciende <b>BÁSICO</b> (en <b>AUTO</b> queda apagado y bloqueado).</li>
             <li>En clasificación, usa <b>Q TABLA</b> (botón 📊) para ver la tabla.</li>
           </ol>
           <div class="manual-note">El piloto seleccionado se guarda en tu navegador. Si recargas y el nombre existe, se auto-selecciona.</div>
@@ -7053,7 +7054,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.42";
+const APP_NAME = "vics_Smart_Spotter_v0.3.44";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -8209,13 +8210,16 @@ try{
 }catch(e){}
 
     const spotterButtons   = document.querySelectorAll('.spotter-btn');
-    let voiceMasterEnabled = true;
+    // VOZ: Desktop por defecto ON. Moviles por defecto OFF (restricciones de autoplay).
+    const __ua0 = navigator.userAgent || '';
+    const __isIpadOS0 = (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
+    const __isMobile0 = /Android|iPhone|iPad|iPod|Mobile/i.test(__ua0) || __isIpadOS0;
+    let voiceMasterEnabled = !__isMobile0;
     try {
       const vme = prefGet('voiceMasterEnabled', null);
       if (vme !== null) voiceMasterEnabled = (vme === '1');
     } catch(e) {}
-
-    // AI: si el usuario nunca ha tocado VOZ, el spotter puede activar voz en Auto Locutor.
+// AI: si el usuario nunca ha tocado VOZ, el spotter puede activar voz en Auto Locutor.
     let userVoiceOverride = false;
 
     // Modo BASICO (solo vueltas, lap time y posicion)
@@ -10522,7 +10526,21 @@ function __duoGuessRole(txt, key) {
     function _updateBasicBtnUI(){
       try{
         if (!basicToggleBtnMini) return;
+        const inFollow = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
+
+        if (!inFollow) {
+          // AUTO LOCUTOR: BÁSICO siempre OFF y bloqueado
+          basicModeEnabled = false;
+          try { prefSet('basicModeEnabled', '0'); } catch(e) {}
+          basicToggleBtnMini.disabled = true;
+          basicToggleBtnMini.classList.remove('active');
+          basicToggleBtnMini.classList.add('disabled');
+          basicToggleBtnMini.textContent = 'BÁSICO';
+          return;
+        }
+
         basicToggleBtnMini.disabled = false;
+        basicToggleBtnMini.classList.remove('disabled');
         basicToggleBtnMini.classList.toggle('active', !!basicModeEnabled);
         basicToggleBtnMini.textContent = (basicModeEnabled ? 'BÁSICO ON' : 'BÁSICO');
       }catch(e){}
@@ -11863,6 +11881,14 @@ function speakWithLaps(_laps, message, opts) {
       const ua = navigator.userAgent || '';
       return /iPad|iPhone|iPod/i.test(ua);
     }
+
+    function isMobileDevice(){
+      try {
+        const ua = navigator.userAgent || '';
+        const isIpadOS = (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
+        return /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || isIpadOS;
+      } catch(e) { return false; }
+    }
     let __oneTapUnlockArmed = false;
 let __oneTapUnlockLastAt = 0;
 
@@ -11893,7 +11919,18 @@ function scheduleOneTapUnlock() {
 
 // Nota: NO uses cancel() aquí - en iPhone mata el "primer speak" y obliga a dar 20 taps.
 let __ttsUnlockedOnce = false;
-    let __ttsCancelShieldUntil = 0; // evita cancelar mientras se esta desbloqueando (iPhone)
+    
+
+      // Desktop: no requiere unlock por gesto. Lo marcamos como listo para auto-recovery.
+      try {
+        const __isIOS = isIOSWebKit();
+        const __isMob = isMobileDevice();
+        if (!__isIOS && !__isMob) {
+          __ttsUnlockedOnce = true;
+          pendingAutoVoiceUnlock = false;
+        }
+      } catch(e) {}
+let __ttsCancelShieldUntil = 0; // evita cancelar mientras se esta desbloqueando (iPhone)
 
 let __ttsUnlockInFlight = false;
 let __ttsUnlockStartedAt = 0;
@@ -12057,9 +12094,28 @@ function setVoiceMaster(on, opts = {}) {
       // unlock audio (seleccionar piloto cuenta como gesto)
       try { ensureAudioCtx(); } catch(e) {}
       if (voiceMasterEnabled && !opts.silent) {
-        try { showToast('VOZ ACTIVA', 900); } catch(e) {}
-        // Intento de unlock silencioso en iOS/Android (si hay gesto)
-        try { unlockTTSOnce('voice-master-on'); } catch(e) {}
+        try { showToast('VOZ ON', 900); } catch(e) {}
+        try {
+          const __isIOS = isIOSWebKit();
+          const __isMob = isMobileDevice();
+          if (__isIOS) {
+            if (!__ttsUnlockedOnce) {
+              pendingAutoVoiceUnlock = true;
+              try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(_e) {}
+              try { scheduleOneTapUnlock(); } catch(_e) {}
+            }
+          } else if (__isMob) {
+            // Android: suele funcionar con gesto del boton, lo marcamos como listo.
+            __ttsUnlockedOnce = true;
+            pendingAutoVoiceUnlock = false;
+            try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(_e) {}
+          } else {
+            // Desktop: listo sin gestos extra.
+            __ttsUnlockedOnce = true;
+            pendingAutoVoiceUnlock = false;
+            try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(_e) {}
+          }
+        } catch(e) {}
       }
       if (!voiceMasterEnabled) {
         try { if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch(e) {}
@@ -12089,35 +12145,58 @@ function setVoiceMaster(on, opts = {}) {
             function __onVoiceToggle(ev){
               try{ if (ev && ev.preventDefault) ev.preventDefault(); }catch(e){}
               try{ if (ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
-      
+
               const now = Date.now();
               if (now - __lastVoiceTapAt < 320) return;
               __lastVoiceTapAt = now;
-      
-              // Siempre alterna ON/OFF. No te quedes "atorado" en modo recuperar.
+
               try{ __userGestureUnlocked = true; }catch(e){}
               try{ if (!__audioCtxReady) ensureAudioCtxOnce(); }catch(e){}
-        try{ playBeep('tap'); }catch(e){}
-      
-              const next = !voiceMasterEnabled;
-              setVoiceMaster(next, { user:true });
+              try{ playBeep('tap'); }catch(e){}
 
-        if (next) {
-          try { speakText('Voz activa', { priority: 'high', dedupe: false, semantic: false, cooldownMs: 0, key: 'sys_voice_on' }); } catch(e) {}
-        }
-      
-              if (next){
-                // Encendido: intenta desbloquear y “revivir” el motor TTS
-                try{ unlockTTSOnce('voice-btn'); }catch(e){}
-                try{ forceTtsRecover('voice-btn'); }catch(e){}
-                try{ setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 120); }catch(e){}
-              }else{
-                // Apagado: feedback corto
-                try{ showToast('VOZ OFF', 700); }catch(e){}
+              const next = !voiceMasterEnabled;
+
+              // OFF: corta TODO y limpia cola
+              if (!next){
+                try { setVoiceMaster(false, { user:true }); } catch(e) {}
+                try { showToast('VOZ OFF', 700); } catch(e) {}
+                return;
               }
+
+              // ON: desktop queda listo sin gestos extra
+              try {
+                const __isIOS = isIOSWebKit();
+                const __isMob = isMobileDevice();
+                if (!__isIOS && !__isMob){
+                  __ttsUnlockedOnce = true;
+                  pendingAutoVoiceUnlock = false;
+                  try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(_e) {}
+                }
+              } catch(e) {}
+
+              try { setVoiceMaster(true, { user:true }); } catch(e) {}
+
+              // iOS: primero unlock, luego confirmacion (si no, el unlock te la cancela)
+              try {
+                const __isIOS = isIOSWebKit();
+                if (__isIOS){
+                  try { unlockTTSOnce('voice-btn'); } catch(e) {}
+                  setTimeout(()=>{
+                    try { speakText('Voz lista', { priority:'high', dedupe:false, semantic:false, cooldownMs:0, key:'sys_voice_on' }); } catch(e) {}
+                    try { forceTtsRecover('voice-btn'); } catch(e) {}
+                    try { pumpSpeechQueue(); } catch(e) {}
+                  }, 140);
+                  return;
+                }
+              } catch(e) {}
+
+              // Desktop/Android: confirmacion inmediata
+              try { speakText('Voz lista', { priority:'high', dedupe:false, semantic:false, cooldownMs:0, key:'sys_voice_on' }); } catch(e) {}
+              try { forceTtsRecover('voice-btn'); } catch(e) {}
+              try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 80); } catch(e) {}
             }
 
-      voiceToggleBtns.forEach(btn => {
+            voiceToggleBtns.forEach(btn => {
         try { btn.style.touchAction = 'manipulation'; } catch(e) {}
 
         // iPhone: usar CLICK (mas confiable para destrabar TTS).
@@ -12147,19 +12226,34 @@ function setVoiceMaster(on, opts = {}) {
       try { updateVoiceStatusDot(); } catch(e) {}
       try { setInterval(()=>{ try{ updateVoiceStatusDot(); }catch(e){} }, 800); } catch(e) {}
 
-      // Botón BÁSICO (AUTO y FOLLOW). Reduce el show: solo laps, última y posición.
+      // Botón BÁSICO (solo FOLLOW). Reduce el show: solo laps, última y posición.
     if (typeof basicToggleBtnMini !== 'undefined' && basicToggleBtnMini) {
       try {
         basicToggleBtnMini.addEventListener('click', () => {
           try {
-            // Permitir BÁSICO en cualquier modo (AUTO/FOLLOW)
-            
+            const inFollow = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
+            if (!inFollow) {
+              try { playBeep('down'); } catch(e) {}
+              try { showToast('BÁSICO solo en FOLLOW', 900); } catch(e) {}
+              basicModeEnabled = false;
+              try { prefSet('basicModeEnabled', '0'); } catch(e) {}
+              try { _updateBasicBtnUI(); } catch(e) {}
+              return;
+            }
+
             basicModeEnabled = !basicModeEnabled;
             try { prefSet('basicModeEnabled', basicModeEnabled ? '1' : '0'); } catch(e) {}
             try { applySmartProfile(currentSessionInfo || {}, 'basic-toggle'); } catch(e) {}
             try { playBeep('tap'); } catch(e) {}
+            try { _updateBasicBtnUI(); } catch(e) {}
+
             // feedback corto (si voz activa)
-            try { if (voiceMasterEnabled) speakText(basicModeEnabled ? 'Básico activado' : 'Básico desactivado', { priority: 'high', dedupe: false, semantic: false, cooldownMs: 0, key: basicModeEnabled ? 'sys_basic_on' : 'sys_basic_off' }); } catch(e) {}
+            try {
+              if (voiceMasterEnabled) speakText(basicModeEnabled ? 'Básico activado' : 'Básico desactivado', {
+                priority: 'high', dedupe: false, semantic: false, cooldownMs: 0,
+                key: basicModeEnabled ? 'sys_basic_on' : 'sys_basic_off'
+              });
+            } catch(e) {}
           } catch(e) {}
         });
       } catch(e) {}
@@ -12172,17 +12266,17 @@ function setVoiceMaster(on, opts = {}) {
         if (!flag) return;
         const on = (flag === 'laps') ? true : !!voiceSettings[flag];
         btn.classList.toggle('active', on);
-      
+
         // LAPS siempre activo y bloqueado visual
         if (flag === 'laps') { btn.classList.add('locked'); } else { btn.classList.remove('locked'); }
-});
-    
+      });
+
       try { if (typeof updateConfigStatusUI === 'function') updateConfigStatusUI(); } catch(e) {}
-}
+    }
 
     applyVoiceSettingsToButtons();
 
-    spotterButtons.forEach(btn => {
+spotterButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const flag = btn.getAttribute('data-flag');
         if (!flag) return;
@@ -12384,7 +12478,7 @@ function setVoiceMaster(on, opts = {}) {
     let selectedPilotFirstDetectBeeped = false;// hotfix: init without undefined k
 
     
-    let pendingAutoVoiceUnlock = false;
+    var pendingAutoVoiceUnlock = false;
 let isLoading = false;
     let loadingSince = 0;
 
@@ -14403,26 +14497,14 @@ function selectPilotByKey(key, opts = {}) {
           resetSelectedPilotTrackingState();
 
           if (k) {
-            // Auto-activar voz al elegir piloto (siempre visible)
-            try { setVoiceMaster(true, { silent:true }); } catch(e) {}
+            // FOLLOW: por defecto BÁSICO OFF al elegir piloto (el usuario lo puede encender)
+            try { basicModeEnabled = false; prefSet('basicModeEnabled','0'); _updateBasicBtnUI(); } catch(e) {}
 
             // MANGA: NO inicia reloj al seleccionar (solo muestra UI)
             try { onPilotSelectedManga(k); } catch(e) {}
-
-            // iOS/Chrome: intentar unlock inmediato dentro del gesto de seleccin
-            try {
-              if (isIOSWebKit && isIOSWebKit()) {
-                if (unlockTTSOnce('pilot-select')) {
-                  try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
-                  pendingAutoVoiceUnlock = false;
-                } else {
-                  try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
-                  scheduleOneTapUnlock();
-                }
-              }
-            } catch(e) {}
           } else {
             // Modo locutor: sin piloto seleccionado
+            try { basicModeEnabled = false; prefSet('basicModeEnabled','0'); _updateBasicBtnUI(); } catch(e) {}
             try { resetAutoCommentatorState();
         if (announce){
           try { showToast('AUTO LOCUTOR activo', { tone: 'info' }); } catch(e) {}
@@ -18436,7 +18518,7 @@ function checkSessionFinishOnLap() {
       }
       function __normForCountry(str){
         let s = (str==null) ? '' : String(str);
-        try { s = s.normalize('NFD').replace(/[-]/g,''); } catch(e) {}
+        try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-]/g,''); } catch(e) {}
         s = s.toUpperCase();
         // homogeniza guiones y separadores
         s = s.replace(/[-]/g,'-');
@@ -18447,7 +18529,7 @@ function checkSessionFinishOnLap() {
         // Twemoji SVG codes (regional indicators)
         const pairs = [
           ['REINO UNIDO','1f1ec-1f1e7'], ['UK','1f1ec-1f1e7'], ['UNITED KINGDOM','1f1ec-1f1e7'],
-          ['MÉXICO','1f1f2-1f1fd'],
+          ['MEXICO','1f1f2-1f1fd'], ['CKA','1f1f2-1f1fd'],
           ['COSTA RICA','1f1e8-1f1f7'],
           ['ITALIA','1f1ee-1f1f9'],
           ['EUA','1f1fa-1f1f8'], ['USA','1f1fa-1f1f8'], ['ESTADOS UNIDOS','1f1fa-1f1f8'], ['UNITED STATES','1f1fa-1f1f8'],
