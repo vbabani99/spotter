@@ -1,11 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.46 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.49 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-31
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.3.49: FIX SyntaxError (isMS redeclared) + Auto Locutor rota Google/Microsoft es-MX/es-ES + indicador VOZ estable.
 - v0.3.46: FIX anti-perico en Clasificación - anuncios de "pole provisional" solo en AUTO (sin piloto). En FOLLOW se calla.
 - v0.3.44: FIX banderas país (Mexico/México, acentos y ñ) - mapeo Twemoji estable.
 - v0.3.43: FIX BÁSICO en AUTO (ya no se queda mudo) - canta P1: vueltas + última vuelta + 'Nuevo líder' si cambia. Manual alineado.
@@ -68,7 +69,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.46</title>
+  <title>vics_Smart_Spotter_v0.3.49</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -855,7 +856,16 @@ body {
     }
 
 
-    .badge-live.live-off {
+    
+    .badge-voice-dot.voice-warn{
+      background: #f59e0b;
+      box-shadow: 0 0 10px rgba(245,158,11,0.75);
+    }
+    .badge-voice-dot.voice-speaking{
+      outline: 1px solid rgba(255,255,255,0.35);
+    }
+
+.badge-live.live-off {
       background: #4b5563;
       box-shadow: none;
     }
@@ -6319,7 +6329,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.46</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.49</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6633,7 +6643,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.46). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.49). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -7055,7 +7065,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.46";
+const APP_NAME = "vics_Smart_Spotter_v0.3.49";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10858,20 +10868,38 @@ let ttsRate = detectDefaultTtsRate();
       // - Si el navegador no muestra "Microsoft" (caso comun: solo ves Raul/Sabina/Helena/Laura/Pablo),
       //   las incluimos como preferidas para rotar siempre entre ellas.
       try {
-        const nameL = (v) => String((v && v.name) || '').toLowerCase().trim();
-        const isMS = (v) => nameL(v).includes('microsoft');
-        const isES = (v) => String((v && v.lang) || '').toLowerCase().startsWith('es');
+        // Pool de rotacion para AUTO LOCUTOR:
+// - Solo Google/Microsoft
+// - Idiomas objetivo: es-MX y es-ES (fallback a cualquier es-* Google/Microsoft)
+// - Rotacion intercalada (Microsoft, Google, Microsoft, Google...) cuando existan ambas.
+const isGoogle = v => /google/i.test((v && v.name) || '') || /google/i.test((v && v.voiceURI) || '');
+const isMS     = v => /microsoft/i.test((v && v.name) || '') || /microsoft/i.test((v && v.voiceURI) || '');
+const isESMX   = v => String((v && v.lang) || '').toLowerCase().startsWith('es-mx');
+const isESES   = v => String((v && v.lang) || '').toLowerCase().startsWith('es-es');
+const isESAny  = v => String((v && v.lang) || '').toLowerCase().startsWith('es');
 
-        const preferred = new Set(['raul','sabina','helena','laura','pablo']);
+function buildInterleaved(msArr, gArr){
+  const out = [];
+  const n = Math.max(msArr.length, gArr.length);
+  for (let i=0;i<n;i++){
+    if (i < msArr.length) out.push(msArr[i]);
+    if (i < gArr.length) out.push(gArr[i]);
+  }
+  return out;
+}
 
-        const preferredES = (voicesAll || []).filter(v => isES(v) && (isMS(v) || preferred.has(nameL(v))));
-        __autoVoicePool = preferredES.map(v => (v.voiceURI || v.name)).filter(Boolean);
+let candidates = (voicesAll || []).filter(v => (isGoogle(v) || isMS(v)) && (isESMX(v) || isESES(v)));
+if (!candidates.length) candidates = (voicesAll || []).filter(v => (isGoogle(v) || isMS(v)) && isESAny(v));
 
-        // fallback 1: voces espanolas visibles (rotar todas)
-        if (!__autoVoicePool.length) __autoVoicePool = (voicesES.length ? voicesES : (voices || [])).map(v => (v.voiceURI || v.name)).filter(Boolean);
+// Solo si NO hay nada Google/Microsoft ES, cae a cualquier ES y al final a todo.
+if (!candidates.length) candidates = (voicesES.length ? voicesES : (voices || []));
+if (!candidates.length) candidates = (voicesAll || []);
 
-        // fallback 2: cualquier voz disponible
-        if (!__autoVoicePool.length) __autoVoicePool = (voicesAll || []).map(v => (v.voiceURI || v.name)).filter(Boolean);
+let ms = candidates.filter(v => isMS(v));
+let gg = candidates.filter(v => isGoogle(v));
+let inter = (ms.length && gg.length) ? buildInterleaved(ms, gg) : (ms.length ? ms : (gg.length ? gg : candidates));
+
+__autoVoicePool = inter.map(v => (v.voiceURI || v.name)).filter(Boolean);
       } catch(e) {}
 
       voiceSelect.innerHTML = '';
@@ -11674,7 +11702,20 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         const pitch = clampNum((opts.pitch != null ? opts.pitch : (pr.pitch != null ? pr.pitch : 1.0)), 0.5, 2.0);
         const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
         const postDelayMs = clampNum((opts.postDelayMs != null ? Number(opts.postDelayMs) : 0), 0, 2000);
-        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: (opts && (opts.voiceURI || opts.voiceUri)) || '' });
+        const __voiceURI = (opts && (opts.voiceURI || opts.voiceUri)) || '';
+        // Auto-rate por proveedor cuando viene voiceURI (Auto Locutor rota Google/Microsoft)
+        // Solo si el mensaje NO forzo rate explícito.
+        if ((opts == null || opts.rate == null) && __voiceURI) {
+          try {
+            const __vv = (window.speechSynthesis && window.speechSynthesis.getVoices) ? (window.speechSynthesis.getVoices() || []) : [];
+            const __v = __vv.find(x => (x.voiceURI || x.name) === __voiceURI);
+            const __nm = String((__v && __v.name) || '').toLowerCase();
+            if (__nm.includes('microsoft')) rate = 1.7;
+            else if (__nm.includes('google')) rate = 1.2;
+          } catch(e) {}
+        }
+
+        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: __voiceURI });
         try { if (pendingAutoVoiceUnlock) __pruneQueueDuringBlock(); } catch(e) {}
         try { pushSpeechLog({ text: clean, key, priority }); } catch(e) {}
         // prioridad desc, FIFO por tiempo
@@ -11981,18 +12022,29 @@ function updateVoiceStatusDot(){
     const dot = document.getElementById('voiceStatusDot');
     if (!dot) return;
 
+    const synth = (window && window.speechSynthesis) ? window.speechSynthesis : null;
+    const speaking = !!synth && (synth.speaking || synth.pending);
+
     const needsUnlock = (typeof pendingAutoVoiceUnlock !== 'undefined' && pendingAutoVoiceUnlock) ||
                         (typeof voiceToggleBtns !== 'undefined' && voiceToggleBtns && voiceToggleBtns.some(b => b.classList.contains('needs-unlock')));
 
-    const ok = !!voiceMasterEnabled && !needsUnlock;
+    // "Armed" = la voz esta habilitada para hablar aunque en este instante no este speaking/pending.
+    // Evita que el puntito se quede rojo mientras el sistema SI funciona (caso comun: idle entre mensajes).
+    const armed = !!voiceMasterEnabled || (!!__ttsUnlockedOnce);
+
+    const ok = armed && !needsUnlock;
+    const warn = armed && needsUnlock;
 
     dot.classList.toggle('voice-on', ok);
-    dot.classList.toggle('voice-off', !ok);
+    dot.classList.toggle('voice-off', !armed);
+    dot.classList.toggle('voice-warn', warn);
+    dot.classList.toggle('voice-speaking', speaking);
 
-    dot.title = ok ? 'Voz OK' : (voiceMasterEnabled ? 'Voz ON - requiere toque' : 'Voz OFF');
-    dot.setAttribute('aria-label', ok ? 'Voz OK' : (voiceMasterEnabled ? 'Voz ON (requiere toque)' : 'Voz OFF'));
+    dot.title = ok ? 'Voz OK' : (warn ? 'Voz ON - requiere toque' : 'Voz OFF');
+    dot.setAttribute('aria-label', ok ? 'Voz OK' : (warn ? 'Voz ON (requiere toque)' : 'Voz OFF'));
   }catch(e){}
 }
+
 
 function unlockTTSOnce(reason = '') {
       try {
