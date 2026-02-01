@@ -1,12 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.51 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.53 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-01
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.51: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
+- v0.3.53: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
 - v0.3.49: FIX SyntaxError (isMS redeclared) + Auto Locutor rota Google/Microsoft es-MX/es-ES + indicador VOZ estable.
 - v0.3.46: FIX anti-perico en Clasificación - anuncios de "pole provisional" solo en AUTO (sin piloto). En FOLLOW se calla.
 - v0.3.44: FIX banderas país (Mexico/México, acentos y ñ) - mapeo Twemoji estable.
@@ -65,26 +65,13 @@ Changelog:
 - v7.1: TTS (Web Speech API) reforzado: selector de voz visible, botn de prueba, carga de voces con reintentos, y respeto a la voz elegida en la cola.
 - v7.0: Nuevo toggle "Modo background" (no pausa al quedar oculta la pestaña/ventana) + reenganche al volver (visibilitychange) + wake lock se reintenta al regresar.
 Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a background real (pantalla apagada o cambiar de app). En Windows/Chrome, si la ventana queda tapada, a veces hay throttling del navegador.-->
-
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.51</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  
-
-
-
-
-
-
-
-
-
-
-
-
+<meta charset="utf-8"/>
+<title>vics_Smart_Spotter_v0.3.53</title>
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
 
@@ -6305,562 +6292,503 @@ html, body{
 </style>
 </head>
 <body class="skin-pro skin-vicpulse">
-  <div class="app">
-    <div class="top-banner-placeholder" aria-hidden="false"><img class="top-banner-logo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" />
+<div class="app">
+<div aria-hidden="false" class="top-banner-placeholder"><img alt="Vic's Pulse Timing" class="top-banner-logo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif"/>
 </div>
-    <div class="banner-subtitle-row"><div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div></div>
+<div class="banner-subtitle-row"><div class="header-title-sub" id="raceSubtitle">Turbo Racing México - x-vic!</div></div>
 <header class="app-header live-off">
 <div class="header-stack">
-        <div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">AI Spotter TRM</span></div>
-        </div>
-
-      <div class="header-controls">
-        <div class="header-actions-row">
-          <div class="badge-live live-off" id="liveIndicator" title="LIVE / VOZ">
-            <span class="badge-live-dot"></span>
-            <span class="badge-voice-dot voice-off" id="voiceStatusDot" aria-label="Voz OFF" title="Voz OFF"></span>
-            </div>
-          <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
-          <div class="hdr-break"></div>
-          <button class="header-help header-auto btn-pro" id="autoSkinBtn" type="button" title="Auto-skin" data-kind="auto"><span class="ico"></span>&#x1F916;<span class="lbl" id="autoSkinLbl">AUTO</span></button>
-          <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Tema: VIC [AUTO]" data-kind="vic">VIC</button>
-          <button class="header-help header-qtable btn-pro" id="qTableBtn" type="button" title="Q TABLA (clasificación)" data-kind="qtabla"><span class="ico"></span>&#x1F4CA;</button>
-          <button class="header-help btn-pro" id="manualBtn" type="button" title="Manual y ayuda" data-kind="manual"><span class="ico"></span>&#x1F4D6;</button>
-        </div>
-      </div>
-
-      <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.51</div>
-        <div class="header-version" id="lastUpdateInfo"></div>
-      </div>
-    </header>
-
-    <!-- Debug strip (solo en modo debug) -->
-    <div id="debugStrip" class="debugstrip expert-only" aria-hidden="true">
-      <div class="dbg-item"><span class="dbg-k">AUTO</span> <span id="dbgAutoPhase" class="dbg-v">-</span></div>
-      <div class="dbg-item"><span class="dbg-k">LAP</span> <span id="dbgAutoLap" class="dbg-v">0</span></div>
-      <div class="dbg-item"><span class="dbg-k">T</span> <span id="dbgAutoT" class="dbg-v">0</span></div>
-      <div class="dbg-item"><span class="dbg-k">DUR</span> <span id="dbgAutoDur" class="dbg-v">0</span></div>
-      <div class="dbg-item"><span class="dbg-k">FINAL</span> <span id="dbgAutoFinal" class="dbg-v">0</span></div>
-      <div class="dbg-item"><span class="dbg-k">IDLE</span> <span id="dbgAutoIdle" class="dbg-v">0</span></div>
-      <div class="dbg-item"><span class="dbg-k">TIME</span> <span id="dbgAutoTrend" class="dbg-v">?</span></div>
-    </div>
-
-
-    <main class="app-main">
-      <section class="pilot-card">
-        <div class="pilot-card-top-strip"></div>
-        <div class="pilot-row-heading">
-          <div style="width:100%; min-width:0;">
-            <div class="pilot-label">Piloto seguido</div>
-            <div class="pilot-name-row">
-              <div class="pilot-name" id="pilotName">Auto Locutor</div>
-              <div class="pilot-laps-big" id="pilotMeta">0 v</div>
-            </div>
-          </div>
-        </div>
-        <div class="pilot-select" style="margin-top:6px;">
-          <select id="pilotSelect">
-            <option value="">Sin piloto seleccionado</option>
-          </select>
-        </div>
-        <div class="pilot-select-actions">
-          <button class="btn-secondary btn-hot btn-voice btn-voice-mini" id="voiceToggleBtnMini" data-voice-toggle type="button">
+<div class="header-title-main" id="raceTitleMain"><span id="raceTitleText">AI Spotter TRM</span></div>
+</div>
+<div class="header-controls">
+<div class="header-actions-row">
+<div class="badge-live live-off" id="liveIndicator" title="LIVE / VOZ">
+<span class="badge-live-dot"></span>
+<span aria-label="Voz OFF" class="badge-voice-dot voice-off" id="voiceStatusDot" title="Voz OFF"></span>
+</div>
+<div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
+<div class="hdr-break"></div>
+<button class="header-help header-auto btn-pro" data-kind="auto" id="autoSkinBtn" title="Auto-skin" type="button"><span class="ico"></span>🤖<span class="lbl" id="autoSkinLbl">AUTO</span></button>
+<button class="header-help header-skin btn-pro" data-kind="vic" id="skinBtn" title="Tema: VIC [AUTO]" type="button">VIC</button>
+<button class="header-help header-qtable btn-pro" data-kind="qtabla" id="qTableBtn" title="Q TABLA (clasificación)" type="button"><span class="ico"></span>📊</button>
+<button class="header-help btn-pro" data-kind="manual" id="manualBtn" title="Manual y ayuda" type="button"><span class="ico"></span>📖</button>
+</div>
+</div>
+<div class="header-version-row">
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.53</div>
+<div class="header-version" id="lastUpdateInfo"></div>
+</div>
+</header>
+<!-- Debug strip (solo en modo debug) -->
+<div aria-hidden="true" class="debugstrip expert-only" id="debugStrip">
+<div class="dbg-item"><span class="dbg-k">AUTO</span> <span class="dbg-v" id="dbgAutoPhase">-</span></div>
+<div class="dbg-item"><span class="dbg-k">LAP</span> <span class="dbg-v" id="dbgAutoLap">0</span></div>
+<div class="dbg-item"><span class="dbg-k">T</span> <span class="dbg-v" id="dbgAutoT">0</span></div>
+<div class="dbg-item"><span class="dbg-k">DUR</span> <span class="dbg-v" id="dbgAutoDur">0</span></div>
+<div class="dbg-item"><span class="dbg-k">FINAL</span> <span class="dbg-v" id="dbgAutoFinal">0</span></div>
+<div class="dbg-item"><span class="dbg-k">IDLE</span> <span class="dbg-v" id="dbgAutoIdle">0</span></div>
+<div class="dbg-item"><span class="dbg-k">TIME</span> <span class="dbg-v" id="dbgAutoTrend">?</span></div>
+</div>
+<main class="app-main">
+<section class="pilot-card">
+<div class="pilot-card-top-strip"></div>
+<div class="pilot-row-heading">
+<div style="width:100%; min-width:0;">
+<div class="pilot-label">Piloto seguido</div>
+<div class="pilot-name-row">
+<div class="pilot-name" id="pilotName">Auto Locutor</div>
+<div class="pilot-laps-big" id="pilotMeta">0 v</div>
+</div>
+</div>
+</div>
+<div class="pilot-select" style="margin-top:6px;">
+<select id="pilotSelect">
+<option value="">Sin piloto seleccionado</option>
+</select>
+</div>
+<div class="pilot-select-actions">
+<button class="btn-secondary btn-hot btn-voice btn-voice-mini" data-voice-toggle="" id="voiceToggleBtnMini" type="button">
              ACTIVAR VOZ
           </button>
-          <button class="btn-secondary btn-hot btn-basic-mini" id="basicToggleBtnMini" type="button" title="Modo básico: solo vueltas, lap time y posición (AUTO y FOLLOW)">BÁSICO</button>
-        </div>
-        <div class="pilot-pos-row">
-          <div class="pos-pill" id="posText">P -</div>
-          <div class="pos-info" id="gapInfo">Diferencia líder  vueltas  estado</div>
-        </div>
-        <div class="pilot-timings">
-          <div class="timing-item last-lap">
-            <div class="timing-label">última</div>
-            <div class="timing-value" id="lastLap">-:--.---</div>
-          </div>
-          <div class="timing-item">
-            <div class="timing-label">Mejor</div>
-            <div class="timing-value" id="bestLap">-:--.---</div>
-          </div>
-
-          <!-- Record carrera (mejor vuelta global) -->
-          <div class="timing-item">
-            <div class="timing-label">Record carrera</div>
-            <div class="timing-value" id="bestOverallLap">-:--.---</div>
-            <div class="timing-meta" id="bestLapHolder" style="font-size:10px; color:var(--text-muted);">-</div>
-          </div>
+<button class="btn-secondary btn-hot btn-basic-mini" id="basicToggleBtnMini" title="Modo básico: solo vueltas, lap time y posición (AUTO y FOLLOW)" type="button">BÁSICO</button>
+</div>
+<div class="pilot-pos-row">
+<div class="pos-pill" id="posText">P -</div>
+<div class="pos-info" id="gapInfo">Diferencia líder  vueltas  estado</div>
+</div>
+<div class="pilot-timings">
+<div class="timing-item last-lap">
+<div class="timing-label">última</div>
+<div class="timing-value" id="lastLap">-:--.---</div>
+</div>
 <div class="timing-item">
-            <div class="timing-label">Media</div>
-            <div class="timing-value" id="meanLap">-:--.---</div>
-          </div>
-
-          <div class="timing-item">
-            <div class="timing-label">Cons</div>
-            <div class="timing-value" id="consistencyVal">--%</div>
-          </div>
-          <div class="timing-item">
-            <div class="timing-label">Std Dev</div>
-            <div class="timing-value" id="sigmaVal">-.---</div>
-          </div>
-          <div class="timing-item timer-only" id="mangaClockItem">
-            <div class="timing-label">Reloj</div>
-            <div class="timing-value manga-clock" id="mangaClock">0:00.000</div>
-          </div>
-
-        </div>
-      
-        <div class="lap-chart-wrap">
-          <div class="lap-chart-header">
-            <div class="lap-chart-header-row">
-              <div class="lap-chart-title">Lap chart</div>
-              <button class="btn-mini" id="top3ToggleBtn" type="button" title="Alternar Top 3 / Top 20">TOP 3</button>
-            </div>
-            <div class="lap-chart-meta" id="lapChartMeta">Sin datos</div>
-          </div>
-          <div class="lap-chart-canvas-wrap">
-
-            <canvas id="lapChart" width="600" height="180"></canvas>
-
-          </div>
-          <div class="top3-mini-grid" id="top3MiniGrid" aria-label="Top 3 grid"></div>
-        </div>
-
-      </section>
-
-      <section class="extras-section">
-
-        
-
-        <div class="toggle-row expert-only">
-          <div class="toggle-label">Mantener pantalla despierta</div>
-          <div class="toggle-pill active" id="wakeLockToggle">
-            <div class="toggle-thumb"></div>
-          </div>
-        </div>
-        <div class="wake-status expert-only" id="wakeLockStatus"></div>
-
-        <div class="toggle-row expert-only">
-          <div class="toggle-label">Modo background</div>
-          <div class="toggle-pill" id="backgroundToggle" title="Si est ON, el spotter sigue leyendo datos aunque la pestaña no estál frente.">
-            <div class="toggle-thumb"></div>
-          </div>
-        </div>
-        <div class="wake-status expert-only" id="backgroundStatus"></div>
-
-        <div class="rate-row" style="margin-top:8px;">
-          <div class="rate-label">Velocidad voz</div>
-          <input type="range" id="rateRange" min="1.0" max="2.5" step="0.1" value="1.5" />
-          <div class="rate-display" id="rateDisplay">1.5x</div>
-        </div>
-
-        <div class="select-row">
-          <div class="select-label">Voz</div>
-          <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;">
-            <select id="voiceSelect" class="spotter-select" title="Selecciona voz del sistema (depende del dispositivo)"></select>
-            <button class="btn-secondary btn-hot" id="ttsTestBtn" type="button" title="Probar voz"> Test</button>
-          </div>
-        </div>
-
-        <div class="grid-button-row">
-          <button class="btn-grid" id="btnOpenGrid">
+<div class="timing-label">Mejor</div>
+<div class="timing-value" id="bestLap">-:--.---</div>
+</div>
+<!-- Record carrera (mejor vuelta global) -->
+<div class="timing-item">
+<div class="timing-label">Record carrera</div>
+<div class="timing-value" id="bestOverallLap">-:--.---</div>
+<div class="timing-meta" id="bestLapHolder" style="font-size:10px; color:var(--text-muted);">-</div>
+</div>
+<div class="timing-item">
+<div class="timing-label">Media</div>
+<div class="timing-value" id="meanLap">-:--.---</div>
+</div>
+<div class="timing-item">
+<div class="timing-label">Cons</div>
+<div class="timing-value" id="consistencyVal">--%</div>
+</div>
+<div class="timing-item">
+<div class="timing-label">Std Dev</div>
+<div class="timing-value" id="sigmaVal">-.---</div>
+</div>
+<div class="timing-item timer-only" id="mangaClockItem">
+<div class="timing-label">Reloj</div>
+<div class="timing-value manga-clock" id="mangaClock">0:00.000</div>
+</div>
+</div>
+<div class="lap-chart-wrap">
+<div class="lap-chart-header">
+<div class="lap-chart-header-row">
+<div class="lap-chart-title">Lap chart</div>
+<button class="btn-mini" id="top3ToggleBtn" title="Alternar Top 3 / Top 20" type="button">TOP 3</button>
+</div>
+<div class="lap-chart-meta" id="lapChartMeta">Sin datos</div>
+</div>
+<div class="lap-chart-canvas-wrap">
+<canvas height="180" id="lapChart" width="600"></canvas>
+</div>
+<div aria-label="Top 3 grid" class="top3-mini-grid" id="top3MiniGrid"></div>
+</div>
+</section>
+<section class="extras-section">
+<div class="toggle-row expert-only">
+<div class="toggle-label">Mantener pantalla despierta</div>
+<div class="toggle-pill active" id="wakeLockToggle">
+<div class="toggle-thumb"></div>
+</div>
+</div>
+<div class="wake-status expert-only" id="wakeLockStatus"></div>
+<div class="toggle-row expert-only">
+<div class="toggle-label">Modo background</div>
+<div class="toggle-pill" id="backgroundToggle" title="Si est ON, el spotter sigue leyendo datos aunque la pestaña no estál frente.">
+<div class="toggle-thumb"></div>
+</div>
+</div>
+<div class="wake-status expert-only" id="backgroundStatus"></div>
+<div class="rate-row" style="margin-top:8px;">
+<div class="rate-label">Velocidad voz</div>
+<input id="rateRange" max="2.5" min="1.0" step="0.1" type="range" value="1.5"/>
+<div class="rate-display" id="rateDisplay">1.5x</div>
+</div>
+<div class="select-row">
+<div class="select-label">Voz</div>
+<div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;">
+<select class="spotter-select" id="voiceSelect" title="Selecciona voz del sistema (depende del dispositivo)"></select>
+<button class="btn-secondary btn-hot" id="ttsTestBtn" title="Probar voz" type="button"> Test</button>
+</div>
+</div>
+<div class="grid-button-row">
+<button class="btn-grid" id="btnOpenGrid">
              TOP 3
           </button>
 </div>
-      </section>
-
-      <section class="controls-section expert-only" id="controlsSection">
-        
-
-        <div class="buttons-row">
-          <button class="btn-secondary btn-hot btn-voice" id="voiceToggleBtn" data-voice-toggle>
+</section>
+<section class="controls-section expert-only" id="controlsSection">
+<div class="buttons-row">
+<button class="btn-secondary btn-hot btn-voice" data-voice-toggle="" id="voiceToggleBtn">
              ACTIVAR VOZ
           </button>
-          <button class="btn-secondary btn-hot btn-speak expert-only" id="speakBtn">
+<button class="btn-secondary btn-hot btn-speak expert-only" id="speakBtn">
              Leer resumen
           </button>
-          <button class="btn-secondary btn-hot btn-rd expert-only" id="rdToggleBtn" title="Prender o apagar el Race Director">
+<button class="btn-secondary btn-hot btn-rd expert-only" id="rdToggleBtn" title="Prender o apagar el Race Director">
              RD ON
           </button>
-        </div>
-
-        <div class="config-status-card" id="configStatusCard" aria-label="Configuracin activa">
-          <div class="config-status-top">
-            <div class="config-status-title"> Configuracin activa</div>
-            <div class="config-status-badges">
-              <span class="cfg-pill cfg-pill-session" id="cfgSessionPill">Sesin: -</span>
-              <span class="cfg-pill cfg-pill-auto" id="cfgPresetPill">Preset: -</span>
-              <span class="cfg-pill cfg-pill-auto" id="modeBadge">Modo: -</span>
-            </div>
-          </div>
-          <div class="config-status-line">
-            <span class="cfg-label">RD:</span> <span class="cfg-value" id="cfgRdMode">-</span>
-            <span class="cfg-sep">|</span>
-            <span class="cfg-label">Auto Locutor:</span> <span class="cfg-value" id="cfgAutoMode">-</span>
-            <span class="cfg-sep">|</span>
-            <span class="cfg-label">Precisin:</span> <span class="cfg-value" id="cfgPrec">-</span>
-            <span class="cfg-sep">|</span>
-            <span class="cfg-label">Voces:</span> <span class="cfg-value" id="cfgVoices">ES</span>
-          </div>
-          <div class="session-presets expert-only" id="sessionPresetsPanel">
-            <div class="session-presets-header">
-              <div class="session-presets-title"> Presets por sesin</div>
-              <div class="session-presets-note" id="sessionPresetNote">Auto: ON</div>
-            </div>
-            <div class="session-preset-grid" role="group" aria-label="Presets por sesin">
-              <button class="session-preset-card" id="presetCardTrain" data-session="TRAIN" type="button">
-                <div class="spc-head">
-                  <span class="spc-name">Entrenamiento</span>
-                  <span class="spc-tag">TRAIN</span>
-                </div>
-                <div class="spc-sub" id="presetTrainMeta">-</div>
-                <div class="spc-toggles" id="presetTrainToggles"></div>
-              </button>
-              <button class="session-preset-card" id="presetCardManga" data-session="MANGA" type="button">
-                <div class="spc-head">
-                  <span class="spc-name">Manga</span>
-                  <span class="spc-tag">MANGA</span>
-                </div>
-                <div class="spc-sub" id="presetMangaMeta">-</div>
-                <div class="spc-toggles" id="presetMangaToggles"></div>
-              </button>
-              <button class="session-preset-card" id="presetCardFinal" data-session="FINAL" type="button">
-                <div class="spc-head">
-                  <span class="spc-name">Final</span>
-                  <span class="spc-tag">FINAL</span>
-                </div>
-                <div class="spc-sub" id="presetFinalMeta">-</div>
-                <div class="spc-toggles" id="presetFinalToggles"></div>
-              </button>
-            </div>
-            <div class="session-now" id="sessionNowRow">
-              <div class="session-now-title">Ahora (lo que est prendido en voz)</div>
-              <div class="session-now-toggles" id="sessionNowToggles"></div>
-            </div>
-          </div>
-        </div>
-        <div class="rd-mode-row expert-only" role="group" aria-label="Modo del Race Director">
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeMinimal" title="Pro Minimal">A Minimal</button>
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeStratega" title="Pro Estratega">B Estratega</button>
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeCoach" title="Pro Coach">C Coach</button>
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeSarca" title="Sarcstico">D Sarcstico</button>
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeEngineer" title="Ingeniero">E Ingeniero</button>
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeHype" title="Hype">F Hype</button>
-        </div>
-
-        <div class="controls-label expert-only"> Auto Locutor (sin piloto)</div>
-        <div class="rd-mode-row expert-only" role="group" aria-label="Modo del Auto Locutor">
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorPro" title="Locutor PRO serio">PRO</button>
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorPicante" title="Picante light">Picante</button>
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorEngineer" title="Ingeniero de carrera">Ingeniero</button>
-          <button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorNarrativo" title="Narracin con hilo y contexto">Narrativo</button>
-        </div>
-
-        <div class="precision-row expert-only">
-                  <div class="controls-label">Precisin de lectura del tiempo</div>
-                  <div class="precision-buttons">
-                    <div class="precision-badge active" data-precision="1">1 dcima</div>
-                    <div class="precision-badge" data-precision="2">2 dcimas</div>
-                    <div class="precision-badge" data-precision="3">3 dcimas</div>
-                  </div>
-                  <select id="precisionSelect" class="spotter-select" style="display:none">
-                    <option value="1" selected>1 dcima</option>
-                    <option value="2">2 dcimas</option>
-                    <option value="3">3 dcimas</option>
-                  </select>
-                </div>
-
-      </section>
-
-      <section class="spotter-section expert-only" id="advancedMessagesPanel">
-  <div class="controls-label" style="margin-bottom:2px;">Mensajes del spotter</div>
-
-  
-  <div class="spotter-master">
-    <button id="presetRdProBtn" type="button" class="spotter-master-btn preset" title="Preset: RD PRO limpio (habla lo importante, sin spam)">RD PRO</button>
-    <button id="presetRdShowBtn" type="button" class="spotter-master-btn preset" title="Preset: RD SHOW (ms emocin, ms narrativa)">RD SHOW</button>
-    <button id="toggleAllMsgsBtn" type="button" class="spotter-master-btn" title="Prender o apagar todos los mensajes (excepto Laps)">TODO</button>
-  </div>
-
-<div class="spotter-cat" data-cat="essential">
-    <div class="spotter-cat-head"><span class="cat-dot"></span>Esenciales</div>
-    <div class="spotter-grid">
-      <div class="spotter-btn active lock" data-flag="laps"><span></span>Laps</div>
-      <div class="spotter-btn" data-flag="saylaps" title="Decir o no decir la palabra vueltas al leer Laps"><span></span>Vueltas</div>
-      <div class="spotter-btn active" data-flag="blueflag" title="Azul: avisa lapeos/trafico (bandera azul)"><span></span>Azul</div>
-      <div class="spotter-btn active" data-flag="ritmo" title="Ritmo: avisa si vienes mejorando o si te caes (comparado con tu promedio reciente)"><span></span>Ritmo +/-</div>
-      <div class="spotter-btn" data-flag="estlap" title="Est: tiempo estimado al final (si el feed lo trae)"><span></span>Est</div>
-      <div class="spotter-btn" data-flag="leadergap" title="Lider: gap al líder, cambios de líder y contexto de punta"><span></span>Lider</div>
-      <div class="spotter-btn" data-flag="podium" title="Podio: llamadas enfocadas al Top 3 (en Finales, suele ser lo mas caliente)"><span></span>Podio</div>
-    </div>
-  </div>
-
-  <div class="spotter-cat" data-cat="battle">
-    <div class="spotter-cat-head"><span class="cat-dot"></span>Batalla</div>
-    <div class="spotter-grid">
-      <div class="spotter-btn" data-flag="pos" title="Pos: cambios de posicion (ganas/pierdes), y pases importantes en Auto"><span></span>Pos</div>
-      <div class="spotter-btn" data-flag="gaps" title="Diferencia: gap con el de adelante y con el de atras (segundos o vueltas)"><span></span>Gap</div>
-      <div class="spotter-btn" data-flag="front06" title="Adel <0.6: tienes a alguien adelante a menos de 0.6s (huele a pase)"><span></span>Adel &lt;0.6</div>
-      <div class="spotter-btn" data-flag="back06" title="Atras <0.6: te vienen atacando a menos de 0.6s (defiende)"><span></span>Atras &lt;0.6</div>
-      <div class="spotter-btn" data-flag="attack" title="Ataque: narrativa cuando tu gap al de adelante cae y estas para intentarlo"><span></span>Ataque</div>
-      <div class="spotter-btn" data-flag="defense" title="Defensa: narrativa cuando te vienen recortando y toca aguantar"><span></span>Defensa</div>
-    </div>
-  </div>
-
-  <div class="spotter-cat" data-cat="summary">
-    <div class="spotter-cat-head"><span class="cat-dot"></span>Resumen</div>
-    <div class="spotter-grid">
-      <div class="spotter-btn" data-flag="total"><span></span>Total</div>
-      <div class="spotter-btn" data-flag="cons10"><span></span>Cons 10</div>
-      <div class="spotter-btn" data-flag="bestlap"><span></span>Best</div>
-      <div class="spotter-btn" data-flag="box"><span></span>Box</div>
-      <div class="spotter-btn" data-flag="pelea"><span></span>Pelea</div>
-      <div class="spotter-btn" data-flag="netgain"><span></span>NetGain</div>
-    </div>
-  </div>
-
-  <div style="display:none;">
-    <input type="checkbox" id="chkLapBasic" checked />
-    <input type="checkbox" id="chkPosChanges" />
-    <input type="checkbox" id="chkExtraInfo" />
-    <input type="checkbox" id="chkBehindAlert" />
-    <input type="checkbox" id="chkTotalTime" />
-    <input type="checkbox" id="chkBlueFlag" checked />
-    <input type="checkbox" id="chkConsistency10" />
-    <input type="checkbox" id="chkEstLap" />
-    <input type="checkbox" id="chkBestLap" />
-    <input type="checkbox" id="chkPaceTrend" checked />
-    <input type="checkbox" id="chkAheadAlert" />
-    <input type="checkbox" id="chkAutoSummary" />
-  </div>
+</div>
+<div aria-label="Configuracin activa" class="config-status-card" id="configStatusCard">
+<div class="config-status-top">
+<div class="config-status-title"> Configuracin activa</div>
+<div class="config-status-badges">
+<span class="cfg-pill cfg-pill-session" id="cfgSessionPill">Sesin: -</span>
+<span class="cfg-pill cfg-pill-auto" id="cfgPresetPill">Preset: -</span>
+<span class="cfg-pill cfg-pill-auto" id="modeBadge">Modo: -</span>
+</div>
+</div>
+<div class="config-status-line">
+<span class="cfg-label">RD:</span> <span class="cfg-value" id="cfgRdMode">-</span>
+<span class="cfg-sep">|</span>
+<span class="cfg-label">Auto Locutor:</span> <span class="cfg-value" id="cfgAutoMode">-</span>
+<span class="cfg-sep">|</span>
+<span class="cfg-label">Precisin:</span> <span class="cfg-value" id="cfgPrec">-</span>
+<span class="cfg-sep">|</span>
+<span class="cfg-label">Voces:</span> <span class="cfg-value" id="cfgVoices">ES</span>
+</div>
+<div class="session-presets expert-only" id="sessionPresetsPanel">
+<div class="session-presets-header">
+<div class="session-presets-title"> Presets por sesin</div>
+<div class="session-presets-note" id="sessionPresetNote">Auto: ON</div>
+</div>
+<div aria-label="Presets por sesin" class="session-preset-grid" role="group">
+<button class="session-preset-card" data-session="TRAIN" id="presetCardTrain" type="button">
+<div class="spc-head">
+<span class="spc-name">Entrenamiento</span>
+<span class="spc-tag">TRAIN</span>
+</div>
+<div class="spc-sub" id="presetTrainMeta">-</div>
+<div class="spc-toggles" id="presetTrainToggles"></div>
+</button>
+<button class="session-preset-card" data-session="MANGA" id="presetCardManga" type="button">
+<div class="spc-head">
+<span class="spc-name">Manga</span>
+<span class="spc-tag">MANGA</span>
+</div>
+<div class="spc-sub" id="presetMangaMeta">-</div>
+<div class="spc-toggles" id="presetMangaToggles"></div>
+</button>
+<button class="session-preset-card" data-session="FINAL" id="presetCardFinal" type="button">
+<div class="spc-head">
+<span class="spc-name">Final</span>
+<span class="spc-tag">FINAL</span>
+</div>
+<div class="spc-sub" id="presetFinalMeta">-</div>
+<div class="spc-toggles" id="presetFinalToggles"></div>
+</button>
+</div>
+<div class="session-now" id="sessionNowRow">
+<div class="session-now-title">Ahora (lo que est prendido en voz)</div>
+<div class="session-now-toggles" id="sessionNowToggles"></div>
+</div>
+</div>
+</div>
+<div aria-label="Modo del Race Director" class="rd-mode-row expert-only" role="group">
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeMinimal" title="Pro Minimal">A Minimal</button>
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeStratega" title="Pro Estratega">B Estratega</button>
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeCoach" title="Pro Coach">C Coach</button>
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeSarca" title="Sarcstico">D Sarcstico</button>
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeEngineer" title="Ingeniero">E Ingeniero</button>
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="rdModeHype" title="Hype">F Hype</button>
+</div>
+<div class="controls-label expert-only"> Auto Locutor (sin piloto)</div>
+<div aria-label="Modo del Auto Locutor" class="rd-mode-row expert-only" role="group">
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorPro" title="Locutor PRO serio">PRO</button>
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorPicante" title="Picante light">Picante</button>
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorEngineer" title="Ingeniero de carrera">Ingeniero</button>
+<button class="btn-secondary btn-hot rd-mode btn-mode" id="autoLocutorNarrativo" title="Narracin con hilo y contexto">Narrativo</button>
+</div>
+<div class="precision-row expert-only">
+<div class="controls-label">Precisin de lectura del tiempo</div>
+<div class="precision-buttons">
+<div class="precision-badge active" data-precision="1">1 dcima</div>
+<div class="precision-badge" data-precision="2">2 dcimas</div>
+<div class="precision-badge" data-precision="3">3 dcimas</div>
+</div>
+<select class="spotter-select" id="precisionSelect" style="display:none">
+<option selected="" value="1">1 dcima</option>
+<option value="2">2 dcimas</option>
+<option value="3">3 dcimas</option>
+</select>
+</div>
 </section>
-
-    </main>
-  </div>
-
-  <!-- Manual modal -->
-<div class="manual-backdrop" id="manualBackdrop" aria-hidden="true">
-  <div class="manual-panel" role="dialog" aria-modal="true" aria-labelledby="manualTitle">
-    <div class="manual-top">
-      <div>
-        <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.51). Activa voz, elige piloto y corre. El resto es opcional.</div>
-      </div>
-      <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
-    </div>
-
-    <div class="manual-tabs" role="tablist" aria-label="Secciones del manual">
-      <button class="manual-tab active" role="tab" aria-selected="true" data-tab="inicio" type="button">Inicio</button>
-      <button class="manual-tab" role="tab" aria-selected="false" data-tab="botones" type="button">Botones</button>
-      <button class="manual-tab" role="tab" aria-selected="false" data-tab="voz" type="button">Voz</button>
-      <button class="manual-tab" role="tab" aria-selected="false" data-tab="qtabla" type="button">Q Tabla</button>
-      <button class="manual-tab" role="tab" aria-selected="false" data-tab="basico" type="button">Básico</button>
-      <button class="manual-tab" role="tab" aria-selected="false" data-tab="problemas" type="button">Problemas</button>
-    </div>
-
-    <div class="manual-sections">
-      <div class="manual-section active" data-tab="inicio">
-        <h3>Arranque en 60 segundos</h3>
-        <div class="manual-card">
-          <ol style="margin:0; padding-left: 18px;">
-            <li>Abre el Spotter y espera 2-3 segundos a que llegue el primer dato.</li>
-            <li><b>PC/Mac</b>: la voz suele quedar en ON sola. Si el punto VOZ está rojo, toca <b>ACTIVAR VOZ</b>. <b>iPhone/Android</b>: toca <b>ACTIVAR VOZ</b> una vez para destrabar.</li>
-            <li>Si quieres seguimiento, <b>selecciona tu piloto</b>.</li>
-            <li>Si quieres menos ruido, en <b>FOLLOW</b> enciende <b>BÁSICO</b> (en <b>AUTO</b> queda apagado y bloqueado).</li>
-            <li>En clasificación, usa <b>Q TABLA</b> (botón 📊) para ver la tabla.</li>
-          </ol>
-          <div class="manual-note">El piloto seleccionado se guarda en tu navegador. Si recargas y el nombre existe, se auto-selecciona.</div>
-        </div>
-
-        <h3>Dos formas de usarlo</h3>
-        <div class="manual-card">
-          <b>Auto</b>: narra lo general (carrera nueva, cambios, avisos, peleas).<br>
-          <b>Seguimiento</b>: se enfoca en tu piloto (posición, gaps, alertas).<br><br>
-          <div class="manual-tip">Regla simple: si seleccionas piloto, el spotter debe hablar menos y más directo.</div>
-        </div>
-
-        <h3>Reglas de oro</h3>
-        <div class="manual-card">
-          <ul style="margin:0; padding-left: 18px;">
-            <li>Una sola pestaña del Spotter. Dos pestañas = dos locutores peleando el micrófono.</li>
-            <li>Si estás en iPhone, no bloquees pantalla al inicio (primero activa la voz).</li>
-            <li>Si todo viene en ceros al arrancar, es normal: espera 1-2 vueltas reales.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="manual-section" data-tab="botones">
-        <h3>Header: lo que sí se toca</h3>
-        <div class="manual-card">
-          <ul style="margin:0; padding-left: 18px;">
-            <li><b>🤖 AUTO</b> - modo automático (decide anuncios y ritmo de mensajes).</li>
-            <li><b>VIC</b> - cambia el skin/tema visual a Vic.</li>
-            <li><b>📊</b> - Q TABLA (clasificación guardada).</li>
-            <li><b>📖</b> - abre/cierra este manual.</li>
-          </ul>
-          <div class="manual-note">El punto LIVE (verde/gris) dice si el feed está vivo. El punto VOZ (verde/rojo) te dice si la voz está OK u OFF. El badge MODO muestra la sesión detectada.</div>
-        </div>
-
-        <h3>Controles principales</h3>
-        <div class="manual-card">
-          <ul style="margin:0; padding-left: 18px;">
-            <li><b>ACTIVAR VOZ</b> - desbloquea audio del navegador.</li>
-            <li><b>BÁSICO</b> - reduce mensajes (modo concentración).</li>
-            <li><b>Selector de piloto</b> - activa seguimiento.</li>
-          </ul>
-          <div class="manual-tip">Si algo se siente atorado, refresco controlado. Mejor eso que discutir con la app en plena final.</div>
-        </div>
-      </div>
-
-      <div class="manual-section" data-tab="voz">
-        <h3>Voz en iPhone (Safari/Chrome iOS)</h3>
-        <div class="manual-card">
+<section class="spotter-section expert-only" id="advancedMessagesPanel">
+<div class="controls-label" style="margin-bottom:2px;">Mensajes del spotter</div>
+<div class="spotter-master">
+<button class="spotter-master-btn preset" id="presetRdProBtn" title="Preset: RD PRO limpio (habla lo importante, sin spam)" type="button">RD PRO</button>
+<button class="spotter-master-btn preset" id="presetRdShowBtn" title="Preset: RD SHOW (ms emocin, ms narrativa)" type="button">RD SHOW</button>
+<button class="spotter-master-btn" id="toggleAllMsgsBtn" title="Prender o apagar todos los mensajes (excepto Laps)" type="button">TODO</button>
+</div>
+<div class="spotter-cat" data-cat="essential">
+<div class="spotter-cat-head"><span class="cat-dot"></span>Esenciales</div>
+<div class="spotter-grid">
+<div class="spotter-btn active lock" data-flag="laps"><span></span>Laps</div>
+<div class="spotter-btn" data-flag="saylaps" title="Decir o no decir la palabra vueltas al leer Laps"><span></span>Vueltas</div>
+<div class="spotter-btn active" data-flag="blueflag" title="Azul: avisa lapeos/trafico (bandera azul)"><span></span>Azul</div>
+<div class="spotter-btn active" data-flag="ritmo" title="Ritmo: avisa si vienes mejorando o si te caes (comparado con tu promedio reciente)"><span></span>Ritmo +/-</div>
+<div class="spotter-btn" data-flag="estlap" title="Est: tiempo estimado al final (si el feed lo trae)"><span></span>Est</div>
+<div class="spotter-btn" data-flag="leadergap" title="Lider: gap al líder, cambios de líder y contexto de punta"><span></span>Lider</div>
+<div class="spotter-btn" data-flag="podium" title="Podio: llamadas enfocadas al Top 3 (en Finales, suele ser lo mas caliente)"><span></span>Podio</div>
+</div>
+</div>
+<div class="spotter-cat" data-cat="battle">
+<div class="spotter-cat-head"><span class="cat-dot"></span>Batalla</div>
+<div class="spotter-grid">
+<div class="spotter-btn" data-flag="pos" title="Pos: cambios de posicion (ganas/pierdes), y pases importantes en Auto"><span></span>Pos</div>
+<div class="spotter-btn" data-flag="gaps" title="Diferencia: gap con el de adelante y con el de atras (segundos o vueltas)"><span></span>Gap</div>
+<div class="spotter-btn" data-flag="front06" title="Adel &lt;0.6: tienes a alguien adelante a menos de 0.6s (huele a pase)"><span></span>Adel &lt;0.6</div>
+<div class="spotter-btn" data-flag="back06" title="Atras &lt;0.6: te vienen atacando a menos de 0.6s (defiende)"><span></span>Atras &lt;0.6</div>
+<div class="spotter-btn" data-flag="attack" title="Ataque: narrativa cuando tu gap al de adelante cae y estas para intentarlo"><span></span>Ataque</div>
+<div class="spotter-btn" data-flag="defense" title="Defensa: narrativa cuando te vienen recortando y toca aguantar"><span></span>Defensa</div>
+</div>
+</div>
+<div class="spotter-cat" data-cat="summary">
+<div class="spotter-cat-head"><span class="cat-dot"></span>Resumen</div>
+<div class="spotter-grid">
+<div class="spotter-btn" data-flag="total"><span></span>Total</div>
+<div class="spotter-btn" data-flag="cons10"><span></span>Cons 10</div>
+<div class="spotter-btn" data-flag="bestlap"><span></span>Best</div>
+<div class="spotter-btn" data-flag="box"><span></span>Box</div>
+<div class="spotter-btn" data-flag="pelea"><span></span>Pelea</div>
+<div class="spotter-btn" data-flag="netgain"><span></span>NetGain</div>
+</div>
+</div>
+<div style="display:none;">
+<input checked="" id="chkLapBasic" type="checkbox"/>
+<input id="chkPosChanges" type="checkbox"/>
+<input id="chkExtraInfo" type="checkbox"/>
+<input id="chkBehindAlert" type="checkbox"/>
+<input id="chkTotalTime" type="checkbox"/>
+<input checked="" id="chkBlueFlag" type="checkbox"/>
+<input id="chkConsistency10" type="checkbox"/>
+<input id="chkEstLap" type="checkbox"/>
+<input id="chkBestLap" type="checkbox"/>
+<input checked="" id="chkPaceTrend" type="checkbox"/>
+<input id="chkAheadAlert" type="checkbox"/>
+<input id="chkAutoSummary" type="checkbox"/>
+</div>
+</section>
+</main>
+</div>
+<!-- Manual modal -->
+<div aria-hidden="true" class="manual-backdrop" id="manualBackdrop">
+<div aria-labelledby="manualTitle" aria-modal="true" class="manual-panel" role="dialog">
+<div class="manual-top">
+<div>
+<div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
+<div class="manual-sub">Guía rápida (v0.3.53). Activa voz, elige piloto y corre. El resto es opcional.</div>
+</div>
+<button aria-label="Cerrar" class="manual-close" id="manualCloseBtn" type="button">✕</button>
+</div>
+<div aria-label="Secciones del manual" class="manual-tabs" role="tablist">
+<button aria-selected="true" class="manual-tab active" data-tab="inicio" role="tab" type="button">Inicio</button>
+<button aria-selected="false" class="manual-tab" data-tab="botones" role="tab" type="button">Botones</button>
+<button aria-selected="false" class="manual-tab" data-tab="voz" role="tab" type="button">Voz</button>
+<button aria-selected="false" class="manual-tab" data-tab="qtabla" role="tab" type="button">Q Tabla</button>
+<button aria-selected="false" class="manual-tab" data-tab="basico" role="tab" type="button">Básico</button>
+<button aria-selected="false" class="manual-tab" data-tab="problemas" role="tab" type="button">Problemas</button>
+</div>
+<div class="manual-sections">
+<div class="manual-section active" data-tab="inicio">
+<h3>Arranque en 60 segundos</h3>
+<div class="manual-card">
+<ol style="margin:0; padding-left: 18px;">
+<li>Abre el Spotter y espera 2-3 segundos a que llegue el primer dato.</li>
+<li><b>PC/Mac</b>: la voz suele quedar en ON sola. Si el punto VOZ está rojo, toca <b>ACTIVAR VOZ</b>. <b>iPhone/Android</b>: toca <b>ACTIVAR VOZ</b> una vez para destrabar.</li>
+<li>Si quieres seguimiento, <b>selecciona tu piloto</b>.</li>
+<li>Si quieres menos ruido, en <b>FOLLOW</b> enciende <b>BÁSICO</b> (en <b>AUTO</b> queda apagado y bloqueado).</li>
+<li>En clasificación, usa <b>Q TABLA</b> (botón 📊) para ver la tabla.</li>
+</ol>
+<div class="manual-note">El piloto seleccionado se guarda en tu navegador. Si recargas y el nombre existe, se auto-selecciona.</div>
+</div>
+<h3>Dos formas de usarlo</h3>
+<div class="manual-card">
+<b>Auto</b>: narra lo general (carrera nueva, cambios, avisos, peleas).<br/>
+<b>Seguimiento</b>: se enfoca en tu piloto (posición, gaps, alertas).<br/><br/>
+<div class="manual-tip">Regla simple: si seleccionas piloto, el spotter debe hablar menos y más directo.</div>
+</div>
+<h3>Reglas de oro</h3>
+<div class="manual-card">
+<ul style="margin:0; padding-left: 18px;">
+<li>Una sola pestaña del Spotter. Dos pestañas = dos locutores peleando el micrófono.</li>
+<li>Si estás en iPhone, no bloquees pantalla al inicio (primero activa la voz).</li>
+<li>Si todo viene en ceros al arrancar, es normal: espera 1-2 vueltas reales.</li>
+</ul>
+</div>
+</div>
+<div class="manual-section" data-tab="botones">
+<h3>Header: lo que sí se toca</h3>
+<div class="manual-card">
+<ul style="margin:0; padding-left: 18px;">
+<li><b>🤖 AUTO</b> - modo automático (decide anuncios y ritmo de mensajes).</li>
+<li><b>VIC</b> - cambia el skin/tema visual a Vic.</li>
+<li><b>📊</b> - Q TABLA (clasificación guardada).</li>
+<li><b>📖</b> - abre/cierra este manual.</li>
+</ul>
+<div class="manual-note">El punto LIVE (verde/gris) dice si el feed está vivo. El punto VOZ (verde/rojo) te dice si la voz está OK u OFF. El badge MODO muestra la sesión detectada.</div>
+</div>
+<h3>Controles principales</h3>
+<div class="manual-card">
+<ul style="margin:0; padding-left: 18px;">
+<li><b>ACTIVAR VOZ</b> - desbloquea audio del navegador.</li>
+<li><b>BÁSICO</b> - reduce mensajes (modo concentración).</li>
+<li><b>Selector de piloto</b> - activa seguimiento.</li>
+</ul>
+<div class="manual-tip">Si algo se siente atorado, refresco controlado. Mejor eso que discutir con la app en plena final.</div>
+</div>
+</div>
+<div class="manual-section" data-tab="voz">
+<h3>Voz en iPhone (Safari/Chrome iOS)</h3>
+<div class="manual-card">
           iOS solo permite audio si hay un gesto del usuario. Por eso existe <b>ACTIVAR VOZ</b>.
           <ol style="margin:8px 0 0; padding-left: 18px;">
-            <li>Sube volumen y quita Silencio.</li>
-            <li>Toca <b>ACTIVAR VOZ</b> una vez con la pantalla despierta.</li>
-            <li>Luego selecciona piloto (si aplica).</li>
-            <li>No bloquees pantalla justo al arrancar.</li>
-          </ol>
-          <div class="manual-note">Si estás con Bluetooth, revisa que el audio no esté saliendo por otro dispositivo. El punto VOZ junto al LIVE: verde = OK, rojo = OFF (o requiere toque).</div>
-        </div>
-
-        <h3>Voz en PC (Chrome/Brave/Edge)</h3>
-        <div class="manual-card">
-          <ul style="margin:0; padding-left: 18px;">
-            <li>Permite audio del sitio (candado del navegador).</li>
-            <li>Evita suspensión del sistema durante evento.</li>
-            <li>Si usas OBS, mejor cargar como Browser Source.</li>
-          </ul>
-        </div>
-
-        <h3>Segundo plano (background)</h3>
-        <div class="manual-card">
+<li>Sube volumen y quita Silencio.</li>
+<li>Toca <b>ACTIVAR VOZ</b> una vez con la pantalla despierta.</li>
+<li>Luego selecciona piloto (si aplica).</li>
+<li>No bloquees pantalla justo al arrancar.</li>
+</ol>
+<div class="manual-note">Si estás con Bluetooth, revisa que el audio no esté saliendo por otro dispositivo. El punto VOZ junto al LIVE: verde = OK, rojo = OFF (o requiere toque).</div>
+</div>
+<h3>Voz en PC (Chrome/Brave/Edge)</h3>
+<div class="manual-card">
+<ul style="margin:0; padding-left: 18px;">
+<li>Permite audio del sitio (candado del navegador).</li>
+<li>Evita suspensión del sistema durante evento.</li>
+<li>Si usas OBS, mejor cargar como Browser Source.</li>
+</ul>
+</div>
+<h3>Segundo plano (background)</h3>
+<div class="manual-card">
           En web puedes mantener actividad, pero si el sistema entra en suspensión, nadie salva eso.
           <ul style="margin:8px 0 0; padding-left: 18px;">
-            <li>Para evento: desactiva sleep y deja la pestaña viva.</li>
-            <li>Si sales y vuelves, dale 1 segundo para retomar.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="manual-section" data-tab="qtabla">
-        <h3>Qué es Q TABLA</h3>
-        <p style="margin-top:8px; color: var(--text-muted);">
+<li>Para evento: desactiva sleep y deja la pestaña viva.</li>
+<li>Si sales y vuelves, dale 1 segundo para retomar.</li>
+</ul>
+</div>
+</div>
+<div class="manual-section" data-tab="qtabla">
+<h3>Qué es Q TABLA</h3>
+<p style="margin-top:8px; color: var(--text-muted);">
           Nota: el <b>Best Lap</b> que ves en Q TABLA viene directo del feed (por piloto, <code>bestMs</code>/<code>bestLapMs</code>). No se calcula.
         </p>
-
-        <div class="manual-card">
+<div class="manual-card">
           Q TABLA es tu "race control" para <b>clasificación</b>. Guarda y muestra resultados por sesión (Q).
           <ul style="margin:8px 0 0; padding-left: 18px;">
-            <li><b>Vista: Mejor por piloto</b> - toma el mejor resultado guardado de cada piloto.</li>
-            <li><b>Vista: Por Q</b> - te deja revisar cada Q guardada (Q1, Q2, etc).</li>
-          </ul>
-          <div class="manual-note">Los chips de arriba muestran Evento, Fecha y cuántas sesiones guardó.</div>
-        </div>
-
-        <h3>Cuándo se guarda</h3>
-        <div class="manual-card">
+<li><b>Vista: Mejor por piloto</b> - toma el mejor resultado guardado de cada piloto.</li>
+<li><b>Vista: Por Q</b> - te deja revisar cada Q guardada (Q1, Q2, etc).</li>
+</ul>
+<div class="manual-note">Los chips de arriba muestran Evento, Fecha y cuántas sesiones guardó.</div>
+</div>
+<h3>Cuándo se guarda</h3>
+<div class="manual-card">
           Se guarda cuando hay datos reales (vueltas o tiempos válidos). Se guarda en tu navegador (localStorage).
           <ul style="margin:8px 0 0; padding-left: 18px;">
-            <li>Si borras datos del sitio o usas incógnito, arrancas con Q TABLA limpia.</li>
-            <li>Si está vacía, es porque aún no llegó info válida.</li>
-          </ul>
-        </div>
-
-        <h3>Lectura rápida</h3>
-        <div class="manual-card">
-          <ul style="margin:0; padding-left: 18px;">
-            <li><b>Pos</b>: posición en clasificación.</li>
-            <li><b>Best</b>: mejor vuelta del piloto.</li>
-            <li><b>Gap</b>: diferencia contra el líder.</li>
-          </ul>
-          <div class="manual-tip">Si estás buscando "quién trae ritmo", mira Best y Gap. Lo demás es chisme, pero útil.</div>
-        </div>
-      </div>
-
-      <div class="manual-section" data-tab="basico">
-        <h3>Modo BÁSICO</h3>
-        <div class="manual-card">
+<li>Si borras datos del sitio o usas incógnito, arrancas con Q TABLA limpia.</li>
+<li>Si está vacía, es porque aún no llegó info válida.</li>
+</ul>
+</div>
+<h3>Lectura rápida</h3>
+<div class="manual-card">
+<ul style="margin:0; padding-left: 18px;">
+<li><b>Pos</b>: posición en clasificación.</li>
+<li><b>Best</b>: mejor vuelta del piloto.</li>
+<li><b>Gap</b>: diferencia contra el líder.</li>
+</ul>
+<div class="manual-tip">Si estás buscando "quién trae ritmo", mira Best y Gap. Lo demás es chisme, pero útil.</div>
+</div>
+</div>
+<div class="manual-section" data-tab="basico">
+<h3>Modo BÁSICO</h3>
+<div class="manual-card">
           BÁSICO es para correr con casco puesto: menos choro, más vueltas.
           <ul style="margin:8px 0 0; padding-left: 18px;">
-            <li>En <b>AUTO</b>: solo P1 (vueltas + última vuelta). Si cambia el líder, lo dice.</li>
-            <li>En <b>FOLLOW</b>: solo tu piloto (vueltas + última vuelta + posición estable).</li>
-            <li>Sin peleas, sin gaps, sin azul, sin resúmenes largos.</li>
-          </ul>
-          <div class="manual-tip">Si quieres el show completo, apaga BÁSICO y deja que hable.</div>
-        </div>
-      </div>
-
-      <div class="manual-section" data-tab="problemas">
-        <h3>Soluciones rápidas</h3>
-        <div class="manual-card">
-          <ol style="margin:0; padding-left: 18px;">
-            <li><b>No habla</b> - toca ACTIVAR VOZ. En iPhone, toca con la pantalla despierta.</li>
-            <li><b>Habla raro o en loop</b> - refresca una vez. Si tienes dos pestañas abiertas, cierra una.</li>
-            <li><b>Q TABLA sin datos</b> - espera 1-2 vueltas reales o revisa que el feed esté vivo.</li>
-            <li><b>Se calla al volver del background</b> - dale 1 segundo. Si no regresa: refresco controlado.</li>
-          </ol>
-          <div class="manual-note">Consejo de veterano: lo importante es que hable cuando lo necesitas, no que platique bonito.</div>
-        </div>
-
-        <h3>Buenas prácticas</h3>
-        <div class="manual-card">
-          <ul style="margin:0; padding-left: 18px;">
-            <li>Antes de arrancar: piloto seleccionado + voz activa.</li>
-            <li>Prueba Q TABLA en clasificación para confirmar que guardó sesiones.</li>
-            <li>Si vas a grabar: haz una prueba de carrera nueva para confirmar anuncios.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <div class="manual-foot">
-      <span class="manual-tip">Meta: 0 fricción. Un toque para voz y listo. El resto es ventaja competitiva.</span>
-    </div>
-  </div>
+<li>En <b>AUTO</b>: solo P1 (vueltas + última vuelta). Si cambia el líder, lo dice.</li>
+<li>En <b>FOLLOW</b>: solo tu piloto (vueltas + última vuelta + posición estable).</li>
+<li>Sin peleas, sin gaps, sin azul, sin resúmenes largos.</li>
+</ul>
+<div class="manual-tip">Si quieres el show completo, apaga BÁSICO y deja que hable.</div>
 </div>
-
+</div>
+<div class="manual-section" data-tab="problemas">
+<h3>Soluciones rápidas</h3>
+<div class="manual-card">
+<ol style="margin:0; padding-left: 18px;">
+<li><b>No habla</b> - toca ACTIVAR VOZ. En iPhone, toca con la pantalla despierta.</li>
+<li><b>Habla raro o en loop</b> - refresca una vez. Si tienes dos pestañas abiertas, cierra una.</li>
+<li><b>Q TABLA sin datos</b> - espera 1-2 vueltas reales o revisa que el feed esté vivo.</li>
+<li><b>Se calla al volver del background</b> - dale 1 segundo. Si no regresa: refresco controlado.</li>
+</ol>
+<div class="manual-note">Consejo de veterano: lo importante es que hable cuando lo necesitas, no que platique bonito.</div>
+</div>
+<h3>Buenas prácticas</h3>
+<div class="manual-card">
+<ul style="margin:0; padding-left: 18px;">
+<li>Antes de arrancar: piloto seleccionado + voz activa.</li>
+<li>Prueba Q TABLA en clasificación para confirmar que guardó sesiones.</li>
+<li>Si vas a grabar: haz una prueba de carrera nueva para confirmar anuncios.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="manual-foot">
+<span class="manual-tip">Meta: 0 fricción. Un toque para voz y listo. El resto es ventaja competitiva.</span>
+</div>
+</div>
+</div>
 <!-- Q TABLA modal -->
-<div class="manual-backdrop" id="qualiBackdrop" aria-hidden="true">
-  <div class="manual-panel" role="dialog" aria-modal="true" aria-labelledby="qualiTitle">
-    <div class="manual-top">
-      <div>
-        <div class="manual-title" id="qualiTitle">Q TABLA</div>
-        <div class="manual-sub">Clasificación guardada por sesión (Q). Mejor por piloto o vista por Q.</div>
-      </div>
-      <button class="manual-close" id="qualiCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
-    </div>
-
-    <div class="qmeta" id="qualiMeta">
-      <span class="qchip" id="qualiMetaEvent">Evento: -</span>
-      <span class="qchip" id="qualiMetaDate">Fecha: -</span>
-      <span class="qchip" id="qualiMetaSessions">Sesiones: -</span>
-
-      <label class="qsel" style="margin-left:auto;">
+<div aria-hidden="true" class="manual-backdrop" id="qualiBackdrop">
+<div aria-labelledby="qualiTitle" aria-modal="true" class="manual-panel" role="dialog">
+<div class="manual-top">
+<div>
+<div class="manual-title" id="qualiTitle">Q TABLA</div>
+<div class="manual-sub">Clasificación guardada por sesión (Q). Mejor por piloto o vista por Q.</div>
+</div>
+<button aria-label="Cerrar" class="manual-close" id="qualiCloseBtn" type="button">✕</button>
+</div>
+<div class="qmeta" id="qualiMeta">
+<span class="qchip" id="qualiMetaEvent">Evento: -</span>
+<span class="qchip" id="qualiMetaDate">Fecha: -</span>
+<span class="qchip" id="qualiMetaSessions">Sesiones: -</span>
+<label class="qsel" style="margin-left:auto;">
         Vista:
         <select id="qualiViewSel">
-          <option value="best">Mejor por piloto</option>
-          <option value="byq">Por Q</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="qtable-wrap">
-      <table class="qtable" aria-label="Tabla de clasificación">
-        <thead id="qualiThead"></thead>
-        <tbody id="qualiTbody">
-          <tr><td colspan="6" class="qcell-empty">Sin datos aún</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="manual-foot">
-      <span class="manual-tip">Tip: si apenas arrancó la carrera y todo viene en ceros, espera 1-2 vueltas.</span>
-    </div>
-  </div>
+<option value="best">Mejor por piloto</option>
+<option value="byq">Por Q</option>
+</select>
+</label>
 </div>
-
+<div class="qtable-wrap">
+<table aria-label="Tabla de clasificación" class="qtable">
+<thead id="qualiThead"></thead>
+<tbody id="qualiTbody">
+<tr><td class="qcell-empty" colspan="6">Sin datos aún</td></tr>
+</tbody>
+</table>
+</div>
+<div class="manual-foot">
+<span class="manual-tip">Tip: si apenas arrancó la carrera y todo viene en ceros, espera 1-2 vueltas.</span>
+</div>
+</div>
+</div>
 <script id="appScript">
 
 
@@ -7066,7 +6994,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.51";
+const APP_NAME = "vics_Smart_Spotter_v0.3.53";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -12050,9 +11978,9 @@ lastSpokenKeyAt.set(next.key, Date.now());
                     try { pendingAutoVoiceUnlock = true; } catch(e) {}
                     try { __ttsBlockedSince = Date.now(); } catch(e) {}
                     try { __pruneQueueDuringBlock(); } catch(e) {}
-                    try { const vis2 = (document && document.visibilityState) ? document.visibilityState : 'visible'; if (vis2 !== 'visible') __ttsUnlockedOnce = false; } catch(e) {}
-                    try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
-                    try { showToast('Toca la pantalla para reactivar audio', 1800); } catch(e) {}
+                    try { const vis2 = (document && document.visibilityState) ? document.visibilityState : 'visible'; if (vis2 !== 'visible' && (typeof isIOSWebKit === 'function' ? isIOSWebKit() : false)) __ttsUnlockedOnce = false; } catch(e) {}
+                    try { if ((typeof isIOSWebKit === 'function' ? isIOSWebKit() : false) && voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+                    try { if ((typeof isIOSWebKit === 'function' ? isIOSWebKit() : false)) showToast('Toca la pantalla para reactivar audio', 1800); } catch(e) {}
                   }
                 }
               } catch(e) {
@@ -12375,12 +12303,92 @@ function setVoiceMaster(on, opts = {}) {
         // Encendido: NO canceles en este punto (iPhone se queda mudo). Solo intenta unlock + drena cola.
         try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 80); } catch(e) {}
 }
-    }
+    
+      // TTS Heartbeat (desktop/OBS): evita que el motor se duerma y caiga en espera de accion
+      try { if (voiceMasterEnabled) startTtsHeartbeat(); else stopTtsHeartbeat(); } catch(e) {}
+}
 
 
 
     // ============================================================
-    // Desktop Chrome: Auto-activar VOZ al detectar carrera nueva
+    // 
+    // ============================================================
+    // TTS HEARTBEAT (Desktop/OBS)
+    // - En Windows/Chrome/OBS, algunos contextos reportan visibilityState != 'visible'
+    //   y/o el motor de SpeechSynthesis se "duerme" tras inactividad.
+    // - Este heartbeat hace resume() y, si esta completamente idle, inyecta un keepalive SILENCIOSO (volume=0).
+    // - NO aplica en iOS/Android (ahi si puede requerir gesto).
+    // ============================================================
+    let __ttsHeartbeatTimer = 0;
+    let __ttsKeepAliveLastAt = 0;
+
+    function __isObsBrowserContext() {
+      try {
+        const ua = (navigator && navigator.userAgent) ? String(navigator.userAgent) : '';
+        return /OBS|obs-browser|CEF/i.test(ua);
+      } catch(e) { return false; }
+    }
+
+    function startTtsHeartbeat() {
+      try {
+        if (__ttsHeartbeatTimer) return;
+        // Solo desktop (incluye OBS Browser Source)
+        const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false;
+        const isMob = (typeof isMobileDevice === 'function') ? isMobileDevice() : false;
+        if (isIOS || isMob) return;
+
+        __ttsHeartbeatTimer = window.setInterval(() => {
+          try { __ttsHeartbeatTick(); } catch(e) {}
+        }, 20000);
+      } catch(e) {}
+    }
+
+    function stopTtsHeartbeat() {
+      try {
+        if (__ttsHeartbeatTimer) {
+          window.clearInterval(__ttsHeartbeatTimer);
+          __ttsHeartbeatTimer = 0;
+        }
+      } catch(e) {}
+    }
+
+    function __ttsHeartbeatTick() {
+      try {
+        if (!voiceMasterEnabled) return;
+
+        const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false;
+        const isMob = (typeof isMobileDevice === 'function') ? isMobileDevice() : false;
+        if (isIOS || isMob) return;
+
+        // Mantener estado "unlocked" en desktop aunque visibilityState no sea visible (OBS a veces reporta hidden)
+        try { __ttsUnlockedOnce = true; pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+        try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+
+        // Reanudar motor
+        try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+
+        // Si esta completamente idle por mucho tiempo, inyecta keepalive SILENCIOSO.
+        const now = Date.now();
+        const speaking = (window.speechSynthesis && window.speechSynthesis.speaking) ? true : false;
+        const pending = (window.speechSynthesis && window.speechSynthesis.pending) ? true : false;
+        const qLen = (speechQueue && speechQueue.length) ? speechQueue.length : 0;
+
+        const lastEvt = Number(__ttsLastEventAt || __ttsLastSpeakCallAt || 0) || 0;
+        const idleMs = now - lastEvt;
+
+        const fullyIdle = (!speaking && !pending && !speechSpeaking && qLen === 0);
+        if (fullyIdle && idleMs > 45000 && (now - __ttsKeepAliveLastAt) > 60000) {
+          __ttsKeepAliveLastAt = now;
+          try {
+            // '.' es suficiente para que el motor no se duerma. Volume 0 = silencioso.
+            enqueueSpeech('.', { key:'sys_keepalive', volume:0, priority:-999, textTtlMs:0, force:true });
+          } catch(e) {}
+        }
+      } catch(e) {}
+    }
+
+
+// Desktop Chrome: Auto-activar VOZ al detectar carrera nueva
     // - Si el usuario dejo VOZ apagada o quedo en "needs-unlock", lo corregimos en carrera nueva.
     // - NO cambia comportamiento en iOS/Android.
     // ============================================================
@@ -20191,6 +20199,5 @@ grouped[gk] = __pickG;
 }
 
 </script>
-
 </body>
 </html>
