@@ -1,11 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.49 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.50 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
-Fecha: 2026-01-31
+Fecha: 2026-02-01
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.3.50: AUTO usa banco qualiBest/record + mezcla de estilos por evento; RD alinea IDs gaps->trend y estlap->est; nuevos bancos RD para cons10/netgain/ritmo/total/box (prefijos).
 - v0.3.49: FIX SyntaxError (isMS redeclared) + Auto Locutor rota Google/Microsoft es-MX/es-ES + indicador VOZ estable.
 - v0.3.46: FIX anti-perico en Clasificación - anuncios de "pole provisional" solo en AUTO (sin piloto). En FOLLOW se calla.
 - v0.3.44: FIX banderas país (Mexico/México, acentos y ñ) - mapeo Twemoji estable.
@@ -69,7 +70,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.49</title>
+  <title>vics_Smart_Spotter_v0.3.50</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6329,7 +6330,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.49</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.50</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6643,7 +6644,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.49). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.50). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -7065,7 +7066,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.49";
+const APP_NAME = "vics_Smart_Spotter_v0.3.50";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -9076,7 +9077,49 @@ function rdPick(variants, key) {
           'Best lap confirmada, buen trabajo. Sin emoción extra.',
           'Best lap confirmada, buen trabajo. Control.',
           'Best lap confirmada, buen trabajo. Perfecto.'
-        ]
+        ],
+
+        cons10: [
+          'Consistencia.',
+          'Metrónomo.',
+          'Estable.',
+          'Buen control.'
+        ],
+
+        netgain: [
+          'Buena ganancia.',
+          'Remontada limpia.',
+          'Posiciones a favor.',
+          'Eso suma.'
+        ],
+
+        ritmo_up: [
+          'Ritmo arriba.',
+          'Vienes cerrando.',
+          'Mejorando el paso.',
+          'Apretando bien.'
+        ],
+
+        ritmo_down: [
+          'Ritmo bajó.',
+          'Recupera el plan.',
+          'Calma y limpio.',
+          'Vuelve a lo básico.'
+        ],
+
+        total: [
+          'Suma vueltas.',
+          'Volumen.',
+          'Trabajo de hormiga.',
+          'Mantén la cuenta.'
+        ],
+
+        box: [
+          'Reset.',
+          'Box.',
+          'Ajuste rápido.',
+          'Respira.'
+        ],
       },
       stratega: {
         manga: [
@@ -9537,7 +9580,49 @@ function rdPick(variants, key) {
           'Nueva best lap. Mantén la l nea. Limpio.',
           'Nueva best lap. Mantén la l nea. Plan claro.',
           'Nueva best lap. Mantén la l nea. Vuelta a vuelta.'
-        ]
+        ],
+
+        cons10: [
+          'Consistencia.',
+          'Metrónomo.',
+          'Estable.',
+          'Buen control.'
+        ],
+
+        netgain: [
+          'Buena ganancia.',
+          'Remontada limpia.',
+          'Posiciones a favor.',
+          'Eso suma.'
+        ],
+
+        ritmo_up: [
+          'Ritmo arriba.',
+          'Vienes cerrando.',
+          'Mejorando el paso.',
+          'Apretando bien.'
+        ],
+
+        ritmo_down: [
+          'Ritmo bajó.',
+          'Recupera el plan.',
+          'Calma y limpio.',
+          'Vuelve a lo básico.'
+        ],
+
+        total: [
+          'Suma vueltas.',
+          'Volumen.',
+          'Trabajo de hormiga.',
+          'Mantén la cuenta.'
+        ],
+
+        box: [
+          'Reset.',
+          'Box.',
+          'Ajuste rápido.',
+          'Respira.'
+        ],
       },
       coach: {
         manga: [
@@ -9890,7 +9975,49 @@ function rdPick(variants, key) {
           'Best lap. Ahora consistencia. Control.',
           'Best lap. Ahora consistencia. Sin errores.',
           'Best lap. Ahora consistencia. Limpio.'
-        ]
+        ],
+
+        cons10: [
+          'Consistencia.',
+          'Metrónomo.',
+          'Estable.',
+          'Buen control.'
+        ],
+
+        netgain: [
+          'Buena ganancia.',
+          'Remontada limpia.',
+          'Posiciones a favor.',
+          'Eso suma.'
+        ],
+
+        ritmo_up: [
+          'Ritmo arriba.',
+          'Vienes cerrando.',
+          'Mejorando el paso.',
+          'Apretando bien.'
+        ],
+
+        ritmo_down: [
+          'Ritmo bajó.',
+          'Recupera el plan.',
+          'Calma y limpio.',
+          'Vuelve a lo básico.'
+        ],
+
+        total: [
+          'Suma vueltas.',
+          'Volumen.',
+          'Trabajo de hormiga.',
+          'Mantén la cuenta.'
+        ],
+
+        box: [
+          'Reset.',
+          'Box.',
+          'Ajuste rápido.',
+          'Respira.'
+        ],
       }
     };
 
@@ -9904,7 +10031,31 @@ function rdPick(variants, key) {
       const tier = c.tier || 'mid';
       const posNow = c.posNow || rdExtractPos(baseText) || 0;
 
-      // Rellena placeholders
+      
+
+      // Normaliza IDs para aprovechar bancos existentes y evitar llaves huérfanas
+      const __idMap = {
+        gaps: 'trend',
+        estlap: 'est'
+      };
+      const __origId = id;
+      id = (__idMap[id] || id);
+
+      // Prefijos: usa banco como "intro" y conserva el texto base (datos duros)
+      const __prefixIds = new Set(['cons10','netgain','ritmo_up','ritmo_down','total','box']);
+      const __applyPrefix = (modeKey, idKey, fallback) => {
+        try {
+          const arr = (RD_PHRASES && RD_PHRASES[modeKey] && RD_PHRASES[modeKey][idKey]) ? RD_PHRASES[modeKey][idKey] : null;
+          if (arr && arr.length) {
+            const pre = fill(rdPick(arr, modeKey[0] + '_p_' + idKey));
+            const bt = String(baseText || '').trim();
+            if (pre && bt) return (pre + ' ' + bt).replace(/\s+/g,' ').trim();
+            if (pre) return pre;
+          }
+        } catch(e) {}
+        return fallback;
+      };
+// Rellena placeholders
       const fill = (tpl) => {
         let s = String(tpl || '');
         s = s.replace(/\{frontNameSafe\}/g, c.frontNameSafe || 'el de adelante');
@@ -9992,6 +10143,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
 }
 // Seleccin por modo
       if (mode === 'minimal') {
+        if (__prefixIds.has(id)) return __applyPrefix('minimal', id, String(baseText || '').trim());
         const arr = RD_PHRASES.minimal[id] || null;
         if (arr && arr.length) return fill(rdPick(arr, 'm_' + id));
         if (id === 'pos' && posNow) return `P${posNow}.`;
@@ -9999,12 +10151,14 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
       }
 
       if (mode === 'coach') {
+        if (__prefixIds.has(id)) return __applyPrefix('coach', id, String(baseText || '').trim());
         const arr = RD_PHRASES.coach[id] || null;
         if (arr && arr.length) return fill(rdPick(arr, 'c_' + id));
         return String(baseText || '').trim();
       }
 
       // stratega
+      if (__prefixIds.has(id)) return __applyPrefix('stratega', id, String(baseText || '').trim());
       if (id === 'attack') {
         const arr = RD_PHRASES.stratega['attack_' + tier] || RD_PHRASES.stratega.attack_mid;
         return fill(rdPick(arr, 's_attack_' + tier));
@@ -15269,7 +15423,10 @@ function updateBlueFlagFromPassEvents() {
       nextQuietCooldownMs: 0,
       lastTop5Sig: '',
       stableTop5Laps: 0,
-      lastTop5Lap: 0
+      lastTop5Lap: 0,
+      bestOverallRaceMs: null,
+      bestOverallRaceKey: '',
+      lastRecordSpeakMs: 0
     };
 
     function autoGapTextFromLapDiff(lapDiff) {
@@ -15917,8 +16074,15 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Queda el tiempo: ' + c.pilot + ' ' + c.best + '.',
         (c) => 'Ojo ese ritmo. ' + c.pilot + ' con ' + c.best + '.',
         (c) => 'Clasificación al detalle. ' + c.pilot + ' marca ' + c.best + '.'
-      ]
-    };
+      ],
+
+      qualiPole: [
+        (c) => 'Pelea por la pole. ' + c.p1 + ' y ' + c.p2 + ' separados por ' + c.sec + '.',
+        (c) => 'Pole en juego. ' + c.p1 + ' contra ' + c.p2 + ', gap ' + c.sec + '.',
+        (c) => 'Se aprieta la pole. ' + c.p1 + ' y ' + c.p2 + ' a ' + c.sec + '.',
+        (c) => 'Clasificación caliente. ' + c.p1 + ' vs ' + c.p2 + ', ' + c.sec + '.'
+      ],
+};
 
 
     const AUTO_PHRASES_PICANTE = {
@@ -16510,7 +16674,47 @@ function autoDecorate(text, type, style) {
     }
 
 
-    function autoBuildMessage(type, ctx) {
+    
+function autoPickStyleForType(type) {
+  const lock = (autoCommentatorMode === 'pro' || autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo')
+    ? autoCommentatorMode : 'pro';
+
+  // Mapeo por evento: usa TODOS los estilos de forma inteligente (sin perder tu modo base)
+  const map = {
+    leaderChange: 'pro',
+    top3: 'pro',
+    pass: 'picante',
+    battle: 'picante',
+    battlePodium: 'picante',
+    closing: 'picante',
+    pressure: 'picante',
+    gap: 'engineer',
+    train: 'engineer',
+    record: 'narrativo',
+    qualiBest: 'pro',
+    qualiPole: 'pro'
+  };
+
+  const preferred = map[type] || lock;
+
+  // Mezcla: 65% preferido por evento, 35% modo fijo (si el usuario lo cambió)
+  const r = Math.random();
+  if (lock !== preferred && r < 0.35) return lock;
+
+  // Rotación suave: cada 5 anuncios cambia a un estilo vecino si existe
+  try {
+    autoStyleMixCounter = (Number(autoStyleMixCounter) || 0) + 1;
+    if ((autoStyleMixCounter % 5) === 0) {
+      const ring = ['pro','engineer','picante','narrativo'];
+      const i = ring.indexOf(preferred);
+      if (i >= 0) return ring[(i + 1) % ring.length];
+    }
+  } catch(e) {}
+  return preferred;
+}
+let autoStyleMixCounter = 0;
+
+function autoBuildMessage(type, ctx) {
       const style = (autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo') ? autoCommentatorMode : 'pro';
       const dict = (AUTO_PHRASES_BY_STYLE && AUTO_PHRASES_BY_STYLE[style]) ? AUTO_PHRASES_BY_STYLE[style] : AUTO_PHRASES_PRO;
       const bank = (dict && dict[type]) ? dict[type] : (AUTO_PHRASES_PRO[type] || []);
@@ -16783,6 +16987,54 @@ function handleAutoCommentator() {
         const candidates = [];
         const battles = [];
         const addCand = (c) => { if (c && c.text && isFinite(c.score)) candidates.push(c); };
+
+
+        // ====== RECORD / BEST LAP (carrera): usa banco 'record' cuando mejora la mejor vuelta global
+        try {
+          const _stype = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+          const isMangaSess = (_stype === 'MANGA' || _stype === 'TRAIN');
+          if (!isMangaSess && vs.bestlap) {
+            let bestMs = null;
+            let bestKey = '';
+            let bestName = '';
+            for (let i = 0; i < Math.min(arr.length, 12); i++) {
+              const r = arr[i];
+              const k = getPilotKey(r);
+              const b = Number(r && r.best) || 0;
+              if (!k || !b || !isFinite(b)) continue;
+              if (bestMs == null || b < bestMs) { bestMs = b; bestKey = k; bestName = safeRacerName(r.racerName) || ''; }
+            }
+            if (bestMs != null && isFinite(bestMs) && bestMs > 0) {
+              const prev = (commentatorAutoState.bestOverallRaceMs == null) ? null : Number(commentatorAutoState.bestOverallRaceMs);
+              const improved = (prev == null) ? false : (bestMs < (prev - 20)); // 20ms para evitar ruido
+              const since = Date.now() - (Number(commentatorAutoState.lastRecordSpeakMs || 0) || 0);
+              if (improved && since > 12000) {
+                const best = msToVoiceTime(bestMs);
+                const pilot = bestName || 'un piloto';
+                const text = autoBuildMessage('record', { pilot, best });
+                addCand({
+                  type:'record',
+                  score: 7.2 + (leaderLap > 5 ? 0.4 : 0),
+                  text,
+                  key: 'auto_record',
+                  sig: 'auto:record:' + String(bestKey || ''),
+                  sigCooldownMs: 24000,
+                  priority: 6,
+                  onCommit: () => {
+                    commentatorAutoState.bestOverallRaceMs = bestMs;
+                    commentatorAutoState.bestOverallRaceKey = bestKey;
+                    commentatorAutoState.lastRecordSpeakMs = Date.now();
+                  }
+                });
+              } else if (prev == null) {
+                // inicializa sin hablar
+                commentatorAutoState.bestOverallRaceMs = bestMs;
+                commentatorAutoState.bestOverallRaceKey = bestKey;
+              }
+            }
+          }
+        } catch(e) {}
+
 
         // ====== cambios de líder / posiciones
         const leaderKey = getPilotKey(leader);
@@ -17218,7 +17470,9 @@ if (isMangaSess) {
 
         if (improved && since > 10000) {
           const t = msToVoiceTime(bestMs); // ya aplica regla flat/precision
-          const txt = bestName ? (`Vuelta rápida. ${bestName} marca ${t}`) : (`Vuelta rápida. ${t}`);
+          const pilot = bestName || 'un piloto';
+          const best = t;
+          const txt = autoBuildMessage('qualiBest', { pilot, best });
           addCand({
             type: 'qualiBest',
             score: 6.8,
@@ -17250,7 +17504,8 @@ if (isMangaSess) {
           const sincePF = now - (autoQualiState.lastPoleFightSpeakMs || 0);
           if (gap <= 0.10 && sincePF > 14000) {
             const g = gapToSpeech(gap, 'pole');
-            const txt = `Pelea por la pole. ${n1} y ${n2} separados por ${g}.`;
+            const p1 = n1; const p2 = n2; const sec = g;
+            const txt = autoBuildMessage('qualiPole', { p1, p2, sec });
             addCand({
               type: 'qualiPole',
               score: 6.1,
