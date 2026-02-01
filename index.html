@@ -1,11 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.44 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.46 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-31
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.3.46: FIX anti-perico en Clasificación - anuncios de "pole provisional" solo en AUTO (sin piloto). En FOLLOW se calla.
 - v0.3.44: FIX banderas país (Mexico/México, acentos y ñ) - mapeo Twemoji estable.
 - v0.3.43: FIX BÁSICO en AUTO (ya no se queda mudo) - canta P1: vueltas + última vuelta + 'Nuevo líder' si cambia. Manual alineado.
 - v0.3.37: FIX SyntaxError (try/catch cerrado + cierre init-guard) - vuelve a cargar sin errores.
@@ -67,7 +68,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.44</title>
+  <title>vics_Smart_Spotter_v0.3.46</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6318,7 +6319,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.44</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.46</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6632,7 +6633,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.44). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.46). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -7054,7 +7055,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.44";
+const APP_NAME = "vics_Smart_Spotter_v0.3.46";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -10896,9 +10897,38 @@ let ttsRate = detectDefaultTtsRate();
         voiceSelect.addEventListener('change', () => {
           chosenVoiceURI = voiceSelect.value || '';
           try { prefSet('spotterVoiceURI', chosenVoiceURI); } catch (e) {}
+          try { __autoSetRateFromSelectedVoice(); } catch (e) {}
         });
       }
     }
+
+    // Auto-rate por tipo de voz seleccionada:
+    // - Microsoft: 1.7
+    // - Google: 1.2
+    // Nota: si no coincide, no tocamos el rate (respeta el slider).
+    function __autoSetRateFromSelectedVoice() {
+      try {
+        if (!window.speechSynthesis || !window.speechSynthesis.getVoices) return;
+        const raw = window.speechSynthesis.getVoices() || [];
+        if (!raw || !raw.length) return;
+
+        const v = raw.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
+        const nm = String((v && v.name) || '').toLowerCase();
+
+        let target = null;
+        if (nm.includes('microsoft')) target = 1.7;
+        else if (nm.includes('google')) target = 1.2;
+
+        if (target === null) return;
+
+        ttsRate = target;
+        try { prefSet('spotterTtsRate', String(ttsRate)); } catch (e) {}
+        try { if (rateRange) rateRange.value = String(ttsRate); } catch (e) {}
+        try { if (rateDisplay) rateDisplay.textContent = String(ttsRate); } catch (e) {}
+      } catch (e) {}
+    }
+
+
 
     if (window.speechSynthesis) {
       refreshVoiceList();
@@ -11396,6 +11426,7 @@ function __semSkipCategory(cat){
 
 function __inferSemCategoryFromKey(key){
   const k = String(key||'').toLowerCase();
+    if (k.startsWith('sys_')) return true;
   if (!k) return '';
   if (k.includes('blue') || k.includes('bandera_azul') || k.includes('blueflag')) return 'blueflag';
   if (k.startsWith('auto_finalizo_') || k.includes('finalizo')) return 'finalizo';
@@ -11577,10 +11608,20 @@ function enqueueSpeech(text, opts = {}) {
 
         const now = Date.now();
                 // Anti-loop: evita repetir el MISMO texto en ventanas cortas aunque cambie el key.
+// - Se puede desactivar por mensaje con textTtlMs:0
+// - Mensajes de sistema (sys_) y forzados no se filtran aquí
         try {
-          const tTTL = (typeof opts.textTtlMs === 'number') ? opts.textTtlMs : 4500;
-          const lastT = lastSpokenTextAt.get(clean) || 0;
-          if ((now - lastT) < tTTL) return;
+          const k0 = String(opts.key || '').trim() || clean;
+          const kL = String(k0 || '').toLowerCase();
+          if (kL.startsWith('sys_') || (opts && (opts.force === true || opts.user === true))) {
+            // sin filtro
+          } else {
+            const tTTL = (typeof opts.textTtlMs === 'number') ? opts.textTtlMs : 4500;
+            if (tTTL > 0) {
+              const lastT = lastSpokenTextAt.get(clean) || 0;
+              if ((now - lastT) < tTTL) return;
+            }
+          }
         } catch(e) {}
 const key = String(opts.key || '').trim() || clean; // dedupe por texto si no hay key
         const cooldownMs = Number(opts.cooldownMs || 0) || 0;
@@ -12182,7 +12223,7 @@ function setVoiceMaster(on, opts = {}) {
                 if (__isIOS){
                   try { unlockTTSOnce('voice-btn'); } catch(e) {}
                   setTimeout(()=>{
-                    try { speakText('Voz lista', { priority:'high', dedupe:false, semantic:false, cooldownMs:0, key:'sys_voice_on' }); } catch(e) {}
+                    try { speakText('Voz lista', { priority: 90, category: 'system', force: true, dedupe: false, semanticDedupe: false, textTtlMs: 0, cooldownMs: 0, key: 'sys_voice_on' }); } catch(e) {}
                     try { forceTtsRecover('voice-btn'); } catch(e) {}
                     try { pumpSpeechQueue(); } catch(e) {}
                   }, 140);
@@ -12249,10 +12290,7 @@ function setVoiceMaster(on, opts = {}) {
 
             // feedback corto (si voz activa)
             try {
-              if (voiceMasterEnabled) speakText(basicModeEnabled ? 'Básico activado' : 'Básico desactivado', {
-                priority: 'high', dedupe: false, semantic: false, cooldownMs: 0,
-                key: basicModeEnabled ? 'sys_basic_on' : 'sys_basic_off'
-              });
+              if (voiceMasterEnabled) speakText(basicModeEnabled ? 'Básico activado' : 'Básico desactivado', { priority: 90, category: 'system', force: true, dedupe: false, semanticDedupe: false, textTtlMs: 0, cooldownMs: 0, key: (basicModeEnabled ? 'sys_basic_on' : 'sys_basic_off') });
             } catch(e) {}
           } catch(e) {}
         });
@@ -18926,6 +18964,11 @@ handleVoiceAndBeeps();
       try{
         if (!raw || !store) return;
         if (!voiceMasterEnabled) return;
+
+        // Anti-perico: en FOLLOW (piloto seleccionado) no cantamos la pole provisional.
+        // Esto es para el modo AUTO LOCUTOR (sin piloto seleccionado).
+        try { if (selectedPilotKey) return; } catch(e) {}
+        try { if (basicModeEnabled) return; } catch(e) {}
 
         // Solo mangas/clasificación
         if (!isMangaRaceName(raw.raceName)) return;
