@@ -1,12 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.41 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.42 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-01-31
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.41: FIX BÁSICO en AUTO (ya no se queda mudo) - canta P1: vueltas + última vuelta + 'Nuevo líder' si cambia. Manual alineado.
+- v0.3.42: FIX BÁSICO en AUTO (ya no se queda mudo) - canta P1: vueltas + última vuelta + 'Nuevo líder' si cambia. Manual alineado.
 - v0.3.37: FIX SyntaxError (try/catch cerrado + cierre init-guard) - vuelve a cargar sin errores.
 - v0.3.36: FIX pageshow/pagehide consolidado (no perder reenganche al volver) + audit TTS/Q TABLA/manual/doc.
 - v0.3.36: AUDIT general (dedupe listeners, declara timers TTS, resume duplicado eliminado) + Q TABLA Best Lap usa SOLO bestMs/bestLapMs del feed (sin indices) + manual alineado + doc.
@@ -66,7 +66,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.41</title>
+  <title>vics_Smart_Spotter_v0.3.42</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6310,14 +6310,14 @@ html, body{
           <div class="header-mode-row" id="raceModeRow"><span class="badge-mode" id="raceModeBadge">MODO -</span></div>
           <div class="hdr-break"></div>
           <button class="header-help header-auto btn-pro" id="autoSkinBtn" type="button" title="Auto-skin" data-kind="auto"><span class="ico"></span>&#x1F916;<span class="lbl" id="autoSkinLbl">AUTO</span></button>
-          <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Tema: VIC [AUTO]" data-kind="vic">VIC🐊</button>
+          <button class="header-help header-skin btn-pro" id="skinBtn" type="button" title="Tema: VIC [AUTO]" data-kind="vic">VIC</button>
           <button class="header-help header-qtable btn-pro" id="qTableBtn" type="button" title="Q TABLA (clasificación)" data-kind="qtabla"><span class="ico"></span>&#x1F4CA;</button>
           <button class="header-help btn-pro" id="manualBtn" type="button" title="Manual y ayuda" data-kind="manual"><span class="ico"></span>&#x1F4D6;</button>
         </div>
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.41</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.42</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6631,7 +6631,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.41). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.42). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -6681,7 +6681,7 @@ html, body{
         <div class="manual-card">
           <ul style="margin:0; padding-left: 18px;">
             <li><b>🤖 AUTO</b> - modo automático (decide anuncios y ritmo de mensajes).</li>
-            <li><b>VIC🐊</b> - cambia el skin/tema visual a Vic.</li>
+            <li><b>VIC</b> - cambia el skin/tema visual a Vic.</li>
             <li><b>📊</b> - Q TABLA (clasificación guardada).</li>
             <li><b>📖</b> - abre/cierra este manual.</li>
           </ul>
@@ -7053,7 +7053,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.41";
+const APP_NAME = "vics_Smart_Spotter_v0.3.42";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -11966,7 +11966,7 @@ function unlockTTSOnce(reason = '') {
         u.rate = clampNum((isFinite(ttsRate) ? ttsRate : 1.5), 0.8, 2.0);
         u.pitch = 1.0;
         // Casi inaudible: desbloquea sin gritarte "AUDIO LISTO" cada vez.
-        u.volume = 1.0;
+        u.volume = 0.05;
 
         try {
           u.onstart = () => {
@@ -12097,9 +12097,14 @@ function setVoiceMaster(on, opts = {}) {
               // Siempre alterna ON/OFF. No te quedes "atorado" en modo recuperar.
               try{ __userGestureUnlocked = true; }catch(e){}
               try{ if (!__audioCtxReady) ensureAudioCtxOnce(); }catch(e){}
+        try{ playBeep('tap'); }catch(e){}
       
               const next = !voiceMasterEnabled;
               setVoiceMaster(next, { user:true });
+
+        if (next) {
+          try { speakText('Voz activa', { priority: 'high', dedupe: false, semantic: false, cooldownMs: 0, key: 'sys_voice_on' }); } catch(e) {}
+        }
       
               if (next){
                 // Encendido: intenta desbloquear y “revivir” el motor TTS
@@ -12154,7 +12159,7 @@ function setVoiceMaster(on, opts = {}) {
             try { applySmartProfile(currentSessionInfo || {}, 'basic-toggle'); } catch(e) {}
             try { playBeep('tap'); } catch(e) {}
             // feedback corto (si voz activa)
-            try { if (voiceMasterEnabled) speakText(basicModeEnabled ? 'Básico activado' : 'Básico desactivado', { priority: 'high', dedupe: true }); } catch(e) {}
+            try { if (voiceMasterEnabled) speakText(basicModeEnabled ? 'Básico activado' : 'Básico desactivado', { priority: 'high', dedupe: false, semantic: false, cooldownMs: 0, key: basicModeEnabled ? 'sys_basic_on' : 'sys_basic_off' }); } catch(e) {}
           } catch(e) {}
         });
       } catch(e) {}
@@ -14450,7 +14455,8 @@ function selectPilotByKey(key, opts = {}) {
           try { renderAutoTop3MiniGrid(); } catch(e) {}
           if (p && p.pos && p.pos > 0) { startPosForSelected = p.pos; lastNetGainValue = 0; }
           if (announce && p && voiceMasterEnabled) {
-            speakText('Siguiendo a ' + safeRacerName(p.racerName));
+            try { forceTtsRecover('pilot-select'); } catch(e) {}
+            speakText('Siguiendo a ' + safeRacerName(p.racerName), { priority: 'high', dedupe: false, semantic: false, cooldownMs: 0, key: 'pilot-follow' });
           }
         }
 
