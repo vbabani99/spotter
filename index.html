@@ -1,12 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.50 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.51 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-01
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.50: AUTO usa banco qualiBest/record + mezcla de estilos por evento; RD alinea IDs gaps->trend y estlap->est; nuevos bancos RD para cons10/netgain/ritmo/total/box (prefijos).
+- v0.3.51: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
 - v0.3.49: FIX SyntaxError (isMS redeclared) + Auto Locutor rota Google/Microsoft es-MX/es-ES + indicador VOZ estable.
 - v0.3.46: FIX anti-perico en Clasificación - anuncios de "pole provisional" solo en AUTO (sin piloto). En FOLLOW se calla.
 - v0.3.44: FIX banderas país (Mexico/México, acentos y ñ) - mapeo Twemoji estable.
@@ -70,7 +70,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>vics_Smart_Spotter_v0.3.50</title>
+  <title>vics_Smart_Spotter_v0.3.51</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   
 
@@ -6330,7 +6330,7 @@ html, body{
       </div>
 
       <div class="header-version-row">
-        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.50</div>
+        <div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.51</div>
         <div class="header-version" id="lastUpdateInfo"></div>
       </div>
     </header>
@@ -6644,7 +6644,7 @@ html, body{
     <div class="manual-top">
       <div>
         <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-        <div class="manual-sub">Guía rápida (v0.3.50). Activa voz, elige piloto y corre. El resto es opcional.</div>
+        <div class="manual-sub">Guía rápida (v0.3.51). Activa voz, elige piloto y corre. El resto es opcional.</div>
       </div>
       <button class="manual-close" id="manualCloseBtn" type="button" aria-label="Cerrar">&#x2715;</button>
     </div>
@@ -7066,7 +7066,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.50";
+const APP_NAME = "vics_Smart_Spotter_v0.3.51";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -7466,6 +7466,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.50";
         const isNewRace = (rn !== __autoIntroSig);
         const sameRace = !isNewRace;
         if (isNewRace) {
+          try { __autoEnsureVoiceReadyOnNewRace(rn); } catch(e) {}
           __autoIntroSig = rn;
           try { __autoResetLifecycle(rn); } catch(e) {}
           try { __autoIntroDoneKeys.clear(); } catch(e) { __autoIntroDoneKeys = new Set(); }
@@ -12374,6 +12375,53 @@ function setVoiceMaster(on, opts = {}) {
         // Encendido: NO canceles en este punto (iPhone se queda mudo). Solo intenta unlock + drena cola.
         try { setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 80); } catch(e) {}
 }
+    }
+
+
+
+    // ============================================================
+    // Desktop Chrome: Auto-activar VOZ al detectar carrera nueva
+    // - Si el usuario dejo VOZ apagada o quedo en "needs-unlock", lo corregimos en carrera nueva.
+    // - NO cambia comportamiento en iOS/Android.
+    // ============================================================
+    function __isDesktopChromeContext() {
+      try {
+        if (typeof isMobileDevice === 'function' && isMobileDevice()) return false;
+        if (typeof isIOSWebKit === 'function' && isIOSWebKit()) return false;
+
+        const ua = navigator.userAgent || '';
+        const isChrome = /Chrome\/\d+/i.test(ua) && !/Edg\/|OPR\/|Brave\/|Vivaldi\/|DuckDuckGo\//i.test(ua);
+        return !!isChrome;
+      } catch(e) { return false; }
+    }
+
+    function __autoEnsureVoiceReadyOnNewRace(raceSig = '') {
+      try {
+        if (!__isDesktopChromeContext()) return false;
+
+        // Si VOZ esta apagada, prendela en silencio.
+        if (!voiceMasterEnabled) {
+          try { setVoiceMaster(true, { silent:true, auto:true, reason:'new_race' }); } catch(e) {}
+        }
+
+        // Desktop Chrome no deberia pedir tap. Si quedo atascado, limpiamos estado.
+        try {
+          if (pendingAutoVoiceUnlock) {
+            pendingAutoVoiceUnlock = false;
+            __ttsBlockedSince = 0;
+            __ttsUnlockedOnce = true;
+            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+          }
+        } catch(e) {}
+
+        // Reanuda y recupera motor TTS
+        try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+        try { if (voiceMasterEnabled) forceTtsRecover('new_race_auto'); } catch(e) {}
+        try { if (voiceMasterEnabled) pumpSpeechQueue(); } catch(e) {}
+        try { updateVoiceStatusDot(); } catch(e) {}
+
+        return true;
+      } catch(e) { return false; }
     }
 
       // VOZ: respuesta inmediata al primer toque (iOS/Android).
