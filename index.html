@@ -1,12 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.53 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.55 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-01
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.53: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
+- v0.3.55: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
 - v0.3.49: FIX SyntaxError (isMS redeclared) + Auto Locutor rota Google/Microsoft es-MX/es-ES + indicador VOZ estable.
 - v0.3.46: FIX anti-perico en Clasificación - anuncios de "pole provisional" solo en AUTO (sin piloto). En FOLLOW se calla.
 - v0.3.44: FIX banderas país (Mexico/México, acentos y ñ) - mapeo Twemoji estable.
@@ -70,7 +70,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.53</title>
+<title>vics_Smart_Spotter_v0.3.55</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -1304,7 +1304,7 @@ body {
     }
 
     .spotter-btn {
-  padding: 6px 7px;
+  padding: 4px 6px;
   border-radius: var(--radius-pill);
   font-size: 11px;
   border: 1px solid var(--border-soft);
@@ -5794,7 +5794,7 @@ html, body {
 #qualiBackdrop .qmeta{ display:flex; flex-wrap:wrap; gap:6px; margin: 0 0 8px 0; }
 #qualiBackdrop .qchip{
   display:inline-flex; align-items:center; gap:6px;
-  padding: 5px 9px; font-size: 11px;
+  padding: 4px 8px; font-size: 10.5px;
   border-radius: 999px;
   border: 1px solid rgba(148,163,184,0.22);
   background: rgba(0,0,0,0.18);
@@ -5802,7 +5802,7 @@ html, body {
   font-weight: 900;
 }
 #qualiBackdrop .qsel{
-  padding: 5px 7px; font-size: 11px;
+  padding: 4px 6px; font-size: 10.5px;
   border-radius: 10px;
   border: 1px solid rgba(148,163,184,0.22);
   background: rgba(0,0,0,0.22);
@@ -5817,13 +5817,13 @@ html, body {
   background: rgba(0,0,0,0.14);
 }
 #qualiBackdrop .qtable{
-  font-size: 11px;
-  min-width: 720px;
+  font-size: 10.5px;
+  min-width: 660px;
   border-collapse: separate;
   border-spacing: 0;
 }
 #qualiBackdrop .qtable th, #qualiBackdrop .qtable td{
-  padding: 6px 7px;
+  padding: 4px 6px;
   vertical-align: top;
 }
 #qualiBackdrop .qtable th{
@@ -5838,10 +5838,10 @@ html, body {
   background: rgba(255,255,255,0.015);
 }
 #qualiBackdrop .qcol-pos{ width: 46px; }
-#qualiBackdrop .qcol-name{ width: 210px; }
-#qualiBackdrop .qcol-q{ width: 58px; }
-#qualiBackdrop .qcol-laps{ width: 82px; }
-#qualiBackdrop .qcol-time{ width: 128px; }
+#qualiBackdrop .qcol-name{ width: 180px; }
+#qualiBackdrop .qcol-q{ width: 54px; }
+#qualiBackdrop .qcol-laps{ width: 72px; }
+#qualiBackdrop .qcol-time{ width: 116px; }
 #qualiBackdrop .qmain{ white-space: nowrap; }
 #qualiBackdrop .qtag{
   display: inline-flex;
@@ -5857,6 +5857,54 @@ html, body {
   color: rgba(242,245,255,0.95);
   margin-bottom: 3px;
 }
+#qualiBackdrop .qtable th.qcol-q1{ box-shadow: inset 0 -2px 0 rgba(56,189,248,0.65); }
+#qualiBackdrop .qtable td.qcol-q1{ background: rgba(56,189,248,0.045); }
+#qualiBackdrop .qtag.qtag-q1{ border-color: rgba(56,189,248,0.50); background: rgba(56,189,248,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q2{ box-shadow: inset 0 -2px 0 rgba(34,197,94,0.65); }
+#qualiBackdrop .qtable td.qcol-q2{ background: rgba(34,197,94,0.040); }
+#qualiBackdrop .qtag.qtag-q2{ border-color: rgba(34,197,94,0.50); background: rgba(34,197,94,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q3{ box-shadow: inset 0 -2px 0 rgba(251,191,36,0.70); }
+#qualiBackdrop .qtable td.qcol-q3{ background: rgba(251,191,36,0.040); }
+#qualiBackdrop .qtag.qtag-q3{ border-color: rgba(251,191,36,0.55); background: rgba(251,191,36,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q4{ box-shadow: inset 0 -2px 0 rgba(216,170,255,0.75); }
+#qualiBackdrop .qtable td.qcol-q4{ background: rgba(216,170,255,0.045); }
+#qualiBackdrop .qtag.qtag-q4{ border-color: rgba(216,170,255,0.55); background: rgba(216,170,255,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q5{ box-shadow: inset 0 -2px 0 rgba(244,114,182,0.75); }
+#qualiBackdrop .qtable td.qcol-q5{ background: rgba(244,114,182,0.040); }
+#qualiBackdrop .qtag.qtag-q5{ border-color: rgba(244,114,182,0.55); background: rgba(244,114,182,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q6{ box-shadow: inset 0 -2px 0 rgba(59,130,246,0.75); }
+#qualiBackdrop .qtable td.qcol-q6{ background: rgba(59,130,246,0.040); }
+#qualiBackdrop .qtag.qtag-q6{ border-color: rgba(59,130,246,0.55); background: rgba(59,130,246,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q7{ box-shadow: inset 0 -2px 0 rgba(20,184,166,0.75); }
+#qualiBackdrop .qtable td.qcol-q7{ background: rgba(20,184,166,0.040); }
+#qualiBackdrop .qtag.qtag-q7{ border-color: rgba(20,184,166,0.55); background: rgba(20,184,166,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q8{ box-shadow: inset 0 -2px 0 rgba(239,68,68,0.75); }
+#qualiBackdrop .qtable td.qcol-q8{ background: rgba(239,68,68,0.040); }
+#qualiBackdrop .qtag.qtag-q8{ border-color: rgba(239,68,68,0.55); background: rgba(239,68,68,0.12); }
+
+
+#qualiBackdrop .qtable th.qcol-q9{ box-shadow: inset 0 -2px 0 rgba(56,189,248,0.65); }
+#qualiBackdrop .qtable td.qcol-q9{ background: rgba(56,189,248,0.045); }
+#qualiBackdrop .qtag.qtag-q9{ border-color: rgba(56,189,248,0.50); background: rgba(56,189,248,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q10{ box-shadow: inset 0 -2px 0 rgba(34,197,94,0.65); }
+#qualiBackdrop .qtable td.qcol-q10{ background: rgba(34,197,94,0.040); }
+#qualiBackdrop .qtag.qtag-q10{ border-color: rgba(34,197,94,0.50); background: rgba(34,197,94,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q11{ box-shadow: inset 0 -2px 0 rgba(251,191,36,0.70); }
+#qualiBackdrop .qtable td.qcol-q11{ background: rgba(251,191,36,0.040); }
+#qualiBackdrop .qtag.qtag-q11{ border-color: rgba(251,191,36,0.55); background: rgba(251,191,36,0.12); }
+
+#qualiBackdrop .qtable th.qcol-q12{ box-shadow: inset 0 -2px 0 rgba(216,170,255,0.75); }
+#qualiBackdrop .qtable td.qcol-q12{ background: rgba(216,170,255,0.045); }
+#qualiBackdrop .qtag.qtag-q12{ border-color: rgba(216,170,255,0.55); background: rgba(216,170,255,0.12); }
 #qualiBackdrop td.qcell-bestlap{
   background: rgba(216,170,255,0.05);
 }
@@ -6315,7 +6363,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.53</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.55</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -6595,7 +6643,7 @@ html, body{
 <div class="manual-top">
 <div>
 <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-<div class="manual-sub">Guía rápida (v0.3.53). Activa voz, elige piloto y corre. El resto es opcional.</div>
+<div class="manual-sub">Guía rápida (v0.3.55). Activa voz, elige piloto y corre. El resto es opcional.</div>
 </div>
 <button aria-label="Cerrar" class="manual-close" id="manualCloseBtn" type="button">✕</button>
 </div>
@@ -6994,7 +7042,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.53";
+const APP_NAME = "vics_Smart_Spotter_v0.3.55";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -14785,7 +14833,17 @@ function selectPilotByKey(key, opts = {}) {
           const announce = (opts.announce !== false);
 
           selectedPilotKey = k;
-          try { localStorage.setItem('aiSpotterLastPilotKey', k || ''); } catch(e) {}
+          try {
+            const __src = (opts && opts.source) ? String(opts.source) : '';
+            const __manual = (__src === 'select' || __src === 'manual');
+            if (k) {
+              localStorage.setItem('aiSpotterLastPilotKey', k);
+            } else if (__manual) {
+              // Si el usuario eligio manualmente Auto Locutor, si se limpia la preferencia.
+              // Si fue fallback automatico (ej. piloto no esta en esta carrera), NO se borra.
+              localStorage.setItem('aiSpotterLastPilotKey', '');
+            }
+          } catch(e) {}
           selectedPilotFirstDetectBeeped = !!firstDetectBeepedByPilot.get(k);
           pendingAutoVoiceUnlock = false; // solo se activa cuando el TTS se bloquea
 
@@ -19991,6 +20049,23 @@ grouped[gk] = __pickG;
 
       const view = viewSel ? String(viewSel.value || 'best') : 'best';
 
+      const __qnOf = (label)=>{
+        const s = String(label||'').toUpperCase();
+        const m = s.match(/Q(\d+)/);
+        const qn = m ? (parseInt(m[1],10)||0) : (parseInt((s.match(/\d+/)||['0'])[0],10)||0);
+        return qn || 0;
+      };
+      const __qClassOf = (label)=>{
+        const qn = __qnOf(label);
+        return qn ? ('qcol-q' + qn) : '';
+      };
+      const __qTagClassOf = (label)=>{
+        const qn = __qnOf(label);
+        return qn ? ('qtag-q' + qn) : '';
+      };
+
+
+
       if (view === 'byq'){
         // Armar mapa piloto -> por Q
         const pilots = {};
@@ -20039,7 +20114,8 @@ grouped[gk] = __pickG;
         // Thead
         let th = `<tr><th class="qcol-pos">Pos</th><th class="qcol-name">Piloto</th><th class="qcol-q">Mejor</th><th class="qcol-time">Mejor (laps-tiempo)</th>`;
         for (const qid of sessionKeys){
-          th += `<th>${qid}</th>`;
+          const qcls = __qClassOf(qid);
+          th += `<th class="qcol-q ${qcls}">${qid}</th>`;
         }
         th += `</tr>`;
         thead.innerHTML = th;
@@ -20051,12 +20127,14 @@ grouped[gk] = __pickG;
           const bestQ = p.bestQ || '';
           const br = p.bestRow || null;
           const bestMain = br ? `${Number(br.laps||0)}v - ${qEscapeHtml(msToMinSec(Number(br.timeMs||0)))}` : '-';
-          out += `<tr><td>${i+1}</td><td>${qEscapeHtml(p.name||'')}</td><td>${qEscapeHtml(bestQ||'-')}</td><td class="qcell-best">${bestMain}</td>`;
+          const __bestQcls = __qTagClassOf(bestQ);
+          out += `<tr><td>${i+1}</td><td>${qEscapeHtml(p.name||'')}</td><td><span class="qtag ${__bestQcls}">${qEscapeHtml(bestQ||'-')}</span></td><td class="qcell-best">${bestMain}</td>`;
           for (const qid of sessionKeys){
             const r = p.byQ[qid];
             const cls = (qid === bestQ) ? 'qcell-best' : '';
             const empty = (!r) ? 'qcell-empty' : '';
-            out += `<td class="${cls} ${empty}">${cellHtml(r)}</td>`;
+            const qcls = __qClassOf(qid);
+            out += `<td class="${qcls} ${cls} ${empty}">${cellHtml(r)}</td>`;
           }
           out += `</tr>`;
         }
@@ -20090,7 +20168,7 @@ grouped[gk] = __pickG;
         out += `<tr>
           <td>${i+1}</td>
           <td>${qEscapeHtml(r.racerName || '')}</td>
-          <td><span class="qtag">${qEscapeHtml(r.q || '-')}</span></td>
+          <td><span class=\"qtag ${__qTagClassOf(r.q)}\">${qEscapeHtml(r.q || '-')}</span></td>
           <td class=\"qcell-laps\">${laps}</td>
           <td class=\"qcell-time\">${qEscapeHtml(t)}</td>
           <td class=\"${bestLapCellClass}\"><span class=\"qbest\" title=\"src:${qEscapeHtml(r.bestKey||'')}\">${qEscapeHtml(b)}</span></td>
