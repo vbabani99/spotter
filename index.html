@@ -1,12 +1,14 @@
 
 <!--
-vics_Smart_Spotter_v0.3.55 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.68 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+v0.3.68: Auto-reacquire en entrenamiento (raceName vacio / titulo fallback Spotter_5.0.1) + reenganche por firma de nombre al cambiar de auto. Labels version alineadas.
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-01
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.55: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
+- v0.3.68: Auto-reacquire en entrenamiento cuando raceName viene vacio (titulo cae a Spotter_5.0.1) - reengancha seguimiento por firma de nombre (sin ID) al cambiar de auto. Version labels alineadas.
+- v0.3.59: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
 - v0.3.49: FIX SyntaxError (isMS redeclared) + Auto Locutor rota Google/Microsoft es-MX/es-ES + indicador VOZ estable.
 - v0.3.46: FIX anti-perico en Clasificación - anuncios de "pole provisional" solo en AUTO (sin piloto). En FOLLOW se calla.
 - v0.3.44: FIX banderas país (Mexico/México, acentos y ñ) - mapeo Twemoji estable.
@@ -70,7 +72,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.55</title>
+<title>vics_Smart_Spotter_v0.3.68</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -2267,7 +2269,7 @@ body {
       gap: 8px;
     }
 
-    /* Compacto: que sea 1 lnea real (Nombre + INT + #) */
+    /* Compacto: que sea 1 línea real (Nombre + INT + #) */
     .top3-mini-row.compact .tgrid-right{
       flex-direction: row;
       align-items:center;
@@ -2343,7 +2345,7 @@ body {
     .top3-mini-row.duel .tgrid-bar{ border-color: rgba(255,43,43,0.28); background: rgba(255,43,43,0.10); }
     .top3-mini-row.duel .tgrid-bar > i{ background: rgba(255,43,43,0.90); }
 
-    /* Compacto P4-P20 (1 lnea pro) */
+    /* Compacto P4-P20 (1 línea pro) */
     .top3-mini-grid.expanded .top3-mini-row.compact{ padding: 5px 10px; }
     .top3-mini-row.compact .tgrid-sub{ display:none; }
     .top3-mini-row.compact .tgrid-name{ max-width: 46vw; }
@@ -2801,7 +2803,7 @@ body {
     .spotter-cat[data-cat="battle"] .spotter-btn:hover{ background: rgba(255,170,0,0.14); }
     .spotter-cat[data-cat="summary"] .spotter-btn:hover{ background: rgba(0,220,120,0.14); }
 
-    /* Cuando est locked (LAPS), que se vea firme */
+    /* Cuando está locked (LAPS), que se vea firme */
     .spotter-btn.locked{
       outline: 2px solid rgba(255,255,255,0.06);
     }
@@ -6363,7 +6365,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.55</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.68</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -6460,7 +6462,7 @@ html, body{
 <div class="wake-status expert-only" id="wakeLockStatus"></div>
 <div class="toggle-row expert-only">
 <div class="toggle-label">Modo background</div>
-<div class="toggle-pill" id="backgroundToggle" title="Si est ON, el spotter sigue leyendo datos aunque la pestaña no estál frente.">
+<div class="toggle-pill" id="backgroundToggle" title="Si está ON, el spotter sigue leyendo datos aunque la pestaña no estál frente.">
 <div class="toggle-thumb"></div>
 </div>
 </div>
@@ -6545,7 +6547,7 @@ html, body{
 </button>
 </div>
 <div class="session-now" id="sessionNowRow">
-<div class="session-now-title">Ahora (lo que est prendido en voz)</div>
+<div class="session-now-title">Ahora (lo que está prendido en voz)</div>
 <div class="session-now-toggles" id="sessionNowToggles"></div>
 </div>
 </div>
@@ -6643,7 +6645,7 @@ html, body{
 <div class="manual-top">
 <div>
 <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-<div class="manual-sub">Guía rápida (v0.3.55). Activa voz, elige piloto y corre. El resto es opcional.</div>
+<div class="manual-sub">Guía rápida (v0.3.59). Activa voz, elige piloto y corre. El resto es opcional.</div>
 </div>
 <button aria-label="Cerrar" class="manual-close" id="manualCloseBtn" type="button">✕</button>
 </div>
@@ -7042,7 +7044,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.55";
+const APP_NAME = "vics_Smart_Spotter_v0.3.68";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -7354,7 +7356,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.55";
 
     function __autoAnnounceTop3Summary(r, forcedLabel) {
       try {
-        // Si el usuario est siguiendo a un piloto, NO anunciamos el Top 3 al finalizar.
+        // Si el usuario está siguiendo a un piloto, NO anunciamos el Top 3 al finalizar.
         // Solo se anuncian los datos del piloto seguido (fin de sesin).
         if (selectedPilotKey) return;
         if (!r || !Array.isArray(r.classification) || !r.classification.length) return;
@@ -8382,6 +8384,18 @@ try{
       return null;
     }
 
+    // AUTO SPICE (sin toggle manual)
+    // - Manga/Clasificacion/Training: SPICY
+    // - Finales (A/B/C): SPICY_PLUS (10% mas filoso)
+    function getAutoSpiceLevel(sessionInfo){
+      const info = sessionInfo || (typeof currentSessionInfo!=='undefined' ? currentSessionInfo : {}) || {};
+      const k = String((info.kind || info.type || '')).toLowerCase();
+      const m = String((info.main || '')).toUpperCase();
+      if (k === 'final' || k.includes('final') || m === 'A' || m === 'B' || m === 'C') return 'spicy_plus';
+      return 'spicy';
+    }
+
+
     function maybeApplyAutoThemeByRaceName(raceName, force=false){
       if ((!autoSkinEnabled) && (!force)) return;
       if (!raceName) return;
@@ -8650,8 +8664,79 @@ function rdPick(variants, key) {
   st.recent.push(pickIdx);
   while (st.recent.length > RECENT_N) st.recent.shift();
 
+  // Evita repetición: inicio (primeras 2 palabras) y cola (último segmento)
+  let txt = uniq[pickIdx % uniq.length];
+  const __norm = (s) => String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+  const __startKey = (s) => {
+    const w = __norm(s).split(' ').filter(Boolean);
+    return (w.slice(0,2).join(' ') || __norm(s).slice(0,18));
+  };
+  const __tailKey = (s) => {
+    const t = String(s||'');
+    const m = t.match(/([\.,!\?])\s*([^\.,!\?]{0,60})\s*$/);
+    const tail = m ? m[2] : t.slice(-40);
+    return __norm(tail).slice(0,40);
+  };
+  st.__lastStarts = Array.isArray(st.__lastStarts) ? st.__lastStarts : [];
+  st.__lastTails  = Array.isArray(st.__lastTails)  ? st.__lastTails  : [];
+  const curStart = __startKey(txt);
+  const curTail  = __tailKey(txt);
+  const startHit = st.__lastStarts.includes(curStart);
+  const tailHit  = curTail && st.__lastTails.includes(curTail);
+  if ((startHit || tailHit) && st.bag && st.bag.length) {
+    let swapPos = -1;
+    for (let i = 0; i < st.bag.length; i++) {
+      const cand = uniq[st.bag[i] % uniq.length];
+      const sKey = __startKey(cand);
+      const tKey = __tailKey(cand);
+      if (!st.__lastStarts.includes(sKey) && (!tKey || !st.__lastTails.includes(tKey))) { swapPos = i; break; }
+    }
+    if (swapPos >= 0) {
+      const altIdx = st.bag.splice(swapPos, 1)[0];
+      st.bag.unshift(pickIdx);
+      if (st.recent && st.recent.length) st.recent[st.recent.length - 1] = altIdx;
+      txt = uniq[altIdx % uniq.length];
+    }
+  }
+
+  // Evita repetir colas negativas seguidas en Manga (suena regañón)
+  if (String(k).includes('_manga')) {
+    const prev = String(st.__lastTxt || '');
+    const curNo  = /^No\b/i.test(String(txt).trim());
+    const prevNo = /^No\b/i.test(String(prev).trim());
+    if (prevNo && curNo && st.bag && st.bag.length) {
+      let swapPos = -1;
+      for (let i = 0; i < st.bag.length; i++) {
+        const cand = uniq[st.bag[i] % uniq.length];
+        if (!/^No\b/i.test(String(cand).trim())) { swapPos = i; break; }
+      }
+      if (swapPos >= 0) {
+        const altIdx = st.bag.splice(swapPos, 1)[0];
+        // regresa el pick original al saco (al frente) y toma el alternativo
+        st.bag.unshift(pickIdx);
+        // corrige el historial reciente (último)
+        if (st.recent && st.recent.length) st.recent[st.recent.length - 1] = altIdx;
+        txt = uniq[altIdx % uniq.length];
+      }
+    }
+    st.__lastTxt = txt;
+  }
+  // Actualiza historial de inicio/cola para evitar bucles
+  try {
+    const sKeyF = (typeof __startKey === 'function') ? __startKey(txt) : '';
+    const tKeyF = (typeof __tailKey === 'function') ? __tailKey(txt) : '';
+    if (sKeyF) {
+      st.__lastStarts.push(sKeyF);
+      while (st.__lastStarts.length > 5) st.__lastStarts.shift();
+    }
+    if (tKeyF) {
+      st.__lastTails.push(tKeyF);
+      while (st.__lastTails.length > 5) st.__lastTails.shift();
+    }
+  } catch(e) {}
+
   rdPhraseBag.set(k, st);
-  return uniq[pickIdx % uniq.length];
+  return txt;
 }
 
 // ---- RD helpers (persuasivo + preciso, sin metralleta) ----
@@ -8702,35 +8787,117 @@ function rdPick(variants, key) {
     
     // Banco de frases por modo - humano, persuasivo y con accin
     // Nota: las plantillas aceptan {frontNameSafe}, {backNameSafe}, {frontSecStr}, {backSecStr}, {posNow}
+
+    // Helper: genera variantes base+cola para reducir duplicados en el banco
+    function buildPhraseVariants(bases, tails){
+      const out = [];
+      const normBase = (s) => {
+        s = String(s || '').trim();
+        if (!s) return '';
+        // Asegura puntuación final para que el TTS haga pausa natural
+        if (!/[.!?…]$/.test(s)) s += '.';
+        return s;
+      };
+      const join = (base, tail) => {
+        const b = normBase(base);
+        let t = String(tail || '').trim();
+        if (!b) return '';
+        if (!t) return b;
+
+        // Si la cola empieza con coma, se pega sin punto extra (", ...")
+        if (t[0] === ',') {
+          // evita ",," o espacios raros
+          t = ',' + t.slice(1).replace(/^\s+/, '');
+          return (b.replace(/[.]+$/, '.') + ' ' + t).replace(/\s+/g,' ').trim();
+        }
+
+        return (b + ' ' + t).replace(/\s+/g,' ').trim();
+      };
+
+      for (const base of (bases || [])){
+        const b = normBase(base);
+        if (!b) continue;
+        out.push(b);
+        for (const tail of (tails || [])){
+          const v = join(base, tail);
+          if (v) out.push(v);
+        }
+      }
+      return out;
+    }
+
     const RD_PHRASES = {
       minimal: {
-        manga: [
-          'Manga, vuelta limpia y sin errores.',
-          'Manga, vuelta limpia y sin errores. Mantén el plan.',
-          'Manga, vuelta limpia y sin errores. Sin regalar nada.',
-          'Manga, vuelta limpia y sin errores. Sin prisa, sin pausa.',
-          'Manga, vuelta limpia y sin errores. Control total.',
-          'Manga, suma vueltas y cuida la trazada.',
-          'Manga, suma vueltas y cuida la trazada. Mantén el plan.',
-          'Manga, suma vueltas y cuida la trazada. Sin regalar nada.',
-          'Manga, suma vueltas y cuida la trazada. Sin prisa, sin pausa.',
-          'Manga, suma vueltas y cuida la trazada. Control total.',
-          'Manga, ritmo estable, no te salgas.',
-          'Manga, ritmo estable, no te salgas. Mantén el plan.',
-          'Manga, ritmo estable, no te salgas. Sin regalar nada.',
-          'Manga, ritmo estable, no te salgas. Sin prisa, sin pausa.',
-          'Manga, ritmo estable, no te salgas. Control total.',
-          'Manga, evita tráfico y busca aire limpio.',
-          'Manga, evita tráfico y busca aire limpio. Mantén el plan.',
-          'Manga, evita tráfico y busca aire limpio. Sin regalar nada.',
-          'Manga, evita tráfico y busca aire limpio. Sin prisa, sin pausa.',
-          'Manga, evita tráfico y busca aire limpio. Control total.',
-          'Manga, todo es consistencia.',
-          'Manga, todo es consistencia. Mantén el plan.',
-          'Manga, todo es consistencia. Sin regalar nada.',
-          'Manga, todo es consistencia. Sin prisa, sin pausa.',
-          'Manga, todo es consistencia. Control total.'
-        ],
+        manga: {
+          spicy: buildPhraseVariants([
+            'Manga, ritmo estable.',
+            'Manga, vueltas limpias.',
+            'Manga, cuida la trazada.',
+            'Manga, aire limpio, cero drama.',
+            'Manga, manos suaves, auto rápido.',
+            'Manga, constancia mata héroes.',
+            'Manga, paciencia de campeón.',
+            'Manga, tráfico es examen.',
+            'Manga, controla el ritmo.',
+            'Manga, orden y ejecución.',
+          ], [
+            'Menos cuento, más vueltas.',
+            'La pista no perdona.',
+            'El que pestañea, paga.',
+            'Esto es precisión, no esperanza.',
+            'Que el cronómetro aplauda.',
+            'Cero show, puro resultado.',
+            'Sin regalar nada.',
+            'No te metas en líos gratis.',
+            'El error cobra caro.',
+            'Lo fácil también se falla.',
+            'Hoy se corre con cabeza.',
+            'No te enamores del riesgo.',
+            'Si dudas, pierdes.',
+            'Sin excusas, con vueltas.',
+            'Aquí se viene a cerrar.',
+            'No lo fuerces, ejecútalo.',
+            ', ojos al apex.',
+            ', respira y ejecuta.',
+            ', línea y freno.',
+            ', sin overdrive.',
+          ]),
+          spicy_plus: buildPhraseVariants([
+            'Manga, ritmo estable.',
+            'Manga, vueltas limpias.',
+            'Manga, cuida la trazada.',
+            'Manga, aire limpio, cero drama.',
+            'Manga, manos suaves, auto rápido.',
+            'Manga, constancia mata héroes.',
+            'Manga, paciencia de campeón.',
+            'Manga, tráfico es examen.',
+            'Manga, controla el ritmo.',
+            'Manga, orden y ejecución.',
+          ], [
+            'Menos cuento, más vueltas.',
+            'La pista no perdona.',
+            'El que pestañea, paga.',
+            'Esto es precisión, no esperanza.',
+            'Que el cronómetro aplauda.',
+            'Cero show, puro resultado.',
+            'Sin regalar nada.',
+            'No te metas en líos gratis.',
+            'El error cobra caro.',
+            'Lo fácil también se falla.',
+            'Hoy se corre con cabeza.',
+            'No te enamores del riesgo.',
+            'Si dudas, pierdes.',
+            'Sin excusas, con vueltas.',
+            'Aquí se viene a cerrar.',
+            'No lo fuerces, ejecútalo.',
+            ', ojos al apex.',
+            ', respira y ejecuta.',
+            ', línea y freno.',
+            ', sin overdrive.',
+            'El que afloja, pierde.',
+            'Hoy se cobra.',
+          ]),
+        },
         attack: [
           'Traes a {frontNameSafe} a {frontSecStr}. Prepara el pase.',
           'Traes a {frontNameSafe} a {frontSecStr}. Ataque con calma.',
@@ -8740,7 +8907,7 @@ function rdPick(variants, key) {
           'Traes a {frontNameSafe} a {frontSecStr}. Coloca el intento en zona segura.',
           'Traes a {frontNameSafe} a {frontSecStr}. Un giro más y lo tienes.',
           'Traes a {frontNameSafe} a {frontSecStr}. Mantén presión y el pase cae.',
-          'Traes a {frontNameSafe} a {frontSecStr}. enf cate en la salida.',
+          'Traes a {frontNameSafe} a {frontSecStr}. enfócate en la salida.',
           'Traes a {frontNameSafe} a {frontSecStr}. No te abras en la entrada.',
           'A {frontSecStr} de {frontNameSafe}. Prepara el pase.',
           'A {frontSecStr} de {frontNameSafe}. Ataque con calma.',
@@ -8750,17 +8917,17 @@ function rdPick(variants, key) {
           'A {frontSecStr} de {frontNameSafe}. Coloca el intento en zona segura.',
           'A {frontSecStr} de {frontNameSafe}. Un giro más y lo tienes.',
           'A {frontSecStr} de {frontNameSafe}. Mantén presión y el pase cae.',
-          'A {frontSecStr} de {frontNameSafe}. enf cate en la salida.',
+          'A {frontSecStr} de {frontNameSafe}. enfócate en la salida.',
           'A {frontSecStr} de {frontNameSafe}. No te abras en la entrada.',
-          '{frontNameSafe} est cerca. Prepara el pase.',
-          '{frontNameSafe} est cerca. Ataque con calma.',
-          '{frontNameSafe} est cerca. Busca salida fuerte.',
-          '{frontNameSafe} est cerca. Sin arriesgar de más.',
-          '{frontNameSafe} est cerca. Cuida la entrada y acelera.'
+          '{frontNameSafe} está cerca. Prepara el pase.',
+          '{frontNameSafe} está cerca. Ataque con calma.',
+          '{frontNameSafe} está cerca. Busca salida fuerte.',
+          '{frontNameSafe} está cerca. Sin arriesgar de más.',
+          '{frontNameSafe} está cerca. Cuida la entrada y acelera.'
         ],
         defense: [
           '{backNameSafe} a {backSecStr}. Cierra la puerta.',
-          '{backNameSafe} a {backSecStr}. l nea firme.',
+          '{backNameSafe} a {backSecStr}. línea firme.',
           '{backNameSafe} a {backSecStr}. No regales la entrada.',
           '{backNameSafe} a {backSecStr}. Protege interior.',
           '{backNameSafe} a {backSecStr}. Salida fuerte y recto.',
@@ -8769,21 +8936,21 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Defiende con trazada.',
           '{backNameSafe} a {backSecStr}. Cubre lo básico.',
           '{backNameSafe} a {backSecStr}. No te desconcentres.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Cierra la puerta.',
-          'presión atr s: {backNameSafe} a {backSecStr}. l nea firme.',
-          'presión atr s: {backNameSafe} a {backSecStr}. No regales la entrada.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Protege interior.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Salida fuerte y recto.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Sin volantazos.',
-          'presión atr s: {backNameSafe} a {backSecStr}. No te abras.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Defiende con trazada.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Cubre lo básico.',
-          'presión atr s: {backNameSafe} a {backSecStr}. No te desconcentres.',
-          'Ojo atr s con {backNameSafe}. Cierra la puerta.',
-          'Ojo atr s con {backNameSafe}. l nea firme.',
-          'Ojo atr s con {backNameSafe}. No regales la entrada.',
-          'Ojo atr s con {backNameSafe}. Protege interior.',
-          'Ojo atr s con {backNameSafe}. Salida fuerte y recto.'
+          'presión atrás: {backNameSafe} a {backSecStr}. Cierra la puerta.',
+          'presión atrás: {backNameSafe} a {backSecStr}. línea firme.',
+          'presión atrás: {backNameSafe} a {backSecStr}. No regales la entrada.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Protege interior.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Salida fuerte y recto.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Sin volantazos.',
+          'presión atrás: {backNameSafe} a {backSecStr}. No te abras.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Defiende con trazada.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Cubre lo básico.',
+          'presión atrás: {backNameSafe} a {backSecStr}. No te desconcentres.',
+          'Ojo atrás con {backNameSafe}. Cierra la puerta.',
+          'Ojo atrás con {backNameSafe}. línea firme.',
+          'Ojo atrás con {backNameSafe}. No regales la entrada.',
+          'Ojo atrás con {backNameSafe}. Protege interior.',
+          'Ojo atrás con {backNameSafe}. Salida fuerte y recto.'
         ],
         fight: [
           'Dos frentes, cabeza fría.',
@@ -8801,11 +8968,11 @@ function rdPick(variants, key) {
           'tráfico, no te enredes. Sin regalos.',
           'tráfico, no te enredes. Todo con calma.',
           'tráfico, no te enredes. Limpio y rápido.',
-          'Mucho movimiento, Mantén la l nea.',
-          'Mucho movimiento, Mantén la l nea. Controla el volante.',
-          'Mucho movimiento, Mantén la l nea. Sin regalos.',
-          'Mucho movimiento, Mantén la l nea. Todo con calma.',
-          'Mucho movimiento, Mantén la l nea. Limpio y rápido.',
+          'Mucho movimiento, Mantén la línea.',
+          'Mucho movimiento, Mantén la línea. Controla el volante.',
+          'Mucho movimiento, Mantén la línea. Sin regalos.',
+          'Mucho movimiento, Mantén la línea. Todo con calma.',
+          'Mucho movimiento, Mantén la línea. Limpio y rápido.',
           'Hay pelea, prioriza la salida.',
           'Hay pelea, prioriza la salida. Controla el volante.',
           'Hay pelea, prioriza la salida. Sin regalos.',
@@ -8813,33 +8980,34 @@ function rdPick(variants, key) {
           'Hay pelea, prioriza la salida. Limpio y rápido.'
         ],
         blueflag: [
-          'Bandera azul, Mantén l nea.',
-          'Bandera azul, Mantén l nea. Sin drama.',
-          'Bandera azul, Mantén l nea. Con seguridad.',
-          'Bandera azul, Mantén l nea. Sin perder la l nea.',
-          'Bandera azul, Mantén l nea. Todo limpio.',
+          'Bandera azul, Mantén línea.',
+          'Bandera azul, Mantén línea. Sin drama.',
+          'Bandera azul, Mantén línea. Con seguridad.',
+          'Bandera azul, Mantén línea. Sin perder la línea.',
+          'Bandera azul, Mantén línea. Todo limpio.',
           'Bandera azul, deja pasar seguro.',
           'Bandera azul, deja pasar seguro. Sin drama.',
           'Bandera azul, deja pasar seguro. Con seguridad.',
-          'Bandera azul, deja pasar seguro. Sin perder la l nea.',
+          'Bandera azul, deja pasar seguro. Sin perder la línea.',
           'Bandera azul, deja pasar seguro. Todo limpio.',
           'Bandera azul, no pelees la posición.',
           'Bandera azul, no pelees la posición. Sin drama.',
           'Bandera azul, no pelees la posición. Con seguridad.',
-          'Bandera azul, no pelees la posición. Sin perder la l nea.',
+          'Bandera azul, no pelees la posición. Sin perder la línea.',
           'Bandera azul, no pelees la posición. Todo limpio.',
           'Bandera azul, cede sin frenar de más.',
           'Bandera azul, cede sin frenar de más. Sin drama.',
           'Bandera azul, cede sin frenar de más. Con seguridad.',
-          'Bandera azul, cede sin frenar de más. Sin perder la l nea.',
+          'Bandera azul, cede sin frenar de más. Sin perder la línea.',
           'Bandera azul, cede sin frenar de más. Todo limpio.',
           'Bandera azul, facilita el pase.',
           'Bandera azul, facilita el pase. Sin drama.',
           'Bandera azul, facilita el pase. Con seguridad.',
-          'Bandera azul, facilita el pase. Sin perder la l nea.',
+          'Bandera azul, facilita el pase. Sin perder la línea.',
           'Bandera azul, facilita el pase. Todo limpio.'
         ],
-        front06: [
+        front06: {
+          spicy: [
           '{frontNameSafe} a {frontSecStr}. Es alcanzable.',
           '{frontNameSafe} a {frontSecStr}. Ventana de pase.',
           '{frontNameSafe} a {frontSecStr}. Mantén la presión.',
@@ -8866,35 +9034,110 @@ function rdPick(variants, key) {
           'A {frontSecStr} de {frontNameSafe}. Cuida la entrada.',
           'A {frontSecStr} de {frontNameSafe}. Una curva bien hecha y ests.'
         ],
-        back06: [
+          spicy_plus: [
+
+          '{frontNameSafe} a {frontSecStr}. Es alcanzable.',
+          '{frontNameSafe} a {frontSecStr}. Ventana de pase.',
+          '{frontNameSafe} a {frontSecStr}. Mantén la presión.',
+          '{frontNameSafe} a {frontSecStr}. Busca salida fuerte.',
+          '{frontNameSafe} a {frontSecStr}. Sin desesperarte.',
+          '{frontNameSafe} a {frontSecStr}. Cuida la entrada.',
+          '{frontNameSafe} a {frontSecStr}. Una curva bien hecha y ests.',
+          '{frontNameSafe} a {frontSecStr}. No te abras.',
+          '{frontNameSafe} a {frontSecStr}. Pase posible en la siguiente.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Es alcanzable.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Ventana de pase.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Mantén la presión.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Busca salida fuerte.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Sin desesperarte.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Cuida la entrada.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Una curva bien hecha y ests.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. No te abras.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Pase posible en la siguiente.',
+          'A {frontSecStr} de {frontNameSafe}. Es alcanzable.',
+          'A {frontSecStr} de {frontNameSafe}. Ventana de pase.',
+          'A {frontSecStr} de {frontNameSafe}. Mantén la presión.',
+          'A {frontSecStr} de {frontNameSafe}. Busca salida fuerte.',
+          'A {frontSecStr} de {frontNameSafe}. Sin desesperarte.',
+          'A {frontSecStr} de {frontNameSafe}. Cuida la entrada.',
+          'A {frontSecStr} de {frontNameSafe}. Una curva bien hecha y ests.',
+            'Presión adelante. El que pestañea, paga.',
+            'Casi lo tienes. Sin regalar la salida.',
+          ],
+
+          premium: [
+            'A 0.06: ahí se define la sangre fría.',
+            'Zona de pase. Sin prisa, sin pausa.',
+            'Lo traes en la mira. Ejecuta el plan.'
+          ],
+        },
+        back06: {
+          spicy: [
           '{backNameSafe} a {backSecStr}. Defiende.',
           '{backNameSafe} a {backSecStr}. Cubre interior.',
-          '{backNameSafe} a {backSecStr}. l nea firme.',
+          '{backNameSafe} a {backSecStr}. línea firme.',
           '{backNameSafe} a {backSecStr}. No regales la salida.',
           '{backNameSafe} a {backSecStr}. Sin errores.',
           '{backNameSafe} a {backSecStr}. No te abras.',
           '{backNameSafe} a {backSecStr}. Protege la trazada.',
           '{backNameSafe} a {backSecStr}. Salida fuerte.',
           '{backNameSafe} a {backSecStr}. Calma y control.',
-          'presión atr s: {backNameSafe} {backSecStr}. Defiende.',
-          'presión atr s: {backNameSafe} {backSecStr}. Cubre interior.',
-          'presión atr s: {backNameSafe} {backSecStr}. l nea firme.',
-          'presión atr s: {backNameSafe} {backSecStr}. No regales la salida.',
-          'presión atr s: {backNameSafe} {backSecStr}. Sin errores.',
-          'presión atr s: {backNameSafe} {backSecStr}. No te abras.',
-          'presión atr s: {backNameSafe} {backSecStr}. Protege la trazada.',
-          'presión atr s: {backNameSafe} {backSecStr}. Salida fuerte.',
-          'presión atr s: {backNameSafe} {backSecStr}. Calma y control.',
+          'presión atrás: {backNameSafe} {backSecStr}. Defiende.',
+          'presión atrás: {backNameSafe} {backSecStr}. Cubre interior.',
+          'presión atrás: {backNameSafe} {backSecStr}. línea firme.',
+          'presión atrás: {backNameSafe} {backSecStr}. No regales la salida.',
+          'presión atrás: {backNameSafe} {backSecStr}. Sin errores.',
+          'presión atrás: {backNameSafe} {backSecStr}. No te abras.',
+          'presión atrás: {backNameSafe} {backSecStr}. Protege la trazada.',
+          'presión atrás: {backNameSafe} {backSecStr}. Salida fuerte.',
+          'presión atrás: {backNameSafe} {backSecStr}. Calma y control.',
           '{backNameSafe} en rango: {backSecStr}. Defiende.',
           '{backNameSafe} en rango: {backSecStr}. Cubre interior.',
-          '{backNameSafe} en rango: {backSecStr}. l nea firme.',
+          '{backNameSafe} en rango: {backSecStr}. línea firme.',
           '{backNameSafe} en rango: {backSecStr}. No regales la salida.',
           '{backNameSafe} en rango: {backSecStr}. Sin errores.',
           '{backNameSafe} en rango: {backSecStr}. No te abras.',
           '{backNameSafe} en rango: {backSecStr}. Protege la trazada.'
         ],
+          spicy_plus: [
+
+          '{backNameSafe} a {backSecStr}. Defiende.',
+          '{backNameSafe} a {backSecStr}. Cubre interior.',
+          '{backNameSafe} a {backSecStr}. línea firme.',
+          '{backNameSafe} a {backSecStr}. No regales la salida.',
+          '{backNameSafe} a {backSecStr}. Sin errores.',
+          '{backNameSafe} a {backSecStr}. No te abras.',
+          '{backNameSafe} a {backSecStr}. Protege la trazada.',
+          '{backNameSafe} a {backSecStr}. Salida fuerte.',
+          '{backNameSafe} a {backSecStr}. Calma y control.',
+          'presión atrás: {backNameSafe} {backSecStr}. Defiende.',
+          'presión atrás: {backNameSafe} {backSecStr}. Cubre interior.',
+          'presión atrás: {backNameSafe} {backSecStr}. línea firme.',
+          'presión atrás: {backNameSafe} {backSecStr}. No regales la salida.',
+          'presión atrás: {backNameSafe} {backSecStr}. Sin errores.',
+          'presión atrás: {backNameSafe} {backSecStr}. No te abras.',
+          'presión atrás: {backNameSafe} {backSecStr}. Protege la trazada.',
+          'presión atrás: {backNameSafe} {backSecStr}. Salida fuerte.',
+          'presión atrás: {backNameSafe} {backSecStr}. Calma y control.',
+          '{backNameSafe} en rango: {backSecStr}. Defiende.',
+          '{backNameSafe} en rango: {backSecStr}. Cubre interior.',
+          '{backNameSafe} en rango: {backSecStr}. línea firme.',
+          '{backNameSafe} en rango: {backSecStr}. No regales la salida.',
+          '{backNameSafe} en rango: {backSecStr}. Sin errores.',
+          '{backNameSafe} en rango: {backSecStr}. No te abras.',
+          '{backNameSafe} en rango: {backSecStr}. Protege la trazada.',
+            'Te huelen atrás. Hoy no hay regalos.',
+            'Defiende con cabeza. Sin drama.',
+          ],
+
+          premium: [
+            'A 0.06 atrás: no respires, ejecuta.',
+            'Defensa de campeón: línea firme.',
+            'No regales el apex. Punto.'
+          ],
+        },
         pos: [
-          'Quedaste P{posNow}. enf cate.',
+          'Quedaste P{posNow}. enfócate.',
           'Quedaste P{posNow}. Calma y ritmo.',
           'Quedaste P{posNow}. A trabajar.',
           'Quedaste P{posNow}. No te desconcentres.',
@@ -8903,7 +9146,7 @@ function rdPick(variants, key) {
           'Quedaste P{posNow}. Ritmo constante.',
           'Quedaste P{posNow}. Sin errores.',
           'Quedaste P{posNow}. Vuelve al plan.',
-          'Ahora P{posNow}. enf cate.',
+          'Ahora P{posNow}. enfócate.',
           'Ahora P{posNow}. Calma y ritmo.',
           'Ahora P{posNow}. A trabajar.',
           'Ahora P{posNow}. No te desconcentres.',
@@ -8912,7 +9155,7 @@ function rdPick(variants, key) {
           'Ahora P{posNow}. Ritmo constante.',
           'Ahora P{posNow}. Sin errores.',
           'Ahora P{posNow}. Vuelve al plan.',
-          'Vas P{posNow}. enf cate.',
+          'Vas P{posNow}. enfócate.',
           'Vas P{posNow}. Calma y ritmo.',
           'Vas P{posNow}. A trabajar.',
           'Vas P{posNow}. No te desconcentres.',
@@ -8931,11 +9174,11 @@ function rdPick(variants, key) {
           'Referencia del líder, no te salgas. Limpio.',
           'Referencia del líder, no te salgas. Control total.',
           'Referencia del líder, no te salgas. Paso a paso.',
-          'Mira al líder y copia la l nea.',
-          'Mira al líder y copia la l nea. Sin errores.',
-          'Mira al líder y copia la l nea. Limpio.',
-          'Mira al líder y copia la l nea. Control total.',
-          'Mira al líder y copia la l nea. Paso a paso.',
+          'Mira al líder y copia la línea.',
+          'Mira al líder y copia la línea. Sin errores.',
+          'Mira al líder y copia la línea. Limpio.',
+          'Mira al líder y copia la línea. Control total.',
+          'Mira al líder y copia la línea. Paso a paso.',
           'El líder marca el ritmo, Mantén precisin.',
           'El líder marca el ritmo, Mantén precisin. Sin errores.',
           'El líder marca el ritmo, Mantén precisin. Limpio.',
@@ -8974,115 +9217,245 @@ function rdPick(variants, key) {
           'Ests en zona de podio, calma. Cero regalos.',
           'Ests en zona de podio, calma. Bien hecho.'
         ],
-        trend: [
-          'Buen ritmo, repite.',
-          'Buen ritmo, repite. Sin apuro.',
-          'Buen ritmo, repite. Sin errores.',
-          'Buen ritmo, repite. Limpio.',
-          'Buen ritmo, repite. Control.',
-          'Ritmo cay, ajusta.',
-          'Ritmo cay, ajusta. Sin apuro.',
-          'Ritmo cay, ajusta. Sin errores.',
-          'Ritmo cay, ajusta. Limpio.',
-          'Ritmo cay, ajusta. Control.',
-          'Consistente, sigue as.',
-          'Consistente, sigue as. Sin apuro.',
-          'Consistente, sigue as. Sin errores.',
-          'Consistente, sigue as. Limpio.',
-          'Consistente, sigue as. Control.',
-          'Mejorando ritmo, Mantén.',
-          'Mejorando ritmo, Mantén. Sin apuro.',
-          'Mejorando ritmo, Mantén. Sin errores.',
-          'Mejorando ritmo, Mantén. Limpio.',
-          'Mejorando ritmo, Mantén. Control.',
-          'Ritmo irregular, calma y l nea.',
-          'Ritmo irregular, calma y l nea. Sin apuro.',
-          'Ritmo irregular, calma y l nea. Sin errores.',
-          'Ritmo irregular, calma y l nea. Limpio.',
-          'Ritmo irregular, calma y l nea. Control.'
-        ],
-        est: [
-          'estimación lista, Mantén el plan.',
-          'estimación lista, Mantén el plan. Todo limpio.',
-          'estimación lista, Mantén el plan. Sin drama.',
-          'estimación lista, Mantén el plan. A tu ritmo.',
-          'estimación lista, Mantén el plan. Control total.',
-          'Ojo con la estimación, no te duermas.',
-          'Ojo con la estimación, no te duermas. Todo limpio.',
-          'Ojo con la estimación, no te duermas. Sin drama.',
-          'Ojo con la estimación, no te duermas. A tu ritmo.',
-          'Ojo con la estimación, no te duermas. Control total.',
-          'estimación estable, sigue empujando.',
-          'estimación estable, sigue empujando. Todo limpio.',
-          'estimación estable, sigue empujando. Sin drama.',
-          'estimación estable, sigue empujando. A tu ritmo.',
-          'estimación estable, sigue empujando. Control total.',
-          'estimación en marcha, cuida el ritmo.',
-          'estimación en marcha, cuida el ritmo. Todo limpio.',
-          'estimación en marcha, cuida el ritmo. Sin drama.',
-          'estimación en marcha, cuida el ritmo. A tu ritmo.',
-          'estimación en marcha, cuida el ritmo. Control total.',
-          'estimación cambia, ajusta salida.',
-          'estimación cambia, ajusta salida. Todo limpio.',
-          'estimación cambia, ajusta salida. Sin drama.',
-          'estimación cambia, ajusta salida. A tu ritmo.',
-          'estimación cambia, ajusta salida. Control total.'
-        ],
-        bestlap: [
+        trend: {
+          spicy: buildPhraseVariants([
+            'Gap bajando, vas bien.',
+            'Gap subiendo, ajusta ya.',
+            'Ritmo mejorando, repite.',
+            'Ritmo cayendo, corrige sin drama.',
+            'Consistencia sólida, sigue así.',
+            'Aire limpio, aprovecha.',
+            'Tráfico, paciencia y línea.',
+            'Sin error tonto, solo vueltas.',
+            'Controla la salida, no la emoción.',
+            'Si dudas, pierdes tiempo.',
+          ], [
+            'Sin magia, con método.',
+            'Que el cronómetro aplauda.',
+            'Cero show, puro resultado.',
+            'Una vuelta a la vez.',
+            'Sin regalar nada.',
+            'No te metas en líos gratis.',
+            'No te enamores del riesgo.',
+            'El error cobra caro.',
+            'Hoy no venimos a sufrir.',
+            'Menos cuento, más vueltas.',
+            'La pista no perdona.',
+            'Esto es precisión, no esperanza.',
+            'Aquí se viene a cerrar.',
+            ', ojos al apex.',
+            ', respira y ejecuta.',
+            ', línea y freno.',
+            ', sin overdrive.',
+            'Si te apuras, te castiga.',
+            'Control total.',
+            'Sin excusas, con vueltas.',
+          ]),
+          spicy_plus: buildPhraseVariants([
+            'Gap bajando, vas bien.',
+            'Gap subiendo, ajusta ya.',
+            'Ritmo mejorando, repite.',
+            'Ritmo cayendo, corrige sin drama.',
+            'Consistencia sólida, sigue así.',
+            'Aire limpio, aprovecha.',
+            'Tráfico, paciencia y línea.',
+            'Sin error tonto, solo vueltas.',
+            'Controla la salida, no la emoción.',
+            'Si dudas, pierdes tiempo.',
+          ], [
+            'Sin magia, con método.',
+            'Que el cronómetro aplauda.',
+            'Cero show, puro resultado.',
+            'Una vuelta a la vez.',
+            'Sin regalar nada.',
+            'No te metas en líos gratis.',
+            'No te enamores del riesgo.',
+            'El error cobra caro.',
+            'Hoy no venimos a sufrir.',
+            'Menos cuento, más vueltas.',
+            'La pista no perdona.',
+            'Esto es precisión, no esperanza.',
+            'Aquí se viene a cerrar.',
+            ', ojos al apex.',
+            ', respira y ejecuta.',
+            ', línea y freno.',
+            ', sin overdrive.',
+            'Si te apuras, te castiga.',
+            'Control total.',
+            'Sin excusas, con vueltas.',
+            'El que afloja, pierde.',
+            'Hoy se cobra.',
+          ]),
+        },
+        bestlap: {
+          spicy: [
           'Nueva best lap, bien ahí.',
-          'Nueva best lap, bien ahí. Mantén l nea.',
+          'Nueva best lap, bien ahí. Mantén línea.',
           'Nueva best lap, bien ahí. Sin emoción extra.',
           'Nueva best lap, bien ahí. Control.',
           'Nueva best lap, bien ahí. Perfecto.',
           'Best lap, eso es.',
-          'Best lap, eso es. Mantén l nea.',
+          'Best lap, eso es. Mantén línea.',
           'Best lap, eso es. Sin emoción extra.',
           'Best lap, eso es. Control.',
           'Best lap, eso es. Perfecto.',
           'Best lap, rep telo.',
-          'Best lap, rep telo. Mantén l nea.',
+          'Best lap, rep telo. Mantén línea.',
           'Best lap, rep telo. Sin emoción extra.',
           'Best lap, rep telo. Control.',
           'Best lap, rep telo. Perfecto.',
           'Mejoraste best lap, Mantén.',
-          'Mejoraste best lap, Mantén. Mantén l nea.',
+          'Mejoraste best lap, Mantén. Mantén línea.',
           'Mejoraste best lap, Mantén. Sin emoción extra.',
           'Mejoraste best lap, Mantén. Control.',
           'Mejoraste best lap, Mantén. Perfecto.',
           'Best lap confirmada, buen trabajo.',
-          'Best lap confirmada, buen trabajo. Mantén l nea.',
+          'Best lap confirmada, buen trabajo. Mantén línea.',
           'Best lap confirmada, buen trabajo. Sin emoción extra.',
           'Best lap confirmada, buen trabajo. Control.',
           'Best lap confirmada, buen trabajo. Perfecto.'
         ],
+          spicy_plus: [
 
-        cons10: [
+          'Nueva best lap, bien ahí.',
+          'Nueva best lap, bien ahí. Mantén línea.',
+          'Nueva best lap, bien ahí. Sin emoción extra.',
+          'Nueva best lap, bien ahí. Control.',
+          'Nueva best lap, bien ahí. Perfecto.',
+          'Best lap, eso es.',
+          'Best lap, eso es. Mantén línea.',
+          'Best lap, eso es. Sin emoción extra.',
+          'Best lap, eso es. Control.',
+          'Best lap, eso es. Perfecto.',
+          'Best lap, rep telo.',
+          'Best lap, rep telo. Mantén línea.',
+          'Best lap, rep telo. Sin emoción extra.',
+          'Best lap, rep telo. Control.',
+          'Best lap, rep telo. Perfecto.',
+          'Mejoraste best lap, Mantén.',
+          'Mejoraste best lap, Mantén. Mantén línea.',
+          'Mejoraste best lap, Mantén. Sin emoción extra.',
+          'Mejoraste best lap, Mantén. Control.',
+          'Mejoraste best lap, Mantén. Perfecto.',
+          'Best lap confirmada, buen trabajo.',
+          'Best lap confirmada, buen trabajo. Mantén línea.',
+          'Best lap confirmada, buen trabajo. Sin emoción extra.',
+          'Best lap confirmada, buen trabajo. Control.',
+          'Best lap confirmada, buen trabajo. Perfecto.',
+            'Best lap al alcance. Se cobra.',
+            'Sin overdrive. Precisión.',
+          ],
+
+          premium: [
+            'Best lap a la vista. No lo regales por ansiedad.',
+            'Una vuelta perfecta. Pégala y repítela.',
+            'El cronómetro está de tu lado. Ejecuta.'
+          ],
+        },
+
+        cons10: {
+
+          spicy: [
           'Consistencia.',
           'Metrónomo.',
           'Estable.',
           'Buen control.'
         ],
 
-        netgain: [
+          spicy_plus: [
+
+          'Consistencia.',
+          'Metrónomo.',
+          'Estable.',
+          'Buen control.',
+            'Consistencia manda. Sin errores tontos.',
+          ],
+
+          premium: [
+            'Consistencia paga campeonatos.',
+            'Diez vueltas buenas valen más que una heroica.',
+            'Constante. Eso es peligroso para los demás.'
+          ],
+
+        },
+
+        netgain: {
+
+          spicy: [
           'Buena ganancia.',
           'Remontada limpia.',
           'Posiciones a favor.',
           'Eso suma.'
         ],
 
-        ritmo_up: [
+          spicy_plus: [
+
+          'Buena ganancia.',
+          'Remontada limpia.',
+          'Posiciones a favor.',
+          'Eso suma.',
+            'Buena remontada. Cierra con cabeza.',
+          ],
+
+          premium: [
+            'Remontada con colmillo. Sin errores gratis.',
+            'Ganaste posiciones. Ahora, asegura.',
+            'Buen avance. Que no se te caiga al final.'
+          ],
+
+        },
+
+        ritmo_up: {
+
+          spicy: [
           'Ritmo arriba.',
           'Vienes cerrando.',
           'Mejorando el paso.',
           'Apretando bien.'
         ],
 
-        ritmo_down: [
+          spicy_plus: [
+
+          'Ritmo arriba.',
+          'Vienes cerrando.',
+          'Mejorando el paso.',
+          'Apretando bien.',
+            'Ritmo arriba. No aflojes ahora.',
+          ],
+
+          premium: [
+            'Presión de campeonato. Sin teatro.',
+            'Ojo, aquí se define.',
+            'Modo quirúrgico: una vuelta perfecta.',
+            'El gap habla. Tú ejecuta.'
+          ],
+        },
+
+        ritmo_down: {
+
+          spicy: [
           'Ritmo bajó.',
           'Recupera el plan.',
           'Calma y limpio.',
           'Vuelve a lo básico.'
         ],
+
+          spicy_plus: [
+
+          'Ritmo bajó.',
+          'Recupera el plan.',
+          'Calma y limpio.',
+          'Vuelve a lo básico.',
+            'Ajusta ya. Hoy se cobra.',
+          ],
+
+          premium: [
+            'Sin drama: vuelve al apex.',
+            'Ritmo abajo. Cero héroes, puro control.',
+            'Corrige y repite. Una vuelta buena cambia todo.'
+          ],
+
+        },
 
         total: [
           'Suma vueltas.',
@@ -9099,8 +9472,8 @@ function rdPick(variants, key) {
         ],
       },
       stratega: {
-        manga: [
-          'Manga, contra reloj. Busca vuelta limpia.',
+        manga: {
+          spicy: ['Manga, contra reloj. Busca vuelta limpia.',
           'Manga, contra reloj. Busca vuelta limpia. Mantén el plan.',
           'Manga, contra reloj. Busca vuelta limpia. Sin inventar.',
           'Manga, contra reloj. Busca vuelta limpia. Cero errores.',
@@ -9124,14 +9497,42 @@ function rdPick(variants, key) {
           'Manga, presión controlada, sin riesgos. Mantén el plan.',
           'Manga, presión controlada, sin riesgos. Sin inventar.',
           'Manga, presión controlada, sin riesgos. Cero errores.',
-          'Manga, presión controlada, sin riesgos. Vuelta a vuelta.'
-        ],
+          'Manga, presión controlada, sin riesgos. Vuelta a vuelta.'],
+          spicy_plus: ['Manga, contra reloj. Busca vuelta limpia.',
+          'Manga, contra reloj. Busca vuelta limpia. Mantén el plan.',
+          'Manga, contra reloj. Busca vuelta limpia. Sin inventar.',
+          'Manga, contra reloj. Busca vuelta limpia. Cero errores.',
+          'Manga, contra reloj. Busca vuelta limpia. Vuelta a vuelta.',
+          'Manga, suma vueltas y no te salgas.',
+          'Manga, suma vueltas y no te salgas. Mantén el plan.',
+          'Manga, suma vueltas y no te salgas. Sin inventar.',
+          'Manga, suma vueltas y no te salgas. Cero errores.',
+          'Manga, suma vueltas y no te salgas. Vuelta a vuelta.',
+          'Manga, ritmo constante y sin tráfico.',
+          'Manga, ritmo constante y sin tráfico. Mantén el plan.',
+          'Manga, ritmo constante y sin tráfico. Sin inventar.',
+          'Manga, ritmo constante y sin tráfico. Cero errores.',
+          'Manga, ritmo constante y sin tráfico. Vuelta a vuelta.',
+          'Manga, prioriza vuelta clara, no pelea.',
+          'Manga, prioriza vuelta clara, no pelea. Mantén el plan.',
+          'Manga, prioriza vuelta clara, no pelea. Sin inventar.',
+          'Manga, prioriza vuelta clara, no pelea. Cero errores.',
+          'Manga, prioriza vuelta clara, no pelea. Vuelta a vuelta.',
+          'Manga, presión controlada, sin riesgos.',
+          'Manga, presión controlada, sin riesgos. Mantén el plan.',
+          'Manga, presión controlada, sin riesgos. Sin inventar.',
+          'Manga, presión controlada, sin riesgos. Cero errores.',
+          'Manga, presión controlada, sin riesgos. Vuelta a vuelta.',
+            'Manga: gestiona riesgo. El error cobra caro.',
+            'Manga: ritmo y control. Hoy se cierra.'
+          ]
+        },
         attack_front: [
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Pasa en la salida.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Entra fuerte y sal más fuerte.',
-          'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Busca la l nea corta.',
+          'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Busca la línea corta.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Una vuelta más y lo ejecutas.',
@@ -9140,18 +9541,18 @@ function rdPick(variants, key) {
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Entra fuerte y sal más fuerte.',
-          'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Busca la l nea corta.',
+          'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Busca la línea corta.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Una vuelta más y lo ejecutas.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Presiona sin regalar.',
-          'Arriba est {frontNameSafe} a {frontSecStr}. Pasa en la salida.',
-          'Arriba est {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
-          'Arriba est {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
-          'Arriba est {frontNameSafe} a {frontSecStr}. Entra fuerte y sal más fuerte.',
-          'Arriba est {frontNameSafe} a {frontSecStr}. Busca la l nea corta.',
-          'Arriba est {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
-          'Arriba est {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.'
+          'Arriba está {frontNameSafe} a {frontSecStr}. Pasa en la salida.',
+          'Arriba está {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
+          'Arriba está {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
+          'Arriba está {frontNameSafe} a {frontSecStr}. Entra fuerte y sal más fuerte.',
+          'Arriba está {frontNameSafe} a {frontSecStr}. Busca la línea corta.',
+          'Arriba está {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
+          'Arriba está {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.'
         ],
         attack_mid: [
           '{frontNameSafe} a {frontSecStr}. Arma el pase con paciencia.',
@@ -9209,7 +9610,7 @@ function rdPick(variants, key) {
         ],
         defense_front: [
           'Defiende el podio: {backNameSafe} a {backSecStr}. Cubre interior.',
-          'Defiende el podio: {backNameSafe} a {backSecStr}. l nea dura, sin golpes.',
+          'Defiende el podio: {backNameSafe} a {backSecStr}. línea dura, sin golpes.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. Salida fuerte.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. Cierra la puerta y acelera limpio.',
@@ -9218,7 +9619,7 @@ function rdPick(variants, key) {
           'Defiende el podio: {backNameSafe} a {backSecStr}. No frenes de más.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. Hazlo predecible y firme.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Cubre interior.',
-          'Arriba no se regala: {backNameSafe} a {backSecStr}. l nea dura, sin golpes.',
+          'Arriba no se regala: {backNameSafe} a {backSecStr}. línea dura, sin golpes.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Salida fuerte.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Cierra la puerta y acelera limpio.',
@@ -9227,7 +9628,7 @@ function rdPick(variants, key) {
           'Arriba no se regala: {backNameSafe} a {backSecStr}. No frenes de más.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Hazlo predecible y firme.',
           'presión por podio: {backNameSafe} {backSecStr}. Cubre interior.',
-          'presión por podio: {backNameSafe} {backSecStr}. l nea dura, sin golpes.',
+          'presión por podio: {backNameSafe} {backSecStr}. línea dura, sin golpes.',
           'presión por podio: {backNameSafe} {backSecStr}. Salida fuerte.',
           'presión por podio: {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
           'presión por podio: {backNameSafe} {backSecStr}. Cierra la puerta y acelera limpio.',
@@ -9237,7 +9638,7 @@ function rdPick(variants, key) {
         defense_mid: [
           '{backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
           '{backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
-          '{backNameSafe} a {backSecStr}. Defiende con l nea, no con volantazo.',
+          '{backNameSafe} a {backSecStr}. Defiende con línea, no con volantazo.',
           '{backNameSafe} a {backSecStr}. Cubre interior y acelera.',
           '{backNameSafe} a {backSecStr}. No regales la curva.',
           '{backNameSafe} a {backSecStr}. Calma, trazada limpia.',
@@ -9246,20 +9647,20 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Control total.',
           'Te cazan: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
           'Te cazan: {backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
-          'Te cazan: {backNameSafe} a {backSecStr}. Defiende con l nea, no con volantazo.',
+          'Te cazan: {backNameSafe} a {backSecStr}. Defiende con línea, no con volantazo.',
           'Te cazan: {backNameSafe} a {backSecStr}. Cubre interior y acelera.',
           'Te cazan: {backNameSafe} a {backSecStr}. No regales la curva.',
           'Te cazan: {backNameSafe} a {backSecStr}. Calma, trazada limpia.',
           'Te cazan: {backNameSafe} a {backSecStr}. No frenes tarde de más.',
           'Te cazan: {backNameSafe} a {backSecStr}. Mantén la puerta cerrada.',
           'Te cazan: {backNameSafe} a {backSecStr}. Control total.',
-          'presión atr s con {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
-          'presión atr s con {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
-          'presión atr s con {backNameSafe} {backSecStr}. Defiende con l nea, no con volantazo.',
-          'presión atr s con {backNameSafe} {backSecStr}. Cubre interior y acelera.',
-          'presión atr s con {backNameSafe} {backSecStr}. No regales la curva.',
-          'presión atr s con {backNameSafe} {backSecStr}. Calma, trazada limpia.',
-          'presión atr s con {backNameSafe} {backSecStr}. No frenes tarde de más.'
+          'presión atrás con {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
+          'presión atrás con {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
+          'presión atrás con {backNameSafe} {backSecStr}. Defiende con línea, no con volantazo.',
+          'presión atrás con {backNameSafe} {backSecStr}. Cubre interior y acelera.',
+          'presión atrás con {backNameSafe} {backSecStr}. No regales la curva.',
+          'presión atrás con {backNameSafe} {backSecStr}. Calma, trazada limpia.',
+          'presión atrás con {backNameSafe} {backSecStr}. No frenes tarde de más.'
         ],
         defense_back: [
           'No regales: {backNameSafe} a {backSecStr}. Orden y manejo.',
@@ -9268,7 +9669,7 @@ function rdPick(variants, key) {
           'No regales: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
           'No regales: {backNameSafe} a {backSecStr}. Salida fuerte.',
           'No regales: {backNameSafe} a {backSecStr}. No inventes, defiende.',
-          'No regales: {backNameSafe} a {backSecStr}. l nea firme.',
+          'No regales: {backNameSafe} a {backSecStr}. línea firme.',
           'No regales: {backNameSafe} a {backSecStr}. Sin drama, pero firme.',
           'No regales: {backNameSafe} a {backSecStr}. Mantén la calma.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. Orden y manejo.',
@@ -9277,7 +9678,7 @@ function rdPick(variants, key) {
           'Defiende lo básico: {backNameSafe} {backSecStr}. No te abras en la entrada.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. Salida fuerte.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. No inventes, defiende.',
-          'Defiende lo básico: {backNameSafe} {backSecStr}. l nea firme.',
+          'Defiende lo básico: {backNameSafe} {backSecStr}. línea firme.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. Sin drama, pero firme.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. Mantén la calma.',
           'presión real: {backNameSafe} a {backSecStr}. Orden y manejo.',
@@ -9286,14 +9687,14 @@ function rdPick(variants, key) {
           'presión real: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
           'presión real: {backNameSafe} a {backSecStr}. Salida fuerte.',
           'presión real: {backNameSafe} a {backSecStr}. No inventes, defiende.',
-          'presión real: {backNameSafe} a {backSecStr}. l nea firme.'
+          'presión real: {backNameSafe} a {backSecStr}. línea firme.'
         ],
-        fight: [
-          'Pelea viva: adelante y atr s. Prioriza salida.',
-          'Pelea viva: adelante y atr s. Prioriza salida. Plan claro.',
-          'Pelea viva: adelante y atr s. Prioriza salida. Sin riesgos tontos.',
-          'Pelea viva: adelante y atr s. Prioriza salida. Salida fuerte.',
-          'Pelea viva: adelante y atr s. Prioriza salida. Todo limpio.',
+        fight: {
+          spicy: ['Pelea viva: adelante y atrás. Prioriza salida.',
+          'Pelea viva: adelante y atrás. Prioriza salida. Plan claro.',
+          'Pelea viva: adelante y atrás. Prioriza salida. Sin riesgos tontos.',
+          'Pelea viva: adelante y atrás. Prioriza salida. Salida fuerte.',
+          'Pelea viva: adelante y atrás. Prioriza salida. Todo limpio.',
           'Doble presión, decide: o atacas o aseguras.',
           'Doble presión, decide: o atacas o aseguras. Plan claro.',
           'Doble presión, decide: o atacas o aseguras. Sin riesgos tontos.',
@@ -9313,14 +9714,42 @@ function rdPick(variants, key) {
           'Cuidado con el tráfico, no regales segundos. Plan claro.',
           'Cuidado con el tráfico, no regales segundos. Sin riesgos tontos.',
           'Cuidado con el tráfico, no regales segundos. Salida fuerte.',
-          'Cuidado con el tráfico, no regales segundos. Todo limpio.'
-        ],
+          'Cuidado con el tráfico, no regales segundos. Todo limpio.'],
+          spicy_plus: ['Pelea viva: adelante y atrás. Prioriza salida.',
+          'Pelea viva: adelante y atrás. Prioriza salida. Plan claro.',
+          'Pelea viva: adelante y atrás. Prioriza salida. Sin riesgos tontos.',
+          'Pelea viva: adelante y atrás. Prioriza salida. Salida fuerte.',
+          'Pelea viva: adelante y atrás. Prioriza salida. Todo limpio.',
+          'Doble presión, decide: o atacas o aseguras.',
+          'Doble presión, decide: o atacas o aseguras. Plan claro.',
+          'Doble presión, decide: o atacas o aseguras. Sin riesgos tontos.',
+          'Doble presión, decide: o atacas o aseguras. Salida fuerte.',
+          'Doble presión, decide: o atacas o aseguras. Todo limpio.',
+          'tráfico pesado. No pierdas tiempo en tonteras.',
+          'tráfico pesado. No pierdas tiempo en tonteras. Plan claro.',
+          'tráfico pesado. No pierdas tiempo en tonteras. Sin riesgos tontos.',
+          'tráfico pesado. No pierdas tiempo en tonteras. Salida fuerte.',
+          'tráfico pesado. No pierdas tiempo en tonteras. Todo limpio.',
+          'Dos frentes. Elige la batalla correcta.',
+          'Dos frentes. Elige la batalla correcta. Plan claro.',
+          'Dos frentes. Elige la batalla correcta. Sin riesgos tontos.',
+          'Dos frentes. Elige la batalla correcta. Salida fuerte.',
+          'Dos frentes. Elige la batalla correcta. Todo limpio.',
+          'Cuidado con el tráfico, no regales segundos.',
+          'Cuidado con el tráfico, no regales segundos. Plan claro.',
+          'Cuidado con el tráfico, no regales segundos. Sin riesgos tontos.',
+          'Cuidado con el tráfico, no regales segundos. Salida fuerte.',
+          'Cuidado con el tráfico, no regales segundos. Todo limpio.',
+            'Duelo: ventana corta. Ejecuta.',
+            'Duelo: aquí se cobra o se paga.'
+          ]
+        },
         blueflag: [
-          'Bandera azul. líder encima. Mantén l nea y deja pasar.',
-          'Bandera azul. líder encima. Mantén l nea y deja pasar. Con seguridad.',
-          'Bandera azul. líder encima. Mantén l nea y deja pasar. Sin perder tiempo.',
-          'Bandera azul. líder encima. Mantén l nea y deja pasar. Todo limpio.',
-          'Bandera azul. líder encima. Mantén l nea y deja pasar. Sin riesgos.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar. Con seguridad.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar. Sin perder tiempo.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar. Todo limpio.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar. Sin riesgos.',
           'Bandera azul. No te metas en broncas, cede seguro.',
           'Bandera azul. No te metas en broncas, cede seguro. Con seguridad.',
           'Bandera azul. No te metas en broncas, cede seguro. Sin perder tiempo.',
@@ -9331,19 +9760,19 @@ function rdPick(variants, key) {
           'Bandera azul. Respeta, deja pasar y sigue tu carrera. Sin perder tiempo.',
           'Bandera azul. Respeta, deja pasar y sigue tu carrera. Todo limpio.',
           'Bandera azul. Respeta, deja pasar y sigue tu carrera. Sin riesgos.',
-          'Bandera azul. l nea predecible, no frenes raro.',
-          'Bandera azul. l nea predecible, no frenes raro. Con seguridad.',
-          'Bandera azul. l nea predecible, no frenes raro. Sin perder tiempo.',
-          'Bandera azul. l nea predecible, no frenes raro. Todo limpio.',
-          'Bandera azul. l nea predecible, no frenes raro. Sin riesgos.',
+          'Bandera azul. línea predecible, no frenes raro.',
+          'Bandera azul. línea predecible, no frenes raro. Con seguridad.',
+          'Bandera azul. línea predecible, no frenes raro. Sin perder tiempo.',
+          'Bandera azul. línea predecible, no frenes raro. Todo limpio.',
+          'Bandera azul. línea predecible, no frenes raro. Sin riesgos.',
           'Bandera azul. Abre espacio en la salida.',
           'Bandera azul. Abre espacio en la salida. Con seguridad.',
           'Bandera azul. Abre espacio en la salida. Sin perder tiempo.',
           'Bandera azul. Abre espacio en la salida. Todo limpio.',
           'Bandera azul. Abre espacio en la salida. Sin riesgos.'
         ],
-        front06: [
-          '{frontNameSafe} a {frontSecStr}. Ventana de ataque abierta.',
+        front06: {
+          spicy: ['{frontNameSafe} a {frontSecStr}. Ventana de ataque abierta.',
           '{frontNameSafe} a {frontSecStr}. Prepara maniobra.',
           '{frontNameSafe} a {frontSecStr}. Entra fuerte, sal más fuerte.',
           '{frontNameSafe} a {frontSecStr}. No dudes en la recta.',
@@ -9367,10 +9796,37 @@ function rdPick(variants, key) {
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. Corta la curva y acelera.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. Busca el error y capitaliza.',
-          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Ataque en zona segura.'
-        ],
-        back06: [
-          '{backNameSafe} a {backSecStr}. Defensa inteligente, sin errores.',
+          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Ataque en zona segura.'],
+          spicy_plus: ['{frontNameSafe} a {frontSecStr}. Ventana de ataque abierta.',
+          '{frontNameSafe} a {frontSecStr}. Prepara maniobra.',
+          '{frontNameSafe} a {frontSecStr}. Entra fuerte, sal más fuerte.',
+          '{frontNameSafe} a {frontSecStr}. No dudes en la recta.',
+          '{frontNameSafe} a {frontSecStr}. Corta la curva y acelera.',
+          '{frontNameSafe} a {frontSecStr}. Busca el error y capitaliza.',
+          '{frontNameSafe} a {frontSecStr}. Ataque en zona segura.',
+          '{frontNameSafe} a {frontSecStr}. Presiona sin regalar.',
+          '{frontNameSafe} a {frontSecStr}. Una vuelta más y lo ejecutas.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Ventana de ataque abierta.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Prepara maniobra.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Entra fuerte, sal más fuerte.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. No dudes en la recta.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Corta la curva y acelera.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Busca el error y capitaliza.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Ataque en zona segura.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Presiona sin regalar.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Una vuelta más y lo ejecutas.',
+          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Ventana de ataque abierta.',
+          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Prepara maniobra.',
+          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Entra fuerte, sal más fuerte.',
+          'Ventana abierta: {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
+          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Corta la curva y acelera.',
+          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Busca el error y capitaliza.',
+          'Ventana abierta: {frontNameSafe} a {frontSecStr}. Ataque en zona segura.',
+            'Frente: oportunidad real. Pase con línea.'
+          ]
+        },
+        back06: {
+          spicy: ['{backNameSafe} a {backSecStr}. Defensa inteligente, sin errores.',
           '{backNameSafe} a {backSecStr}. Cubre interior y acelera.',
           '{backNameSafe} a {backSecStr}. No abras la puerta.',
           '{backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
@@ -9379,25 +9835,52 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Defiende con cabeza.',
           '{backNameSafe} a {backSecStr}. No regales la curva.',
           '{backNameSafe} a {backSecStr}. Calma y control.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Defensa inteligente, sin errores.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Cubre interior y acelera.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. No abras la puerta.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Trazada firme, sin volantazo.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Defiende con cabeza.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. No regales la curva.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Calma y control.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Defensa inteligente, sin errores.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Cubre interior y acelera.',
-          'presión atr s: {backNameSafe} a {backSecStr}. No abras la puerta.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
-          'presión atr s: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Trazada firme, sin volantazo.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Defiende con cabeza.'
-        ],
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Defensa inteligente, sin errores.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Cubre interior y acelera.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. No abras la puerta.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Trazada firme, sin volantazo.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Defiende con cabeza.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. No regales la curva.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Calma y control.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Defensa inteligente, sin errores.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Cubre interior y acelera.',
+          'presión atrás: {backNameSafe} a {backSecStr}. No abras la puerta.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
+          'presión atrás: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Trazada firme, sin volantazo.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Defiende con cabeza.'],
+          spicy_plus: ['{backNameSafe} a {backSecStr}. Defensa inteligente, sin errores.',
+          '{backNameSafe} a {backSecStr}. Cubre interior y acelera.',
+          '{backNameSafe} a {backSecStr}. No abras la puerta.',
+          '{backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
+          '{backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
+          '{backNameSafe} a {backSecStr}. Trazada firme, sin volantazo.',
+          '{backNameSafe} a {backSecStr}. Defiende con cabeza.',
+          '{backNameSafe} a {backSecStr}. No regales la curva.',
+          '{backNameSafe} a {backSecStr}. Calma y control.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Defensa inteligente, sin errores.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Cubre interior y acelera.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. No abras la puerta.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Trazada firme, sin volantazo.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Defiende con cabeza.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. No regales la curva.',
+          'Gap chico atrás: {backNameSafe} {backSecStr}. Calma y control.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Defensa inteligente, sin errores.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Cubre interior y acelera.',
+          'presión atrás: {backNameSafe} a {backSecStr}. No abras la puerta.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
+          'presión atrás: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Trazada firme, sin volantazo.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Defiende con cabeza.',
+            'Atrás: presión. Cierra puertas limpias.'
+          ]
+        },
         pos: [
-          'Ahora P{posNow}. Reacciona: l nea limpia y salida fuerte.',
+          'Ahora P{posNow}. Reacciona: línea limpia y salida fuerte.',
           'Ahora P{posNow}. Cero errores, recupera ritmo.',
           'Ahora P{posNow}. acom date y vuelve al ataque.',
           'Ahora P{posNow}. Plan claro: salida manda.',
@@ -9406,7 +9889,7 @@ function rdPick(variants, key) {
           'Ahora P{posNow}. Orden y gas.',
           'Ahora P{posNow}. No inventes, ejecuta.',
           'Ahora P{posNow}. A trabajar, vuelta a vuelta.',
-          'P{posNow}. Reacciona: l nea limpia y salida fuerte.',
+          'P{posNow}. Reacciona: línea limpia y salida fuerte.',
           'P{posNow}. Cero errores, recupera ritmo.',
           'P{posNow}. acom date y vuelve al ataque.',
           'P{posNow}. Plan claro: salida manda.',
@@ -9415,7 +9898,7 @@ function rdPick(variants, key) {
           'P{posNow}. Orden y gas.',
           'P{posNow}. No inventes, ejecuta.',
           'P{posNow}. A trabajar, vuelta a vuelta.',
-          'Vas P{posNow}. Reacciona: l nea limpia y salida fuerte.',
+          'Vas P{posNow}. Reacciona: línea limpia y salida fuerte.',
           'Vas P{posNow}. Cero errores, recupera ritmo.',
           'Vas P{posNow}. acom date y vuelve al ataque.',
           'Vas P{posNow}. Plan claro: salida manda.',
@@ -9477,8 +9960,8 @@ function rdPick(variants, key) {
           'Podio en juego. No inventes en la entrada. Limpio.',
           'Podio en juego. No inventes en la entrada. Firme.'
         ],
-        trend: [
-          'Ritmo subiendo. Mantén la presión.',
+        trend: {
+          spicy: ['Ritmo subiendo. Mantén la presión.',
           'Ritmo subiendo. Mantén la presión. Vuelta a vuelta.',
           'Ritmo subiendo. Mantén la presión. Control total.',
           'Ritmo subiendo. Mantén la presión. Sin errores.',
@@ -9488,11 +9971,11 @@ function rdPick(variants, key) {
           'Ritmo baj. Corrige trazada y salida. Control total.',
           'Ritmo baj. Corrige trazada y salida. Sin errores.',
           'Ritmo baj. Corrige trazada y salida. Plan claro.',
-          'Consistente. Repite la l nea y aprieta.',
-          'Consistente. Repite la l nea y aprieta. Vuelta a vuelta.',
-          'Consistente. Repite la l nea y aprieta. Control total.',
-          'Consistente. Repite la l nea y aprieta. Sin errores.',
-          'Consistente. Repite la l nea y aprieta. Plan claro.',
+          'Consistente. Repite la línea y aprieta.',
+          'Consistente. Repite la línea y aprieta. Vuelta a vuelta.',
+          'Consistente. Repite la línea y aprieta. Control total.',
+          'Consistente. Repite la línea y aprieta. Sin errores.',
+          'Consistente. Repite la línea y aprieta. Plan claro.',
           'Ritmo slido. No cambies nada.',
           'Ritmo slido. No cambies nada. Vuelta a vuelta.',
           'Ritmo slido. No cambies nada. Control total.',
@@ -9502,9 +9985,38 @@ function rdPick(variants, key) {
           'Ritmo irregular. Vuelve al plan. Vuelta a vuelta.',
           'Ritmo irregular. Vuelve al plan. Control total.',
           'Ritmo irregular. Vuelve al plan. Sin errores.',
-          'Ritmo irregular. Vuelve al plan. Plan claro.'
-        ],
-        est: [
+          'Ritmo irregular. Vuelve al plan. Plan claro.'],
+          spicy_plus: ['Ritmo subiendo. Mantén la presión.',
+          'Ritmo subiendo. Mantén la presión. Vuelta a vuelta.',
+          'Ritmo subiendo. Mantén la presión. Control total.',
+          'Ritmo subiendo. Mantén la presión. Sin errores.',
+          'Ritmo subiendo. Mantén la presión. Plan claro.',
+          'Ritmo baj. Corrige trazada y salida.',
+          'Ritmo baj. Corrige trazada y salida. Vuelta a vuelta.',
+          'Ritmo baj. Corrige trazada y salida. Control total.',
+          'Ritmo baj. Corrige trazada y salida. Sin errores.',
+          'Ritmo baj. Corrige trazada y salida. Plan claro.',
+          'Consistente. Repite la línea y aprieta.',
+          'Consistente. Repite la línea y aprieta. Vuelta a vuelta.',
+          'Consistente. Repite la línea y aprieta. Control total.',
+          'Consistente. Repite la línea y aprieta. Sin errores.',
+          'Consistente. Repite la línea y aprieta. Plan claro.',
+          'Ritmo slido. No cambies nada.',
+          'Ritmo slido. No cambies nada. Vuelta a vuelta.',
+          'Ritmo slido. No cambies nada. Control total.',
+          'Ritmo slido. No cambies nada. Sin errores.',
+          'Ritmo slido. No cambies nada. Plan claro.',
+          'Ritmo irregular. Vuelve al plan.',
+          'Ritmo irregular. Vuelve al plan. Vuelta a vuelta.',
+          'Ritmo irregular. Vuelve al plan. Control total.',
+          'Ritmo irregular. Vuelve al plan. Sin errores.',
+          'Ritmo irregular. Vuelve al plan. Plan claro.',
+            'Gap: tendencia manda. Ajusta sin pánico.',
+            'Gap: ciérralo con método.'
+          ]
+        },
+        est: {
+          spicy: [
           'estimación en marcha. No te desconcentres.',
           'estimación en marcha. No te desconcentres. Control.',
           'estimación en marcha. No te desconcentres. Sin drama.',
@@ -9531,8 +10043,45 @@ function rdPick(variants, key) {
           'estimación marcada. Control de riesgo. Limpio.',
           'estimación marcada. Control de riesgo. Plan claro.'
         ],
-        bestlap: [
-          'Best lap confirmada. Ahora rep tela sin riesgo.',
+          spicy_plus: [
+
+          'estimación en marcha. No te desconcentres.',
+          'estimación en marcha. No te desconcentres. Control.',
+          'estimación en marcha. No te desconcentres. Sin drama.',
+          'estimación en marcha. No te desconcentres. Limpio.',
+          'estimación en marcha. No te desconcentres. Plan claro.',
+          'La estimación cambi. Ajusta y sigue.',
+          'La estimación cambi. Ajusta y sigue. Control.',
+          'La estimación cambi. Ajusta y sigue. Sin drama.',
+          'La estimación cambi. Ajusta y sigue. Limpio.',
+          'La estimación cambi. Ajusta y sigue. Plan claro.',
+          'estimación estable. Mantén ritmo limpio.',
+          'estimación estable. Mantén ritmo limpio. Control.',
+          'estimación estable. Mantén ritmo limpio. Sin drama.',
+          'estimación estable. Mantén ritmo limpio. Limpio.',
+          'estimación estable. Mantén ritmo limpio. Plan claro.',
+          'estimación lista. No regales la salida.',
+          'estimación lista. No regales la salida. Control.',
+          'estimación lista. No regales la salida. Sin drama.',
+          'estimación lista. No regales la salida. Limpio.',
+          'estimación lista. No regales la salida. Plan claro.',
+          'estimación marcada. Control de riesgo.',
+          'estimación marcada. Control de riesgo. Control.',
+          'estimación marcada. Control de riesgo. Sin drama.',
+          'estimación marcada. Control de riesgo. Limpio.',
+          'estimación marcada. Control de riesgo. Plan claro.',
+            'Ritmo objetivo. Ejecútalo.',
+            'Control total. Hoy se cobra.',
+          ],
+
+          premium: [
+            'Ese tiempo se puede. Trátalo con respeto.',
+            'No es magia: es línea, freno y salida.',
+            'Una vuelta limpia vale oro.'
+          ],
+        },
+        bestlap: {
+          spicy: ['Best lap confirmada. Ahora rep tela sin riesgo.',
           'Best lap confirmada. Ahora rep tela sin riesgo. Sin riesgos.',
           'Best lap confirmada. Ahora rep tela sin riesgo. Limpio.',
           'Best lap confirmada. Ahora rep tela sin riesgo. Plan claro.',
@@ -9552,40 +10101,91 @@ function rdPick(variants, key) {
           'Best lap. Buen trabajo, ahora consistencia. Limpio.',
           'Best lap. Buen trabajo, ahora consistencia. Plan claro.',
           'Best lap. Buen trabajo, ahora consistencia. Vuelta a vuelta.',
-          'Nueva best lap. Mantén la l nea.',
-          'Nueva best lap. Mantén la l nea. Sin riesgos.',
-          'Nueva best lap. Mantén la l nea. Limpio.',
-          'Nueva best lap. Mantén la l nea. Plan claro.',
-          'Nueva best lap. Mantén la l nea. Vuelta a vuelta.'
-        ],
+          'Nueva best lap. Mantén la línea.',
+          'Nueva best lap. Mantén la línea. Sin riesgos.',
+          'Nueva best lap. Mantén la línea. Limpio.',
+          'Nueva best lap. Mantén la línea. Plan claro.',
+          'Nueva best lap. Mantén la línea. Vuelta a vuelta.'],
+          spicy_plus: ['Best lap confirmada. Ahora rep tela sin riesgo.',
+          'Best lap confirmada. Ahora rep tela sin riesgo. Sin riesgos.',
+          'Best lap confirmada. Ahora rep tela sin riesgo. Limpio.',
+          'Best lap confirmada. Ahora rep tela sin riesgo. Plan claro.',
+          'Best lap confirmada. Ahora rep tela sin riesgo. Vuelta a vuelta.',
+          'Mejoraste best lap. sostén el ritmo.',
+          'Mejoraste best lap. sostén el ritmo. Sin riesgos.',
+          'Mejoraste best lap. sostén el ritmo. Limpio.',
+          'Mejoraste best lap. sostén el ritmo. Plan claro.',
+          'Mejoraste best lap. sostén el ritmo. Vuelta a vuelta.',
+          'Best lap. No te emociones, repite.',
+          'Best lap. No te emociones, repite. Sin riesgos.',
+          'Best lap. No te emociones, repite. Limpio.',
+          'Best lap. No te emociones, repite. Plan claro.',
+          'Best lap. No te emociones, repite. Vuelta a vuelta.',
+          'Best lap. Buen trabajo, ahora consistencia.',
+          'Best lap. Buen trabajo, ahora consistencia. Sin riesgos.',
+          'Best lap. Buen trabajo, ahora consistencia. Limpio.',
+          'Best lap. Buen trabajo, ahora consistencia. Plan claro.',
+          'Best lap. Buen trabajo, ahora consistencia. Vuelta a vuelta.',
+          'Nueva best lap. Mantén la línea.',
+          'Nueva best lap. Mantén la línea. Sin riesgos.',
+          'Nueva best lap. Mantén la línea. Limpio.',
+          'Nueva best lap. Mantén la línea. Plan claro.',
+          'Nueva best lap. Mantén la línea. Vuelta a vuelta.',
+            'Best Lap: útil. Lo que importa es el stint.'
+          ]
+        },
 
-        cons10: [
-          'Consistencia.',
+        cons10: {
+          spicy: ['Consistencia.',
           'Metrónomo.',
           'Estable.',
-          'Buen control.'
-        ],
+          'Buen control.'],
+          spicy_plus: ['Consistencia.',
+          'Metrónomo.',
+          'Estable.',
+          'Buen control.',
+            'Consistencia: tu arma. No la sueltes.'
+          ]
+        },
 
-        netgain: [
-          'Buena ganancia.',
+        netgain: {
+          spicy: ['Buena ganancia.',
           'Remontada limpia.',
           'Posiciones a favor.',
-          'Eso suma.'
-        ],
+          'Eso suma.'],
+          spicy_plus: ['Buena ganancia.',
+          'Remontada limpia.',
+          'Posiciones a favor.',
+          'Eso suma.',
+            'NetGain: suma posiciones con cabeza fría.'
+          ]
+        },
 
-        ritmo_up: [
-          'Ritmo arriba.',
+        ritmo_up: {
+          spicy: ['Ritmo arriba.',
           'Vienes cerrando.',
           'Mejorando el paso.',
-          'Apretando bien.'
-        ],
+          'Apretando bien.'],
+          spicy_plus: ['Ritmo arriba.',
+          'Vienes cerrando.',
+          'Mejorando el paso.',
+          'Apretando bien.',
+            'Ritmo arriba: sostén, no sobre-conduzcas.'
+          ]
+        },
 
-        ritmo_down: [
-          'Ritmo bajó.',
+        ritmo_down: {
+          spicy: ['Ritmo bajó.',
           'Recupera el plan.',
           'Calma y limpio.',
-          'Vuelve a lo básico.'
-        ],
+          'Vuelve a lo básico.'],
+          spicy_plus: ['Ritmo bajó.',
+          'Recupera el plan.',
+          'Calma y limpio.',
+          'Vuelve a lo básico.',
+            'Ritmo abajo: corrige trazada, no inventes.'
+          ]
+        },
 
         total: [
           'Suma vueltas.',
@@ -9602,8 +10202,8 @@ function rdPick(variants, key) {
         ],
       },
       coach: {
-        manga: [
-          'Manga: vuelta limpia. Respira y aprieta.',
+        manga: {
+          spicy: ['Manga: vuelta limpia. Respira y aprieta.',
           'Manga: vuelta limpia. Respira y aprieta. T  puedes.',
           'Manga: vuelta limpia. Respira y aprieta. Mantén el plan.',
           'Manga: vuelta limpia. Respira y aprieta. Sin presionarte.',
@@ -9618,19 +10218,47 @@ function rdPick(variants, key) {
           'Manga: constancia. No persigas fantasmas. Mantén el plan.',
           'Manga: constancia. No persigas fantasmas. Sin presionarte.',
           'Manga: constancia. No persigas fantasmas. Paso a paso.',
-          'Manga: manos suaves, l nea firme.',
-          'Manga: manos suaves, l nea firme. T  puedes.',
-          'Manga: manos suaves, l nea firme. Mantén el plan.',
-          'Manga: manos suaves, l nea firme. Sin presionarte.',
-          'Manga: manos suaves, l nea firme. Paso a paso.',
+          'Manga: manos suaves, línea firme.',
+          'Manga: manos suaves, línea firme. T  puedes.',
+          'Manga: manos suaves, línea firme. Mantén el plan.',
+          'Manga: manos suaves, línea firme. Sin presionarte.',
+          'Manga: manos suaves, línea firme. Paso a paso.',
           'Manga: aire limpio y ritmo estable.',
           'Manga: aire limpio y ritmo estable. T  puedes.',
           'Manga: aire limpio y ritmo estable. Mantén el plan.',
           'Manga: aire limpio y ritmo estable. Sin presionarte.',
-          'Manga: aire limpio y ritmo estable. Paso a paso.'
-        ],
-        attack: [
-          'Vas alcanzando a {frontNameSafe}. Entra suave, sal fuerte.',
+          'Manga: aire limpio y ritmo estable. Paso a paso.'],
+          spicy_plus: ['Manga: vuelta limpia. Respira y aprieta.',
+          'Manga: vuelta limpia. Respira y aprieta. T  puedes.',
+          'Manga: vuelta limpia. Respira y aprieta. Mantén el plan.',
+          'Manga: vuelta limpia. Respira y aprieta. Sin presionarte.',
+          'Manga: vuelta limpia. Respira y aprieta. Paso a paso.',
+          'Manga: sin errores. Cada meta cuenta.',
+          'Manga: sin errores. Cada meta cuenta. T  puedes.',
+          'Manga: sin errores. Cada meta cuenta. Mantén el plan.',
+          'Manga: sin errores. Cada meta cuenta. Sin presionarte.',
+          'Manga: sin errores. Cada meta cuenta. Paso a paso.',
+          'Manga: constancia. No persigas fantasmas.',
+          'Manga: constancia. No persigas fantasmas. T  puedes.',
+          'Manga: constancia. No persigas fantasmas. Mantén el plan.',
+          'Manga: constancia. No persigas fantasmas. Sin presionarte.',
+          'Manga: constancia. No persigas fantasmas. Paso a paso.',
+          'Manga: manos suaves, línea firme.',
+          'Manga: manos suaves, línea firme. T  puedes.',
+          'Manga: manos suaves, línea firme. Mantén el plan.',
+          'Manga: manos suaves, línea firme. Sin presionarte.',
+          'Manga: manos suaves, línea firme. Paso a paso.',
+          'Manga: aire limpio y ritmo estable.',
+          'Manga: aire limpio y ritmo estable. T  puedes.',
+          'Manga: aire limpio y ritmo estable. Mantén el plan.',
+          'Manga: aire limpio y ritmo estable. Sin presionarte.',
+          'Manga: aire limpio y ritmo estable. Paso a paso.',
+            'Manga: presión real. Hoy se cobra.',
+            'Manga: cero drama. Puro resultado.'
+          ]
+        },
+        attack: {
+          spicy: ['Vas alcanzando a {frontNameSafe}. Entra suave, sal fuerte.',
           'Vas alcanzando a {frontNameSafe}. Prepara el pase seguro.',
           'Vas alcanzando a {frontNameSafe}. Hazlo limpio, sin tocar.',
           'Vas alcanzando a {frontNameSafe}. Cuida la salida y lo tienes.',
@@ -9650,14 +10278,42 @@ function rdPick(variants, key) {
           'A {frontSecStr} de {frontNameSafe}. Un giro más y cae.',
           'A {frontSecStr} de {frontNameSafe}. Con calma y precisin.',
           'A {frontSecStr} de {frontNameSafe}. Sin prisa tonta.',
-          '{frontNameSafe} est cerca. Entra suave, sal fuerte.',
-          '{frontNameSafe} est cerca. Prepara el pase seguro.',
-          '{frontNameSafe} est cerca. Hazlo limpio, sin tocar.',
-          '{frontNameSafe} est cerca. Cuida la salida y lo tienes.',
-          '{frontNameSafe} est cerca. Paciencia, el pase llega.'
-        ],
-        defense: [
-          'Te viene {backNameSafe}. Mantén tu l nea y acelera limpio.',
+          '{frontNameSafe} está cerca. Entra suave, sal fuerte.',
+          '{frontNameSafe} está cerca. Prepara el pase seguro.',
+          '{frontNameSafe} está cerca. Hazlo limpio, sin tocar.',
+          '{frontNameSafe} está cerca. Cuida la salida y lo tienes.',
+          '{frontNameSafe} está cerca. Paciencia, el pase llega.'],
+          spicy_plus: ['Vas alcanzando a {frontNameSafe}. Entra suave, sal fuerte.',
+          'Vas alcanzando a {frontNameSafe}. Prepara el pase seguro.',
+          'Vas alcanzando a {frontNameSafe}. Hazlo limpio, sin tocar.',
+          'Vas alcanzando a {frontNameSafe}. Cuida la salida y lo tienes.',
+          'Vas alcanzando a {frontNameSafe}. Paciencia, el pase llega.',
+          'Vas alcanzando a {frontNameSafe}. No fuerces la entrada.',
+          'Vas alcanzando a {frontNameSafe}. Busca aire limpio y ejecuta.',
+          'Vas alcanzando a {frontNameSafe}. Un giro más y cae.',
+          'Vas alcanzando a {frontNameSafe}. Con calma y precisin.',
+          'Vas alcanzando a {frontNameSafe}. Sin prisa tonta.',
+          'A {frontSecStr} de {frontNameSafe}. Entra suave, sal fuerte.',
+          'A {frontSecStr} de {frontNameSafe}. Prepara el pase seguro.',
+          'A {frontSecStr} de {frontNameSafe}. Hazlo limpio, sin tocar.',
+          'A {frontSecStr} de {frontNameSafe}. Cuida la salida y lo tienes.',
+          'A {frontSecStr} de {frontNameSafe}. Paciencia, el pase llega.',
+          'A {frontSecStr} de {frontNameSafe}. No fuerces la entrada.',
+          'A {frontSecStr} de {frontNameSafe}. Busca aire limpio y ejecuta.',
+          'A {frontSecStr} de {frontNameSafe}. Un giro más y cae.',
+          'A {frontSecStr} de {frontNameSafe}. Con calma y precisin.',
+          'A {frontSecStr} de {frontNameSafe}. Sin prisa tonta.',
+          '{frontNameSafe} está cerca. Entra suave, sal fuerte.',
+          '{frontNameSafe} está cerca. Prepara el pase seguro.',
+          '{frontNameSafe} está cerca. Hazlo limpio, sin tocar.',
+          '{frontNameSafe} está cerca. Cuida la salida y lo tienes.',
+          '{frontNameSafe} está cerca. Paciencia, el pase llega.',
+            'Ataque: ahora o nunca. Sin overdrive.',
+            'Ataque: línea limpia. Se cobra.'
+          ]
+        },
+        defense: {
+          spicy: ['Te viene {backNameSafe}. Mantén tu línea y acelera limpio.',
           'Te viene {backNameSafe}. Puerta cerrada, sin frenar de más.',
           'Te viene {backNameSafe}. Protege interior.',
           'Te viene {backNameSafe}. Defiende con trazada, no con golpes.',
@@ -9667,7 +10323,7 @@ function rdPick(variants, key) {
           'Te viene {backNameSafe}. Todo limpio.',
           'Te viene {backNameSafe}. Sin errores.',
           'Te viene {backNameSafe}. Calma, lo tienes.',
-          '{backNameSafe} a {backSecStr}. Mantén tu l nea y acelera limpio.',
+          '{backNameSafe} a {backSecStr}. Mantén tu línea y acelera limpio.',
           '{backNameSafe} a {backSecStr}. Puerta cerrada, sin frenar de más.',
           '{backNameSafe} a {backSecStr}. Protege interior.',
           '{backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
@@ -9677,14 +10333,42 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Todo limpio.',
           '{backNameSafe} a {backSecStr}. Sin errores.',
           '{backNameSafe} a {backSecStr}. Calma, lo tienes.',
-          'Ojo atr s con {backNameSafe}. Mantén tu l nea y acelera limpio.',
-          'Ojo atr s con {backNameSafe}. Puerta cerrada, sin frenar de más.',
-          'Ojo atr s con {backNameSafe}. Protege interior.',
-          'Ojo atr s con {backNameSafe}. Defiende con trazada, no con golpes.',
-          'Ojo atr s con {backNameSafe}. Salida fuerte, manos suaves.'
-        ],
-        fight: [
-          'Hay pelea. Prioriza salida y cero errores.',
+          'Ojo atrás con {backNameSafe}. Mantén tu línea y acelera limpio.',
+          'Ojo atrás con {backNameSafe}. Puerta cerrada, sin frenar de más.',
+          'Ojo atrás con {backNameSafe}. Protege interior.',
+          'Ojo atrás con {backNameSafe}. Defiende con trazada, no con golpes.',
+          'Ojo atrás con {backNameSafe}. Salida fuerte, manos suaves.'],
+          spicy_plus: ['Te viene {backNameSafe}. Mantén tu línea y acelera limpio.',
+          'Te viene {backNameSafe}. Puerta cerrada, sin frenar de más.',
+          'Te viene {backNameSafe}. Protege interior.',
+          'Te viene {backNameSafe}. Defiende con trazada, no con golpes.',
+          'Te viene {backNameSafe}. Salida fuerte, manos suaves.',
+          'Te viene {backNameSafe}. No te abras en la entrada.',
+          'Te viene {backNameSafe}. Respira y controla.',
+          'Te viene {backNameSafe}. Todo limpio.',
+          'Te viene {backNameSafe}. Sin errores.',
+          'Te viene {backNameSafe}. Calma, lo tienes.',
+          '{backNameSafe} a {backSecStr}. Mantén tu línea y acelera limpio.',
+          '{backNameSafe} a {backSecStr}. Puerta cerrada, sin frenar de más.',
+          '{backNameSafe} a {backSecStr}. Protege interior.',
+          '{backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
+          '{backNameSafe} a {backSecStr}. Salida fuerte, manos suaves.',
+          '{backNameSafe} a {backSecStr}. No te abras en la entrada.',
+          '{backNameSafe} a {backSecStr}. Respira y controla.',
+          '{backNameSafe} a {backSecStr}. Todo limpio.',
+          '{backNameSafe} a {backSecStr}. Sin errores.',
+          '{backNameSafe} a {backSecStr}. Calma, lo tienes.',
+          'Ojo atrás con {backNameSafe}. Mantén tu línea y acelera limpio.',
+          'Ojo atrás con {backNameSafe}. Puerta cerrada, sin frenar de más.',
+          'Ojo atrás con {backNameSafe}. Protege interior.',
+          'Ojo atrás con {backNameSafe}. Defiende con trazada, no con golpes.',
+          'Ojo atrás con {backNameSafe}. Salida fuerte, manos suaves.',
+            'Defensa: te huelen. Cierra con cabeza.',
+            'Defensa: hoy no hay regalos.'
+          ]
+        },
+        fight: {
+          spicy: ['Hay pelea. Prioriza salida y cero errores.',
           'Hay pelea. Prioriza salida y cero errores. T  puedes.',
           'Hay pelea. Prioriza salida y cero errores. Paso a paso.',
           'Hay pelea. Prioriza salida y cero errores. Sin drama.',
@@ -9708,14 +10392,42 @@ function rdPick(variants, key) {
           'No todo es ahora, cuida el coche. T  puedes.',
           'No todo es ahora, cuida el coche. Paso a paso.',
           'No todo es ahora, cuida el coche. Sin drama.',
-          'No todo es ahora, cuida el coche. Limpio y rápido.'
-        ],
+          'No todo es ahora, cuida el coche. Limpio y rápido.'],
+          spicy_plus: ['Hay pelea. Prioriza salida y cero errores.',
+          'Hay pelea. Prioriza salida y cero errores. T  puedes.',
+          'Hay pelea. Prioriza salida y cero errores. Paso a paso.',
+          'Hay pelea. Prioriza salida y cero errores. Sin drama.',
+          'Hay pelea. Prioriza salida y cero errores. Limpio y rápido.',
+          'Dos frentes. Cabeza fría, trazada limpia.',
+          'Dos frentes. Cabeza fría, trazada limpia. T  puedes.',
+          'Dos frentes. Cabeza fría, trazada limpia. Paso a paso.',
+          'Dos frentes. Cabeza fría, trazada limpia. Sin drama.',
+          'Dos frentes. Cabeza fría, trazada limpia. Limpio y rápido.',
+          'tráfico. No te enganches, s  inteligente.',
+          'tráfico. No te enganches, s  inteligente. T  puedes.',
+          'tráfico. No te enganches, s  inteligente. Paso a paso.',
+          'tráfico. No te enganches, s  inteligente. Sin drama.',
+          'tráfico. No te enganches, s  inteligente. Limpio y rápido.',
+          'Mantén la calma, el pase llega.',
+          'Mantén la calma, el pase llega. T  puedes.',
+          'Mantén la calma, el pase llega. Paso a paso.',
+          'Mantén la calma, el pase llega. Sin drama.',
+          'Mantén la calma, el pase llega. Limpio y rápido.',
+          'No todo es ahora, cuida el coche.',
+          'No todo es ahora, cuida el coche. T  puedes.',
+          'No todo es ahora, cuida el coche. Paso a paso.',
+          'No todo es ahora, cuida el coche. Sin drama.',
+          'No todo es ahora, cuida el coche. Limpio y rápido.',
+            'Duelo: el que pestañea, paga.',
+            'Duelo: precisión, no esperanza.'
+          ]
+        },
         blueflag: [
-          'Bandera azul. Deja pasar sin perder la l nea.',
-          'Bandera azul. Deja pasar sin perder la l nea. Con seguridad.',
-          'Bandera azul. Deja pasar sin perder la l nea. Sin drama.',
-          'Bandera azul. Deja pasar sin perder la l nea. Todo limpio.',
-          'Bandera azul. Deja pasar sin perder la l nea. Sin riesgos.',
+          'Bandera azul. Deja pasar sin perder la línea.',
+          'Bandera azul. Deja pasar sin perder la línea. Con seguridad.',
+          'Bandera azul. Deja pasar sin perder la línea. Sin drama.',
+          'Bandera azul. Deja pasar sin perder la línea. Todo limpio.',
+          'Bandera azul. Deja pasar sin perder la línea. Sin riesgos.',
           'Bandera azul. Cede seguro y sigue tu ritmo.',
           'Bandera azul. Cede seguro y sigue tu ritmo. Con seguridad.',
           'Bandera azul. Cede seguro y sigue tu ritmo. Sin drama.',
@@ -9726,19 +10438,19 @@ function rdPick(variants, key) {
           'Bandera azul. Respeta, no arriesgues. Sin drama.',
           'Bandera azul. Respeta, no arriesgues. Todo limpio.',
           'Bandera azul. Respeta, no arriesgues. Sin riesgos.',
-          'Bandera azul. l nea predecible.',
-          'Bandera azul. l nea predecible. Con seguridad.',
-          'Bandera azul. l nea predecible. Sin drama.',
-          'Bandera azul. l nea predecible. Todo limpio.',
-          'Bandera azul. l nea predecible. Sin riesgos.',
+          'Bandera azul. línea predecible.',
+          'Bandera azul. línea predecible. Con seguridad.',
+          'Bandera azul. línea predecible. Sin drama.',
+          'Bandera azul. línea predecible. Todo limpio.',
+          'Bandera azul. línea predecible. Sin riesgos.',
           'Bandera azul. Abre espacio en salida.',
           'Bandera azul. Abre espacio en salida. Con seguridad.',
           'Bandera azul. Abre espacio en salida. Sin drama.',
           'Bandera azul. Abre espacio en salida. Todo limpio.',
           'Bandera azul. Abre espacio en salida. Sin riesgos.'
         ],
-        front06: [
-          'Buen cierre con {frontNameSafe}. Si te abre, vas.',
+        front06: {
+          spicy: ['Buen cierre con {frontNameSafe}. Si te abre, vas.',
           'Buen cierre con {frontNameSafe}. Mantén presión.',
           'Buen cierre con {frontNameSafe}. Una vuelta más y lo tienes.',
           'Buen cierre con {frontNameSafe}. Cuida la salida.',
@@ -9762,35 +10474,89 @@ function rdPick(variants, key) {
           'A {frontSecStr} de {frontNameSafe}. Cuida la salida.',
           'A {frontSecStr} de {frontNameSafe}. No fuerces la entrada.',
           'A {frontSecStr} de {frontNameSafe}. Con calma, el pase llega.',
-          'A {frontSecStr} de {frontNameSafe}. Todo limpio.'
-        ],
-        back06: [
-          '{backNameSafe} est encima. Defiende con trazada, no con golpes.',
-          '{backNameSafe} est encima. l nea firme y salida fuerte.',
-          '{backNameSafe} est encima. Sin errores, lo aguantas.',
-          '{backNameSafe} est encima. Calma y control.',
-          '{backNameSafe} est encima. No te abras en la entrada.',
-          '{backNameSafe} est encima. Puerta cerrada.',
-          '{backNameSafe} est encima. Respira y acelera limpio.',
-          '{backNameSafe} est encima. Cubre interior.',
-          '{backNameSafe} est encima. Todo limpio.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
-          'presión atr s: {backNameSafe} a {backSecStr}. l nea firme y salida fuerte.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Sin errores, lo aguantas.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Calma y control.',
-          'presión atr s: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Puerta cerrada.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Respira y acelera limpio.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Cubre interior.',
-          'presión atr s: {backNameSafe} a {backSecStr}. Todo limpio.',
+          'A {frontSecStr} de {frontNameSafe}. Todo limpio.'],
+          spicy_plus: ['Buen cierre con {frontNameSafe}. Si te abre, vas.',
+          'Buen cierre con {frontNameSafe}. Mantén presión.',
+          'Buen cierre con {frontNameSafe}. Una vuelta más y lo tienes.',
+          'Buen cierre con {frontNameSafe}. Cuida la salida.',
+          'Buen cierre con {frontNameSafe}. No fuerces la entrada.',
+          'Buen cierre con {frontNameSafe}. Con calma, el pase llega.',
+          'Buen cierre con {frontNameSafe}. Todo limpio.',
+          'Buen cierre con {frontNameSafe}. Salida fuerte.',
+          'Buen cierre con {frontNameSafe}. Aprovecha el error.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Si te abre, vas.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Mantén presión.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Una vuelta más y lo tienes.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Cuida la salida.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. No fuerces la entrada.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Con calma, el pase llega.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Todo limpio.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Salida fuerte.',
+          'Gap corto con {frontNameSafe}: {frontSecStr}. Aprovecha el error.',
+          'A {frontSecStr} de {frontNameSafe}. Si te abre, vas.',
+          'A {frontSecStr} de {frontNameSafe}. Mantén presión.',
+          'A {frontSecStr} de {frontNameSafe}. Una vuelta más y lo tienes.',
+          'A {frontSecStr} de {frontNameSafe}. Cuida la salida.',
+          'A {frontSecStr} de {frontNameSafe}. No fuerces la entrada.',
+          'A {frontSecStr} de {frontNameSafe}. Con calma, el pase llega.',
+          'A {frontSecStr} de {frontNameSafe}. Todo limpio.',
+            'Frente: lo tienes. Ejecuta el pase seguro.'
+          ]
+        },
+        back06: {
+          spicy: ['{backNameSafe} está encima. Defiende con trazada, no con golpes.',
+          '{backNameSafe} está encima. línea firme y salida fuerte.',
+          '{backNameSafe} está encima. Sin errores, lo aguantas.',
+          '{backNameSafe} está encima. Calma y control.',
+          '{backNameSafe} está encima. No te abras en la entrada.',
+          '{backNameSafe} está encima. Puerta cerrada.',
+          '{backNameSafe} está encima. Respira y acelera limpio.',
+          '{backNameSafe} está encima. Cubre interior.',
+          '{backNameSafe} está encima. Todo limpio.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
+          'presión atrás: {backNameSafe} a {backSecStr}. línea firme y salida fuerte.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Sin errores, lo aguantas.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Calma y control.',
+          'presión atrás: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Puerta cerrada.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Respira y acelera limpio.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Cubre interior.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Todo limpio.',
           '{backNameSafe} en rango: {backSecStr}. Defiende con trazada, no con golpes.',
-          '{backNameSafe} en rango: {backSecStr}. l nea firme y salida fuerte.',
+          '{backNameSafe} en rango: {backSecStr}. línea firme y salida fuerte.',
           '{backNameSafe} en rango: {backSecStr}. Sin errores, lo aguantas.',
           '{backNameSafe} en rango: {backSecStr}. Calma y control.',
           '{backNameSafe} en rango: {backSecStr}. No te abras en la entrada.',
           '{backNameSafe} en rango: {backSecStr}. Puerta cerrada.',
-          '{backNameSafe} en rango: {backSecStr}. Respira y acelera limpio.'
-        ],
+          '{backNameSafe} en rango: {backSecStr}. Respira y acelera limpio.'],
+          spicy_plus: ['{backNameSafe} está encima. Defiende con trazada, no con golpes.',
+          '{backNameSafe} está encima. línea firme y salida fuerte.',
+          '{backNameSafe} está encima. Sin errores, lo aguantas.',
+          '{backNameSafe} está encima. Calma y control.',
+          '{backNameSafe} está encima. No te abras en la entrada.',
+          '{backNameSafe} está encima. Puerta cerrada.',
+          '{backNameSafe} está encima. Respira y acelera limpio.',
+          '{backNameSafe} está encima. Cubre interior.',
+          '{backNameSafe} está encima. Todo limpio.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
+          'presión atrás: {backNameSafe} a {backSecStr}. línea firme y salida fuerte.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Sin errores, lo aguantas.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Calma y control.',
+          'presión atrás: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Puerta cerrada.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Respira y acelera limpio.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Cubre interior.',
+          'presión atrás: {backNameSafe} a {backSecStr}. Todo limpio.',
+          '{backNameSafe} en rango: {backSecStr}. Defiende con trazada, no con golpes.',
+          '{backNameSafe} en rango: {backSecStr}. línea firme y salida fuerte.',
+          '{backNameSafe} en rango: {backSecStr}. Sin errores, lo aguantas.',
+          '{backNameSafe} en rango: {backSecStr}. Calma y control.',
+          '{backNameSafe} en rango: {backSecStr}. No te abras en la entrada.',
+          '{backNameSafe} en rango: {backSecStr}. Puerta cerrada.',
+          '{backNameSafe} en rango: {backSecStr}. Respira y acelera limpio.',
+            'Atrás: presión alta. No regales el apex.'
+          ]
+        },
         pos: [
           'Ahora P{posNow}. Respira, vuelve al plan.',
           'Ahora P{posNow}. Calma y ritmo.',
@@ -9819,21 +10585,21 @@ function rdPick(variants, key) {
           'posición P{posNow}. Sin errores.'
         ],
         leader: [
-          'El líder marca el ritmo. T  marca tu l nea.',
-          'El líder marca el ritmo. T  marca tu l nea. T  puedes.',
-          'El líder marca el ritmo. T  marca tu l nea. Paso a paso.',
-          'El líder marca el ritmo. T  marca tu l nea. Sin errores.',
-          'El líder marca el ritmo. T  marca tu l nea. Control.',
+          'El líder marca el ritmo. T  marca tu línea.',
+          'El líder marca el ritmo. T  marca tu línea. T  puedes.',
+          'El líder marca el ritmo. T  marca tu línea. Paso a paso.',
+          'El líder marca el ritmo. T  marca tu línea. Sin errores.',
+          'El líder marca el ritmo. T  marca tu línea. Control.',
           'Referencia del líder, sin obsesionarte.',
           'Referencia del líder, sin obsesionarte. T  puedes.',
           'Referencia del líder, sin obsesionarte. Paso a paso.',
           'Referencia del líder, sin obsesionarte. Sin errores.',
           'Referencia del líder, sin obsesionarte. Control.',
-          'líder al frente. enf cate en tus marcas.',
-          'líder al frente. enf cate en tus marcas. T  puedes.',
-          'líder al frente. enf cate en tus marcas. Paso a paso.',
-          'líder al frente. enf cate en tus marcas. Sin errores.',
-          'líder al frente. enf cate en tus marcas. Control.',
+          'líder al frente. enfócate en tus marcas.',
+          'líder al frente. enfócate en tus marcas. T  puedes.',
+          'líder al frente. enfócate en tus marcas. Paso a paso.',
+          'líder al frente. enfócate en tus marcas. Sin errores.',
+          'líder al frente. enfócate en tus marcas. Control.',
           'Observa al líder y aprende la trazada.',
           'Observa al líder y aprende la trazada. T  puedes.',
           'Observa al líder y aprende la trazada. Paso a paso.',
@@ -9872,8 +10638,8 @@ function rdPick(variants, key) {
           'Podio cerca. Cuida la salida. Control.',
           'Podio cerca. Cuida la salida. Limpio y rápido.'
         ],
-        trend: [
-          'Ritmo mejorando. Mantén.',
+        trend: {
+          spicy: ['Ritmo mejorando. Mantén.',
           'Ritmo mejorando. Mantén. T  puedes.',
           'Ritmo mejorando. Mantén. Paso a paso.',
           'Ritmo mejorando. Mantén. Sin errores.',
@@ -9897,10 +10663,38 @@ function rdPick(variants, key) {
           'Ritmo irregular. Respira y repite. T  puedes.',
           'Ritmo irregular. Respira y repite. Paso a paso.',
           'Ritmo irregular. Respira y repite. Sin errores.',
-          'Ritmo irregular. Respira y repite. Control.'
-        ],
-        est: [
-          'estimación lista. Mantén el plan.',
+          'Ritmo irregular. Respira y repite. Control.'],
+          spicy_plus: ['Ritmo mejorando. Mantén.',
+          'Ritmo mejorando. Mantén. T  puedes.',
+          'Ritmo mejorando. Mantén. Paso a paso.',
+          'Ritmo mejorando. Mantén. Sin errores.',
+          'Ritmo mejorando. Mantén. Control.',
+          'Ritmo baj. Ajusta y sigue.',
+          'Ritmo baj. Ajusta y sigue. T  puedes.',
+          'Ritmo baj. Ajusta y sigue. Paso a paso.',
+          'Ritmo baj. Ajusta y sigue. Sin errores.',
+          'Ritmo baj. Ajusta y sigue. Control.',
+          'Consistente. Buen trabajo.',
+          'Consistente. Buen trabajo. T  puedes.',
+          'Consistente. Buen trabajo. Paso a paso.',
+          'Consistente. Buen trabajo. Sin errores.',
+          'Consistente. Buen trabajo. Control.',
+          'Ritmo slido. No cambies.',
+          'Ritmo slido. No cambies. T  puedes.',
+          'Ritmo slido. No cambies. Paso a paso.',
+          'Ritmo slido. No cambies. Sin errores.',
+          'Ritmo slido. No cambies. Control.',
+          'Ritmo irregular. Respira y repite.',
+          'Ritmo irregular. Respira y repite. T  puedes.',
+          'Ritmo irregular. Respira y repite. Paso a paso.',
+          'Ritmo irregular. Respira y repite. Sin errores.',
+          'Ritmo irregular. Respira y repite. Control.',
+            'Gap: si baja, ciérralo. Si sube, corrige ya.',
+            'Gap: control total, sin excusas.'
+          ]
+        },
+        est: {
+          spicy: ['estimación lista. Mantén el plan.',
           'estimación lista. Mantén el plan. T  puedes.',
           'estimación lista. Mantén el plan. Sin drama.',
           'estimación lista. Mantén el plan. Limpio.',
@@ -9924,10 +10718,37 @@ function rdPick(variants, key) {
           'estimación ok. Paso a paso. T  puedes.',
           'estimación ok. Paso a paso. Sin drama.',
           'estimación ok. Paso a paso. Limpio.',
-          'estimación ok. Paso a paso. Control.'
-        ],
-        bestlap: [
-          'Best lap. Bien ahí, repite con calma.',
+          'estimación ok. Paso a paso. Control.'],
+          spicy_plus: ['estimación lista. Mantén el plan.',
+          'estimación lista. Mantén el plan. T  puedes.',
+          'estimación lista. Mantén el plan. Sin drama.',
+          'estimación lista. Mantén el plan. Limpio.',
+          'estimación lista. Mantén el plan. Control.',
+          'estimación cambi. Ajusta y sigue.',
+          'estimación cambi. Ajusta y sigue. T  puedes.',
+          'estimación cambi. Ajusta y sigue. Sin drama.',
+          'estimación cambi. Ajusta y sigue. Limpio.',
+          'estimación cambi. Ajusta y sigue. Control.',
+          'estimación estable. No te desconcentres.',
+          'estimación estable. No te desconcentres. T  puedes.',
+          'estimación estable. No te desconcentres. Sin drama.',
+          'estimación estable. No te desconcentres. Limpio.',
+          'estimación estable. No te desconcentres. Control.',
+          'estimación marcada. Todo limpio.',
+          'estimación marcada. Todo limpio. T  puedes.',
+          'estimación marcada. Todo limpio. Sin drama.',
+          'estimación marcada. Todo limpio. Limpio.',
+          'estimación marcada. Todo limpio. Control.',
+          'estimación ok. Paso a paso.',
+          'estimación ok. Paso a paso. T  puedes.',
+          'estimación ok. Paso a paso. Sin drama.',
+          'estimación ok. Paso a paso. Limpio.',
+          'estimación ok. Paso a paso. Control.',
+            'Estimado: cuida el ritmo, no el ego.'
+          ]
+        },
+        bestlap: {
+          spicy: ['Best lap. Bien ahí, repite con calma.',
           'Best lap. Bien ahí, repite con calma. Paso a paso.',
           'Best lap. Bien ahí, repite con calma. Control.',
           'Best lap. Bien ahí, repite con calma. Sin errores.',
@@ -9951,36 +10772,87 @@ function rdPick(variants, key) {
           'Best lap. Ahora consistencia. Paso a paso.',
           'Best lap. Ahora consistencia. Control.',
           'Best lap. Ahora consistencia. Sin errores.',
-          'Best lap. Ahora consistencia. Limpio.'
-        ],
+          'Best lap. Ahora consistencia. Limpio.'],
+          spicy_plus: ['Best lap. Bien ahí, repite con calma.',
+          'Best lap. Bien ahí, repite con calma. Paso a paso.',
+          'Best lap. Bien ahí, repite con calma. Control.',
+          'Best lap. Bien ahí, repite con calma. Sin errores.',
+          'Best lap. Bien ahí, repite con calma. Limpio.',
+          'Nueva best lap. Buen trabajo.',
+          'Nueva best lap. Buen trabajo. Paso a paso.',
+          'Nueva best lap. Buen trabajo. Control.',
+          'Nueva best lap. Buen trabajo. Sin errores.',
+          'Nueva best lap. Buen trabajo. Limpio.',
+          'Best lap confirmada. Mantén.',
+          'Best lap confirmada. Mantén. Paso a paso.',
+          'Best lap confirmada. Mantén. Control.',
+          'Best lap confirmada. Mantén. Sin errores.',
+          'Best lap confirmada. Mantén. Limpio.',
+          'Mejoraste best lap. Control total.',
+          'Mejoraste best lap. Control total. Paso a paso.',
+          'Mejoraste best lap. Control total. Control.',
+          'Mejoraste best lap. Control total. Sin errores.',
+          'Mejoraste best lap. Control total. Limpio.',
+          'Best lap. Ahora consistencia.',
+          'Best lap. Ahora consistencia. Paso a paso.',
+          'Best lap. Ahora consistencia. Control.',
+          'Best lap. Ahora consistencia. Sin errores.',
+          'Best lap. Ahora consistencia. Limpio.',
+            'Best Lap: bien. Pero no te enamores del récord.'
+          ]
+        },
 
-        cons10: [
-          'Consistencia.',
+        cons10: {
+          spicy: ['Consistencia.',
           'Metrónomo.',
           'Estable.',
-          'Buen control.'
-        ],
+          'Buen control.'],
+          spicy_plus: ['Consistencia.',
+          'Metrónomo.',
+          'Estable.',
+          'Buen control.',
+            'Consistencia: eso gana carreras. Sosténlo.'
+          ]
+        },
 
-        netgain: [
-          'Buena ganancia.',
+        netgain: {
+          spicy: ['Buena ganancia.',
           'Remontada limpia.',
           'Posiciones a favor.',
-          'Eso suma.'
-        ],
+          'Eso suma.'],
+          spicy_plus: ['Buena ganancia.',
+          'Remontada limpia.',
+          'Posiciones a favor.',
+          'Eso suma.',
+            'Posición: suma sin arriesgar gratis.'
+          ]
+        },
 
-        ritmo_up: [
-          'Ritmo arriba.',
+        ritmo_up: {
+          spicy: ['Ritmo arriba.',
           'Vienes cerrando.',
           'Mejorando el paso.',
-          'Apretando bien.'
-        ],
+          'Apretando bien.'],
+          spicy_plus: ['Ritmo arriba.',
+          'Vienes cerrando.',
+          'Mejorando el paso.',
+          'Apretando bien.',
+            'Ritmo: va subiendo. Mantén el filo.'
+          ]
+        },
 
-        ritmo_down: [
-          'Ritmo bajó.',
+        ritmo_down: {
+          spicy: ['Ritmo bajó.',
           'Recupera el plan.',
           'Calma y limpio.',
-          'Vuelve a lo básico.'
-        ],
+          'Vuelve a lo básico.'],
+          spicy_plus: ['Ritmo bajó.',
+          'Recupera el plan.',
+          'Calma y limpio.',
+          'Vuelve a lo básico.',
+            'Ritmo: se cayó. Ajusta ya, sin drama.'
+          ]
+        },
 
         total: [
           'Suma vueltas.',
@@ -10022,7 +10894,15 @@ function rdPick(variants, key) {
       const __prefixIds = new Set(['cons10','netgain','ritmo_up','ritmo_down','total','box']);
       const __applyPrefix = (modeKey, idKey, fallback) => {
         try {
-          const arr = (RD_PHRASES && RD_PHRASES[modeKey] && RD_PHRASES[modeKey][idKey]) ? RD_PHRASES[modeKey][idKey] : null;
+          let arr = (RD_PHRASES && RD_PHRASES[modeKey] && RD_PHRASES[modeKey][idKey]) ? RD_PHRASES[modeKey][idKey] : null;
+          // Soporta bancos por nivel: {spicy:[...], spicy_plus:[...]}
+          if (arr && !Array.isArray(arr) && typeof arr === 'object') {
+            const lvl = (typeof getAutoSpiceLevel === 'function')
+              ? getAutoSpiceLevel((typeof currentSessionInfo !== 'undefined') ? currentSessionInfo : null)
+              : 'spicy';
+            const usePremium = !!arr.premium && Array.isArray(arr.premium) && arr.premium.length && (Math.random() < 0.12);
+            arr = usePremium ? arr.premium : (arr[lvl] || arr.spicy || arr.spicy_plus);
+          }
           if (arr && arr.length) {
             const pre = fill(rdPick(arr, modeKey[0] + '_p_' + idKey));
             const bt = String(baseText || '').trim();
@@ -10036,7 +10916,7 @@ function rdPick(variants, key) {
       const fill = (tpl) => {
         let s = String(tpl || '');
         s = s.replace(/\{frontNameSafe\}/g, c.frontNameSafe || 'el de adelante');
-        s = s.replace(/\{backNameSafe\}/g, c.backNameSafe || 'el de atrs');
+        s = s.replace(/\{backNameSafe\}/g, c.backNameSafe || 'el de atrás');
         s = s.replace(/\{frontSecStr\}/g, c.frontSecStr || '');
         s = s.replace(/\{backSecStr\}/g, c.backSecStr || '');
         s = s.replace(/\{posNow\}/g, String(posNow || 0));
@@ -10044,68 +10924,63 @@ function rdPick(variants, key) {
       };
 
 function rdMakeMangaBattleText(kind, c, mode) {
-  const front = (c && c.frontNameSafe) ? c.frontNameSafe : 'el de adelante';
-  const back  = (c && c.backNameSafe)  ? c.backNameSafe  : 'el de atrs';
-  const fs = (c && c.frontSecStr) ? c.frontSecStr : '';
-  const bs = (c && c.backSecStr)  ? c.backSecStr  : '';
+  // Duelo MANGA (ATK/DEF/DUEL) con nivel de picante automático:
+  // - MANGA/Quali: spicy
+  // - Finales: spicy_plus (10% más filoso)
+  const spice = (typeof getAutoSpiceLevel === 'function')
+    ? getAutoSpiceLevel((typeof currentSessionInfo !== 'undefined') ? currentSessionInfo : null)
+    : 'spicy';
 
-  // Plantillas cortas, tiles y con nombres. (MANGA = suave, pero con datos)
-  const attack = [
-    'Manga. {frontNameSafe} a {frontSecStr}. Limpio y lo cazas.',
-    'Manga. {frontNameSafe} a {frontSecStr}. Sal bien y cae el pase.',
-    'Manga. {frontNameSafe} a {frontSecStr}. Lnea fina, sin drama.',
-    'Manga. {frontNameSafe} a {frontSecStr}. Cero errores, aprieta.',
-    'Manga. {frontNameSafe} a {frontSecStr}. Dos vueltas as y lo tienes.',
-    'Manga. Vas por {frontNameSafe}. Gap {frontSecStr}.',
-    'Manga. {frontNameSafe} está tiro. {frontSecStr}.',
-    'Manga. Se ve el rebufo. {frontNameSafe} {frontSecStr}.',
-    'Manga. Ojo con {frontNameSafe}. {frontSecStr}.',
-    'Manga. Paciencia y traccin. {frontNameSafe} {frontSecStr}.',
-    'Manga. Si la salida es limpia, {frontNameSafe} cae. {frontSecStr}.',
-    'Manga. Ataque inteligente. {frontNameSafe} {frontSecStr}.',
-    'Manga. No lo forces, provcalo. {frontNameSafe} {frontSecStr}.',
-    'Manga. Gap rico para cazar. {frontNameSafe} {frontSecStr}.',
-    'Manga. Est en ventana. {frontNameSafe} {frontSecStr}.'
+  const atk_spicy = [
+    'Manga. {frontNameSafe} a {frontSecStr}. Línea limpia, pase con cabeza.',
+    'Manga. Gap {frontSecStr} a {frontNameSafe}. Presión sin drama.',
+    'Manga. {frontNameSafe} a {frontSecStr}. Salida fuerte y cae el pase.',
+    'Manga. A {frontSecStr} de {frontNameSafe}. Paciencia y ejecución.',
+    'Manga. {frontNameSafe} está a tiro {frontSecStr}. No forces, ejecútalo.',
+    'Manga. {frontNameSafe} a {frontSecStr}. Mide la entrada, cobra la salida.',
+    'Manga. {frontSecStr} a {frontNameSafe}. Ojos al apex, mano fina.',
+    'Manga. Se viene el pase. {frontNameSafe} {frontSecStr}.'
   ];
+  const atk_spicy_plus = atk_spicy.concat([
+    'Manga. {frontNameSafe} a {frontSecStr}. Se cobra esta vuelta.',
+    'Manga. Gap {frontSecStr}. Aquí se cierra, no se pide permiso.'
+  ]);
 
-  const defense = [
-    'Manga. {backNameSafe} a {backSecStr}. Cierra puertas, suave.',
-    'Manga. {backNameSafe} a {backSecStr}. Sin espejo, pero sin regalo.',
-    'Manga. {backNameSafe} a {backSecStr}. Marca el apex y listo.',
-    'Manga. {backNameSafe} a {backSecStr}. Control, no ansiedad.',
-    'Manga. {backNameSafe} a {backSecStr}. Si te equivocas, te muerde.',
-    'Manga. Te vienen oliendo. {backNameSafe} {backSecStr}.',
-    'Manga. Defensa fina. {backNameSafe} {backSecStr}.',
-    'Manga. No des espacio gratis. {backNameSafe} {backSecStr}.',
-    'Manga. Mantn tu lnea. {backNameSafe} {backSecStr}.',
-    'Manga. Respira. {backNameSafe} est encima. {backSecStr}.',
-    'Manga. Sal de curva bien, y se apaga. {backNameSafe} {backSecStr}.',
-    'Manga. No te enredes. {backNameSafe} {backSecStr}.',
-    'Manga. Si te presiona, tu respuesta es limpieza. {backNameSafe} {backSecStr}.',
-    'Manga. Cero contactos. {backNameSafe} {backSecStr}.',
-    'Manga. Aguanta el ritmo. {backNameSafe} {backSecStr}.'
+  const def_spicy = [
+    'Manga. {backNameSafe} a {backSecStr}. Cierra la puerta con elegancia.',
+    'Manga. {backSecStr} detrás. No regales el apex.',
+    'Manga. Te huelen a {backSecStr}. Sin errores tontos.',
+    'Manga. {backNameSafe} {backSecStr}. Defensa limpia, sin drama.',
+    'Manga. {backSecStr} detrás. Orden y ejecución.',
+    'Manga. {backNameSafe} a {backSecStr}. Línea firme, volante suave.',
+    'Manga. {backSecStr} detrás. Que el cronómetro aplauda.'
   ];
+  const def_spicy_plus = def_spicy.concat([
+    'Manga. {backSecStr} detrás. Hoy no hay regalos.',
+    'Manga. {backNameSafe} a {backSecStr}. Defiende y cobra.'
+  ]);
 
-  const fight = [
-    'Manga. Duelo doble: adelante {frontSecStr}, atrs {backSecStr}.',
-    'Manga. Ests en sndwich. Adelante {frontSecStr}, atrs {backSecStr}.',
-    'Manga. Se viene pelea: {frontNameSafe} {frontSecStr}, {backNameSafe} {backSecStr}.',
-    'Manga. Tres autos en un respiro. Mantn calma.',
+  const duel_spicy = [
+    'Manga. Sándwich: {frontSecStr} adelante, {backSecStr} atrás. Cabeza fría.',
+    'Manga. Duelo doble. Línea limpia, cero contactos.',
+    'Manga. Batalla cerrada: {frontNameSafe} {frontSecStr}, {backNameSafe} {backSecStr}.',
+    'Manga. Tres autos en un suspiro. Línea y freno.',
     'Manga. Esto es ajedrez en miniatura. No regales.',
-    'Manga. Lnea limpia, manos suaves. Duelo real.',
-    'Manga. Cada error cuesta dos posiciones. Ojo.',
-    'Manga. Juega con la salida, no con el choque.',
-    'Manga. Batalla cerrada. Decide con cabeza fra.',
-    'Manga. Si te pones nervioso, ya perdiste. Respira.'
+    'Manga. Decide con cabeza fría. {frontSecStr} delante, {backSecStr} detrás.',
+    'Manga. Control total. Adelante {frontSecStr}, atrás {backSecStr}.'
   ];
+  const duel_spicy_plus = duel_spicy.concat([
+    'Manga. Duelo doble. El que pestañea, paga.',
+    'Manga. Batalla cerrada. Precisión, no esperanza.'
+  ]);
 
-  let bank = null;
-  if (kind === 'attack') bank = attack;
-  else if (kind === 'defense') bank = defense;
-  else if (kind === 'fight') bank = fight;
+  let bank;
+  if (kind === 'attack') bank = (spice === 'spicy_plus') ? atk_spicy_plus : atk_spicy;
+  else if (kind === 'defense') bank = (spice === 'spicy_plus') ? def_spicy_plus : def_spicy;
+  else bank = (spice === 'spicy_plus') ? duel_spicy_plus : duel_spicy;
 
-  if (!bank || !bank.length) return '';
-  return fill(rdPick(bank, 'mb_' + String(mode || 'x') + '_' + kind));
+  const key = 'mb_' + String(mode || 'x') + '_' + String(kind || 'fight') + '_' + String(spice || 'spicy');
+  return fill(rdPick(bank, key));
 }
 
     
@@ -10115,13 +10990,43 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
   const out = rdMakeMangaBattleText(id, c, mode);
   if (out) return out;
 
-  const arr = RD_PHRASES[mode] && RD_PHRASES[mode].manga;
+  const m0 = RD_PHRASES[mode] && RD_PHRASES[mode].manga;
+  let arr = null;
+  if (Array.isArray(m0)) arr = m0;
+  else if (m0 && typeof m0 === 'object'){
+    const lvl = getAutoSpiceLevel(currentSessionInfo);
+    const usePremium = !!m0.premium && Array.isArray(m0.premium) && m0.premium.length && (Math.random() < 0.12);
+    arr = usePremium ? m0.premium : (m0[lvl] || m0.spicy || m0.spicy_plus);
+  }
   if (arr && arr.length) return fill(rdPick(arr, mode[0] + '_manga'));
 }
+
+ // Trend/Gaps: nivel de picante automático (spicy / spicy_plus)
+ if (id === 'trend') {
+   const t0 = RD_PHRASES[mode] && RD_PHRASES[mode].trend;
+   let arr = null;
+   if (Array.isArray(t0)) arr = t0;
+   else if (t0 && typeof t0 === 'object') {
+     const lvl = (typeof getAutoSpiceLevel === 'function')
+       ? getAutoSpiceLevel((typeof currentSessionInfo !== 'undefined') ? currentSessionInfo : null)
+       : 'spicy';
+     const usePremium = !!t0.premium && Array.isArray(t0.premium) && t0.premium.length && (Math.random() < 0.12);
+     arr = usePremium ? t0.premium : (t0[lvl] || t0.spicy || t0.spicy_plus);
+   }
+   if (arr && arr.length) return fill(rdPick(arr, mode[0] + '_trend'));
+ }
+
 // Seleccin por modo
       if (mode === 'minimal') {
         if (__prefixIds.has(id)) return __applyPrefix('minimal', id, String(baseText || '').trim());
-        const arr = RD_PHRASES.minimal[id] || null;
+        let arr = RD_PHRASES.minimal[id] || null;
+        if (arr && !Array.isArray(arr) && typeof arr === 'object') {
+          const lvl = (typeof getAutoSpiceLevel === 'function')
+            ? getAutoSpiceLevel((typeof currentSessionInfo !== 'undefined') ? currentSessionInfo : null)
+            : 'spicy';
+          const usePremium = !!arr.premium && Array.isArray(arr.premium) && arr.premium.length && (Math.random() < 0.12);
+          arr = usePremium ? arr.premium : (arr[lvl] || arr.spicy || arr.spicy_plus);
+        }
         if (arr && arr.length) return fill(rdPick(arr, 'm_' + id));
         if (id === 'pos' && posNow) return `P${posNow}.`;
         return String(baseText || '').trim();
@@ -10129,7 +11034,14 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
 
       if (mode === 'coach') {
         if (__prefixIds.has(id)) return __applyPrefix('coach', id, String(baseText || '').trim());
-        const arr = RD_PHRASES.coach[id] || null;
+        let arr = RD_PHRASES.coach[id] || null;
+        if (arr && !Array.isArray(arr) && typeof arr === 'object') {
+          const lvl = (typeof getAutoSpiceLevel === 'function')
+            ? getAutoSpiceLevel((typeof currentSessionInfo !== 'undefined') ? currentSessionInfo : null)
+            : 'spicy';
+          const usePremium = !!arr.premium && Array.isArray(arr.premium) && arr.premium.length && (Math.random() < 0.12);
+          arr = usePremium ? arr.premium : (arr[lvl] || arr.spicy || arr.spicy_plus);
+        }
         if (arr && arr.length) return fill(rdPick(arr, 'c_' + id));
         return String(baseText || '').trim();
       }
@@ -10144,7 +11056,14 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
         const arr = RD_PHRASES.stratega['defense_' + tier] || RD_PHRASES.stratega.defense_mid;
         return fill(rdPick(arr, 's_def_' + tier));
       }
-      const arr = RD_PHRASES.stratega[id] || null;
+      let arr = RD_PHRASES.stratega[id] || null;
+      if (arr && !Array.isArray(arr) && typeof arr === 'object') {
+        const lvl = (typeof getAutoSpiceLevel === 'function')
+          ? getAutoSpiceLevel((typeof currentSessionInfo !== 'undefined') ? currentSessionInfo : null)
+          : 'spicy';
+        const usePremium = !!arr.premium && Array.isArray(arr.premium) && arr.premium.length && (Math.random() < 0.12);
+        arr = usePremium ? arr.premium : (arr[lvl] || arr.spicy || arr.spicy_plus);
+      }
       if (arr && arr.length) return fill(rdPick(arr, 's_' + id));
       return String(baseText || '').trim();
     }
@@ -10281,7 +11200,7 @@ if (isManga && (id === 'attack' || id === 'defense' || id === 'fight')) {
         return;
       }
 
-      // Si est en debounce, actualiza y no hables an
+      // Si está en debounce, actualiza y no hables an
       if (posDropDebounceTimer) {
         posDropDebounceLatest = to;
         return;
@@ -11230,7 +12149,7 @@ let __ttsStartGuard = 0;
         s = s.replace(/\b(\d+)\s*ms\b/gi, (m, n) => __msToSpeech(n));
 
         // Diccionario r\xe1pido de tildes y pronunciaci\xf3n (TTS)
-        // - evita lecturas raras por falta de acento ("basico") o por encoding/recortes (ej. "líder", "lnea")
+        // - evita lecturas raras por falta de acento ("basico") o por encoding/recortes (ej. "líder", "línea")
         const __dict = [
           [/\bbasico\b/gi, 'b\xe1sico'],
           [/\bbásico\b/gi, 'b\xe1sico'],
@@ -11250,7 +12169,7 @@ let __ttsStartGuard = 0;
           [/\btrafico\b/gi, 'tr\xe1fico'],
           [/\btrfico\b/gi, 'tr\xe1fico'],
           [/\blinea\b/gi, 'l\xednea'],
-          [/\blnea\b/gi, 'l\xednea'],
+          [/\blínea\b/gi, 'l\xednea'],
           [/\bpresion\b/gi, 'presi\xf3n'],
           [/\bpresin\b/gi, 'presi\xf3n'],
           [/\batras\b/gi, 'atr\xe1s'],
@@ -11742,7 +12661,7 @@ function forceTtsRecover(reason = ''){
     // "Soft recover": reanuda motor y drena cola sin spamear cancel()
     try { if (typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e){}
 
-    // Solo cancela si ya estaba hablando y el motivo es "stuck/idle" (evita romper unlock/primer speak)
+    // Solo cancela si ya estába hablando y el motivo es "stuck/idle" (evita romper unlock/primer speak)
     try {
       const r = String(reason || '');
       if (window.speechSynthesis.speaking && (r.includes('stuck') || r.includes('idle') || r.includes('recover'))) {
@@ -12143,7 +13062,7 @@ let __ttsUnlockedOnce = false;
           pendingAutoVoiceUnlock = false;
         }
       } catch(e) {}
-let __ttsCancelShieldUntil = 0; // evita cancelar mientras se esta desbloqueando (iPhone)
+let __ttsCancelShieldUntil = 0; // evita cancelar mientras se está desbloqueando (iPhone)
 
 let __ttsUnlockInFlight = false;
 let __ttsUnlockStartedAt = 0;
@@ -12824,6 +13743,10 @@ spotterButtons.forEach(btn => {
     let raceData = null;
     let selectedPilotKey = '';
     let selectedPilotFirstDetectBeeped = false;// hotfix: init without undefined k
+    let lastFollowPersonSig = ''; // normalized person signature for auto-reacquire in training
+    let lastFollowPersonRaw = ''; // last seen display name base
+    let lastFollowSeenAt = 0;
+    let autoReacquireCooldownUntil = 0;
 
     
     var pendingAutoVoiceUnlock = false;
@@ -13163,6 +14086,101 @@ function setLiveStatus(isOnline) {
     }
 
 
+
+    function normalizePersonName(name) {
+      try {
+        let s = (name == null) ? '' : String(name);
+        s = s.trim().toLowerCase();
+        if (!s) return '';
+        // remove diacritics (línea -> linea)
+        try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch(e) {}
+        // remove parentheses content
+        s = s.replace(/\([^)]*\)/g, ' ');
+        // common separators for car/model appended (keep left side)
+        s = s.split(' - ')[0];
+        s = s.split('|')[0];
+        // remove extra symbols and numbers that often encode car/hashtag
+        s = s.replace(/[#\d]+/g, ' ');
+        s = s.replace(/[^a-z\s]/g, ' ');
+        s = s.replace(/\s{2,}/g, ' ').trim();
+        // keep up to first 3 tokens (stable identity)
+        const parts = s.split(' ').filter(Boolean);
+        return parts.slice(0, 3).join(' ');
+      } catch(e) { return ''; }
+    }
+
+    function autoReacquireFollowIfNeeded(rawRace) {
+      try {
+        // only in training (no event name)
+        const rn = rawRace && rawRace.raceName != null ? String(rawRace.raceName).trim() : '';
+        const trainingMode = (!rn); // when title falls back to Spotter_5.0.1
+        if (!trainingMode) return;
+
+        const now = Date.now();
+        if (now < autoReacquireCooldownUntil) return;
+
+        const rows = (raceData && Array.isArray(raceData.classification)) ? raceData.classification : [];
+        if (!rows.length) return;
+
+        // establish target signature
+        if (selectedPilotKey) {
+          // selectedPilotKey is already normalized key; derive signature from it
+          const sig = normalizePersonName(selectedPilotKey);
+          if (sig) {
+            lastFollowPersonSig = sig;
+            lastFollowPersonRaw = selectedPilotKey;
+            lastFollowSeenAt = now;
+            try { localStorage.setItem('followPersonSig', sig); } catch(e) {}
+          }
+        } else {
+          // if no selection, do nothing (do not auto-pick without user intent)
+          return;
+        }
+
+        const targetSig = lastFollowPersonSig || '';
+        if (!targetSig) return;
+
+        // scan for candidates with same signature
+        let best = null;
+        let bestScore = -1;
+
+        for (const r of rows) {
+          const name = (r && r.racerName != null) ? String(r.racerName) : '';
+          const sig = normalizePersonName(name);
+          if (!sig || sig !== targetSig) continue;
+
+          // score: prefer more laps, then valid total time
+          const laps = Number(r.lapcount || 0) || 0;
+          const t = Number(r.time || 0) || 0;
+          const score = (laps * 1000000) + (t > 0 ? 1 : 0);
+          if (score > bestScore) {
+            bestScore = score;
+            best = r;
+          }
+        }
+
+        if (!best) {
+          // selected not currently present; wait before trying again
+          if ((now - (lastFollowSeenAt || 0)) > 2500) {
+            autoReacquireCooldownUntil = now + 1200;
+          }
+          return;
+        }
+
+        // compute candidate key
+        const candidateKey = normalizePilotKey(getPilotKey(best));
+        const currentKey = normalizePilotKey(selectedPilotKey);
+
+        if (candidateKey && candidateKey !== currentKey) {
+          // switch follow silently
+          selectPilotByKey(candidateKey, { source: 'auto_reacquire', announce: false });
+          autoReacquireCooldownUntil = now + 2000;
+          try { if (voiceMasterEnabled) playBeep('up'); } catch(e) {}
+        } else {
+          lastFollowSeenAt = now;
+        }
+      } catch(e) {}
+    }
     function safeRacerName(name) {
       if (!name) return '';
       let s = String(name).trim();
@@ -13177,8 +14195,8 @@ function setLiveStatus(isOnline) {
       if (input == null) return 0;
 
       // Heurstica clave:
-      // - Si viene como nmero y es "chico" (ej. 9.881, 14.564), normalmente est en segundos.
-      // - Si viene grande (ej. 9881, 14564), normalmente ya est en milisegundos.
+      // - Si viene como nmero y es "chico" (ej. 9.881, 14.564), normalmente está en segundos.
+      // - Si viene grande (ej. 9881, 14564), normalmente ya está en milisegundos.
       if (typeof input === 'number') {
         const n = input;
         if (!isFinite(n) || n <= 0) return 0;
@@ -13570,7 +14588,7 @@ ensureCanvasHiDpi(lapChartEl);
         }
       } catch(e){}
 
-      // lnea promedio
+      // línea promedio
       if (isLapPlausible(mean)) {
         const yMean = top + (1 - (Math.min(Math.max(mean, minV), maxV) - minV) / (maxV - minV)) * gh;
         ctx.strokeStyle = 'rgba(34,211,238,0.35)';
@@ -13598,7 +14616,7 @@ try {
   }
 } catch(e) {}
 
-      // lnea tiempos
+      // línea tiempos
       ctx.strokeStyle = 'rgba(251,146,60,0.95)';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -13624,7 +14642,7 @@ try {
         ctx.restore();
       }
 
-      // lnea de media (pace)
+      // línea de media (pace)
       if (mean && maxV > minV) {
         const yM = top + (1 - (Math.min(Math.max(mean, minV), maxV) - minV) / (maxV - minV)) * gh;
         ctx.save();
@@ -14833,6 +15851,17 @@ function selectPilotByKey(key, opts = {}) {
           const announce = (opts.announce !== false);
 
           selectedPilotKey = k;
+          try{
+            if (k) {
+              const sig = normalizePersonName(k);
+              if (sig) {
+                lastFollowPersonSig = sig;
+                lastFollowPersonRaw = k;
+                lastFollowSeenAt = Date.now();
+                try { localStorage.setItem('followPersonSig', sig); } catch(e) {}
+              }
+            }
+          }catch(e){}
           try {
             const __src = (opts && opts.source) ? String(opts.source) : '';
             const __manual = (__src === 'select' || __src === 'manual');
@@ -15399,8 +16428,8 @@ function updateBlueFlagFromPassEvents() {
 
         pendingBlueFlagForPilotKey = selectedPilotKey;
         pendingBlueFlagMessage = isFinal
-          ? ('Bandera azul! Detrs viene ' + who + '. Mantn tu lnea y djalo pasar en la recta')
-          : ('Bandera azul. Detrs viene ' + who + '. Mantn tu lnea y djalo pasar en la recta');
+          ? ('Bandera azul! Detrs viene ' + who + '. Mantn tu línea y djalo pasar en la recta')
+          : ('Bandera azul. Detrs viene ' + who + '. Mantn tu línea y djalo pasar en la recta');
 
         lastBlueFlagPilotLap = selLap || lastBlueFlagPilotLap;
         lastBlueFlagLeaderLap = best.laperLap || lastBlueFlagLeaderLap;
@@ -15845,7 +16874,7 @@ function autoFocusMsg(stage, c, style) {
   const connectors = {
     pro: [
       'Ojo con esto.',
-      'Atencion aquí.',
+      'Atención aquí.',
       'Se calienta la cosa.',
       'Dato clave.',
       'Esto se mueve.',
@@ -15876,7 +16905,7 @@ function autoFocusMsg(stage, c, style) {
       'Y ojo, porque...',
       'La pelea sigue viva.',
       'Sin soltar el volante...',
-      'Atencion, que esto cambia.',
+      'Atención, que esto cambia.',
       'Del otro lado...'
     ]
   };
@@ -15892,10 +16921,10 @@ function autoFocusMsg(stage, c, style) {
       (x) => `${c0} P${x.pos} esta en modo espejo: ${x.attacker} no lo suelta a ${x.defender}.`
     ],
     closing: [
-      (x) => `${c0} Se esta cerrando P${x.pos}: ${x.attacker} recorta ${x.delta} y ya esta a ${x.toSec || x.sec} de ${x.defender}.`,
+      (x) => `${c0} Se esta cerrando P${x.pos}: ${x.attacker} recorta ${x.delta} y ya está a ${x.toSec || x.sec} de ${x.defender}.`,
       (x) => `${c0} P${x.pos} se aprieta: de ${x.fromSec} baja a ${x.toSec}. ${x.attacker} viene encima.`,
       (x) => `${c0} P${x.pos}: ${x.attacker} acorta el gap. ${x.defender} ya lo trae en el espejo a ${x.toSec || x.sec}.`,
-      (x) => `${c0} P${x.pos} se esta cocinando. ${x.attacker} viene recortando y ya esta a ${x.toSec || x.sec}.`
+      (x) => `${c0} P${x.pos} se está cocinando. ${x.attacker} viene recortando y ya está a ${x.toSec || x.sec}.`
     ],
     opening: [
       (x) => `${c0} Se abre un poco la pelea en P${x.pos}. ${x.defender} estira a ${x.sec}.`,
@@ -16046,8 +17075,13 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Swap en la punta. ' + c.winner + ' P1, ' + c.loser + ' P2.',
         (c) => 'Cambio arriba. ' + c.winner + ' primero. ' + c.loser + ' segundo.',
         (c) => 'Golpe de autoridad: ' + c.winner + ' toma P1. ' + c.loser + ' a reorganizar.',
-        (c) => 'Actualizacion punta: ' + c.winner + ' lidera. ' + c.loser + ' queda P2.'
-      ],
+        (c) => 'Actualización punta: ' + c.winner + ' lidera. ' + c.loser + ' queda P2.',
+      
+        // PREMIUM UNICAS
+        (c) => 'Cambio de líder. ' + c.winner + ' manda y punto.',
+        (c) => 'Nuevo P1: ' + c.winner + '. El reloj no perdona.',
+        (c) => 'Se mueve la punta. ' + c.winner + ' sin pedir permiso.',
+],
 
       pass: [
         (c) => 'Rebase confirmado. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
@@ -16060,9 +17094,14 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Se concreta el intercambio. ' + c.winner + ' arriba a P' + c.newPos + '.',
         (c) => 'Adelantamiento al conteo. ' + c.winner + ' sube. ' + c.loser + ' baja.',
         (c) => 'P' + c.newPos + ' cambia de manos. ' + c.winner + ' toma la plaza.',
-        (c) => 'Buen pase. ' + c.winner + ' ya esta delante de ' + c.loser + '. P' + c.newPos + '.',
-        (c) => 'Rebase cerrado: ' + c.winner + ' gana P' + c.newPos + ', ' + c.loser + ' a P' + c.oldPos + '.'
-      ],
+        (c) => 'Buen pase. ' + c.winner + ' ya está delante de ' + c.loser + '. P' + c.newPos + '.',
+        (c) => 'Rebase cerrado: ' + c.winner + ' gana P' + c.newPos + ', ' + c.loser + ' a P' + c.oldPos + '.',
+      
+        // PREMIUM UNICAS
+        (c) => 'Adelantamiento con colmillo. ' + c.winner + ' pasa a P' + c.newPos + '.',
+        (c) => 'Pase limpio, cero drama. ' + c.winner + ' ya está delante.',
+        (c) => 'Lo vio y lo hizo. ' + c.winner + ' gana P' + c.newPos + '.',
+],
 
       battle: [
         (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' a rueda de ' + c.defender + '. Gap ' + c.sec + '.',
@@ -16073,11 +17112,16 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Camara a P' + c.pos + '. ' + c.attacker + ' en el espejo de ' + c.defender + '. ' + c.sec + '.',
         (c) => 'Separacion minima en P' + c.pos + ': ' + c.sec + '. ' + c.attacker + ' encima.',
         (c) => 'P' + c.pos + ' sin aire. ' + c.attacker + ' no se despega. ' + c.sec + '.',
-        (c) => 'Atencion P' + c.pos + '. ' + c.attacker + ' busca hueco con ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'Atención P' + c.pos + '. ' + c.attacker + ' busca hueco con ' + c.defender + '. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' en mano a mano. ' + c.attacker + ' contra ' + c.defender + '. ' + c.sec + '.',
         (c) => 'Duelo directo. P' + c.pos + ' con gap ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' bajo fuego. ' + c.attacker + ' viene encima. ' + c.sec + '.'
-      ],
+        (c) => 'P' + c.pos + ' bajo fuego. ' + c.attacker + ' viene encima. ' + c.sec + '.',
+      
+        // PREMIUM UNICAS
+        (c) => 'Duelo serio. Gap ' + (c.gapSecStr || '') + '. Cabeza fría.',
+        (c) => 'Presión real en P' + c.pos + '. El que pestañea, paga.',
+        (c) => 'Se están oliendo. No hay regalos.',
+],
 
       battlePodium: [
         (c) => 'Podio en juego en P' + c.pos + '. ' + c.attacker + ' presiona. ' + c.sec + '.',
@@ -16099,14 +17143,19 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Recorte en P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + '.',
         (c) => 'Gap en P' + c.pos + ' cae: ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Se acerca en P' + c.pos + '. ' + c.attacker + ' ya esta a ' + c.toSec + ' de ' + c.defender + '.',
+        (c) => 'Se acerca en P' + c.pos + '. ' + c.attacker + ' ya está a ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Tendencia positiva P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + '.',
         (c) => 'Ojo P' + c.pos + '. ' + c.attacker + ' recorta ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Cierre confirmado. P' + c.pos + ' ahora ' + c.toSec + '.',
         (c) => 'Se aprieta P' + c.pos + '. ' + c.attacker + ' trae el gap en ' + c.toSec + '.',
-        (c) => 'P' + c.pos + ' se esta cerrando. ' + c.toSec + ' entre ellos.',
-        (c) => 'Recorte constante. P' + c.pos + ' de ' + c.fromSec + ' a ' + c.toSec + '.'
-      ],
+        (c) => 'P' + c.pos + ' se está cerrando. ' + c.toSec + ' entre ellos.',
+        (c) => 'Recorte constante. P' + c.pos + ' de ' + c.fromSec + ' a ' + c.toSec + '.',
+      
+        // PREMIUM UNICAS
+        (c) => 'Lo trae en la mira. Gap ' + (c.secStr || '') + '.',
+        (c) => 'Presión arriba. Sin errores tontos.',
+        (c) => 'Cierre de carrera. Aquí se cobra.',
+],
 
       gap: [
         (c) => 'Gap P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
@@ -16118,11 +17167,16 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Referencia P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's.',
         (c) => 'Tiempo entre autos P' + c.pos + ': ' + c.sec + 's.',
         (c) => 'Brecha P' + c.pos + ': ' + c.sec + 's.',
-        (c) => 'Gap P' + c.pos + ' = ' + c.sec + 's.'
-      ],
+        (c) => 'Gap P' + c.pos + ' = ' + c.sec + 's.',
+      
+        // PREMIUM UNICAS
+        (c) => 'Gap bajando. Esto se aprieta.',
+        (c) => 'Gap subiendo. Ajusta ya, sin overdrive.',
+        (c) => 'Gap estable. Control, no show.',
+],
 
       pressure: [
-        (c) => 'Presin en P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '.',
+        (c) => 'Presión en P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' defendiendo. ' + c.defender + ' con ' + c.attacker + ' pegado.',
         (c) => 'Ataque en P' + c.pos + '. ' + c.attacker + ' con opcion.',
         (c) => 'P' + c.pos + ' sin margen. ' + c.attacker + ' lo trae.',
@@ -16131,7 +17185,7 @@ function autoBuildStoryCandidate(args) {
         (c) => 'P' + c.pos + ' en modo espejo. ' + c.attacker + ' no suelta.',
         (c) => 'Sombra en P' + c.pos + '. ' + c.attacker + ' pegado.',
         (c) => 'P' + c.pos + ' con ataque constante de ' + c.attacker + '.',
-        (c) => 'Presin sostenida en P' + c.pos + '. No hay respiro.'
+        (c) => 'Presión sostenida en P' + c.pos + '. No hay respiro.'
       ],
 
       top3: [
@@ -16267,12 +17321,12 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Duelazo en P' + c.pos + '. ' + c.attacker + ' ya trae el pase en la mira. ' + c.sec + '.',
         (c) => 'Duelazo en P' + c.pos + '. ' + c.attacker + ' presiona fuerte. ' + c.sec + '.',
         (c) => 'Duelazo en P' + c.pos + '. ' + c.defender + ' no se puede equivocar. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' respirando en la nuca de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' est que arde. ' + c.defender + ' defendiendo, ' + c.attacker + ' insistiendo. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' ya trae el pase en la mira. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' presiona fuerte. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' est que arde. ' + c.defender + ' no se puede equivocar. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' está que arde. ' + c.attacker + ' respirando en la nuca de ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' está que arde. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' está que arde. ' + c.defender + ' defendiendo, ' + c.attacker + ' insistiendo. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' está que arde. ' + c.attacker + ' ya trae el pase en la mira. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' está que arde. ' + c.attacker + ' presiona fuerte. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' está que arde. ' + c.defender + ' no se puede equivocar. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con presin brava. ' + c.attacker + ' respirando en la nuca de ' + c.defender + '. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con presin brava. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con presin brava. ' + c.defender + ' defendiendo, ' + c.attacker + ' insistiendo. ' + c.sec + '.',
@@ -16309,26 +17363,26 @@ function autoBuildStoryCandidate(args) {
         (c) => 'P' + c.pos + ' con olor a podio. ' + c.attacker + ' ya se asom. ' + c.sec + '.'
       ],
       closing: [
-        (c) => 'Se est cerrando P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Se est cerrando P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
-        (c) => 'Se est cerrando P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'Se est cerrando P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Se est cerrando P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + ' de ' + c.defender + '.',
-        (c) => 'Se est cerrando P' + c.pos + '. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
+        (c) => 'Se está cerrando P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
+        (c) => 'Se está cerrando P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya está encima.',
+        (c) => 'Se está cerrando P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
+        (c) => 'Se está cerrando P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
+        (c) => 'Se está cerrando P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + ' de ' + c.defender + '.',
+        (c) => 'Se está cerrando P' + c.pos + '. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'P' + c.pos + ' se cocina. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
+        (c) => 'P' + c.pos + ' se cocina. De ' + c.fromSec + ' a ' + c.toSec + '. Ya está encima.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'P' + c.pos + ' se cocina. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' ya está ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Atencin en P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
+        (c) => 'Atencin en P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya está encima.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Atencin en P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Cierre fuerte en P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
+        (c) => 'Cierre fuerte en P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya está encima.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + ' de ' + c.defender + '.',
@@ -16356,11 +17410,11 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Podio provisional: ' + c.p1 + ' manda. ' + c.p2 + ' segundo. ' + c.p3 + ' tercero.',
         (c) => 'Podio provisional: ' + c.p1 + ' primero, ' + c.p2 + ' segundo, ' + c.p3 + ' tercero.',
         (c) => 'Podio provisional: ' + c.p1 + ' al frente con ' + c.p2 + ' y ' + c.p3 + ' pegados.',
-        (c) => 'As est el frente: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
-        (c) => 'As est el frente: P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
-        (c) => 'As est el frente: ' + c.p1 + ' manda. ' + c.p2 + ' segundo. ' + c.p3 + ' tercero.',
-        (c) => 'As est el frente: ' + c.p1 + ' primero, ' + c.p2 + ' segundo, ' + c.p3 + ' tercero.',
-        (c) => 'As est el frente: ' + c.p1 + ' al frente con ' + c.p2 + ' y ' + c.p3 + ' pegados.'
+        (c) => 'As está el frente: ' + c.p1 + ', ' + c.p2 + ', ' + c.p3 + '.',
+        (c) => 'As está el frente: P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
+        (c) => 'As está el frente: ' + c.p1 + ' manda. ' + c.p2 + ' segundo. ' + c.p3 + ' tercero.',
+        (c) => 'As está el frente: ' + c.p1 + ' primero, ' + c.p2 + ' segundo, ' + c.p3 + ' tercero.',
+        (c) => 'As está el frente: ' + c.p1 + ' al frente con ' + c.p2 + ' y ' + c.p3 + ' pegados.'
       ],
       train: [
         (c) => 'Tren de trofeo. ' + (c.p2 ? ('P2 a P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'P2 a P4 en paquete. ') + 'Aquí nadie respira.',
@@ -16414,7 +17468,7 @@ function autoBuildStoryCandidate(args) {
 
     AUTO_PHRASES_PICANTE.closing = (AUTO_PHRASES_PICANTE.closing||[]).concat([
       (c) => 'Cierre serio en P' + c.pos + '. ' + c.attacker + ' ya lo trae en la bolsa. ' + c.toSec + '.',
-      (c) => 'Se viene el golpe en P' + c.pos + '. ' + c.attacker + ' ya esta a ' + c.toSec + '.',
+      (c) => 'Se viene el golpe en P' + c.pos + '. ' + c.attacker + ' ya está a ' + c.toSec + '.',
       (c) => 'P' + c.pos + ' en zona de error cero. ' + c.defender + ' con ' + c.attacker + ' encima. ' + c.toSec + '.'
     ]);
 
@@ -16571,10 +17625,10 @@ function autoBuildStoryCandidate(args) {
         (c) => 'P' + c.pos + '. ' + c.attacker + ' marca ' + c.sec + 's al de adelante.'
       ],
       pressure: [
-        (c) => 'Presin en P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. ' + c.sec + 's.',
+        (c) => 'Presión en P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. ' + c.sec + 's.',
         (c) => 'P' + c.pos + ' bajo presin. ' + c.attacker + ' a ' + c.sec + 's. Ojo defensa.',
         (c) => 'Defensa en P' + c.pos + '. ' + c.defender + ' se sostiene con ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' en modo defensa. ' + c.attacker + ' est encima, ' + c.sec + 's.'
+        (c) => 'P' + c.pos + ' en modo defensa. ' + c.attacker + ' está encima, ' + c.sec + 's.'
       ],
       top3: [
         (c) => 'Top 3: P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
@@ -16650,7 +17704,7 @@ function autoBuildStoryCandidate(args) {
       ],
 
       pass: [
-        (c) => 'Pase confirmado. ' + (c.winner||c.attacker) + ' ya esta en P' + (c.newPos||c.pos) + '.',
+        (c) => 'Pase confirmado. ' + (c.winner||c.attacker) + ' ya está en P' + (c.newPos||c.pos) + '.',
         (c) => 'Lo hizo. ' + (c.winner||c.attacker) + ' se mete por dentro y gana la plaza.',
         (c) => 'Movimiento limpio. ' + (c.winner||c.attacker) + ' pasa a ' + (c.loser||c.defender) + '. P' + (c.newPos||c.pos) + '.',
         (c) => 'Se concreta el intercambio. ' + (c.winner||c.attacker) + ' por delante.',
@@ -16660,7 +17714,7 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Lo cierra y lo firma. ' + (c.winner||c.attacker) + ' gana el lugar.',
         (c) => 'P' + (c.newPos||c.pos) + ' cambia de manos. ' + (c.winner||c.attacker) + ' se lo queda.',
         (c) => 'Pase al limite. ' + (c.winner||c.attacker) + ' por delante.',
-        (c) => 'Rebase completo. ' + (c.winner||c.attacker) + ' ya esta arriba.',
+        (c) => 'Rebase completo. ' + (c.winner||c.attacker) + ' ya está arriba.',
         (c) => 'Se confirma el pase. ' + (c.winner||c.attacker) + ' gana la plaza.'
       ],
 
@@ -16698,9 +17752,9 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Recorte. P' + c.pos + ' de ' + c.fromSec + ' a ' + c.toSec + '. ' + c.attacker + ' se acerca.',
         (c) => 'Se viene. ' + c.attacker + ' baja a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Gap cayendo en P' + c.pos + '. ' + c.toSec + ' ahora.',
-        (c) => 'Cierre confirmado. P' + c.pos + ' ya esta en ' + c.toSec + '.',
+        (c) => 'Cierre confirmado. P' + c.pos + ' ya está en ' + c.toSec + '.',
         (c) => 'Tendencia clara. ' + c.attacker + ' recorta y pone presion.',
-        (c) => 'Atencion. P' + c.pos + ' se aprieta rapido.',
+        (c) => 'Atención. P' + c.pos + ' se aprieta rapido.',
         (c) => 'Se compacta P' + c.pos + '. Se huele el pase.',
         (c) => 'Recorte constante. ' + c.attacker + ' viene con ritmo.',
         (c) => 'De ' + c.fromSec + ' a ' + c.toSec + '. Eso es recortar.',
@@ -16729,7 +17783,49 @@ function autoBuildStoryCandidate(args) {
       picante: AUTO_PHRASES_PICANTE,
       engineer: AUTO_PHRASES_ENGINEER,
       narrativo: AUTO_PHRASES_NARRATIVO
-    };
+    }
+    // =========================
+    // PRO SPICY+ (automático en Finales)
+    // - Mantiene el banco PRO y agrega ~10% más colmillo para A/B/C
+    const AUTO_PHRASES_PRO_SPICY_PLUS = (() => {
+      const o = {};
+      try {
+        for (const k in AUTO_PHRASES_PRO) o[k] = (AUTO_PHRASES_PRO[k] || []).slice();
+      } catch(e) {}
+      const add = (k, arr) => { try { o[k] = (o[k] || []).concat(arr || []); } catch(e) {} };
+      // Pass / batalla
+      add('pass', [
+        (c) => 'Pase con colmillo. Sin disculpas.',
+        (c) => 'Se cobra el pase. Cierra la puerta y acelera.'
+      ]);
+      add('battle', [
+        (c) => 'Duelo serio. El que pestañea, paga.',
+        (c) => 'Apretado. Cabeza fría, manos calientes.'
+      ]);
+      add('pressure', [
+        (c) => 'Presión alta. Hoy no hay regalos.',
+        (c) => 'Te huelen. Mantén la línea y ejecuta.'
+      ]);
+      add('gap', [
+        (c) => 'Gap bajando. Ciérralo esta vuelta.',
+        (c) => 'Gap subiendo. Ajusta ya, sin drama.'
+      ]);
+      add('leaderChange', [
+        (c) => 'Cambio de líder. Sin romance, puro ritmo.',
+        (c) => 'Nuevo líder. Se vino el martillo.'
+      ]);
+      add('closing', [
+        (c) => 'Cierre limpio. Nada de regalos.',
+        (c) => 'Puerta cerrada. Que trabajen por ese pase.'
+      ]);
+      add('top3', [
+        (c) => 'Top 3 bajo fuego. Cero errores.',
+        (c) => 'Top 3: presión real. Se cobra cada fallo.'
+      ]);
+      return o;
+    })();
+
+;
 
 function autoDecorate(text, type, style) {
   const t = String(text || '').trim();
@@ -16752,7 +17848,7 @@ function autoDecorate(text, type, style) {
     : (st === 'picante')
       ? ['Se puso bueno.', 'Sin piedad.']
       : (st === 'narrativo')
-        ? ['No se sueltan.', 'Se viene el pase.', 'Sin respiro.', 'Esto est vivo.']
+        ? ['No se sueltan.', 'Se viene el pase.', 'Sin respiro.', 'Esto está vivo.']
         : ['Esto se pone bueno.', 'Ojo ah.'];
 
   // Narrativo: un poquito ms de "hilo", pero sin spam
@@ -16830,7 +17926,14 @@ let autoStyleMixCounter = 0;
 
 function autoBuildMessage(type, ctx) {
       const style = (autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo') ? autoCommentatorMode : 'pro';
-      const dict = (AUTO_PHRASES_BY_STYLE && AUTO_PHRASES_BY_STYLE[style]) ? AUTO_PHRASES_BY_STYLE[style] : AUTO_PHRASES_PRO;
+      let dict = (AUTO_PHRASES_BY_STYLE && AUTO_PHRASES_BY_STYLE[style]) ? AUTO_PHRASES_BY_STYLE[style] : AUTO_PHRASES_PRO;
+      // Picante automático: en finales usa PRO SPICY+
+      try {
+        if (style === 'pro' && typeof getAutoSpiceLevel === 'function') {
+          const lvl = getAutoSpiceLevel((typeof currentSessionInfo !== 'undefined') ? currentSessionInfo : null);
+          if (lvl === 'spicy_plus' && typeof AUTO_PHRASES_PRO_SPICY_PLUS !== 'undefined') dict = AUTO_PHRASES_PRO_SPICY_PLUS;
+        }
+      } catch(e) {}
       const bank = (dict && dict[type]) ? dict[type] : (AUTO_PHRASES_PRO[type] || []);
       const keyBase = style + ':' + type;
 
@@ -17341,15 +18444,15 @@ const sec = diffMs / 1000;
 
 const posFight = Number(ahead.pos) || (i + 1);
 
-// Pool para narracin con hilo (seguimos la pelea aunque no est en 0.50 exacto)
+// Pool para narracin con hilo (seguimos la pelea aunque no está en 0.50 exacto)
 const defenderName = safeRacerName(ahead.racerName) || 'el de adelante';
-const attackerName = safeRacerName(behind.racerName) || 'el de atrs';
+const attackerName = safeRacerName(behind.racerName) || 'el de atrás';
 const secNum = sec;
 
 // Tendencia (si el atacante viene ms rápido en la última vuelta, pesa ms)
 const aLast = Number(ahead.lastTime) || 0;
 const bLast = Number(behind.lastTime) || 0;
-const attackerFaster = (aLast > 0 && bLast > 0) ? ((aLast - bLast) / 1000) : 0; // >0 = el de atrs viene ms rápido
+const attackerFaster = (aLast > 0 && bLast > 0) ? ((aLast - bLast) / 1000) : 0; // >0 = el de atrás viene ms rápido
 
 const rem = autoRememberPair(pairKey, secNum, leaderLap, now);
 const trendBonus = (rem.deltaSec < -0.08) ? 0.8 : (rem.deltaSec < -0.04 ? 0.4 : 0);
@@ -17383,7 +18486,7 @@ if (secNum <= 1.25) {
 
             if (sec <= 0.50) {
               const defender = safeRacerName(ahead.racerName) || 'el de adelante';
-              const attacker = safeRacerName(behind.racerName) || 'el de atrs';
+              const attacker = safeRacerName(behind.racerName) || 'el de atrás';
               const secStr = gapToSpeech(sec, 'battle');
 
               const closeness = clamp01((0.50 - sec) / 0.50);
@@ -17459,7 +18562,7 @@ if (secNum <= 1.25) {
 
 const posFight = Number(ahead.pos) || (i + 1);
 const defender = safeRacerName(ahead.racerName) || 'el de adelante';
-const attacker = safeRacerName(behind.racerName) || 'el de atrs';
+const attacker = safeRacerName(behind.racerName) || 'el de atrás';
 const fromSec = gapToSpeechBare(hist.lastGapMs / 1000, 'close');
 const toSec = gapToSpeechBare(sec, 'close');
 
@@ -17703,12 +18806,12 @@ if (isMangaSess) {
               pro: {
                 manga: ['Clasificacion.', 'Clasificacion en vivo.', 'Como va la clasificación.'],
                 final: ['Carrera.', 'Carrera en vivo.', 'Como va la carrera.'],
-                other: ['Seguimos.', 'Actualizacion.', 'Estado.']
+                other: ['Seguimos.', 'Actualización.', 'Estado.']
               },
               picante: {
                 manga: ['Clasificacion.', 'Clasificacion, sin llorar.', 'Clasificacion, a ver quien trae manos.'],
                 final: ['Carrera.', 'Carrera, sin piedad.', 'Carrera, esto ya se prendio.'],
-                other: ['Seguimos.', 'Ojo.', 'Atencion.']
+                other: ['Seguimos.', 'Ojo.', 'Atención.']
               },
               engineer: {
                 manga: ['Clasificacion.', 'Control. Clasificacion.', 'Dato. Clasificacion.'],
@@ -17718,7 +18821,7 @@ if (isMangaSess) {
               narrativo: {
                 manga: ['Clasificacion.', 'Cambiamos camara. Clasificacion.', 'Vamos con la clasificación.'],
                 final: ['Carrera.', 'Cambiamos camara. Carrera.', 'Vamos con la carrera.'],
-                other: ['Seguimos.', 'Cambiamos camara.', 'Atencion.']
+                other: ['Seguimos.', 'Cambiamos camara.', 'Atención.']
               }
             };
 
@@ -18058,15 +19161,15 @@ try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
 
       // Estimacin (evento, no spamea)
       if (voiceSettings.estlap) {
-        const est = Number(p.estLap) || 0;
-        if (est > 0) {
+        const está = Number(p.estLap) || 0;
+        if (está > 0) {
           // Solo si cambi contra la última estimacin hablada (no contra la vista)
           const estInt = Math.floor(est);
           const lastInt = (lastSpokenEstLap == null) ? null : Math.floor(lastSpokenEstLap);
           const changedEnough = (lastInt == null) ? true : (Math.abs(estInt - lastInt) >= 2);
           const spaced = (lapsNow - lastEstLapSpokenLap) >= 8;
           if ((changedEnough && spaced) || (spaced && (lapsNow - lastEstLapSpokenLap) >= 12)) {
-            const palabra = est === 1 ? 'vuelta' : 'vueltas';
+            const palabra = está === 1 ? 'vuelta' : 'vueltas';
             pendingEstLap = {
               text: `Estimacin ${estInt} ${palabra}`,
               opts: { dedupe: true },
@@ -19173,7 +20276,7 @@ function checkSessionFinishOnLap() {
             const t0 = (Number(tm)||0) === 0;
             const best = parseTimeToMs(rr.best ?? rr.bestMs ?? rr.bestLapTime ?? rr.bestLapTimeMs ?? rr.bestTime ?? 0);
             const mean = parseTimeToMs(rr.mean ?? rr.meanMs ?? rr.meanLapTime ?? rr.meanLapTimeMs ?? 0);
-            const est  = parseTimeToMs(rr.estTime ?? 0);
+            const está  = parseTimeToMs(rr.estTime ?? 0);
             return lap0 && t0 && ((best||0)===0) && ((mean||0)===0) && ((est||0)===0);
           });
 
@@ -19191,6 +20294,7 @@ function checkSessionFinishOnLap() {
         // Q TABLA: snapshot de clasificacin (UI only)
         try { recordQualiSnapshotIfNeeded(rawRace); } catch(e) {}
 raceData = normalizeRaceData(rawRace);
+        try { autoReacquireFollowIfNeeded(rawRace); } catch(e) {}
         updateLapHistoryAll();
         refreshSessionBestCache();
         updateRecordCarreraUI();
