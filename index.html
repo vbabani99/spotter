@@ -1,12 +1,15 @@
 
 <!--
-vics_Smart_Spotter_v0.3.55 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.62 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
-Fecha: 2026-02-01
+Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.3.62: TTS v2 por bloques (anti-repetición), frases más naturales en Follow (ataque/defensa/ritmo/azul/best lap), y sin 'Best lap' en locución.
 - v0.3.55: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
+- v0.3.60: Auto Locutor en PC rota solo voces Microsoft es-MX (si existen) para claridad (Raul/Sabina). Fallback seguro.
+- v0.3.59: FIX dicción TTS: 'línea' ya sale bien (antes se colaba como 'l nea').
 - v0.3.49: FIX SyntaxError (isMS redeclared) + Auto Locutor rota Google/Microsoft es-MX/es-ES + indicador VOZ estable.
 - v0.3.46: FIX anti-perico en Clasificación - anuncios de "pole provisional" solo en AUTO (sin piloto). En FOLLOW se calla.
 - v0.3.44: FIX banderas país (Mexico/México, acentos y ñ) - mapeo Twemoji estable.
@@ -70,7 +73,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.55</title>
+<title>vics_Smart_Spotter_v0.3.62</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -1033,6 +1036,38 @@ body {
       cursor: not-allowed;
       filter: grayscale(0.35);
     }
+
+/* Checkbox - Prefijo de vueltas (FOLLOW) */
+    .saylaps-toggle{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      flex: 0 0 18%;
+      padding: 6px 8px;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      opacity: 0.95;
+      border: 1px solid rgba(56,189,248,0.70);
+      background: linear-gradient(135deg, rgba(56,189,248,0.22), rgba(30,58,138,0.14));
+      color: rgba(255,255,255,0.94);
+      box-shadow: 0 0 12px rgba(56,189,248,0.12);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .saylaps-toggle input{
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: rgba(56,189,248,0.95);
+    }
+    .saylaps-toggle.disabled{
+      opacity: 0.35;
+      cursor: not-allowed;
+      filter: grayscale(0.35);
+    }
+
 
 /* Color del selector por posición */
     #pilotSelect.pos-none {
@@ -2267,7 +2302,7 @@ body {
       gap: 8px;
     }
 
-    /* Compacto: que sea 1 lnea real (Nombre + INT + #) */
+    /* Compacto: que sea 1 línea real (Nombre + INT + #) */
     .top3-mini-row.compact .tgrid-right{
       flex-direction: row;
       align-items:center;
@@ -2343,7 +2378,7 @@ body {
     .top3-mini-row.duel .tgrid-bar{ border-color: rgba(255,43,43,0.28); background: rgba(255,43,43,0.10); }
     .top3-mini-row.duel .tgrid-bar > i{ background: rgba(255,43,43,0.90); }
 
-    /* Compacto P4-P20 (1 lnea pro) */
+    /* Compacto P4-P20 (1 línea pro) */
     .top3-mini-grid.expanded .top3-mini-row.compact{ padding: 5px 10px; }
     .top3-mini-row.compact .tgrid-sub{ display:none; }
     .top3-mini-row.compact .tgrid-name{ max-width: 46vw; }
@@ -6363,7 +6398,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.55</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.62</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -6399,6 +6434,11 @@ html, body{
              ACTIVAR VOZ
           </button>
 <button class="btn-secondary btn-hot btn-basic-mini" id="basicToggleBtnMini" title="Modo básico: solo vueltas, lap time y posición (AUTO y FOLLOW)" type="button">BÁSICO</button>
+
+<label class="btn-secondary btn-hot saylaps-toggle" id="sayLapsWrap" title="Decir vueltas (prefijo). Solo en FOLLOW y con BÁSICO OFF.">
+  <input type="checkbox" id="sayLapsChk" />
+  <span>VU</span>
+</label>
 </div>
 <div class="pilot-pos-row">
 <div class="pos-pill" id="posText">P -</div>
@@ -6643,7 +6683,7 @@ html, body{
 <div class="manual-top">
 <div>
 <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-<div class="manual-sub">Guía rápida (v0.3.55). Activa voz, elige piloto y corre. El resto es opcional.</div>
+<div class="manual-sub">Guía rápida (v0.3.60). Activa voz, elige piloto y corre. El resto es opcional.</div>
 </div>
 <button aria-label="Cerrar" class="manual-close" id="manualCloseBtn" type="button">✕</button>
 </div>
@@ -7042,8 +7082,278 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.55";
+const APP_NAME = "vics_Smart_Spotter_v0.3.62";
     const APP_LABEL = APP_NAME;
+
+    // =========================
+    // MENSAJES v2 (bloques) - menos repetitivo
+    // - Solo cambia textos: NO toca la lógica de detección ni puntajes.
+    // =========================
+    const MSGV2_LAST = new Map(); // key -> last full text
+
+    function msgv2PilotKey(ctx) {
+      try {
+        if (ctx && ctx.pilotKey) return String(ctx.pilotKey);
+        if (typeof selectedPilotKey !== 'undefined' && selectedPilotKey) return String(selectedPilotKey);
+        return 'AUTO';
+      } catch(e) { return 'AUTO'; }
+    }
+
+    function msgv2Key(type, ctx, part) {
+      const pk = msgv2PilotKey(ctx);
+      return String(type || 'x') + ':' + pk + ':' + String(part || 'full');
+    }
+
+    function msgv2Pick(arr, type, ctx, part) {
+      try {
+        if (!Array.isArray(arr) || !arr.length) return '';
+        const key = msgv2Key(type, ctx, part);
+        if (typeof autoRandPick === 'function') {
+          const fn = autoRandPick(arr, 'msgv2:' + key);
+          return (typeof fn === 'function') ? String(fn(ctx) || '') : String(fn || '');
+        }
+        const v = arr[Math.floor(Math.random() * arr.length)];
+        return (typeof v === 'function') ? String(v(ctx) || '') : String(v || '');
+      } catch(e) { return ''; }
+    }
+
+    function msgv2DecimasTxt(ms) {
+      const abs = Math.abs(Number(ms) || 0);
+      const dec = Math.max(1, Math.round(abs / 100));
+      if (dec === 1) return 'una décima';
+      return String(dec) + ' décimas';
+    }
+
+    // Bancos por tipo: combinación por bloques (apertura + dato + acción + cierre)
+    const MSGV2 = {
+      blueflag: {
+        open: [
+          (c) => (c && c.isFinal) ? 'Bandera azul!' : 'Bandera azul.',
+          () => 'Azul.',
+          () => 'Atención, azul.',
+          () => 'Cuidado, azul.'
+        ],
+        info: [
+          (c) => (c && c.who) ? ('Detrás viene ' + c.who + '.') : 'Detrás viene el líder.',
+          (c) => (c && c.who) ? ('Te alcanza ' + c.who + '.') : 'Te alcanza el líder.',
+          (c) => (c && c.who) ? ('Te llega ' + c.who + '.') : 'Te llega el líder.'
+        ],
+        act: [
+          () => 'Mantén tu línea',
+          () => 'Traza limpio',
+          () => 'Sin volantazos',
+          () => 'No cierres la puerta'
+        ],
+        end: [
+          () => 'y déjalo pasar en la recta.',
+          () => 'en la recta, dale paso.',
+          () => 'en el siguiente tramo recto.',
+          () => 'cuando lo tengas, suelta la línea.'
+        ]
+      },
+
+      bestlap: {
+        open: [
+          () => 'Nueva mejor vuelta.',
+          () => 'Mejor vuelta.',
+          () => 'Vuelta clavada.',
+          () => 'Eso es ritmo.'
+        ],
+        info: [
+          (c) => (c && c.best) ? ('Tiempo ' + c.best + '.') : '',
+          (c) => (c && c.best) ? ('Marcaste ' + c.best + '.') : '',
+          (c) => (c && c.best) ? ('Paraste el crono en ' + c.best + '.') : ''
+        ],
+        act: [
+          () => 'Repite la trazada.',
+          () => 'Ahora, consistencia.',
+          () => 'Sin errores.',
+          () => 'Cuida la salida.'
+        ],
+        end: [
+          () => '',
+          () => 'Sigue así.',
+          () => 'No regales nada.'
+        ]
+      },
+
+      ritmo_up: { // tiempos más altos (más lento)
+        open: [
+          () => 'Ojo, se cayó el ritmo.',
+          () => 'Perdiste ritmo.',
+          () => 'Se abrió el tiempo.',
+          () => 'Cuidado con el ritmo.'
+        ],
+        info: [
+          (c) => (c && c.deltaMs) ? ('Más lento por ' + msgv2DecimasTxt(c.deltaMs) + '.') : '',
+          (c) => (c && c.deltaMs) ? ('Se te fue ' + msgv2DecimasTxt(c.deltaMs) + '.') : '',
+          () => ''
+        ],
+        act: [
+          () => 'Vuelve al apex.',
+          () => 'Limpia la trazada.',
+          () => 'Respira y enfócate.',
+          () => 'Sin castigar llanta.'
+        ],
+        end: [
+          () => '',
+          () => 'Recupera en la siguiente.',
+          () => 'Con calma.'
+        ]
+      },
+
+      ritmo_down: { // tiempos más bajos (más rápido)
+        open: [
+          () => 'Bien, encontraste ritmo.',
+          () => 'Ritmo mejorando.',
+          () => 'Vas bajando el tiempo.',
+          () => 'Eso, ritmo fino.'
+        ],
+        info: [
+          (c) => (c && c.deltaMs) ? ('Bajaste ' + msgv2DecimasTxt(c.deltaMs) + '.') : '',
+          (c) => (c && c.deltaMs) ? ('Ganaste ' + msgv2DecimasTxt(c.deltaMs) + '.') : '',
+          () => ''
+        ],
+        act: [
+          () => 'Repite esa trazada.',
+          () => 'Ahora, a sostener.',
+          () => 'Sin errores.',
+          () => 'Sigue así.'
+        ],
+        end: [
+          () => '',
+          () => 'Buen trabajo.',
+          () => 'Aguanta el ritmo.'
+        ]
+      },
+
+      attack: {
+        open: [
+          () => 'Ataque.',
+          () => 'A presionar.',
+          () => 'Lo tienes a tiro.',
+          () => 'Entra en pelea.'
+        ],
+        info: [
+          (c) => {
+            const nm = (c && c.otherName) ? String(c.otherName).trim() : '';
+            const g  = (c && c.gapStr) ? String(c.gapStr).trim() : '';
+            if (nm && g) return 'Adelante ' + nm + ' ' + g + '.';
+            if (g) return 'Adelante ' + g + '.';
+            if (nm) return 'Adelante ' + nm + '.';
+            return '';
+          },
+          (c) => {
+            const g  = (c && c.gapStr) ? String(c.gapStr).trim() : '';
+            if (g) return 'Cerrando ' + g + '.';
+            return '';
+          }
+        ],
+        act: [
+          () => 'Clava apex.',
+          () => 'Salida limpia.',
+          () => 'Sin contacto.',
+          () => 'Freno corto y gira.'
+        ],
+        end: [
+          () => '',
+          () => 'Todo limpio.',
+          () => 'Con paciencia.'
+        ]
+      },
+
+      defense: {
+        open: [
+          () => 'Defensa.',
+          () => 'Te vienen encima.',
+          () => 'Cierra puertas.',
+          () => 'A cuidar la línea.'
+        ],
+        info: [
+          (c) => {
+            const nm = (c && c.otherName) ? String(c.otherName).trim() : '';
+            const g  = (c && c.gapStr) ? String(c.gapStr).trim() : '';
+            if (nm && g) return 'Atrás viene ' + nm + ' ' + g + '.';
+            if (g) return 'Atrás viene ' + g + '.';
+            if (nm) return 'Atrás viene ' + nm + '.';
+            return '';
+          },
+          (c) => {
+            const g  = (c && c.gapStr) ? String(c.gapStr).trim() : '';
+            if (g) return 'Están ' + g + '.';
+            return '';
+          }
+        ],
+        act: [
+          () => 'Traza firme.',
+          () => 'Sin volantazos.',
+          () => 'Salida limpia.',
+          () => 'No te pases de freno.'
+        ],
+        end: [
+          () => '',
+          () => 'Mantén calma.',
+          () => 'Sin errores.'
+        ]
+      },
+
+      fight: {
+        open: [
+          () => 'Pelea cerrada.',
+          () => 'Carrera apretada.',
+          () => 'Dos por décimas.',
+          () => 'En la pelea.'
+        ],
+        info: [ () => '' ],
+        act: [
+          () => 'Ojos al apex.',
+          () => 'Todo limpio.',
+          () => 'Sin tocar.',
+          () => 'Salida fina.'
+        ],
+        end: [
+          () => '',
+          () => 'Aguanta.',
+          () => 'Con cabeza.'
+        ]
+      }
+    };
+
+    function msgv2Compose(type, ctx) {
+      try {
+        const t = String(type || '').trim();
+        const bank = (MSGV2 && MSGV2[t]) ? MSGV2[t] : null;
+        if (!bank) return '';
+
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const a = msgv2Pick(bank.open || [], t, ctx, 'open').trim();
+          const b = msgv2Pick(bank.info || [], t, ctx, 'info').trim();
+          const c = msgv2Pick(bank.act  || [], t, ctx, 'act').trim();
+          const d = msgv2Pick(bank.end  || [], t, ctx, 'end').trim();
+
+          let out = [a, b, c, d].filter(Boolean).join(' ');
+          out = out.replace(/\s+/g, ' ').trim();
+          out = out.replace(/\s+\./g, '.').replace(/\s+,/g, ',');
+          out = out.replace(/,\s*,/g, ',').replace(/\s+,\s+/g, ', ');
+
+          // Evita repetir EXACTAMENTE la misma frase por piloto+tipo
+          const k = msgv2Key(t, ctx, 'full');
+          const last = MSGV2_LAST.get(k) || '';
+          if (out && out !== last) {
+            MSGV2_LAST.set(k, out);
+            return out;
+          }
+        }
+
+        // fallback
+        const k = msgv2Key(t, ctx, 'full');
+        const out = msgv2Pick((bank.open || []), t, ctx, 'open').trim();
+        if (out) { MSGV2_LAST.set(k, out); return out; }
+        return '';
+      } catch(e) { return ''; }
+    }
+
+
 
     // =========================
     // AI AUTO-INTRO + FINISHERS (Auto Locutor)
@@ -7943,6 +8253,16 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.55";
       try{ localStorage.setItem(k, v); }catch(e){}
     }
 
+    // Pref: override para decir "X vueltas..." aun con perfiles AI (solo FOLLOW y con BÁSICO OFF)
+    const PREF_SAYLAPS_OVERRIDE = 'spotterSayLapsOverride'; // '1'/'0'
+    function getSayLapsOverride(){
+      try { return String(prefGet(PREF_SAYLAPS_OVERRIDE, '0')) === '1'; } catch(e) { return false; }
+    }
+    function setSayLapsOverride(v){
+      try { prefSet(PREF_SAYLAPS_OVERRIDE, v ? '1' : '0'); } catch(e) {}
+    }
+
+
     // Mini grid (TOP 3/TOP 20) estado persistente
     let miniGridExpanded = false;
     let miniGridLimit = 3;
@@ -8760,7 +9080,7 @@ function rdPick(variants, key) {
         ],
         defense: [
           '{backNameSafe} a {backSecStr}. Cierra la puerta.',
-          '{backNameSafe} a {backSecStr}. l nea firme.',
+          '{backNameSafe} a {backSecStr}. línea firme.',
           '{backNameSafe} a {backSecStr}. No regales la entrada.',
           '{backNameSafe} a {backSecStr}. Protege interior.',
           '{backNameSafe} a {backSecStr}. Salida fuerte y recto.',
@@ -8770,7 +9090,7 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Cubre lo básico.',
           '{backNameSafe} a {backSecStr}. No te desconcentres.',
           'presión atr s: {backNameSafe} a {backSecStr}. Cierra la puerta.',
-          'presión atr s: {backNameSafe} a {backSecStr}. l nea firme.',
+          'presión atr s: {backNameSafe} a {backSecStr}. línea firme.',
           'presión atr s: {backNameSafe} a {backSecStr}. No regales la entrada.',
           'presión atr s: {backNameSafe} a {backSecStr}. Protege interior.',
           'presión atr s: {backNameSafe} a {backSecStr}. Salida fuerte y recto.',
@@ -8780,7 +9100,7 @@ function rdPick(variants, key) {
           'presión atr s: {backNameSafe} a {backSecStr}. Cubre lo básico.',
           'presión atr s: {backNameSafe} a {backSecStr}. No te desconcentres.',
           'Ojo atr s con {backNameSafe}. Cierra la puerta.',
-          'Ojo atr s con {backNameSafe}. l nea firme.',
+          'Ojo atr s con {backNameSafe}. línea firme.',
           'Ojo atr s con {backNameSafe}. No regales la entrada.',
           'Ojo atr s con {backNameSafe}. Protege interior.',
           'Ojo atr s con {backNameSafe}. Salida fuerte y recto.'
@@ -8801,11 +9121,11 @@ function rdPick(variants, key) {
           'tráfico, no te enredes. Sin regalos.',
           'tráfico, no te enredes. Todo con calma.',
           'tráfico, no te enredes. Limpio y rápido.',
-          'Mucho movimiento, Mantén la l nea.',
-          'Mucho movimiento, Mantén la l nea. Controla el volante.',
-          'Mucho movimiento, Mantén la l nea. Sin regalos.',
-          'Mucho movimiento, Mantén la l nea. Todo con calma.',
-          'Mucho movimiento, Mantén la l nea. Limpio y rápido.',
+          'Mucho movimiento, Mantén la línea.',
+          'Mucho movimiento, Mantén la línea. Controla el volante.',
+          'Mucho movimiento, Mantén la línea. Sin regalos.',
+          'Mucho movimiento, Mantén la línea. Todo con calma.',
+          'Mucho movimiento, Mantén la línea. Limpio y rápido.',
           'Hay pelea, prioriza la salida.',
           'Hay pelea, prioriza la salida. Controla el volante.',
           'Hay pelea, prioriza la salida. Sin regalos.',
@@ -8813,30 +9133,30 @@ function rdPick(variants, key) {
           'Hay pelea, prioriza la salida. Limpio y rápido.'
         ],
         blueflag: [
-          'Bandera azul, Mantén l nea.',
-          'Bandera azul, Mantén l nea. Sin drama.',
-          'Bandera azul, Mantén l nea. Con seguridad.',
-          'Bandera azul, Mantén l nea. Sin perder la l nea.',
-          'Bandera azul, Mantén l nea. Todo limpio.',
+          'Bandera azul, Mantén línea.',
+          'Bandera azul, Mantén línea. Sin drama.',
+          'Bandera azul, Mantén línea. Con seguridad.',
+          'Bandera azul, Mantén línea. Sin perder la línea.',
+          'Bandera azul, Mantén línea. Todo limpio.',
           'Bandera azul, deja pasar seguro.',
           'Bandera azul, deja pasar seguro. Sin drama.',
           'Bandera azul, deja pasar seguro. Con seguridad.',
-          'Bandera azul, deja pasar seguro. Sin perder la l nea.',
+          'Bandera azul, deja pasar seguro. Sin perder la línea.',
           'Bandera azul, deja pasar seguro. Todo limpio.',
           'Bandera azul, no pelees la posición.',
           'Bandera azul, no pelees la posición. Sin drama.',
           'Bandera azul, no pelees la posición. Con seguridad.',
-          'Bandera azul, no pelees la posición. Sin perder la l nea.',
+          'Bandera azul, no pelees la posición. Sin perder la línea.',
           'Bandera azul, no pelees la posición. Todo limpio.',
           'Bandera azul, cede sin frenar de más.',
           'Bandera azul, cede sin frenar de más. Sin drama.',
           'Bandera azul, cede sin frenar de más. Con seguridad.',
-          'Bandera azul, cede sin frenar de más. Sin perder la l nea.',
+          'Bandera azul, cede sin frenar de más. Sin perder la línea.',
           'Bandera azul, cede sin frenar de más. Todo limpio.',
           'Bandera azul, facilita el pase.',
           'Bandera azul, facilita el pase. Sin drama.',
           'Bandera azul, facilita el pase. Con seguridad.',
-          'Bandera azul, facilita el pase. Sin perder la l nea.',
+          'Bandera azul, facilita el pase. Sin perder la línea.',
           'Bandera azul, facilita el pase. Todo limpio.'
         ],
         front06: [
@@ -8869,7 +9189,7 @@ function rdPick(variants, key) {
         back06: [
           '{backNameSafe} a {backSecStr}. Defiende.',
           '{backNameSafe} a {backSecStr}. Cubre interior.',
-          '{backNameSafe} a {backSecStr}. l nea firme.',
+          '{backNameSafe} a {backSecStr}. línea firme.',
           '{backNameSafe} a {backSecStr}. No regales la salida.',
           '{backNameSafe} a {backSecStr}. Sin errores.',
           '{backNameSafe} a {backSecStr}. No te abras.',
@@ -8878,7 +9198,7 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Calma y control.',
           'presión atr s: {backNameSafe} {backSecStr}. Defiende.',
           'presión atr s: {backNameSafe} {backSecStr}. Cubre interior.',
-          'presión atr s: {backNameSafe} {backSecStr}. l nea firme.',
+          'presión atr s: {backNameSafe} {backSecStr}. línea firme.',
           'presión atr s: {backNameSafe} {backSecStr}. No regales la salida.',
           'presión atr s: {backNameSafe} {backSecStr}. Sin errores.',
           'presión atr s: {backNameSafe} {backSecStr}. No te abras.',
@@ -8887,7 +9207,7 @@ function rdPick(variants, key) {
           'presión atr s: {backNameSafe} {backSecStr}. Calma y control.',
           '{backNameSafe} en rango: {backSecStr}. Defiende.',
           '{backNameSafe} en rango: {backSecStr}. Cubre interior.',
-          '{backNameSafe} en rango: {backSecStr}. l nea firme.',
+          '{backNameSafe} en rango: {backSecStr}. línea firme.',
           '{backNameSafe} en rango: {backSecStr}. No regales la salida.',
           '{backNameSafe} en rango: {backSecStr}. Sin errores.',
           '{backNameSafe} en rango: {backSecStr}. No te abras.',
@@ -8931,11 +9251,11 @@ function rdPick(variants, key) {
           'Referencia del líder, no te salgas. Limpio.',
           'Referencia del líder, no te salgas. Control total.',
           'Referencia del líder, no te salgas. Paso a paso.',
-          'Mira al líder y copia la l nea.',
-          'Mira al líder y copia la l nea. Sin errores.',
-          'Mira al líder y copia la l nea. Limpio.',
-          'Mira al líder y copia la l nea. Control total.',
-          'Mira al líder y copia la l nea. Paso a paso.',
+          'Mira al líder y copia la línea.',
+          'Mira al líder y copia la línea. Sin errores.',
+          'Mira al líder y copia la línea. Limpio.',
+          'Mira al líder y copia la línea. Control total.',
+          'Mira al líder y copia la línea. Paso a paso.',
           'El líder marca el ritmo, Mantén precisin.',
           'El líder marca el ritmo, Mantén precisin. Sin errores.',
           'El líder marca el ritmo, Mantén precisin. Limpio.',
@@ -8995,11 +9315,11 @@ function rdPick(variants, key) {
           'Mejorando ritmo, Mantén. Sin errores.',
           'Mejorando ritmo, Mantén. Limpio.',
           'Mejorando ritmo, Mantén. Control.',
-          'Ritmo irregular, calma y l nea.',
-          'Ritmo irregular, calma y l nea. Sin apuro.',
-          'Ritmo irregular, calma y l nea. Sin errores.',
-          'Ritmo irregular, calma y l nea. Limpio.',
-          'Ritmo irregular, calma y l nea. Control.'
+          'Ritmo irregular, calma y línea.',
+          'Ritmo irregular, calma y línea. Sin apuro.',
+          'Ritmo irregular, calma y línea. Sin errores.',
+          'Ritmo irregular, calma y línea. Limpio.',
+          'Ritmo irregular, calma y línea. Control.'
         ],
         est: [
           'estimación lista, Mantén el plan.',
@@ -9030,30 +9350,30 @@ function rdPick(variants, key) {
         ],
         bestlap: [
           'Nueva best lap, bien ahí.',
-          'Nueva best lap, bien ahí. Mantén l nea.',
+          'Nueva best lap, bien ahí. Mantén línea.',
           'Nueva best lap, bien ahí. Sin emoción extra.',
           'Nueva best lap, bien ahí. Control.',
           'Nueva best lap, bien ahí. Perfecto.',
-          'Best lap, eso es.',
-          'Best lap, eso es. Mantén l nea.',
-          'Best lap, eso es. Sin emoción extra.',
-          'Best lap, eso es. Control.',
-          'Best lap, eso es. Perfecto.',
-          'Best lap, rep telo.',
-          'Best lap, rep telo. Mantén l nea.',
-          'Best lap, rep telo. Sin emoción extra.',
-          'Best lap, rep telo. Control.',
-          'Best lap, rep telo. Perfecto.',
+          'Mejor vuelta, eso es.',
+          'Mejor vuelta, eso es. Mantén línea.',
+          'Mejor vuelta, eso es. Sin emoción extra.',
+          'Mejor vuelta, eso es. Control.',
+          'Mejor vuelta, eso es. Perfecto.',
+          'Mejor vuelta, rep telo.',
+          'Mejor vuelta, rep telo. Mantén línea.',
+          'Mejor vuelta, rep telo. Sin emoción extra.',
+          'Mejor vuelta, rep telo. Control.',
+          'Mejor vuelta, rep telo. Perfecto.',
           'Mejoraste best lap, Mantén.',
-          'Mejoraste best lap, Mantén. Mantén l nea.',
+          'Mejoraste best lap, Mantén. Mantén línea.',
           'Mejoraste best lap, Mantén. Sin emoción extra.',
           'Mejoraste best lap, Mantén. Control.',
           'Mejoraste best lap, Mantén. Perfecto.',
-          'Best lap confirmada, buen trabajo.',
-          'Best lap confirmada, buen trabajo. Mantén l nea.',
-          'Best lap confirmada, buen trabajo. Sin emoción extra.',
-          'Best lap confirmada, buen trabajo. Control.',
-          'Best lap confirmada, buen trabajo. Perfecto.'
+          'Mejor vuelta confirmada, buen trabajo.',
+          'Mejor vuelta confirmada, buen trabajo. Mantén línea.',
+          'Mejor vuelta confirmada, buen trabajo. Sin emoción extra.',
+          'Mejor vuelta confirmada, buen trabajo. Control.',
+          'Mejor vuelta confirmada, buen trabajo. Perfecto.'
         ],
 
         cons10: [
@@ -9131,7 +9451,7 @@ function rdPick(variants, key) {
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Entra fuerte y sal más fuerte.',
-          'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Busca la l nea corta.',
+          'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Busca la línea corta.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.',
           'Por la punta se gana: {frontNameSafe} a {frontSecStr}. Una vuelta más y lo ejecutas.',
@@ -9140,7 +9460,7 @@ function rdPick(variants, key) {
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Entra fuerte y sal más fuerte.',
-          'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Busca la l nea corta.',
+          'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Busca la línea corta.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.',
           'Top 3 en juego: {frontNameSafe} a {frontSecStr}. Una vuelta más y lo ejecutas.',
@@ -9149,7 +9469,7 @@ function rdPick(variants, key) {
           'Arriba est {frontNameSafe} a {frontSecStr}. Ataque quirrgico.',
           'Arriba est {frontNameSafe} a {frontSecStr}. Coloca el pase sin tocar.',
           'Arriba est {frontNameSafe} a {frontSecStr}. Entra fuerte y sal más fuerte.',
-          'Arriba est {frontNameSafe} a {frontSecStr}. Busca la l nea corta.',
+          'Arriba est {frontNameSafe} a {frontSecStr}. Busca la línea corta.',
           'Arriba est {frontNameSafe} a {frontSecStr}. No dudes en la recta.',
           'Arriba est {frontNameSafe} a {frontSecStr}. Hazlo en zona segura.'
         ],
@@ -9209,7 +9529,7 @@ function rdPick(variants, key) {
         ],
         defense_front: [
           'Defiende el podio: {backNameSafe} a {backSecStr}. Cubre interior.',
-          'Defiende el podio: {backNameSafe} a {backSecStr}. l nea dura, sin golpes.',
+          'Defiende el podio: {backNameSafe} a {backSecStr}. línea dura, sin golpes.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. Salida fuerte.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. Cierra la puerta y acelera limpio.',
@@ -9218,7 +9538,7 @@ function rdPick(variants, key) {
           'Defiende el podio: {backNameSafe} a {backSecStr}. No frenes de más.',
           'Defiende el podio: {backNameSafe} a {backSecStr}. Hazlo predecible y firme.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Cubre interior.',
-          'Arriba no se regala: {backNameSafe} a {backSecStr}. l nea dura, sin golpes.',
+          'Arriba no se regala: {backNameSafe} a {backSecStr}. línea dura, sin golpes.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Salida fuerte.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Cierra la puerta y acelera limpio.',
@@ -9227,7 +9547,7 @@ function rdPick(variants, key) {
           'Arriba no se regala: {backNameSafe} a {backSecStr}. No frenes de más.',
           'Arriba no se regala: {backNameSafe} a {backSecStr}. Hazlo predecible y firme.',
           'presión por podio: {backNameSafe} {backSecStr}. Cubre interior.',
-          'presión por podio: {backNameSafe} {backSecStr}. l nea dura, sin golpes.',
+          'presión por podio: {backNameSafe} {backSecStr}. línea dura, sin golpes.',
           'presión por podio: {backNameSafe} {backSecStr}. Salida fuerte.',
           'presión por podio: {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
           'presión por podio: {backNameSafe} {backSecStr}. Cierra la puerta y acelera limpio.',
@@ -9237,7 +9557,7 @@ function rdPick(variants, key) {
         defense_mid: [
           '{backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
           '{backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
-          '{backNameSafe} a {backSecStr}. Defiende con l nea, no con volantazo.',
+          '{backNameSafe} a {backSecStr}. Defiende con línea, no con volantazo.',
           '{backNameSafe} a {backSecStr}. Cubre interior y acelera.',
           '{backNameSafe} a {backSecStr}. No regales la curva.',
           '{backNameSafe} a {backSecStr}. Calma, trazada limpia.',
@@ -9246,7 +9566,7 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Control total.',
           'Te cazan: {backNameSafe} a {backSecStr}. No dejes hueco en la entrada.',
           'Te cazan: {backNameSafe} a {backSecStr}. Salida fuerte, sin error.',
-          'Te cazan: {backNameSafe} a {backSecStr}. Defiende con l nea, no con volantazo.',
+          'Te cazan: {backNameSafe} a {backSecStr}. Defiende con línea, no con volantazo.',
           'Te cazan: {backNameSafe} a {backSecStr}. Cubre interior y acelera.',
           'Te cazan: {backNameSafe} a {backSecStr}. No regales la curva.',
           'Te cazan: {backNameSafe} a {backSecStr}. Calma, trazada limpia.',
@@ -9255,7 +9575,7 @@ function rdPick(variants, key) {
           'Te cazan: {backNameSafe} a {backSecStr}. Control total.',
           'presión atr s con {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
           'presión atr s con {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
-          'presión atr s con {backNameSafe} {backSecStr}. Defiende con l nea, no con volantazo.',
+          'presión atr s con {backNameSafe} {backSecStr}. Defiende con línea, no con volantazo.',
           'presión atr s con {backNameSafe} {backSecStr}. Cubre interior y acelera.',
           'presión atr s con {backNameSafe} {backSecStr}. No regales la curva.',
           'presión atr s con {backNameSafe} {backSecStr}. Calma, trazada limpia.',
@@ -9268,7 +9588,7 @@ function rdPick(variants, key) {
           'No regales: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
           'No regales: {backNameSafe} a {backSecStr}. Salida fuerte.',
           'No regales: {backNameSafe} a {backSecStr}. No inventes, defiende.',
-          'No regales: {backNameSafe} a {backSecStr}. l nea firme.',
+          'No regales: {backNameSafe} a {backSecStr}. línea firme.',
           'No regales: {backNameSafe} a {backSecStr}. Sin drama, pero firme.',
           'No regales: {backNameSafe} a {backSecStr}. Mantén la calma.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. Orden y manejo.',
@@ -9277,7 +9597,7 @@ function rdPick(variants, key) {
           'Defiende lo básico: {backNameSafe} {backSecStr}. No te abras en la entrada.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. Salida fuerte.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. No inventes, defiende.',
-          'Defiende lo básico: {backNameSafe} {backSecStr}. l nea firme.',
+          'Defiende lo básico: {backNameSafe} {backSecStr}. línea firme.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. Sin drama, pero firme.',
           'Defiende lo básico: {backNameSafe} {backSecStr}. Mantén la calma.',
           'presión real: {backNameSafe} a {backSecStr}. Orden y manejo.',
@@ -9286,7 +9606,7 @@ function rdPick(variants, key) {
           'presión real: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
           'presión real: {backNameSafe} a {backSecStr}. Salida fuerte.',
           'presión real: {backNameSafe} a {backSecStr}. No inventes, defiende.',
-          'presión real: {backNameSafe} a {backSecStr}. l nea firme.'
+          'presión real: {backNameSafe} a {backSecStr}. línea firme.'
         ],
         fight: [
           'Pelea viva: adelante y atr s. Prioriza salida.',
@@ -9316,11 +9636,11 @@ function rdPick(variants, key) {
           'Cuidado con el tráfico, no regales segundos. Todo limpio.'
         ],
         blueflag: [
-          'Bandera azul. líder encima. Mantén l nea y deja pasar.',
-          'Bandera azul. líder encima. Mantén l nea y deja pasar. Con seguridad.',
-          'Bandera azul. líder encima. Mantén l nea y deja pasar. Sin perder tiempo.',
-          'Bandera azul. líder encima. Mantén l nea y deja pasar. Todo limpio.',
-          'Bandera azul. líder encima. Mantén l nea y deja pasar. Sin riesgos.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar. Con seguridad.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar. Sin perder tiempo.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar. Todo limpio.',
+          'Bandera azul. líder encima. Mantén línea y deja pasar. Sin riesgos.',
           'Bandera azul. No te metas en broncas, cede seguro.',
           'Bandera azul. No te metas en broncas, cede seguro. Con seguridad.',
           'Bandera azul. No te metas en broncas, cede seguro. Sin perder tiempo.',
@@ -9331,11 +9651,11 @@ function rdPick(variants, key) {
           'Bandera azul. Respeta, deja pasar y sigue tu carrera. Sin perder tiempo.',
           'Bandera azul. Respeta, deja pasar y sigue tu carrera. Todo limpio.',
           'Bandera azul. Respeta, deja pasar y sigue tu carrera. Sin riesgos.',
-          'Bandera azul. l nea predecible, no frenes raro.',
-          'Bandera azul. l nea predecible, no frenes raro. Con seguridad.',
-          'Bandera azul. l nea predecible, no frenes raro. Sin perder tiempo.',
-          'Bandera azul. l nea predecible, no frenes raro. Todo limpio.',
-          'Bandera azul. l nea predecible, no frenes raro. Sin riesgos.',
+          'Bandera azul. línea predecible, no frenes raro.',
+          'Bandera azul. línea predecible, no frenes raro. Con seguridad.',
+          'Bandera azul. línea predecible, no frenes raro. Sin perder tiempo.',
+          'Bandera azul. línea predecible, no frenes raro. Todo limpio.',
+          'Bandera azul. línea predecible, no frenes raro. Sin riesgos.',
           'Bandera azul. Abre espacio en la salida.',
           'Bandera azul. Abre espacio en la salida. Con seguridad.',
           'Bandera azul. Abre espacio en la salida. Sin perder tiempo.',
@@ -9397,7 +9717,7 @@ function rdPick(variants, key) {
           'presión atr s: {backNameSafe} a {backSecStr}. Defiende con cabeza.'
         ],
         pos: [
-          'Ahora P{posNow}. Reacciona: l nea limpia y salida fuerte.',
+          'Ahora P{posNow}. Reacciona: línea limpia y salida fuerte.',
           'Ahora P{posNow}. Cero errores, recupera ritmo.',
           'Ahora P{posNow}. acom date y vuelve al ataque.',
           'Ahora P{posNow}. Plan claro: salida manda.',
@@ -9406,7 +9726,7 @@ function rdPick(variants, key) {
           'Ahora P{posNow}. Orden y gas.',
           'Ahora P{posNow}. No inventes, ejecuta.',
           'Ahora P{posNow}. A trabajar, vuelta a vuelta.',
-          'P{posNow}. Reacciona: l nea limpia y salida fuerte.',
+          'P{posNow}. Reacciona: línea limpia y salida fuerte.',
           'P{posNow}. Cero errores, recupera ritmo.',
           'P{posNow}. acom date y vuelve al ataque.',
           'P{posNow}. Plan claro: salida manda.',
@@ -9415,7 +9735,7 @@ function rdPick(variants, key) {
           'P{posNow}. Orden y gas.',
           'P{posNow}. No inventes, ejecuta.',
           'P{posNow}. A trabajar, vuelta a vuelta.',
-          'Vas P{posNow}. Reacciona: l nea limpia y salida fuerte.',
+          'Vas P{posNow}. Reacciona: línea limpia y salida fuerte.',
           'Vas P{posNow}. Cero errores, recupera ritmo.',
           'Vas P{posNow}. acom date y vuelve al ataque.',
           'Vas P{posNow}. Plan claro: salida manda.',
@@ -9488,11 +9808,11 @@ function rdPick(variants, key) {
           'Ritmo baj. Corrige trazada y salida. Control total.',
           'Ritmo baj. Corrige trazada y salida. Sin errores.',
           'Ritmo baj. Corrige trazada y salida. Plan claro.',
-          'Consistente. Repite la l nea y aprieta.',
-          'Consistente. Repite la l nea y aprieta. Vuelta a vuelta.',
-          'Consistente. Repite la l nea y aprieta. Control total.',
-          'Consistente. Repite la l nea y aprieta. Sin errores.',
-          'Consistente. Repite la l nea y aprieta. Plan claro.',
+          'Consistente. Repite la línea y aprieta.',
+          'Consistente. Repite la línea y aprieta. Vuelta a vuelta.',
+          'Consistente. Repite la línea y aprieta. Control total.',
+          'Consistente. Repite la línea y aprieta. Sin errores.',
+          'Consistente. Repite la línea y aprieta. Plan claro.',
           'Ritmo slido. No cambies nada.',
           'Ritmo slido. No cambies nada. Vuelta a vuelta.',
           'Ritmo slido. No cambies nada. Control total.',
@@ -9532,31 +9852,31 @@ function rdPick(variants, key) {
           'estimación marcada. Control de riesgo. Plan claro.'
         ],
         bestlap: [
-          'Best lap confirmada. Ahora rep tela sin riesgo.',
-          'Best lap confirmada. Ahora rep tela sin riesgo. Sin riesgos.',
-          'Best lap confirmada. Ahora rep tela sin riesgo. Limpio.',
-          'Best lap confirmada. Ahora rep tela sin riesgo. Plan claro.',
-          'Best lap confirmada. Ahora rep tela sin riesgo. Vuelta a vuelta.',
+          'Mejor vuelta confirmada. Ahora rep tela sin riesgo.',
+          'Mejor vuelta confirmada. Ahora rep tela sin riesgo. Sin riesgos.',
+          'Mejor vuelta confirmada. Ahora rep tela sin riesgo. Limpio.',
+          'Mejor vuelta confirmada. Ahora rep tela sin riesgo. Plan claro.',
+          'Mejor vuelta confirmada. Ahora rep tela sin riesgo. Vuelta a vuelta.',
           'Mejoraste best lap. sostén el ritmo.',
           'Mejoraste best lap. sostén el ritmo. Sin riesgos.',
           'Mejoraste best lap. sostén el ritmo. Limpio.',
           'Mejoraste best lap. sostén el ritmo. Plan claro.',
           'Mejoraste best lap. sostén el ritmo. Vuelta a vuelta.',
-          'Best lap. No te emociones, repite.',
-          'Best lap. No te emociones, repite. Sin riesgos.',
-          'Best lap. No te emociones, repite. Limpio.',
-          'Best lap. No te emociones, repite. Plan claro.',
-          'Best lap. No te emociones, repite. Vuelta a vuelta.',
-          'Best lap. Buen trabajo, ahora consistencia.',
-          'Best lap. Buen trabajo, ahora consistencia. Sin riesgos.',
-          'Best lap. Buen trabajo, ahora consistencia. Limpio.',
-          'Best lap. Buen trabajo, ahora consistencia. Plan claro.',
-          'Best lap. Buen trabajo, ahora consistencia. Vuelta a vuelta.',
-          'Nueva best lap. Mantén la l nea.',
-          'Nueva best lap. Mantén la l nea. Sin riesgos.',
-          'Nueva best lap. Mantén la l nea. Limpio.',
-          'Nueva best lap. Mantén la l nea. Plan claro.',
-          'Nueva best lap. Mantén la l nea. Vuelta a vuelta.'
+          'Mejor vuelta. No te emociones, repite.',
+          'Mejor vuelta. No te emociones, repite. Sin riesgos.',
+          'Mejor vuelta. No te emociones, repite. Limpio.',
+          'Mejor vuelta. No te emociones, repite. Plan claro.',
+          'Mejor vuelta. No te emociones, repite. Vuelta a vuelta.',
+          'Mejor vuelta. Buen trabajo, ahora consistencia.',
+          'Mejor vuelta. Buen trabajo, ahora consistencia. Sin riesgos.',
+          'Mejor vuelta. Buen trabajo, ahora consistencia. Limpio.',
+          'Mejor vuelta. Buen trabajo, ahora consistencia. Plan claro.',
+          'Mejor vuelta. Buen trabajo, ahora consistencia. Vuelta a vuelta.',
+          'Nueva best lap. Mantén la línea.',
+          'Nueva best lap. Mantén la línea. Sin riesgos.',
+          'Nueva best lap. Mantén la línea. Limpio.',
+          'Nueva best lap. Mantén la línea. Plan claro.',
+          'Nueva best lap. Mantén la línea. Vuelta a vuelta.'
         ],
 
         cons10: [
@@ -9618,11 +9938,11 @@ function rdPick(variants, key) {
           'Manga: constancia. No persigas fantasmas. Mantén el plan.',
           'Manga: constancia. No persigas fantasmas. Sin presionarte.',
           'Manga: constancia. No persigas fantasmas. Paso a paso.',
-          'Manga: manos suaves, l nea firme.',
-          'Manga: manos suaves, l nea firme. T  puedes.',
-          'Manga: manos suaves, l nea firme. Mantén el plan.',
-          'Manga: manos suaves, l nea firme. Sin presionarte.',
-          'Manga: manos suaves, l nea firme. Paso a paso.',
+          'Manga: manos suaves, línea firme.',
+          'Manga: manos suaves, línea firme. T  puedes.',
+          'Manga: manos suaves, línea firme. Mantén el plan.',
+          'Manga: manos suaves, línea firme. Sin presionarte.',
+          'Manga: manos suaves, línea firme. Paso a paso.',
           'Manga: aire limpio y ritmo estable.',
           'Manga: aire limpio y ritmo estable. T  puedes.',
           'Manga: aire limpio y ritmo estable. Mantén el plan.',
@@ -9657,7 +9977,7 @@ function rdPick(variants, key) {
           '{frontNameSafe} est cerca. Paciencia, el pase llega.'
         ],
         defense: [
-          'Te viene {backNameSafe}. Mantén tu l nea y acelera limpio.',
+          'Te viene {backNameSafe}. Mantén tu línea y acelera limpio.',
           'Te viene {backNameSafe}. Puerta cerrada, sin frenar de más.',
           'Te viene {backNameSafe}. Protege interior.',
           'Te viene {backNameSafe}. Defiende con trazada, no con golpes.',
@@ -9667,7 +9987,7 @@ function rdPick(variants, key) {
           'Te viene {backNameSafe}. Todo limpio.',
           'Te viene {backNameSafe}. Sin errores.',
           'Te viene {backNameSafe}. Calma, lo tienes.',
-          '{backNameSafe} a {backSecStr}. Mantén tu l nea y acelera limpio.',
+          '{backNameSafe} a {backSecStr}. Mantén tu línea y acelera limpio.',
           '{backNameSafe} a {backSecStr}. Puerta cerrada, sin frenar de más.',
           '{backNameSafe} a {backSecStr}. Protege interior.',
           '{backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
@@ -9677,7 +9997,7 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Todo limpio.',
           '{backNameSafe} a {backSecStr}. Sin errores.',
           '{backNameSafe} a {backSecStr}. Calma, lo tienes.',
-          'Ojo atr s con {backNameSafe}. Mantén tu l nea y acelera limpio.',
+          'Ojo atr s con {backNameSafe}. Mantén tu línea y acelera limpio.',
           'Ojo atr s con {backNameSafe}. Puerta cerrada, sin frenar de más.',
           'Ojo atr s con {backNameSafe}. Protege interior.',
           'Ojo atr s con {backNameSafe}. Defiende con trazada, no con golpes.',
@@ -9711,11 +10031,11 @@ function rdPick(variants, key) {
           'No todo es ahora, cuida el coche. Limpio y rápido.'
         ],
         blueflag: [
-          'Bandera azul. Deja pasar sin perder la l nea.',
-          'Bandera azul. Deja pasar sin perder la l nea. Con seguridad.',
-          'Bandera azul. Deja pasar sin perder la l nea. Sin drama.',
-          'Bandera azul. Deja pasar sin perder la l nea. Todo limpio.',
-          'Bandera azul. Deja pasar sin perder la l nea. Sin riesgos.',
+          'Bandera azul. Deja pasar sin perder la línea.',
+          'Bandera azul. Deja pasar sin perder la línea. Con seguridad.',
+          'Bandera azul. Deja pasar sin perder la línea. Sin drama.',
+          'Bandera azul. Deja pasar sin perder la línea. Todo limpio.',
+          'Bandera azul. Deja pasar sin perder la línea. Sin riesgos.',
           'Bandera azul. Cede seguro y sigue tu ritmo.',
           'Bandera azul. Cede seguro y sigue tu ritmo. Con seguridad.',
           'Bandera azul. Cede seguro y sigue tu ritmo. Sin drama.',
@@ -9726,11 +10046,11 @@ function rdPick(variants, key) {
           'Bandera azul. Respeta, no arriesgues. Sin drama.',
           'Bandera azul. Respeta, no arriesgues. Todo limpio.',
           'Bandera azul. Respeta, no arriesgues. Sin riesgos.',
-          'Bandera azul. l nea predecible.',
-          'Bandera azul. l nea predecible. Con seguridad.',
-          'Bandera azul. l nea predecible. Sin drama.',
-          'Bandera azul. l nea predecible. Todo limpio.',
-          'Bandera azul. l nea predecible. Sin riesgos.',
+          'Bandera azul. línea predecible.',
+          'Bandera azul. línea predecible. Con seguridad.',
+          'Bandera azul. línea predecible. Sin drama.',
+          'Bandera azul. línea predecible. Todo limpio.',
+          'Bandera azul. línea predecible. Sin riesgos.',
           'Bandera azul. Abre espacio en salida.',
           'Bandera azul. Abre espacio en salida. Con seguridad.',
           'Bandera azul. Abre espacio en salida. Sin drama.',
@@ -9766,7 +10086,7 @@ function rdPick(variants, key) {
         ],
         back06: [
           '{backNameSafe} est encima. Defiende con trazada, no con golpes.',
-          '{backNameSafe} est encima. l nea firme y salida fuerte.',
+          '{backNameSafe} est encima. línea firme y salida fuerte.',
           '{backNameSafe} est encima. Sin errores, lo aguantas.',
           '{backNameSafe} est encima. Calma y control.',
           '{backNameSafe} est encima. No te abras en la entrada.',
@@ -9775,7 +10095,7 @@ function rdPick(variants, key) {
           '{backNameSafe} est encima. Cubre interior.',
           '{backNameSafe} est encima. Todo limpio.',
           'presión atr s: {backNameSafe} a {backSecStr}. Defiende con trazada, no con golpes.',
-          'presión atr s: {backNameSafe} a {backSecStr}. l nea firme y salida fuerte.',
+          'presión atr s: {backNameSafe} a {backSecStr}. línea firme y salida fuerte.',
           'presión atr s: {backNameSafe} a {backSecStr}. Sin errores, lo aguantas.',
           'presión atr s: {backNameSafe} a {backSecStr}. Calma y control.',
           'presión atr s: {backNameSafe} a {backSecStr}. No te abras en la entrada.',
@@ -9784,7 +10104,7 @@ function rdPick(variants, key) {
           'presión atr s: {backNameSafe} a {backSecStr}. Cubre interior.',
           'presión atr s: {backNameSafe} a {backSecStr}. Todo limpio.',
           '{backNameSafe} en rango: {backSecStr}. Defiende con trazada, no con golpes.',
-          '{backNameSafe} en rango: {backSecStr}. l nea firme y salida fuerte.',
+          '{backNameSafe} en rango: {backSecStr}. línea firme y salida fuerte.',
           '{backNameSafe} en rango: {backSecStr}. Sin errores, lo aguantas.',
           '{backNameSafe} en rango: {backSecStr}. Calma y control.',
           '{backNameSafe} en rango: {backSecStr}. No te abras en la entrada.',
@@ -9819,11 +10139,11 @@ function rdPick(variants, key) {
           'posición P{posNow}. Sin errores.'
         ],
         leader: [
-          'El líder marca el ritmo. T  marca tu l nea.',
-          'El líder marca el ritmo. T  marca tu l nea. T  puedes.',
-          'El líder marca el ritmo. T  marca tu l nea. Paso a paso.',
-          'El líder marca el ritmo. T  marca tu l nea. Sin errores.',
-          'El líder marca el ritmo. T  marca tu l nea. Control.',
+          'El líder marca el ritmo. T  marca tu línea.',
+          'El líder marca el ritmo. T  marca tu línea. T  puedes.',
+          'El líder marca el ritmo. T  marca tu línea. Paso a paso.',
+          'El líder marca el ritmo. T  marca tu línea. Sin errores.',
+          'El líder marca el ritmo. T  marca tu línea. Control.',
           'Referencia del líder, sin obsesionarte.',
           'Referencia del líder, sin obsesionarte. T  puedes.',
           'Referencia del líder, sin obsesionarte. Paso a paso.',
@@ -9927,31 +10247,31 @@ function rdPick(variants, key) {
           'estimación ok. Paso a paso. Control.'
         ],
         bestlap: [
-          'Best lap. Bien ahí, repite con calma.',
-          'Best lap. Bien ahí, repite con calma. Paso a paso.',
-          'Best lap. Bien ahí, repite con calma. Control.',
-          'Best lap. Bien ahí, repite con calma. Sin errores.',
-          'Best lap. Bien ahí, repite con calma. Limpio.',
+          'Mejor vuelta. Bien ahí, repite con calma.',
+          'Mejor vuelta. Bien ahí, repite con calma. Paso a paso.',
+          'Mejor vuelta. Bien ahí, repite con calma. Control.',
+          'Mejor vuelta. Bien ahí, repite con calma. Sin errores.',
+          'Mejor vuelta. Bien ahí, repite con calma. Limpio.',
           'Nueva best lap. Buen trabajo.',
           'Nueva best lap. Buen trabajo. Paso a paso.',
           'Nueva best lap. Buen trabajo. Control.',
           'Nueva best lap. Buen trabajo. Sin errores.',
           'Nueva best lap. Buen trabajo. Limpio.',
-          'Best lap confirmada. Mantén.',
-          'Best lap confirmada. Mantén. Paso a paso.',
-          'Best lap confirmada. Mantén. Control.',
-          'Best lap confirmada. Mantén. Sin errores.',
-          'Best lap confirmada. Mantén. Limpio.',
+          'Mejor vuelta confirmada. Mantén.',
+          'Mejor vuelta confirmada. Mantén. Paso a paso.',
+          'Mejor vuelta confirmada. Mantén. Control.',
+          'Mejor vuelta confirmada. Mantén. Sin errores.',
+          'Mejor vuelta confirmada. Mantén. Limpio.',
           'Mejoraste best lap. Control total.',
           'Mejoraste best lap. Control total. Paso a paso.',
           'Mejoraste best lap. Control total. Control.',
           'Mejoraste best lap. Control total. Sin errores.',
           'Mejoraste best lap. Control total. Limpio.',
-          'Best lap. Ahora consistencia.',
-          'Best lap. Ahora consistencia. Paso a paso.',
-          'Best lap. Ahora consistencia. Control.',
-          'Best lap. Ahora consistencia. Sin errores.',
-          'Best lap. Ahora consistencia. Limpio.'
+          'Mejor vuelta. Ahora consistencia.',
+          'Mejor vuelta. Ahora consistencia. Paso a paso.',
+          'Mejor vuelta. Ahora consistencia. Control.',
+          'Mejor vuelta. Ahora consistencia. Sin errores.',
+          'Mejor vuelta. Ahora consistencia. Limpio.'
         ],
 
         cons10: [
@@ -10053,7 +10373,7 @@ function rdMakeMangaBattleText(kind, c, mode) {
   const attack = [
     'Manga. {frontNameSafe} a {frontSecStr}. Limpio y lo cazas.',
     'Manga. {frontNameSafe} a {frontSecStr}. Sal bien y cae el pase.',
-    'Manga. {frontNameSafe} a {frontSecStr}. Lnea fina, sin drama.',
+    'Manga. {frontNameSafe} a {frontSecStr}. Línea fina, sin drama.',
     'Manga. {frontNameSafe} a {frontSecStr}. Cero errores, aprieta.',
     'Manga. {frontNameSafe} a {frontSecStr}. Dos vueltas as y lo tienes.',
     'Manga. Vas por {frontNameSafe}. Gap {frontSecStr}.',
@@ -10077,7 +10397,7 @@ function rdMakeMangaBattleText(kind, c, mode) {
     'Manga. Te vienen oliendo. {backNameSafe} {backSecStr}.',
     'Manga. Defensa fina. {backNameSafe} {backSecStr}.',
     'Manga. No des espacio gratis. {backNameSafe} {backSecStr}.',
-    'Manga. Mantn tu lnea. {backNameSafe} {backSecStr}.',
+    'Manga. Mantn tu línea. {backNameSafe} {backSecStr}.',
     'Manga. Respira. {backNameSafe} est encima. {backSecStr}.',
     'Manga. Sal de curva bien, y se apaga. {backNameSafe} {backSecStr}.',
     'Manga. No te enredes. {backNameSafe} {backSecStr}.',
@@ -10092,7 +10412,7 @@ function rdMakeMangaBattleText(kind, c, mode) {
     'Manga. Se viene pelea: {frontNameSafe} {frontSecStr}, {backNameSafe} {backSecStr}.',
     'Manga. Tres autos en un respiro. Mantn calma.',
     'Manga. Esto es ajedrez en miniatura. No regales.',
-    'Manga. Lnea limpia, manos suaves. Duelo real.',
+    'Manga. Línea limpia, manos suaves. Duelo real.',
     'Manga. Cada error cuesta dos posiciones. Ojo.',
     'Manga. Juega con la salida, no con el choque.',
     'Manga. Batalla cerrada. Decide con cabeza fra.',
@@ -10685,6 +11005,7 @@ function __duoGuessRole(txt, key) {
         basicToggleBtnMini.classList.remove('disabled');
         basicToggleBtnMini.classList.toggle('active', !!basicModeEnabled);
         basicToggleBtnMini.textContent = (basicModeEnabled ? 'BÁSICO ON' : 'BÁSICO');
+        try { if (typeof updateSayLapsUI === 'function') updateSayLapsUI(); } catch(e) {}
       }catch(e){}
     }
 
@@ -11028,7 +11349,30 @@ if (!candidates.length) candidates = (voicesAll || []);
 
 let ms = candidates.filter(v => isMS(v));
 let gg = candidates.filter(v => isGoogle(v));
-let inter = (ms.length && gg.length) ? buildInterleaved(ms, gg) : (ms.length ? ms : (gg.length ? gg : candidates));
+
+// En PC (desktop), el Auto Locutor se puede forzar a solo Microsoft para mejor claridad.
+const __isMobileUA = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+// En PC (desktop), limpia el pool: solo voces en español (evita EN como 'David').
+if (!__isMobileUA && ms.length) {
+  const _es = ms.filter(v => (((v.lang||'')+'').toLowerCase().startsWith('es')));
+  if (_es.length) ms = _es;
+}
+const __mxOnlyDesktop = !__isMobileUA && (prefGet('spotterAutoVoiceMXOnlyDesktop','0') !== '0');
+const __msOnlyDesktop = !__isMobileUA && (prefGet('spotterAutoVoiceMSOnlyDesktop','1') !== '0');
+
+
+if (__mxOnlyDesktop && ms.length) {
+  const _msmx = ms.filter(v => (((v.lang||'')+'').toLowerCase().startsWith('es-mx')) || /mexico/i.test((v.name||'')));
+  if (_msmx.length) ms = _msmx;
+}
+
+let inter;
+if (__msOnlyDesktop && ms.length) {
+  inter = ms;
+} else {
+  inter = (ms.length && gg.length) ? buildInterleaved(ms, gg) : (ms.length ? ms : (gg.length ? gg : candidates));
+}
+
 
 __autoVoicePool = inter.map(v => (v.voiceURI || v.name)).filter(Boolean);
       } catch(e) {}
@@ -11230,7 +11574,7 @@ let __ttsStartGuard = 0;
         s = s.replace(/\b(\d+)\s*ms\b/gi, (m, n) => __msToSpeech(n));
 
         // Diccionario r\xe1pido de tildes y pronunciaci\xf3n (TTS)
-        // - evita lecturas raras por falta de acento ("basico") o por encoding/recortes (ej. "líder", "lnea")
+        // - evita lecturas raras por falta de acento ("basico") o por encoding/recortes (ej. "líder", "línea")
         const __dict = [
           [/\bbasico\b/gi, 'b\xe1sico'],
           [/\bbásico\b/gi, 'b\xe1sico'],
@@ -11250,7 +11594,7 @@ let __ttsStartGuard = 0;
           [/\btrafico\b/gi, 'tr\xe1fico'],
           [/\btrfico\b/gi, 'tr\xe1fico'],
           [/\blinea\b/gi, 'l\xednea'],
-          [/\blnea\b/gi, 'l\xednea'],
+          [/\blínea\b/gi, 'l\xednea'],
           [/\bpresion\b/gi, 'presi\xf3n'],
           [/\bpresin\b/gi, 'presi\xf3n'],
           [/\batras\b/gi, 'atr\xe1s'],
@@ -11829,7 +12173,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         const baseRate = (Number.isFinite(ttsRate) ? ttsRate : 1.5);
         const mood = opts.mood;
         const pr = prosodyFromMood(mood);
-        const rate = clampNum((opts.rate != null ? opts.rate : (baseRate * (pr.rateMul || 1.0))), 0.6, 2.2);
+        let rate = clampNum((opts.rate != null ? opts.rate : (baseRate * (pr.rateMul || 1.0))), 0.6, 2.2);
         const pitch = clampNum((opts.pitch != null ? opts.pitch : (pr.pitch != null ? pr.pitch : 1.0)), 0.5, 2.0);
         const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
         const postDelayMs = clampNum((opts.postDelayMs != null ? Number(opts.postDelayMs) : 0), 0, 2000);
@@ -12055,7 +12399,8 @@ lastSpokenKeyAt.set(next.key, Date.now());
 function speakWithLaps(_laps, message, opts) {
       // Prefijo de LAPS (opcional): si "Vueltas" estápagado, no digas "10 vueltas..."
       const msg = String(message || '').trim();
-      const allowPrefix = !!(voiceSettings && voiceSettings.saylaps);
+      const inFollow = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
+      const allowPrefix = !!(voiceSettings && voiceSettings.saylaps) || (getSayLapsOverride() && inFollow && !(typeof basicModeEnabled !== 'undefined' && basicModeEnabled));
 
       if (!allowPrefix) {
         if (msg) speakText(msg, opts || {});
@@ -12606,6 +12951,52 @@ function setVoiceMaster(on, opts = {}) {
         });
       } catch(e) {}
     }
+
+    // Checkbox: prefijo de VUELTAS (solo FOLLOW)
+    function updateSayLapsUI(){
+      try{
+        const sayLapsChk = document.getElementById('sayLapsChk');
+        const sayLapsWrap = document.getElementById('sayLapsWrap');
+        if (!sayLapsChk || !sayLapsWrap) return;
+        const inFollow = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
+        const ov = getSayLapsOverride();
+
+        // En AUTO no aplica (sin piloto). En BÁSICO no aplica (override bloqueado).
+        sayLapsChk.disabled = !inFollow;
+        sayLapsWrap.classList.toggle('disabled', !inFollow);
+
+        sayLapsChk.checked = !!ov && inFollow && !(typeof basicModeEnabled !== 'undefined' && basicModeEnabled);
+      }catch(e){}
+    }
+
+    try { updateSayLapsUI(); } catch(e) {}
+
+    (function wireSayLapsCheckbox(){
+      try{
+        const sayLapsChk = document.getElementById('sayLapsChk');
+        if (!sayLapsChk) return;
+
+        sayLapsChk.addEventListener('change', ()=>{
+          try{
+            const want = !!sayLapsChk.checked;
+
+            // Si lo prendes y BÁSICO está ON, apágalo (para que se note el cambio)
+            if (want && (typeof basicModeEnabled !== 'undefined' && basicModeEnabled)) {
+              basicModeEnabled = false;
+              try { prefSet('basicModeEnabled', '0'); } catch(e) {}
+              try { applySmartProfile(currentSessionInfo || {}, 'saylaps-toggle'); } catch(e) {}
+              try { _updateBasicBtnUI(); } catch(e) {}
+            }
+
+            setSayLapsOverride(want);
+            try { playBeep('tap'); } catch(e) {}
+            try { updateSayLapsUI(); } catch(e) {}
+          }catch(e){}
+        });
+      }catch(e){}
+    })();
+
+
 
     // Toggle UI de mensajes
     function applyVoiceSettingsToButtons() {
@@ -13570,7 +13961,7 @@ ensureCanvasHiDpi(lapChartEl);
         }
       } catch(e){}
 
-      // lnea promedio
+      // línea promedio
       if (isLapPlausible(mean)) {
         const yMean = top + (1 - (Math.min(Math.max(mean, minV), maxV) - minV) / (maxV - minV)) * gh;
         ctx.strokeStyle = 'rgba(34,211,238,0.35)';
@@ -13598,7 +13989,7 @@ try {
   }
 } catch(e) {}
 
-      // lnea tiempos
+      // línea tiempos
       ctx.strokeStyle = 'rgba(251,146,60,0.95)';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -13624,7 +14015,7 @@ try {
         ctx.restore();
       }
 
-      // lnea de media (pace)
+      // línea de media (pace)
       if (mean && maxV > minV) {
         const yM = top + (1 - (Math.min(Math.max(mean, minV), maxV) - minV) / (maxV - minV)) * gh;
         ctx.save();
@@ -15398,10 +15789,7 @@ function updateBlueFlagFromPassEvents() {
         const who = (laperPos === 1) ? ('el líder P1 ' + laperNameClean) : ('P' + laperPos + ' ' + laperNameClean);
 
         pendingBlueFlagForPilotKey = selectedPilotKey;
-        pendingBlueFlagMessage = isFinal
-          ? ('Bandera azul! Detrs viene ' + who + '. Mantn tu lnea y djalo pasar en la recta')
-          : ('Bandera azul. Detrs viene ' + who + '. Mantn tu lnea y djalo pasar en la recta');
-
+        pendingBlueFlagMessage = msgv2Compose('blueflag', { who: who, isFinal: !!isFinal, pilotKey: (typeof selectedPilotKey !== 'undefined' ? selectedPilotKey : '') });
         lastBlueFlagPilotLap = selLap || lastBlueFlagPilotLap;
         lastBlueFlagLeaderLap = best.laperLap || lastBlueFlagLeaderLap;
         blueFlagConfirm.hits = 0;
@@ -16165,13 +16553,13 @@ function autoBuildStoryCandidate(args) {
       ],
 
       record: [
-        (c) => 'Best lap. ' + c.pilot + ' marca ' + c.best + '.',
+        (c) => 'Mejor vuelta. ' + c.pilot + ' marca ' + c.best + '.',
         (c) => 'Nueva mejor vuelta para ' + c.pilot + ': ' + c.best + '.',
         (c) => 'Referencia de ritmo: ' + c.pilot + ' con ' + c.best + '.',
         (c) => 'Se apunta best lap. ' + c.pilot + ' ' + c.best + '.',
         (c) => 'Mejor vuelta del stint: ' + c.pilot + ' ' + c.best + '.',
         (c) => 'Tiempo top para ' + c.pilot + ': ' + c.best + '.',
-        (c) => 'Best lap registrado: ' + c.pilot + ' con ' + c.best + '.',
+        (c) => 'Mejor vuelta registrado: ' + c.pilot + ' con ' + c.best + '.',
         (c) => 'Ritmo fuerte. ' + c.pilot + ' clava ' + c.best + '.',
         (c) => 'Mejor vuelta. ' + c.pilot + ' firma ' + c.best + '.',
         (c) => 'Se actualiza best lap: ' + c.pilot + ' ' + c.best + '.'
@@ -18046,7 +18434,7 @@ try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
         const isNewBest = (lastBestAnnouncedMs == null) ? true : (lapMsNow < (lastBestAnnouncedMs - 30));
         if (isNewBest) {
           pendingBestLap = {
-            text: 'Best lap ' + tiempoATexto(lapMsNow),
+            text: msgv2Compose('bestlap', { best: tiempoATexto(lapMsNow), isFinal: !!isFinal, isManga: !!isManga, pilotKey: (typeof selectedPilotKey !== 'undefined' ? selectedPilotKey : '') }),
             opts: { key: 'bestlap_' + lapsNow, priority: 75, cooldownMs: 1500, dedupe: true },
             expLap: lapsNow + 2,
             ms: lapMsNow
@@ -18299,7 +18687,7 @@ try {
           if (!attackLatch.active) {
             const secStr = gapToSpeech(sec, 'attack');
             const nm = ctx.frontName || '';
-            const txt = nm ? ('Ataque. ' + nm + ' a ' + secStr) : ('Ataque. Adelante a ' + secStr);
+            const txt = msgv2Compose('attack', { otherName: nm, gapStr: secStr, isFinal: !!isFinal, isManga: !!isManga, pilotKey: (typeof selectedPilotKey !== 'undefined' ? selectedPilotKey : '') });
             pushCand('attack', isFinal ? 88 : 22, txt,
               { key: 'attack_' + Math.floor(lapsNow/2), priority: 70, cooldownMs: 4200, dedupe: true },
               () => {
@@ -18325,7 +18713,7 @@ try {
           if (!defenseLatch.active) {
             const secStr = gapToSpeech(sec, 'defense');
             const nm = ctx.backName || '';
-            const txt = nm ? ('Defensa. ' + nm + ' viene ' + secStr) : ('Defensa. Atras viene ' + secStr);
+            const txt = msgv2Compose('defense', { otherName: nm, gapStr: secStr, isFinal: !!isFinal, isManga: !!isManga, pilotKey: (typeof selectedPilotKey !== 'undefined' ? selectedPilotKey : '') });
             pushCand('defense', isFinal ? 88 : 22, txt,
               { key: 'defense_' + Math.floor(lapsNow/2), priority: 70, cooldownMs: 4200, dedupe: true },
               () => {
@@ -18354,7 +18742,7 @@ try {
           }
         }
         if (!fightLatch.active && inFight) {
-          pushCand('fight', isFinal ? 78 : 18, 'Pelea cerrada',
+          pushCand('fight', isFinal ? 78 : 18, msgv2Compose('fight', { isFinal: !!isFinal, isManga: !!isManga, pilotKey: (typeof selectedPilotKey !== 'undefined' ? selectedPilotKey : '') }),
             { key: 'fight_' + Math.floor(lapsNow/2), priority: 66, cooldownMs: 5200, dedupe: true },
             () => {
               fightLatch.active = true;
@@ -18449,12 +18837,12 @@ try {
           const avgPrev = prev3.reduce((a,b)=>a+b,0) / 3;
           const diff = avgPrev - avgLast; // positivo = mejoraste
           if (diff > 120) {
-            pushCand('ritmo_up', isManga ? 72 : 28, 'Ritmo subiendo',
+            pushCand('ritmo_up', isManga ? 72 : 28, msgv2Compose('ritmo_up', { deltaMs: diff, isFinal: !!isFinal, isManga: !!isManga, pilotKey: (typeof selectedPilotKey !== 'undefined' ? selectedPilotKey : '') }),
               { key: 'ritmo_up_' + Math.floor(lapsNow/3), priority: 30, cooldownMs: 2500, dedupe: true },
               () => { lastTrendSpokenLap = lapsNow; }
             );
           } else if (diff < -120) {
-            pushCand('ritmo_down', isManga ? 72 : 28, 'Ritmo bajando',
+            pushCand('ritmo_down', isManga ? 72 : 28, msgv2Compose('ritmo_down', { deltaMs: diff, isFinal: !!isFinal, isManga: !!isManga, pilotKey: (typeof selectedPilotKey !== 'undefined' ? selectedPilotKey : '') }),
               { key: 'ritmo_down_' + Math.floor(lapsNow/3), priority: 30, cooldownMs: 2500, dedupe: true },
               () => { lastTrendSpokenLap = lapsNow; }
             );
@@ -18498,7 +18886,7 @@ try {
           let msg = '';
           if (posTxt) msg += posTxt + '. ';
           if (gapTxt) msg += gapTxt + '. ';
-          if (bestTxt) msg += 'Best lap ' + bestTxt + '. ';
+          if (bestTxt) msg += 'Mejor vuelta ' + bestTxt + '. ';
           msg = msg.trim();
           if (msg) {
             pushCand('box', isFinal ? 22 : 40, msg,
