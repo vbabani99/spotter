@@ -1,12 +1,12 @@
 
 <!--
-vics_Smart_Spotter_v0.3.62 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.63 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.62: TTS v2 por bloques (anti-repetición), frases más naturales en Follow (ataque/defensa/ritmo/azul/best lap), y sin 'Best lap' en locución.
+- v0.3.63: TTS v2 por bloques (anti-repetición), frases más naturales en Follow (ataque/defensa/ritmo/azul/best lap), y sin 'Best lap' en locución.
 - v0.3.55: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
 - v0.3.60: Auto Locutor en PC rota solo voces Microsoft es-MX (si existen) para claridad (Raul/Sabina). Fallback seguro.
 - v0.3.59: FIX dicción TTS: 'línea' ya sale bien (antes se colaba como 'l nea').
@@ -73,7 +73,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.62</title>
+<title>vics_Smart_Spotter_v0.3.63</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6398,7 +6398,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.62</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.63</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7082,7 +7082,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.62";
+const APP_NAME = "vics_Smart_Spotter_v0.3.64";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -7090,6 +7090,11 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.62";
     // - Solo cambia textos: NO toca la lógica de detección ni puntajes.
     // =========================
     const MSGV2_LAST = new Map(); // key -> last full text
+    const MSGV2_LAST_OPEN = new Map(); // pilotKey -> {txt, at}
+    const MSGV2_LAST_END  = new Map();
+    const MSGV2_BLUE_SEQ = new Map(); // pilotKey -> counter
+ // pilotKey -> {txt, at}
+
 
     function msgv2PilotKey(ctx) {
       try {
@@ -7112,12 +7117,66 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.62";
           const fn = autoRandPick(arr, 'msgv2:' + key);
           return (typeof fn === 'function') ? String(fn(ctx) || '') : String(fn || '');
         }
+
+    function msgv2PickSalt(arr, type, ctx, part, salt) {
+      try {
+        if (!Array.isArray(arr) || !arr.length) return '';
+        const key = msgv2Key(type, ctx, part) + ':' + String(salt || '0');
+        if (typeof autoRandPick === 'function') {
+          const fn = autoRandPick(arr, 'msgv2:' + key);
+          return (typeof fn === 'function') ? String(fn(ctx) || '') : String(fn || '');
+        }
         const v = arr[Math.floor(Math.random() * arr.length)];
         return (typeof v === 'function') ? String(v(ctx) || '') : String(v || '');
       } catch(e) { return ''; }
     }
 
-    function msgv2DecimasTxt(ms) {
+        const v = arr[Math.floor(Math.random() * arr.length)];
+        return (typeof v === 'function') ? String(v(ctx) || '') : String(v || '');
+      } catch(e) { return ''; }
+    }
+
+    
+    // =========================
+    // SPOTTER - Sanitizador de texto (anti-inglés con excepciones)
+    // - Evita spanglish en la locución (permite: "apex")
+    // - Reemplaza términos típicos a español
+    // - Corrige errores comunes (línea)
+    // =========================
+    function spotterSanitizeText(text) {
+      try {
+        let s = String(text || '');
+
+        // Fix de acentos/typos comunes
+        s = s.replace(/\bl\s*nea\b/ig, 'línea');
+
+        // Reemplazos (NO tocar "apex")
+        const rep = [
+          { re: /\bbest\s*lap\b/ig, to: 'mejor vuelta' },
+          { re: /\bbestlap\b/ig,     to: 'mejor vuelta' },
+          { re: /\bpace\b/ig,        to: 'ritmo' },
+          { re: /\bgap\b/ig,         to: 'brecha' },
+          { re: /\bdelta\b/ig,       to: 'diferencia' },
+          { re: /\bpush\b/ig,        to: 'aprieta' },
+          { re: /\bclean\b/ig,       to: 'limpio' },
+          { re: /\bstint\b/ig,       to: 'tanda' },
+          { re: /\btrack\b/ig,       to: 'pista' },
+          { re: /\bline\b/ig,        to: 'línea' },
+        ];
+        for (const r of rep) s = s.replace(r.re, r.to);
+
+        // Limpieza final
+        s = s.replace(/\s+/g, ' ').trim();
+        s = s.replace(/\s+\./g, '.').replace(/\s+,/g, ',');
+        s = s.replace(/,\s*,/g, ',').replace(/\s+,\s+/g, ', ');
+
+        return s;
+      } catch(e) {
+        try { return String(text || '').trim(); } catch(_) { return ''; }
+      }
+    }
+
+function msgv2DecimasTxt(ms) {
       const abs = Math.abs(Number(ms) || 0);
       const dec = Math.max(1, Math.round(abs / 100));
       if (dec === 1) return 'una décima';
@@ -7128,27 +7187,50 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.62";
     const MSGV2 = {
       blueflag: {
         open: [
-          (c) => (c && c.isFinal) ? 'Bandera azul!' : 'Bandera azul.',
+          (c) => (c && c.isFinal) ? 'Bandera azul.' : 'Bandera azul.',
           () => 'Azul.',
-          () => 'Atención, azul.',
-          () => 'Cuidado, azul.'
+          () => 'Atento, azul.',
+          () => 'Cuidado, azul.',
+          () => 'Líder atrás.',
+          () => 'Auto rápido detrás.',
+          () => 'Tráfico atrás.',
+          () => 'Azul, calma.',
+          () => 'Respeta la azul.',
+          () => 'Azul, mantén trazada.'
         ],
         info: [
           (c) => (c && c.who) ? ('Detrás viene ' + c.who + '.') : 'Detrás viene el líder.',
           (c) => (c && c.who) ? ('Te alcanza ' + c.who + '.') : 'Te alcanza el líder.',
-          (c) => (c && c.who) ? ('Te llega ' + c.who + '.') : 'Te llega el líder.'
+          (c) => (c && c.who) ? ('Te llega ' + c.who + '.') : 'Te llega el líder.',
+          (c) => (c && c.who) ? ('Viene cerrando ' + c.who + '.') : 'Viene cerrando el líder.',
+          (c) => (c && c.who) ? ('Ya lo tienes en el espejo: ' + c.who + '.') : 'Ya lo tienes en el espejo: el líder.',
+          (c) => (c && c.who) ? ('Te llega a la salida del apex: ' + c.who + '.') : 'Te llega a la salida del apex: el líder.'
         ],
         act: [
-          () => 'Mantén tu línea',
-          () => 'Traza limpio',
-          () => 'Sin volantazos',
-          () => 'No cierres la puerta'
+          () => 'Mantén tu línea.',
+          () => 'Mantén la trazada.',
+          () => 'Traza limpio.',
+          () => 'Sin volantazos.',
+          () => 'No cierres la puerta.',
+          () => 'No frenes de golpe.',
+          () => 'Abre espacio a la salida.',
+          () => 'Deja el interior.',
+          () => 'Deja el exterior.',
+          () => 'Suelta la línea en recta.',
+          () => 'No pelees esta.',
+          () => 'Hazlo limpio.'
         ],
         end: [
-          () => 'y déjalo pasar en la recta.',
-          () => 'en la recta, dale paso.',
-          () => 'en el siguiente tramo recto.',
-          () => 'cuando lo tengas, suelta la línea.'
+          () => 'Dale paso en la recta.',
+          () => 'En la próxima recta, dale paso.',
+          () => 'En cuanto puedas, dale paso.',
+          () => 'Al salir del apex, deja espacio.',
+          () => 'En la salida, deja espacio.',
+          () => 'Cuando lo tengas, déjalo pasar.',
+          () => 'Sin perder ritmo, dale paso.',
+          () => 'No lo bloquees, dale paso.',
+          () => 'Respeta la bandera azul.',
+          () => 'Hazlo limpio y sigue.'
         ]
       },
 
@@ -7325,29 +7407,121 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.62";
         const bank = (MSGV2 && MSGV2[t]) ? MSGV2[t] : null;
         if (!bank) return '';
 
-        for (let attempt = 0; attempt < 2; attempt++) {
-          const a = msgv2Pick(bank.open || [], t, ctx, 'open').trim();
-          const b = msgv2Pick(bank.info || [], t, ctx, 'info').trim();
-          const c = msgv2Pick(bank.act  || [], t, ctx, 'act').trim();
-          const d = msgv2Pick(bank.end  || [], t, ctx, 'end').trim();
+        const pk = msgv2PilotKey(ctx);
+        const now = Date.now();
+
+        const urgent = (t === 'blueflag');
+
+        // SPECIAL BLUEFLAG COMPOSE (más variedad, sin tocar lógica de detección)
+        if (t === 'blueflag') {
+          try {
+            const seq0 = Number(MSGV2_BLUE_SEQ.get(pk) || 0) + 1;
+            MSGV2_BLUE_SEQ.set(pk, seq0);
+
+            // rota 3 plantillas para que NO suene igual
+            const mode = seq0 % 3; // 0,1,2
+            const saltBase = String(seq0);
+
+            function buildOnce(salt) {
+              const a = msgv2PickSalt(bank.open || [], t, ctx, 'open', salt + ':o').trim();
+              const b = msgv2PickSalt(bank.info || [], t, ctx, 'info', salt + ':i').trim();
+              const c = msgv2PickSalt(bank.act  || [], t, ctx, 'act',  salt + ':a').trim();
+              const d = msgv2PickSalt(bank.end  || [], t, ctx, 'end',  salt + ':e').trim();
+
+              let parts = [];
+              if (mode === 0) parts = [a, b, d];        // info + cierre
+              else if (mode === 1) parts = [a, b, c];   // info + acción
+              else parts = [a, c, d];                   // acción + cierre
+
+              let out = parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+              out = spotterSanitizeText(out);
+              return out;
+            }
+
+            let out = buildOnce(saltBase);
+
+            // dedupe por piloto+tipo (si sale igual, reintenta con otro salt)
+            const k = msgv2Key(t, ctx, 'full');
+            const last = MSGV2_LAST.get(k) || '';
+            if (out && out === last) {
+              out = buildOnce(saltBase + ':r1');
+              if (out && out === last) out = buildOnce(saltBase + ':r2');
+            }
+
+            if (out) { MSGV2_LAST.set(msgv2Key(t, ctx, 'full'), out); return out; }
+          } catch(e) {}
+        }
+
+
+        function pickDifferent(arr, part, prevTxt) {
+          if (!Array.isArray(arr) || !arr.length) return '';
+          let out = '';
+          for (let i = 0; i < 4; i++) {
+            out = msgv2Pick(arr, t, ctx, part).trim();
+            if (!prevTxt || out !== prevTxt) break;
+          }
+          return out;
+        }
+
+        // Probabilidades para compactar (menos repetición / menos "relleno")
+        let pInfo = 0.75;
+        let pEnd  = 0.45;
+        if (urgent) { pInfo = 1.00; pEnd = 0.15; }
+        if (t === 'bestlap') { pInfo = 0.10; pEnd = 0.70; }
+        if (t === 'ritmo_up' || t === 'ritmo_down') { pInfo = 0.15; pEnd = 0.35; }
+
+        for (let attempt = 0; attempt < 3; attempt++) {
+          let a = msgv2Pick(bank.open || [], t, ctx, 'open').trim();
+          let b = msgv2Pick(bank.info || [], t, ctx, 'info').trim();
+          let c = msgv2Pick(bank.act  || [], t, ctx, 'act').trim();
+          let d = msgv2Pick(bank.end  || [], t, ctx, 'end').trim();
+
+          // Compactación
+          if (b && Math.random() > pInfo) b = '';
+          if (d && Math.random() > pEnd)  d = '';
+
+          // Anti-repetición GLOBAL por piloto (aperturas y cierres)
+          try {
+            const prevO = MSGV2_LAST_OPEN.get(pk) || { txt:'', at:0 };
+            if (a && prevO.txt === a && (now - prevO.at) < 8000) {
+              a = pickDifferent(bank.open || [], 'open', a);
+            }
+          } catch(e) {}
+
+          try {
+            const prevE = MSGV2_LAST_END.get(pk) || { txt:'', at:0 };
+            if (d && prevE.txt === d && (now - prevE.at) < 12000) {
+              d = pickDifferent(bank.end || [], 'end', d);
+              // si aún queda igual, mejor lo omitimos para no sonar repetido
+              if (d && prevE.txt === d) d = '';
+            }
+          } catch(e) {}
 
           let out = [a, b, c, d].filter(Boolean).join(' ');
           out = out.replace(/\s+/g, ' ').trim();
           out = out.replace(/\s+\./g, '.').replace(/\s+,/g, ',');
           out = out.replace(/,\s*,/g, ',').replace(/\s+,\s+/g, ', ');
 
+          // Sanitiza (anti-inglés) antes de comparar dedupe
+          out = spotterSanitizeText(out);
+
           // Evita repetir EXACTAMENTE la misma frase por piloto+tipo
           const k = msgv2Key(t, ctx, 'full');
           const last = MSGV2_LAST.get(k) || '';
           if (out && out !== last) {
             MSGV2_LAST.set(k, out);
+
+            // guarda global open/end si aplica
+            try { if (a) MSGV2_LAST_OPEN.set(pk, { txt:a, at:now }); } catch(e) {}
+            try { if (d) MSGV2_LAST_END.set(pk,  { txt:d, at:now }); } catch(e) {}
+
             return out;
           }
         }
 
         // fallback
         const k = msgv2Key(t, ctx, 'full');
-        const out = msgv2Pick((bank.open || []), t, ctx, 'open').trim();
+        const out = spotterSanitizeText(msgv2Pick((bank.open || []), t, ctx, 'open').trim());
         if (out) { MSGV2_LAST.set(k, out); return out; }
         return '';
       } catch(e) { return ''; }
@@ -12105,7 +12279,9 @@ function forceTtsRecover(reason = ''){
 function enqueueSpeech(text, opts = {}) {
       try {
         if (!voiceMasterEnabled) return;
-        const clean = String(text || '').trim();
+        let clean = String(text || '').trim();
+        clean = (opts && opts.noSanitize) ? clean : spotterSanitizeText(clean);
+
         if (!clean) return;
         if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
 
