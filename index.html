@@ -1,6 +1,6 @@
 
 <!--
-vics_Smart_Spotter_v0.3.66 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.67 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -73,7 +73,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.66</title>
+<title>vics_Smart_Spotter_v0.3.67</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6398,7 +6398,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.66</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.67</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7082,7 +7082,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.66";
+const APP_NAME = "vics_Smart_Spotter_v0.3.67";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -7183,6 +7183,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.66";
         s = s.replace(/\s+/g, ' ').trim();
         s = s.replace(/\s+\./g, '.').replace(/\s+,/g, ',');
         s = s.replace(/,\s*,/g, ',').replace(/\s+,\s+/g, ', ');
+
+        
+        // Fixes de espaol natural (anti "acorta el brecha")
+        s = s
+          .replace(/\bacorta\s+el\s+brecha\b/ig, 'recorta la brecha')
+          .replace(/\bacorta\s+la\s+brecha\b/ig, 'recorta la brecha')
+          .replace(/\bel\s+brecha\b/ig, 'la brecha');
 
         return s;
       } catch(e) {
