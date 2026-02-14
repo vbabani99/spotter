@@ -1,6 +1,6 @@
 
 <!--
-vics_Smart_Spotter_v0.3.68 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.71 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -73,7 +73,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.68</title>
+<title>vics_Smart_Spotter_v0.3.71</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6398,7 +6398,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.68</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.71</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7082,7 +7082,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.68";
+const APP_NAME = "vics_Smart_Spotter_v0.3.71";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -7193,7 +7193,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.3.68";
         s = s.replace(/,\s*,/g, ',').replace(/\s+,\s+/g, ', ');
 
         
-        // Fixes de español natural (anti "acorta el brecha")
+        // Fixes de espaol natural (anti "acorta el brecha")
         s = s
           .replace(/\bacorta\s+el\s+brecha\b/ig, 'recorta la brecha')
           .replace(/\bacorta\s+la\s+brecha\b/ig, 'recorta la brecha')
@@ -11973,8 +11973,7 @@ return s;
 
         // Umbrales (ms)
         const marks = [
-          120000, 60000, 30000, 10000,
-          5000, 3000, 2000, 1000, 0
+          120000, 60000, 30000, 0
         ];
 
         // Detecta cruces hacia abajo
@@ -11986,14 +11985,9 @@ return s;
             __sessClockAnnounced.add(m);
 
             let txt = '';
-            if (m === 120000) txt = 'Quedan 2 minutos.';
-            else if (m === 60000) txt = 'Ultimo minuto.';
+            if (m === 120000) txt = 'Quedan dos minutos.';
+            else if (m === 60000) txt = 'Ãšltimo minuto.';
             else if (m === 30000) txt = 'Treinta segundos.';
-            else if (m === 10000) txt = 'Diez segundos.';
-            else if (m === 5000) txt = 'Cinco.';
-            else if (m === 3000) txt = 'Tres.';
-            else if (m === 2000) txt = 'Dos.';
-            else if (m === 1000) txt = 'Uno.';
             else if (m === 0) txt = 'Tiempo. Bandera a cuadros.';
 
             if (txt) {
@@ -13076,7 +13070,7 @@ function setVoiceMaster(on, opts = {}) {
 }
     
       // TTS Heartbeat (desktop/OBS): evita que el motor se duerma y caiga en espera de accion
-      try { if (voiceMasterEnabled) startTtsHeartbeat(); else stopTtsHeartbeat(); } catch(e) {}
+      try { if (voiceMasterEnabled) { startTtsHeartbeat(); startTtsSafetyLoop(); } else { stopTtsHeartbeat(); stopTtsSafetyLoop(); } } catch(e) {}
 }
 
 
@@ -13120,6 +13114,73 @@ function setVoiceMaster(on, opts = {}) {
           window.clearInterval(__ttsHeartbeatTimer);
           __ttsHeartbeatTimer = 0;
         }
+
+
+    // ============================================================
+    // TTS SAFETY LOOP (anti-apagado)
+    // - Reanuda periodicamente el motor (resume)
+    // - Re-sincroniza speechSpeaking vs speechSynthesis.speaking
+    // - Si hay cola pendiente y el motor esta idle, re-pump
+    // - Inyecta keepalive silencioso (volume=0) si pasan muchos segundos sin eventos
+    // ============================================================
+    let __ttsSafetyTimer = 0;
+    function startTtsSafetyLoop() {
+      try {
+        if (__ttsSafetyTimer) return;
+        __ttsSafetyTimer = window.setInterval(() => {
+          try {
+            if (!voiceMasterEnabled) return;
+            if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+
+            const ss = window.speechSynthesis;
+            const now = Date.now();
+
+            // Resume suave (Chrome/OBS a veces queda "paused" o dormido)
+            try { if (typeof ss.resume === 'function') ss.resume(); } catch(e) {}
+
+            // Desync fix: a veces speechSpeaking queda true pero el motor ya no esta hablando
+            try {
+              if (speechSpeaking && ss && !ss.speaking && !ss.pending) {
+                const lastEv = (__ttsLastEventAt || 0);
+                if (!lastEv || (now - lastEv) > 2500) {
+                  speechSpeaking = false;
+                }
+              }
+            } catch(e) {}
+
+            // Si hay cola y no estamos hablando, vuelve a bombear
+            try {
+              if (!speechSpeaking && Array.isArray(speechQueue) && speechQueue.length > 0) {
+                pumpSpeechQueue();
+              }
+            } catch(e) {}
+
+            // Keepalive TTS silencioso si pasa mucho sin eventos (mantiene el motor despierto)
+            try {
+              const lastEv = (__ttsLastEventAt || 0);
+              if (__ttsUnlockedOnce && (!lastEv || (now - lastEv) > 35000)) {
+                const u = new SpeechSynthesisUtterance(' ');
+                u.volume = 0;
+                u.rate = 1;
+                u.onend = () => { try { __ttsLastEventAt = Date.now(); } catch(e) {} };
+                u.onerror = () => { try { __ttsLastEventAt = Date.now(); } catch(e) {} };
+                try { ss.speak(u); __ttsLastEventAt = now; } catch(e) {}
+              }
+            } catch(e) {}
+          } catch(e) {}
+        }, 2000);
+      } catch(e) {}
+    }
+    function stopTtsSafetyLoop() {
+      try {
+        if (__ttsSafetyTimer) {
+          clearInterval(__ttsSafetyTimer);
+          __ttsSafetyTimer = 0;
+        }
+      } catch(e) {}
+    }
+
+
       } catch(e) {}
     }
 
