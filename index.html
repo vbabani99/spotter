@@ -1,6 +1,6 @@
 
 <!--
-vics_Smart_Spotter_v0.3.73 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.71 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -26,7 +26,7 @@ Changelog:
 - v0.0.2.17: LapChart watermark restaurada (logo Vic) en fondo del canvas. UI only.
 - v0.0.1.99: Logo header ajustado -5% (reduce height de 88px a 84px) manteniendo 'cover' para recorte del aire.
 - v0.0.1.91: Limpieza editorial de textos del locutor (acentos y palabras recortadas) en RD_PHRASES y AUTO_PHRASES_PRO. Solo texto/UI.
-- v0.0.1.87: TTS PRO (ms -> segundos/dcimas/centsimas/milsimas; +V como 'más una vuelta'; correccin de recortes en normalizador).
+- v0.0.1.87: TTS PRO (ms -> segundos/dcimas/centsimas/milsimas; +V como 'ms una vuelta'; correccin de recortes en normalizador).
 - v0.0.1.79: LIVE como radio-button (solo punto verde) + MODO legible sin recortes y con color por estado.
 - v0.0.1.86: Fix TTS (P# en espaol, +V como 'ms 1 vuelta', tildes, HobbyShop México, Italia, Messina).
 - v0.0.1.38: Auto Locutor lifecycle: actividad robusta (tiempo sube o baja) + debug strip (solo ?debug=1).
@@ -73,7 +73,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.73</title>
+<title>vics_Smart_Spotter_v0.3.71</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6398,7 +6398,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.73</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.71</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7082,7 +7082,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.73";
+const APP_NAME = "vics_Smart_Spotter_v0.3.71";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -8575,7 +8575,7 @@ function msgv2DecimasTxt(ms) {
       if (isFinite(n)) return { sec:null, laps:Math.abs(n) };
     }
     const s = s0.toLowerCase();
-    const mMas = s.match(/m[aá]s\s+(\d+|una|un|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+vueltas?/i);
+    const mMas = s.match(/m[a]s\s+(\d+|una|un|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+vueltas?/i);
     if (mMas){
       const tok = mMas[1];
       const map = { 'una':1,'un':1,'uno':1,'dos':2,'tres':3,'cuatro':4,'cinco':5,'seis':6,'siete':7,'ocho':8,'nueve':9,'diez':10 };
@@ -11863,7 +11863,7 @@ let __ttsStartGuard = 0;
 
         
         // Limpieza: evitar repetir el mismo dato dos veces en la misma frase (bug/armado)
-        // Ej: "más una vuelta, más una vuelta" / "0.2 segundos, 0.2 segundos"
+        // Ej: "ms una vuelta, ms una vuelta" / "0.2 segundos, 0.2 segundos"
         try {
           // Repite "ms X vuelta(s)"
           s = s.replace(/\b(m\xe1s\s+(?:una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+vueltas?)\b(?:\s*[,;:\-]\s*\1\b)+/gi, '$1');
@@ -13996,13 +13996,7 @@ function setLiveStatus(isOnline) {
     function safeRacerName(name) {
       if (!name) return '';
       let s = String(name).trim();
-
-      // Fix mojibake comun (latin1 -> utf-8): "AdriÃ¡n" -> "Adrián"
-      if (s && /Ã.|Â./.test(s)) {
-        try { s = decodeURIComponent(escape(s)); } catch(e) {}
-      }
-
-      // Quitar prefijos numericos tipo "26 Victor" o "#26 Victor"
+      // Quitar prefijos numricos tipo "26 Victor" o "#26 Victor"
       s = s.replace(/^#?\d+\s+/, '');
       // Normalizar espacios
       s = s.replace(/\s{2,}/g, ' ');
@@ -14963,13 +14957,13 @@ function drawLapChartTop3Auto(){
     function normalizeRaceData(rawRace) {
       const result = {
         raceName: rawRace.raceName || '',
-        lapCount: (rawRace.lapCount != null ? rawRace.lapCount : (rawRace.lapcount != null ? rawRace.lapcount : (rawRace.laps != null ? rawRace.laps : 0))) || 0,
+        lapCount: rawRace.lapCount || 0,
         // Nuevo feed (watcher): reloj y modo
         clockMs: (typeof rawRace.clockMs === 'number') ? rawRace.clockMs : ((typeof rawRace.clock === 'number') ? rawRace.clock : 0),
         clockFmt: (rawRace.clockFmt != null) ? String(rawRace.clockFmt) : '',
         practice: (rawRace.practice != null) ? Number(rawRace.practice) : null,
         mode: (rawRace.mode != null) ? String(rawRace.mode) : '',
-        bestLapTime: parseTimeToMs((rawRace.bestLapMs != null) ? rawRace.bestLapMs : (rawRace.bestLapTime != null ? rawRace.bestLapTime : (rawRace.bestLapTimeMs != null ? rawRace.bestLapTimeMs : 0))),
+        bestLapTime: parseTimeToMs(rawRace.bestLapTime),
         classification: []
       };
 
@@ -14985,17 +14979,15 @@ function drawLapChartTop3Auto(){
 
       (rawRace.classification || []).forEach(row => {
         const key = getPilotKey(row);
-        const lap = Number((row.lapcount != null) ? row.lapcount : (row.lapCount != null ? row.lapCount : (row.laps != null ? row.laps : (row.lap != null ? row.lap : 0)))) || 0;
+        const lap = Number(row.lapcount) || 0;
 
         let totalMs = 0;
-        const totalRaw =
-          (typeof row.timeMs === 'number') ? row.timeMs :
-          (typeof row.totalMs === 'number') ? row.totalMs :
-          (typeof row.totalTimeMs === 'number') ? row.totalTimeMs :
-          (row.time != null) ? row.time :
-          (row.totalTime != null) ? row.totalTime :
-          (row.total != null) ? row.total : 0;
-        totalMs = parseTimeToMs(totalRaw);
+        const timeStr = row.time != null ? String(row.time) : '';
+        if (typeof row.timeMs === 'number') {
+          totalMs = row.timeMs;
+        } else if (timeStr) {
+          totalMs = parseTimeToMs(timeStr);
+        }
 
         // bestLap suele ser NUMERO DE VUELTA (indice), no tiempo. Usar "best"/"bestLapTime" para el tiempo.
 const bestTimeRaw =
@@ -15014,25 +15006,13 @@ const meanTimeRaw =
 let meanMs = parseTimeToMs(meanTimeRaw);
         const estMs  = parseTimeToMs((row.estTime != null) ? row.estTime : (row.estTimeMs != null ? row.estTimeMs : 0));
 
-        // Prioridad: lastLap del watcher si viene (evita calcular por delta cuando el feed ya trae lastLapMs)
         let lastMs = 0;
-        const feedLastRaw =
-          (row.lastLapMs != null) ? row.lastLapMs :
-          (row.lastLapTimeMs != null) ? row.lastLapTimeMs :
-          (row.lastLapTimeFmt != null) ? row.lastLapTimeFmt :
-          (row.lastLapTime != null) ? row.lastLapTime :
-          (row.lastLap != null) ? row.lastLap :
-          (row.lastTimeMs != null) ? row.lastTimeMs :
-          (row.lastTime != null) ? row.lastTime : 0;
-        const feedLastMs = parseTimeToMs(feedLastRaw);
-        if (feedLastMs > 0) lastMs = feedLastMs;
-
         const prev = prevByKey.get(key);
-        if (!lastMs && prev) {
+        if (prev) {
           const prevLaps = Number(prev.lapcount) || 0;
           if (lap > prevLaps && totalMs > prev.time) {
             lastMs = totalMs - prev.time;
-            // registrar evento de paso por meta para logica de bandera azul (ultimo paso por piloto)
+            // registrar evento de paso por meta para lgica de bandera azul (último paso por piloto)
             if (!lastPassEvents || typeof lastPassEvents.set !== 'function') {
               lastPassEvents = new Map();
             }
@@ -15072,50 +15052,22 @@ let meanMs = parseTimeToMs(meanTimeRaw);
           meanMs = prev.mean;
         }
 
-        const gapStr = (row.gapStr != null) ? row.gapStr :
-                         (row.gap != null) ? row.gap :
-                         (row.gapTime != null) ? row.gapTime :
-                         (row.gapMs != null) ? row.gapMs : "";
-        const diffStr = (row.diff != null) ? row.diff :
-                         (row.intervalTime != null) ? row.intervalTime :
-                         (row.interval != null) ? row.interval :
-                         (row.intervalMs != null) ? row.intervalMs : "";
         const normalized = {
           pos:         row.pos,
           racerNumber: row.racerNumber,
           racerName:   safeRacerName(row.racerName),
           lapcount:    lap,
-
-          // Totales (ms)
           time:        totalMs,
-          timeMs:      totalMs,
-
-          // Ultima vuelta (ms)
+          timeStr:     timeStr,
           lastTime:    lastMs,
-          lastLapMs:   (typeof row.lastLapMs === 'number') ? row.lastLapMs : lastMs,
-
-          // Gaps (string del watcher, ej. "+0.123" o "+1 V")
-          gap:         (gapStr != null ? String(gapStr).trim() : ""),
-          gapMs:       (typeof row.gapMs === 'number') ? row.gapMs : null,
-          diff:        (diffStr != null ? String(diffStr).trim() : ""),
-          interval:    (diffStr != null ? String(diffStr).trim() : ""),
-          intervalMs:  (typeof row.intervalMs === 'number') ? row.intervalMs : null,
-
-          // Ritmo / consistencia (si viene del watcher)
-          paceMs:      (typeof row.paceMs === 'number') ? row.paceMs : parseTimeToMs(row.pace),
-          sigmaMs:     (typeof row.sigmaMs === 'number') ? row.sigmaMs : null,
-          consPct:     (row.consPct != null) ? Number(row.consPct) : (row.consistency != null ? Number(row.consistency) : null),
-          consStr:     (row.consStr != null) ? String(row.consStr) : "",
-
-          // Tiempos clave
+          gap:         row.gap || "",
+          diff:        row.diff || "",
           best:        bestMs,
           bestLap:     row.bestLap,
           mean:        meanMs,
           estLap:      row.estLap || 0,
           estTime:     estMs,
-
-          // Back-compat (algunos bloques esperan "consistency")
-          consistency: (row.consistency != null ? row.consistency : row.consPct)
+          consistency: row.consistency
         };
 
         result.classification.push(normalized);
@@ -15796,11 +15748,6 @@ function onPilotSelectedManga(pilotKey) {
     try {
       if (raceData && raceData.raceName) {
         currentSessionInfo = parseSessionFromRaceName(raceData.raceName);
-        // practice: 1 = practica/entrenamiento, 0 = carrera
-        if (raceData.practice === 1) {
-          currentSessionInfo.type = 'TRAIN';
-          currentSessionInfo.main = '';
-        }
        try { applyLapChartPreset(); } catch(e) {}
 try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
       }
@@ -15876,7 +15823,7 @@ pilotSelect.addEventListener('change', () => {
         const otherLaps = (other.lapcount != null) ? other.lapcount : 0;
         const lapDiff = meLaps - otherLaps;
 
-        // Si hay diferencia de vueltas, dilo como "más una vuelta" (sin nombres).
+        // Si hay diferencia de vueltas, dilo como "ms una vuelta" (sin nombres).
         if (lapDiff !== 0) {
 
           // Guard: evitar glitches de lapcount en lecturas pegadas
@@ -15901,9 +15848,9 @@ pilotSelect.addEventListener('change', () => {
 
             const palabra = (v === 1) ? 'una vuelta' : (v + ' vueltas');
 
-            if (direction === 'ahead') return 'Gap con ' + (other.racerName || 'adelante') + ' más ' + palabra;
+            if (direction === 'ahead') return 'Gap con ' + (other.racerName || 'adelante') + ' ms ' + palabra;
 
-            return 'Gap con ' + (other.racerName || 'atrás') + ' más ' + palabra;
+            return 'Gap con ' + (other.racerName || 'atrs') + ' ms ' + palabra;
 
           }
         }
@@ -15915,7 +15862,7 @@ pilotSelect.addEventListener('change', () => {
 
         const secStr = gapToSpeech((diffMs / 1000), 'pilotgaps');
         if (direction === 'ahead') return 'Gap con ' + (other.racerName || 'adelante') + ' ' + secStr;
-        return 'Gap con ' + (other.racerName || 'atrás') + ' ' + secStr;
+        return 'Gap con ' + (other.racerName || 'atrs') + ' ' + secStr;
       }
 
       const parts = [];
@@ -15957,7 +15904,7 @@ pilotSelect.addEventListener('change', () => {
             if (isFinite(n)) return { sec: null, laps: Math.abs(n) };
           }
           const s = s0.toLowerCase();
-          const mMas = s.match(/m[aá]s\s+(\d+|una|un|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+vueltas?/i);
+          const mMas = s.match(/m[a]s\s+(\d+|una|un|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+vueltas?/i);
           if (mMas){
             const tok = mMas[1];
             const n = /^\d+$/.test(tok) ? parseInt(tok,10) : wordToNum(tok);
@@ -17749,7 +17696,7 @@ function __autoParseLapDiff(raw){
       if (isFinite(n)) return Math.abs(n);
     }
     const s = s0.toLowerCase();
-    const mMas = s.match(/m[aá]s\s+(\d+)\s+vueltas?/i);
+    const mMas = s.match(/m[a]s\s+(\d+)\s+vueltas?/i);
     if (mMas){
       const n = parseInt(mMas[1], 10);
       if (isFinite(n) && n > 0) return n;
@@ -18813,11 +18760,6 @@ function handleVoiceAndBeeps() {
       // Actualiza el modo desde raceName (ya viene de Firebase)
       if (raceData && raceData.raceName) {
         currentSessionInfo = parseSessionFromRaceName(raceData.raceName);
-        // practice: 1 = practica/entrenamiento, 0 = carrera
-        if (raceData.practice === 1) {
-          currentSessionInfo.type = 'TRAIN';
-          currentSessionInfo.main = '';
-        }
        try { applyLapChartPreset(); } catch(e) {}
 try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
       }
@@ -19993,15 +19935,7 @@ function checkSessionFinishOnLap() {
 
         let rawRace = null;
         if (data.parsed && Array.isArray(data.parsed.classification)) {
-          // data.parsed trae la clasificacion, pero clock/practice/mode suelen venir en top-level del doc.
-          rawRace = { ...data.parsed };
-          try{
-            const mergeKeys = ['raceName','lapCount','lapcount','laps','clockMs','clock','clockFmt','practice','mode',
-                               'bestLapMs','bestLapTime','bestLapTimeMs','bestLapTimeFmt','lastUpdate'];
-            mergeKeys.forEach(k => {
-              if (rawRace[k] == null && data[k] != null) rawRace[k] = data[k];
-            });
-          }catch(e){}
+          rawRace = data.parsed;
         } else if (data.rawJson) {
           try {
             rawRace = JSON.parse(data.rawJson);
