@@ -1,6 +1,6 @@
 
 <!--
-vics_Smart_Spotter_v0.3.71 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.73 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -73,7 +73,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.71</title>
+<title>vics_Smart_Spotter_v0.3.73</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6398,7 +6398,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.71</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.73</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7082,7 +7082,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.71";
+const APP_NAME = "vics_Smart_Spotter_v0.3.73";
     const APP_LABEL = APP_NAME;
 
     // =========================
@@ -11435,7 +11435,7 @@ function __duoGuessRole(txt, key) {
     }
 
     
-    // Defaults por plataforma: iPhone 1.2, Android 1.7, Web 2.0
+    // Default rate: 1.8
     function _isIOSWebKitRate() {
       const ua = navigator.userAgent || '';
       return /iPad|iPhone|iPod/i.test(ua);
@@ -11445,9 +11445,7 @@ function __duoGuessRole(txt, key) {
       return /Android/i.test(ua);
     }
     function detectDefaultTtsRate() {
-      if (_isIOSWebKitRate()) return 1.2;
-      if (_isAndroidRate()) return 1.7;
-      return 2.0;
+      return 1.8;
     }
 
 let ttsRate = detectDefaultTtsRate();
@@ -11524,9 +11522,9 @@ let ttsRate = detectDefaultTtsRate();
       //   las incluimos como preferidas para rotar siempre entre ellas.
       try {
         // Pool de rotacion para AUTO LOCUTOR:
-// - Solo Google/Microsoft
+// - Solo Microsoft
 // - Idiomas objetivo: es-MX y es-ES (fallback a cualquier es-* Google/Microsoft)
-// - Rotacion intercalada (Microsoft, Google, Microsoft, Google...) cuando existan ambas.
+// - Sin Google: solo Microsoft (cuando existan)
 const isGoogle = v => /google/i.test((v && v.name) || '') || /google/i.test((v && v.voiceURI) || '');
 const isMS     = v => /microsoft/i.test((v && v.name) || '') || /microsoft/i.test((v && v.voiceURI) || '');
 const isESMX   = v => String((v && v.lang) || '').toLowerCase().startsWith('es-mx');
@@ -11543,8 +11541,8 @@ function buildInterleaved(msArr, gArr){
   return out;
 }
 
-let candidates = (voicesAll || []).filter(v => (isGoogle(v) || isMS(v)) && (isESMX(v) || isESES(v)));
-if (!candidates.length) candidates = (voicesAll || []).filter(v => (isGoogle(v) || isMS(v)) && isESAny(v));
+let candidates = (voicesAll || []).filter(v => (isMS(v)) && (isESMX(v) || isESES(v)));
+if (!candidates.length) candidates = (voicesAll || []).filter(v => (isMS(v)) && isESAny(v));
 
 // Solo si NO hay nada Google/Microsoft ES, cae a cualquier ES y al final a todo.
 if (!candidates.length) candidates = (voicesES.length ? voicesES : (voices || []));
@@ -11569,14 +11567,7 @@ if (__mxOnlyDesktop && ms.length) {
   if (_msmx.length) ms = _msmx;
 }
 
-let inter;
-if (__msOnlyDesktop && ms.length) {
-  inter = ms;
-} else {
-  inter = (ms.length && gg.length) ? buildInterleaved(ms, gg) : (ms.length ? ms : (gg.length ? gg : candidates));
-}
-
-
+let inter = (ms && ms.length) ? ms : [];
 __autoVoicePool = inter.map(v => (v.voiceURI || v.name)).filter(Boolean);
       } catch(e) {}
 
@@ -11967,13 +11958,15 @@ return s;
     }
 
     function __maybeAnnounceRemainingMs(remMs){
+      // TTS de tiempo restante desactivado (sin anuncio final).
+      return;
       try{
         if (!voiceMasterEnabled) return;
         if (!remMs || remMs < 0) remMs = 0;
 
         // Umbrales (ms)
         const marks = [
-          120000, 60000, 30000, 0
+          120000, 60000, 30000
         ];
 
         // Detecta cruces hacia abajo
@@ -11988,7 +11981,6 @@ return s;
             if (m === 120000) txt = 'Quedan dos minutos.';
             else if (m === 60000) txt = 'Último minuto.';
             else if (m === 30000) txt = 'Treinta segundos.';
-            else if (m === 0) txt = 'Tiempo. Bandera a cuadros.';
 
             if (txt) {
               enqueueSpeech(txt, { key: 'time_mark_' + m + '_' + __sessClockSig, priority: 86, cooldownMs: 15000, dedupe: true });
@@ -12542,7 +12534,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           try { if (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil) window.speechSynthesis.cancel(); } catch (e) {}
         }
 
-        const baseRate = (Number.isFinite(ttsRate) ? ttsRate : 1.5);
+        const baseRate = (Number.isFinite(ttsRate) ? ttsRate : 1.8);
         const mood = opts.mood;
         const pr = prosodyFromMood(mood);
         let rate = clampNum((opts.rate != null ? opts.rate : (baseRate * (pr.rateMul || 1.0))), 0.6, 2.2);
@@ -12550,15 +12542,14 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         const volume = clampNum((opts.volume != null ? opts.volume : (pr.volume != null ? pr.volume : 1.0)), 0.0, 1.0);
         const postDelayMs = clampNum((opts.postDelayMs != null ? Number(opts.postDelayMs) : 0), 0, 2000);
         const __voiceURI = (opts && (opts.voiceURI || opts.voiceUri)) || '';
-        // Auto-rate por proveedor cuando viene voiceURI (Auto Locutor rota Google/Microsoft)
+        // Auto-rate por proveedor cuando viene voiceURI (Auto Locutor: solo Microsoft)
         // Solo si el mensaje NO forzo rate explícito.
         if ((opts == null || opts.rate == null) && __voiceURI) {
           try {
             const __vv = (window.speechSynthesis && window.speechSynthesis.getVoices) ? (window.speechSynthesis.getVoices() || []) : [];
             const __v = __vv.find(x => (x.voiceURI || x.name) === __voiceURI);
             const __nm = String((__v && __v.name) || '').toLowerCase();
-            if (__nm.includes('microsoft')) rate = 1.7;
-            else if (__nm.includes('google')) rate = 1.2;
+            if (__nm.includes('microsoft')) rate = 1.8;
           } catch(e) {}
         }
 
@@ -12626,7 +12617,7 @@ try { if (__ttsStartGuard) { clearTimeout(__ttsStartGuard); __ttsStartGuard = 0;
           };
         } catch(e) {}
         u.lang = 'es-MX';
-        u.rate = (next.rate != null ? next.rate : (isFinite(ttsRate) ? ttsRate : 1.5));
+        u.rate = (next.rate != null ? next.rate : (isFinite(ttsRate) ? ttsRate : 1.8));
         u.pitch = (next.pitch != null ? next.pitch : 1.0);
         u.volume = (next.volume != null ? next.volume : 1.0);
 
@@ -12941,7 +12932,7 @@ function unlockTTSOnce(reason = '') {
 
         const u = new SpeechSynthesisUtterance('Audio listo');
         u.lang = 'es-MX';
-        u.rate = clampNum((isFinite(ttsRate) ? ttsRate : 1.5), 0.8, 2.0);
+        u.rate = clampNum((isFinite(ttsRate) ? ttsRate : 1.8), 0.8, 2.0);
         u.pitch = 1.0;
         // Casi inaudible: desbloquea sin gritarte "AUDIO LISTO" cada vez.
         u.volume = 0.05;
