@@ -1,11 +1,19 @@
 
+
 <!--
-vics_Smart_Spotter_v0.3.73 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.82 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.3.82: TTS SMART v3 - memoria narrativa ampliada: rival recurrente, presion sostenida, defensa heroica y tren de tres con continuidad real.
+- v0.3.79: TTS SMART v2 - memoria narrativa corta y remates contextuales: el motor sigue historias de duelo, detecta cuando la presion crece, se enfria o se concreta, y ajusta la locucion al vuelo.
+- v0.3.78: TTS SMART - motor contextual de locucion que decide al vuelo que decir segun evento, gap, continuidad, sesion y tono.
+- v0.3.77: TTS GEN - motor generativo de frases para Follow + Auto Locutor, con plantillas, variantes y combinaciones dinamicas para miles de textos.
+- v0.3.76: Pit wall PRO - bitacora TTS visible, perfiles runtime (Evento/Ahorro/iPhone/Auto), timers centrales para watchdog/diag/TTS y recovery mas ordenado.
+- v0.3.75: Pit wall tecnico en vivo - panel de diagnostico TTS/Firebase/Wake Lock/Realtime/Polling/iOS unlock, semaforos de estado y errores recientes visibles.
+- v0.3.74: Hardening web stable build - Wake Lock y Background vuelven a ser toggles reales, rawJson validado, fallback Firebase con backoff, mejor deteccion Chromium/iPadOS y menos listeners frágiles de voces.
 - v0.3.63: TTS v2 por bloques (anti-repetición), frases más naturales en Follow (ataque/defensa/ritmo/azul/best lap), y sin 'Best lap' en locución.
 - v0.3.55: Desktop Chrome auto-activa VOZ al detectar carrera nueva (limpia needs-unlock y recupera TTS). Además: AUTO usa qualiBest/record + mezcla estilos; RD alinea gaps->trend y estlap->est; bancos RD para cons10/netgain/ritmo/total/box.
 - v0.3.60: Auto Locutor en PC rota solo voces Microsoft es-MX (si existen) para claridad (Raul/Sabina). Fallback seguro.
@@ -16,6 +24,7 @@ Changelog:
 - v0.3.43: FIX BÁSICO en AUTO (ya no se queda mudo) - canta P1: vueltas + última vuelta + 'Nuevo líder' si cambia. Manual alineado.
 - v0.3.37: FIX SyntaxError (try/catch cerrado + cierre init-guard) - vuelve a cargar sin errores.
 - v0.3.36: FIX pageshow/pagehide consolidado (no perder reenganche al volver) + audit TTS/Q TABLA/manual/doc.
+- v0.3.82: Speech Arbiter editorial. La cola ya no escupe backlog viejo: prioridad real + caducidad por tipo de mensaje + supresión por categoría + cap de cola + filtro anti-ruido para FOLLOW/AUTO.
 - v0.3.36: AUDIT general (dedupe listeners, declara timers TTS, resume duplicado eliminado) + Q TABLA Best Lap usa SOLO bestMs/bestLapMs del feed (sin indices) + manual alineado + doc.
 - v0.3.33: FIX SyntaxError (token inesperado) + Q TABLA - Best Lap ahora SIEMPRE conserva el mejor valor plausible del feed aunque no cambie el tiempo total (anti valores locos) + tooltip con fuente de BL -
 - v0.3.29: Q TABLA - Best Lap ahora toma el valor mas confiable del feed (anti 0:00.xxx, soporte ms/seg/us) + mas color por columnas + blindaje extra TTS (anti 'ghost speaking' en primer plano) -
@@ -73,7 +82,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.73</title>
+<title>vics_Smart_Spotter_v0.3.82</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -3867,6 +3876,172 @@ body {
     .cfg-label{opacity:0.70; font-weight:700;}
     .cfg-value{font-weight:900;}
     .cfg-sep{opacity:0.35; padding: 0 4px;}
+    .diag-panel{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid rgba(255,255,255,0.10);
+    }
+    .diag-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:0.04em;
+      opacity:0.92;
+    }
+    .diag-note{
+      font-size:10px;
+      font-weight:700;
+      opacity:0.62;
+    }
+    .diag-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:8px;
+    }
+    .diag-item{
+      min-width:0;
+      border-radius:12px;
+      padding:8px 9px;
+      background: rgba(0,0,0,0.26);
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .diag-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:4px;
+    }
+    .diag-name{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      min-width:0;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:0.03em;
+    }
+    .diag-dot{
+      width:10px;
+      height:10px;
+      flex:0 0 10px;
+      border-radius:999px;
+      background:#64748b;
+      box-shadow:0 0 0 1px rgba(255,255,255,0.08);
+    }
+    .diag-item.good .diag-dot{
+      background:#00d26a;
+      box-shadow:0 0 10px rgba(0,210,106,0.42);
+    }
+    .diag-item.warn .diag-dot{
+      background:#ffb020;
+      box-shadow:0 0 10px rgba(255,176,32,0.42);
+    }
+    .diag-item.bad .diag-dot{
+      background:#ff4d4f;
+      box-shadow:0 0 10px rgba(255,77,79,0.42);
+    }
+    .diag-item.off .diag-dot{
+      background:#667085;
+      box-shadow:none;
+    }
+    .diag-state{
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:0.04em;
+      opacity:0.8;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+    .diag-text{
+      font-size:10.5px;
+      line-height:1.25;
+      opacity:0.88;
+      min-height:26px;
+      word-break:break-word;
+    }
+    .diag-error{
+      margin-top:8px;
+      padding:7px 9px;
+      border-radius:10px;
+      font-size:10.5px;
+      line-height:1.25;
+      background:rgba(255,77,79,0.10);
+      border:1px solid rgba(255,77,79,0.20);
+      color:rgba(255,240,240,0.95);
+      display:none;
+    }
+    .diag-error.show{display:block;}
+    .diag-subpanel{
+      margin-top:8px;
+      padding:8px 9px;
+      border-radius:12px;
+      background: rgba(0,0,0,0.22);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+    .diag-subhead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+      font-size:10.5px;
+      font-weight:900;
+      letter-spacing:0.04em;
+      opacity:0.9;
+    }
+    .diag-subnote{font-size:10px; opacity:0.62; font-weight:700;}
+    .ttslog-list{display:grid; gap:6px;}
+    .ttslog-item{
+      border-radius:10px;
+      padding:6px 7px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.06);
+    }
+    .ttslog-meta{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:3px;}
+    .ttslog-type{font-size:10px; font-weight:900; letter-spacing:0.04em; opacity:0.88;}
+    .ttslog-time{font-size:10px; opacity:0.58; font-weight:700; white-space:nowrap;}
+    .ttslog-text{font-size:10.5px; line-height:1.25; opacity:0.90; word-break:break-word;}
+    .ttslog-empty{font-size:10.5px; opacity:0.55;}
+    .runtime-profiles{margin-top:10px;}
+    .runtime-profiles-header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;}
+    .runtime-profiles-title{font-size:12px; font-weight:900; opacity:0.9;}
+    .runtime-profiles-note{font-size:11px; opacity:0.65; font-weight:700;}
+    .runtime-profile-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px;}
+    .runtime-profile-card{
+      text-align:left;
+      padding:9px 9px 8px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(0,0,0,0.26);
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      min-height:92px;
+    }
+    .runtime-profile-card:hover{transform:translateY(-1px); border-color: rgba(255,255,255,0.18);}
+    .runtime-profile-card.active{
+      border-color: rgba(0,255,163,0.40);
+      background: rgba(0,255,163,0.09);
+      box-shadow: 0 10px 18px rgba(0,0,0,0.22);
+    }
+    .rpc-head{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+    .rpc-name{font-size:11px; font-weight:900;}
+    .rpc-tag{font-size:10px; font-weight:900; opacity:0.72; padding:3px 7px; border-radius:999px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10);}
+    .rpc-sub{font-size:10px; line-height:1.2; opacity:0.72; margin-top:4px;}
+    .rpc-specs{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+    .rpc-pill{font-size:9.5px; font-weight:900; padding:3px 6px; border-radius:999px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); opacity:0.78;}
+    @media (max-width: 760px){
+      .diag-grid{ grid-template-columns: 1fr; }
+      .runtime-profile-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+    @media (max-width: 520px){
+      .runtime-profile-grid{grid-template-columns:1fr;}
+    }
     .session-presets{margin-top:10px;}
     .session-presets-header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;}
     .session-presets-title{font-size: 12px; font-weight: 900; opacity:0.9;}
@@ -6398,7 +6573,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.73</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.82</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -6552,6 +6727,84 @@ html, body{
 <span class="cfg-label">Precisin:</span> <span class="cfg-value" id="cfgPrec">-</span>
 <span class="cfg-sep">|</span>
 <span class="cfg-label">Voces:</span> <span class="cfg-value" id="cfgVoices">ES</span>
+</div>
+<div class="diag-panel" id="diagPanel">
+<div class="diag-header">
+<span>Pit wall tecnico</span>
+<span class="diag-note" id="diagPanelNote">Esperando telemetria...</span>
+</div>
+<div class="diag-grid">
+<div class="diag-item off" id="diagVoice">
+<div class="diag-top"><div class="diag-name"><span class="diag-dot"></span><span>Voz</span></div><div class="diag-state">OFF</div></div>
+<div class="diag-text">Sin revisar</div>
+</div>
+<div class="diag-item off" id="diagUnlock">
+<div class="diag-top"><div class="diag-name"><span class="diag-dot"></span><span>Unlock iOS</span></div><div class="diag-state">OFF</div></div>
+<div class="diag-text">Sin revisar</div>
+</div>
+<div class="diag-item off" id="diagFirebase">
+<div class="diag-top"><div class="diag-name"><span class="diag-dot"></span><span>Firebase</span></div><div class="diag-state">OFF</div></div>
+<div class="diag-text">Sin revisar</div>
+</div>
+<div class="diag-item off" id="diagRealtime">
+<div class="diag-top"><div class="diag-name"><span class="diag-dot"></span><span>Realtime</span></div><div class="diag-state">OFF</div></div>
+<div class="diag-text">Sin revisar</div>
+</div>
+<div class="diag-item off" id="diagPolling">
+<div class="diag-top"><div class="diag-name"><span class="diag-dot"></span><span>Polling</span></div><div class="diag-state">OFF</div></div>
+<div class="diag-text">Sin revisar</div>
+</div>
+<div class="diag-item off" id="diagWake">
+<div class="diag-top"><div class="diag-name"><span class="diag-dot"></span><span>Wake Lock</span></div><div class="diag-state">OFF</div></div>
+<div class="diag-text">Sin revisar</div>
+</div>
+<div class="diag-item off" id="diagFeed">
+<div class="diag-top"><div class="diag-name"><span class="diag-dot"></span><span>Feed</span></div><div class="diag-state">OFF</div></div>
+<div class="diag-text">Sin revisar</div>
+</div>
+<div class="diag-item off" id="diagVisibility">
+<div class="diag-top"><div class="diag-name"><span class="diag-dot"></span><span>Vista</span></div><div class="diag-state">OFF</div></div>
+<div class="diag-text">Sin revisar</div>
+</div>
+</div>
+<div class="diag-error" id="diagErrorBox"></div>
+<div class="diag-subpanel" id="ttsDiagPanel">
+<div class="diag-subhead">
+<span>Motor de voz en vivo</span>
+<span class="diag-subnote" id="ttsDiagNote">Sin eventos todavia</span>
+</div>
+<div class="ttslog-list" id="ttsEventList">
+<div class="ttslog-empty">Esperando eventos TTS...</div>
+</div>
+</div>
+</div>
+<div class="runtime-profiles expert-only" id="runtimeProfilesPanel">
+<div class="runtime-profiles-header">
+<div class="runtime-profiles-title"> Perfiles runtime</div>
+<div class="runtime-profiles-note" id="runtimeProfileNote">Auto</div>
+</div>
+<div class="runtime-profile-grid" role="group" aria-label="Perfiles runtime">
+<button class="runtime-profile-card" data-runtime-profile="AUTO" id="runtimeProfileAuto" type="button">
+<div class="rpc-head"><span class="rpc-name">Auto</span><span class="rpc-tag">AUTO</span></div>
+<div class="rpc-sub">Se adapta segun iPhone, Android o desktop.</div>
+<div class="rpc-specs"><span class="rpc-pill">smart</span><span class="rpc-pill">seguro</span></div>
+</button>
+<button class="runtime-profile-card" data-runtime-profile="EVENTO" id="runtimeProfileEvento" type="button">
+<div class="rpc-head"><span class="rpc-name">Evento</span><span class="rpc-tag">PRO</span></div>
+<div class="rpc-sub">Mas insistente para pista y narracion continua.</div>
+<div class="rpc-specs"><span class="rpc-pill">rapido</span><span class="rpc-pill">mas consumo</span></div>
+</button>
+<button class="runtime-profile-card" data-runtime-profile="AHORRO" id="runtimeProfileAhorro" type="button">
+<div class="rpc-head"><span class="rpc-name">Ahorro</span><span class="rpc-tag">ECO</span></div>
+<div class="rpc-sub">Baja timers y polling para descansar bateria.</div>
+<div class="rpc-specs"><span class="rpc-pill">eco</span><span class="rpc-pill">suave</span></div>
+</button>
+<button class="runtime-profile-card" data-runtime-profile="IPHONE" id="runtimeProfileIphone" type="button">
+<div class="rpc-head"><span class="rpc-name">iPhone</span><span class="rpc-tag">iOS</span></div>
+<div class="rpc-sub">Mas prudente con background y recovery en Safari.</div>
+<div class="rpc-specs"><span class="rpc-pill">tap-safe</span><span class="rpc-pill">Safari</span></div>
+</button>
+</div>
 </div>
 <div class="session-presets expert-only" id="sessionPresetsPanel">
 <div class="session-presets-header">
@@ -7082,8 +7335,171 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.73";
+const APP_NAME = "vics_Smart_Spotter_v0.3.82";
     const APP_LABEL = APP_NAME;
+
+    const RUNTIME_PROFILES = {
+      AUTO: { label:'Auto', diagMs:1000, watchdogMs:2500, watchdogStaleMs:6000, fallback:[1000,2000,5000,10000], safetyMs:3000, heartbeatMs:30000, frontKeepAliveMs:3000 },
+      EVENTO: { label:'Evento', diagMs:900, watchdogMs:2200, watchdogStaleMs:5500, fallback:[1000,2000,4000,8000], safetyMs:2500, heartbeatMs:25000, frontKeepAliveMs:2600 },
+      AHORRO: { label:'Ahorro', diagMs:1800, watchdogMs:4000, watchdogStaleMs:9000, fallback:[2500,5000,10000,15000], safetyMs:4500, heartbeatMs:45000, frontKeepAliveMs:4500 },
+      IPHONE: { label:'iPhone', diagMs:1200, watchdogMs:3200, watchdogStaleMs:7500, fallback:[1500,3000,6000,12000], safetyMs:3800, heartbeatMs:0, frontKeepAliveMs:3600 }
+    };
+    let runtimeProfileKey = 'AUTO';
+    let __diagUiTimer = 0;
+    let __watchdogTimer = 0;
+    let __diagUiIntervalMs = 1000;
+    let __watchdogIntervalMs = 2500;
+    let __watchdogStaleMs = 6000;
+    let __ttsSafetyIntervalMs = 3000;
+    let __ttsHeartbeatIntervalMs = 30000;
+    let __ttsFrontKeepAliveIntervalMs = 3000;
+    let __lastFallbackReason = '';
+    const __ttsEventLog = [];
+    const __TTS_EVENT_LIMIT = 12;
+
+    function __resolveRuntimeProfileKey(key){
+      const k = String(key || runtimeProfileKey || 'AUTO').toUpperCase();
+      if (k !== 'AUTO') return (RUNTIME_PROFILES[k] ? k : 'AUTO');
+      try {
+        if (typeof isIOSWebKit === 'function' && isIOSWebKit()) return 'IPHONE';
+      } catch(e) {}
+      try {
+        if (typeof isMobileDevice === 'function' && isMobileDevice()) return 'EVENTO';
+      } catch(e) {}
+      return 'EVENTO';
+    }
+
+    function __getRuntimeProfileConfig(key){
+      const resolved = __resolveRuntimeProfileKey(key);
+      return Object.assign({ key: resolved }, RUNTIME_PROFILES[resolved] || RUNTIME_PROFILES.EVENTO);
+    }
+
+    function pushTtsEvent(type, detail = '', meta = ''){
+      try{
+        const item = {
+          t: Date.now(),
+          type: String(type || 'info').trim() || 'info',
+          detail: String(detail || '').replace(/\s+/g,' ').trim(),
+          meta: String(meta || '').replace(/\s+/g,' ').trim()
+        };
+        __ttsEventLog.push(item);
+        while (__ttsEventLog.length > __TTS_EVENT_LIMIT) __ttsEventLog.shift();
+        if (/error|fail|unlock/i.test(item.type)) {
+          try { __lastReadErr = __lastReadErr || ''; } catch(e) {}
+        }
+        try { renderTtsEventLog(); } catch(e) {}
+      }catch(e){}
+    }
+
+    function renderTtsEventLog(){
+      try{
+        if (!ttsEventList) return;
+        const list = __ttsEventLog.slice(-6).reverse();
+        if (!list.length){
+          ttsEventList.innerHTML = '<div class="ttslog-empty">Esperando eventos TTS...</div>';
+          if (ttsDiagNote) ttsDiagNote.textContent = 'Sin eventos todavia';
+          return;
+        }
+        const fmt = (t) => { const d = new Date(t); return String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0'); };
+        ttsEventList.innerHTML = list.map(it => {
+          const ty = String(it.type || 'info').replace(/[<>]/g,'');
+          const meta = String(it.meta || '').replace(/[<>]/g,'');
+          const detail = String(it.detail || '').replace(/[<>]/g,'');
+          return '<div class="ttslog-item">'
+            + '<div class="ttslog-meta"><span class="ttslog-type">' + ty + (meta ? ' - ' + meta : '') + '</span><span class="ttslog-time">' + fmt(it.t) + '</span></div>'
+            + '<div class="ttslog-text">' + (detail || '-') + '</div>'
+            + '</div>';
+        }).join('');
+        const last = list[0];
+        if (ttsDiagNote) ttsDiagNote.textContent = String(last.type || 'info').toUpperCase() + (last.meta ? ' - ' + last.meta : '');
+      }catch(e){}
+    }
+
+    function startRuntimeDiagTicker(){
+      try { if (__diagUiTimer) clearInterval(__diagUiTimer); } catch(e) {}
+      __diagUiTimer = 0;
+      try {
+        __diagUiTimer = setInterval(() => {
+          try { updateRuntimeDiagUI(); } catch(e) {}
+          try { renderTtsEventLog(); } catch(e) {}
+        }, Math.max(700, Number(__diagUiIntervalMs || 1000)));
+      } catch(e) {}
+      try { updateRuntimeDiagUI(); } catch(e) {}
+      try { renderTtsEventLog(); } catch(e) {}
+    }
+
+    function startRuntimeWatchdog(){
+      try { if (__watchdogTimer) clearInterval(__watchdogTimer); } catch(e) {}
+      __watchdogTimer = 0;
+      try {
+        __watchdogTimer = setInterval(() => {
+          try {
+            const now = Date.now();
+            if (__lastGoodTickMs && (now - __lastGoodTickMs > __watchdogStaleMs)) {
+              setLiveStatus(false);
+              if (raceInfo) raceInfo.textContent = 'Sin actualizaciones. Revisando conexion...';
+              __bumpFallbackPolling('watchdog');
+            }
+          } catch(e) {}
+        }, Math.max(1200, Number(__watchdogIntervalMs || 2500)));
+      } catch(e) {}
+    }
+
+    function refreshRuntimeProfileUI(){
+      try{
+        const resolved = __resolveRuntimeProfileKey(runtimeProfileKey);
+        const cfg = __getRuntimeProfileConfig(runtimeProfileKey);
+        document.querySelectorAll('[data-runtime-profile]').forEach(btn => {
+          const k = String(btn.getAttribute('data-runtime-profile') || '').toUpperCase();
+          btn.classList.toggle('active', k === String(runtimeProfileKey || '').toUpperCase());
+          btn.title = (k === 'AUTO') ? ('Auto -> ' + resolved) : (RUNTIME_PROFILES[k] ? RUNTIME_PROFILES[k].label : k);
+        });
+        if (runtimeProfileNote) runtimeProfileNote.textContent = 'Activo: ' + cfg.label + (String(runtimeProfileKey).toUpperCase() === 'AUTO' ? ' -> ' + resolved : '');
+      }catch(e){}
+    }
+
+    function applyRuntimeProfile(key, opts = {}){
+      try{
+        const wanted = String(key || runtimeProfileKey || 'AUTO').toUpperCase();
+        runtimeProfileKey = RUNTIME_PROFILES[wanted] ? wanted : 'AUTO';
+        const cfg = __getRuntimeProfileConfig(runtimeProfileKey);
+        __diagUiIntervalMs = cfg.diagMs;
+        __watchdogIntervalMs = cfg.watchdogMs;
+        __watchdogStaleMs = cfg.watchdogStaleMs;
+        __ttsSafetyIntervalMs = cfg.safetyMs;
+        __ttsHeartbeatIntervalMs = cfg.heartbeatMs;
+        __ttsFrontKeepAliveIntervalMs = cfg.frontKeepAliveMs;
+        __fallbackPollSchedule = Array.isArray(cfg.fallback) ? cfg.fallback.slice() : [1000,2000,5000,10000];
+        try { prefSet('spotterRuntimeProfile', runtimeProfileKey); } catch(e) {}
+        refreshRuntimeProfileUI();
+        startRuntimeDiagTicker();
+        startRuntimeWatchdog();
+        try { stopFallbackPolling(); __fallbackPollStep = 0; } catch(e) {}
+        try { stopTtsSafetyLoop(); if (voiceMasterEnabled) startTtsSafetyLoop(); } catch(e) {}
+        try { stopTtsHeartbeat(); if (voiceMasterEnabled) startTtsHeartbeat(); } catch(e) {}
+        if (!opts.silent) {
+          try { pushTtsEvent('profile', 'Perfil runtime: ' + cfg.label, 'runtime'); } catch(e) {}
+          try { showToast('Perfil ' + cfg.label, 900); } catch(e) {}
+        }
+      }catch(e){}
+    }
+
+    function bindRuntimeProfileCards(){
+      try{
+        document.querySelectorAll('[data-runtime-profile]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const k = btn.getAttribute('data-runtime-profile') || 'AUTO';
+            applyRuntimeProfile(k);
+            try { playBeep('up'); } catch(e) {}
+          });
+        });
+      }catch(e){}
+    }
+
+    try {
+      const savedRuntimeProfile = String(prefGet('spotterRuntimeProfile', 'AUTO') || 'AUTO').toUpperCase();
+      runtimeProfileKey = RUNTIME_PROFILES[savedRuntimeProfile] ? savedRuntimeProfile : 'AUTO';
+    } catch(e) { runtimeProfileKey = 'AUTO'; }
 
     // =========================
     // SILENCIO PRE-ARRANQUE (despues de practica)
@@ -7430,6 +7846,1108 @@ function msgv2DecimasTxt(ms) {
       }
     };
 
+
+    // =========================
+    // TTS GEN v1 - motor generativo
+    // - Plantillas con variantes [[a|b|c]]
+    // - Placeholders {pilot}, {winner}, {gapStr}, etc.
+    // - Multiplica frases sin escribirlas a mano una por una
+    // =========================
+    const __ttsGenBag = new Map();
+
+    function __ttsGenPick(list, key) {
+      try {
+        if (!Array.isArray(list) || !list.length) return '';
+        if (typeof autoRandPick === 'function') {
+          const v = autoRandPick(list, key || 'ttsgen');
+          return (v == null) ? '' : v;
+        }
+        const k = String(key || 'ttsgen');
+        let st = __ttsGenBag.get(k);
+        if (!st || !Array.isArray(st.bag) || st.srcLen !== list.length) st = { bag: [], srcLen: list.length };
+        if (!st.bag.length) {
+          st.bag = list.slice();
+          for (let i = st.bag.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const t = st.bag[i]; st.bag[i] = st.bag[j]; st.bag[j] = t;
+          }
+        }
+        const out = st.bag.shift();
+        __ttsGenBag.set(k, st);
+        return out;
+      } catch(e) { return (Array.isArray(list) && list[0]) ? list[0] : ''; }
+    }
+
+    function __ttsGenClean(out) {
+      try {
+        let s = String(out || '');
+        s = s.replace(/\s+/g, ' ').trim();
+        s = s.replace(/\s+\./g, '.').replace(/\s+,/g, ',');
+        s = s.replace(/,\s*,/g, ',').replace(/\.\s*\./g, '.');
+        s = s.replace(/\s+:/g, ':').replace(/\s+;/g, ';');
+        return spotterSanitizeText(s);
+      } catch(e) { return String(out || '').trim(); }
+    }
+
+    function __ttsGenRender(template, ctx, scopeKey) {
+      try {
+        let s = String(template || '');
+        let vi = 0;
+        for (let pass = 0; pass < 6; pass++) {
+          if (!/\[\[[^\]]+\]\]/.test(s)) break;
+          s = s.replace(/\[\[([^\]]+)\]\]/g, function(_, body){
+            vi += 1;
+            const opts = String(body || '').split('|').map(x => String(x || '').trim()).filter(Boolean);
+            return String(__ttsGenPick(opts, String(scopeKey || 'ttsgen') + ':v' + vi) || '');
+          });
+        }
+        s = s.replace(/\{([a-zA-Z0-9_]+)\}/g, function(_, key){
+          const v = (ctx && Object.prototype.hasOwnProperty.call(ctx, key)) ? ctx[key] : '';
+          return (v == null) ? '' : String(v);
+        });
+        return __ttsGenClean(s);
+      } catch(e) { return ''; }
+    }
+
+    function __ttsGenUse(templates, ctx, scopeKey, validator) {
+      try {
+        const arr = Array.isArray(templates) ? templates : [];
+        if (!arr.length) return '';
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const tpl = __ttsGenPick(arr, String(scopeKey || 'ttsgen') + ':tpl');
+          const out = __ttsGenRender(tpl, ctx || {}, String(scopeKey || 'ttsgen') + ':a' + attempt);
+          if (!out) continue;
+          if (typeof validator === 'function' && !validator(out)) continue;
+          return out;
+        }
+        return '';
+      } catch(e) { return ''; }
+    }
+
+    const TTS_GEN_MSGV2 = {
+      attack: [
+        '[[Ataca|Presiona|Va encima|Lo trae en la mira]]. [[Atras viene|Encima esta|Al acecho viene]] {otherName}. [[Gap {gapStr}|Estan {gapStr}|A {gapStr}]]. [[Traza limpia|Sin regalar apex|Con calma|Sin tocar]].',
+        '[[Presion real|Ojo atras|Hay amenaza]]. {otherName} [[pegado|muy cerca|metido en la pelea]]. [[{gapStr}|Gap {gapStr}|A {gapStr}]]. [[No abras la puerta|Cuida la salida|Fino en el volante|Todo limpio]].',
+        '[[Radar prendido|Espejos alertas|No te relajes]]. {otherName} [[ya esta ahi|se vino encima|esta en rango]]. [[Separacion {gapStr}|A {gapStr}|Gap {gapStr}]]. [[Sin errores|Con cabeza|Respira y traza|No regales]].'
+      ],
+      defense: [
+        '[[Defiende|Aguanta|Sostiene la plaza|Cubre la posicion]]. [[Detras viene|Pegado atras]] {otherName}. [[Gap {gapStr}|A {gapStr}|Estan {gapStr}]]. [[No dejes hueco|Salida limpia|Todo fino|Sin tocar]].',
+        '[[Toca defender|Hay que cuidar el sitio|No regales la puerta]]. {otherName} [[presiona|viene apretando|esta pegado]]. [[{gapStr}|Gap {gapStr}|A {gapStr}]]. [[Con cabeza|Traza limpia|Freno fino|Nada de drama]].',
+        '[[Posicion bajo presion|Momento de sangre fria|Hay que cerrar bien]]. {otherName} [[encima|al ataque|sin soltarte]]. [[A {gapStr}|Gap {gapStr}|Estan {gapStr}]]. [[Sin volantazos|Limpio|Calma|Sin abrir la puerta]].'
+      ],
+      fight: [
+        '[[Pelea cerrada|Duelo apretado|Batalla viva|Estan a cuchillo]]. [[Todo limpio|Sin tocar|Con cabeza|Ojos al apex]].',
+        '[[Dos por decimas|Mano a mano|Esto esta vivo|Hay duelo serio]]. [[Traza fina|Nada de regalos|Todo controlado|Salida limpia]].',
+        '[[Batalla directa|Pelea de precision|Carrera apretada|Se cerro el asunto]]. [[Con calma|Sin errores|Sin panico|Todo limpio]].'
+      ],
+      ritmo_up: [
+        '[[Buen ritmo|Sube el ritmo|Vas mejorando|Hay ganancia]]. [[Recortas {deltaMs} milisegundas|Recortas {deltaMs} milisegundos|Mejoras {deltaMs} milisegundos]]. [[Sigue asi|Mantelo|Repite eso|Esa linea sirve]].',
+        '[[Ritmo arriba|Mejora clara|Paso adelante|Va mejor]]. [[Ganaste {deltaMs} milisegundos|Hay {deltaMs} milisegundos de mejora|Recorte de {deltaMs} milisegundos]]. [[A sostenerlo|Clavalo otra vez|Misma receta|Buena vuelta]].'
+      ],
+      ritmo_down: [
+        '[[Se fue tiempo|Caida de ritmo|Ojo con el ritmo|Vuelta mas lenta]]. [[Perdiste {deltaMs} milisegundos|Cedes {deltaMs} milisegundos|Se fueron {deltaMs} milisegundos]]. [[Respira y corrige|Sin forzar de mas|Vuelve a la linea|Calma]].',
+        '[[Hay perdida|Se abrio la vuelta|Ritmo abajo|No fue esa]]. [[{deltaMs} milisegundos mas|Se fueron {deltaMs} milisegundos|Pierdes {deltaMs} milisegundos]]. [[Recupera la trazada|Sin castigar llanta|Acomoda la entrada|Vuelve al plan]].'
+      ],
+      bestlap: [
+        '[[Mejor vuelta|Gran vuelta|Vueltota|Tiempo top]]. [[{best}|Registro {best}|Marca {best}]]. [[Sigue empujando|Ahi esta el ritmo|Muy bien|Buena referencia]].',
+        '[[Best lap|Referencia nueva|Ritmo premium|Tiempo fuerte]]. [[{best}|Con {best}|Parando el reloj en {best}]]. [[Eso sirve|Buen dato|Quedate ahi|Limpio]].'
+      ],
+      blueflag: [
+        '[[Bandera azul|Cortesia de carrera|Atencion trafico]]. [[Viene {who}|Ya esta encima {who}|Se acerca {who}]]. [[Dale pista limpia|No lo amarres|Sin estorbar|Dejalo pasar limpio]].'
+      ]
+    };
+
+    function ttsGenMsgv2Compose(type, ctx) {
+      try {
+        const t = String(type || '').trim();
+        if (!t || t === 'blueflag') return '';
+        const bank = TTS_GEN_MSGV2[t];
+        if (!Array.isArray(bank) || !bank.length) return '';
+        const pk = msgv2PilotKey(ctx);
+        const out = __ttsGenUse(bank, ctx || {}, 'msgv2gen:' + t + ':' + pk, function(txt){ return !!String(txt || '').trim(); });
+        return out || '';
+      } catch(e) { return ''; }
+    }
+
+    const TTS_GEN_AUTO_BASE = {
+      leaderChange: [
+        '[[Cambio de lider|Nueva punta|Punta nueva|Se mueve la cabeza|Golpe arriba]]. {winner} [[toma|asegura|recupera|manda en|se queda con]] P1. [[{loser} queda P2|{loser} cae a segundo|{loser} responde desde P2|{loser} a perseguir]].',
+        '[[Arriba hay cambio|Se altera el frente|La punta cambia de manos|Tenemos lider nuevo]]. [[P1 para {winner}|Lidera {winner}|{winner} pasa al frente]]. [[P2 {loser}|{loser} ahora segundo|{loser} en persecucion]].',
+        '[[Golpe de autoridad|Movimiento serio|Cambio importante|Se mueve la carrera]]. {winner} [[desbanca|supera|deja atras|rebasa]] a {loser} y [[ya es lider|manda en P1|se pone primero]].'
+      ],
+      pass: [
+        '[[Rebase confirmado|Cambio de posicion|Puesto ganado|Pase hecho]]. {winner} [[sube a|se mete en|asegura]] P{newPos}. [[{loser} cae a P{oldPos}|{loser} baja a P{oldPos}|{loser} pierde el sitio]].',
+        '[[Movimiento limpio|Adelantamiento al conteo|Intercambio cerrado|Posicion nueva]]. [[P{newPos} para {winner}|{winner} toma P{newPos}|{winner} gana la plaza]]. [[{loser} ahora P{oldPos}|{loser} se reacomoda en P{oldPos}|{loser} a perseguir]].',
+        '[[Se concreta el pase|Ya esta el cambio|Se mueve la tabla|Puesto que cambia]]. {winner} [[adelante|por delante|hace el trabajo]] y [[queda P{newPos}|se instala en P{newPos}|amarra P{newPos}]].'
+      ],
+      battle: [
+        '[[Duelo en P{pos}|P{pos} en pelea|Atencion P{pos}|P{pos} caliente]]. {attacker} [[presiona|se viene encima|no suelta|aprieta]] a {defender}. [[Gap {sec}|{sec}|Separacion {sec}]].',
+        '[[P{pos} sin aire|P{pos} al limite|P{pos} apretado|Camara a P{pos}]]. {attacker} [[pegado|muy cerca|en el espejo|en rango de pase]]. [[{sec}|Gap {sec}|A {sec}]].',
+        '[[Batalla directa por P{pos}|Mano a mano en P{pos}|Hay historia en P{pos}|P{pos} en foco]]. {defender} [[aguanta|defiende|resiste]] y {attacker} [[insiste|vuelve a cargar|sigue encima|busca hueco]].'
+      ],
+      battlePodium: [
+        '[[Podio en juego|Puesto grande en riesgo|Se pelea el podio|Podio bajo presion]]. {attacker} [[caza|persigue|acecha|aprieta]] a {defender} por P{pos}. [[{sec}|Gap {sec}|A {sec}]].',
+        '[[La pelea buena esta en el podio|Hay humo en zona de trofeo|P{pos} vale trofeo|Zona podio encendida]]. {attacker} [[encima|en rango|muy cerca|metido]] de {defender}.',
+        '[[Podio en el radar|Podio que no esta seguro|Trofeo todavia en disputa|Nadie puede pestañear]]. {defender} [[aguanta|resiste|cubre]] y {attacker} [[presiona|no perdona|viene fuerte|no afloja]].'
+      ],
+      closing: [
+        '[[Se cierra la pelea|Cada vez mas cerca|Se aprieta el duelo|El gap viene abajo]]. {attacker} [[recorta|descuenta|se acerca|viene encima]] sobre {defender}. [[De {fromSec} a {toSec}|Ahora {toSec}|Gap {toSec}]].',
+        '[[Ojo con esta tendencia|Lectura clara|Se esta cocinando|Esto cambia]]. {attacker} [[ya lo trae|ya lo tiene cerca|viene a la carga|va acortando]]. [[{toSec}|A {toSec}|Gap {toSec}]].',
+        '[[La presion sube|La historia aprieta|Se prende el foco|Esto se mueve]]. {defender} [[ya lo siente|lo trae en espejos|no respira]] y {attacker} [[recorta|se mete|llega|amenaza]].'
+      ],
+      pressure: [
+        '[[Presion real|No hay margen|Se juega fino|Momento delicado]]. {attacker} [[encima|a tiro|metido|apretando]] de {defender}. [[{sec}|A {sec}|Gap {sec}]].',
+        '[[Sin aire adelante|Defensa en marcha|Todo bajo estres|Alta presion]]. {defender} [[tiene que cerrar|no puede fallar|debe trazar limpio|carga los espejos]].',
+        '[[Se siente el ataque|Esto pide precision|No hay respiro|Viene la carga]]. {attacker} [[ya toca la puerta|esta muy cerca|huele sangre|no perdona]].'
+      ],
+      gap: [
+        '[[Gap de referencia|Lectura del gap|Dato de separacion|Delta actual]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
+        '[[Numero en pista|La diferencia ahora|La pelicula del cronometro|Dato frio]]. {front} [[mantiene|lleva|conserva]] [[{sec}|a {sec}|gap {sec}]] sobre {back}.',
+        '[[Separacion registrada|Ventana actual|Distancia de carrera|Margen ahora]]. [[{front} adelante|{front} controla|{front} sostiene]] y {back} [[sigue|persigue|responde]].'
+      ],
+      top3: [
+        '[[Top 3 actual|Asi va el podio|Foto del frente|Referencia de punta]]. P1 {p1}, P2 {p2}, P3 {p3}.',
+        '[[En punta|Orden del podio|Frente de la carrera|Tres primeros]]. {p1}, {p2}, {p3}.',
+        '[[Podio provisional|Corte rapido|Estado del frente|Marcador al frente]]. [[Lider {p1}|P1 {p1}]]. [[Luego {p2} y {p3}|Detras {p2} y {p3}|P2 {p2}, P3 {p3}]].'
+      ],
+      train: [
+        '[[Paquete compacto|Tren formado|Grupo cerrado|Fila apretada]]. P2 {p2}, P3 {p3}, P4 {p4}. [[Cualquier error cambia todo|Nadie sobra ahi|Todo esta vivo|Ventana de pase abierta]].',
+        '[[P2 a P4 en rango|Tres autos en paquete|Grupo por el podio|Cluster caliente]]. {p2}, {p3} y {p4}. [[Sin espacio de sobra|Alta tension|Todo al filo|Precision total]].',
+        '[[Hay tren por el podio|Se agrupan fuerte|No se despegan|Todo muy corto]]. [[{p2} delante|Manda {p2} en el grupo|Encabeza {p2}]]. [[{p3} y {p4} pegados|{p3} y {p4} sin aire|{p3} con {p4} encima]].'
+      ],
+      record: [
+        '[[Mejor vuelta|Tiempo de referencia|Ritmo premium|Registro top]]. {pilot} [[marca|firma|clava|pone]] {best}.',
+        '[[Se actualiza la referencia|Hay tiempo fuerte|Nueva marca buena|Vuelta de peso]]. {pilot} con {best}.',
+        '[[Cronometro a favor|Tiempo serio|Vuelta importante|Dato fino]]. {pilot} [[se apunta|deja|registra|anota]] {best}.',
+      ],
+      qualiBest: [
+        '[[En clasificacion|Modo quali|Tiempo de manga|En el reloj]]. {pilot} [[marca|pone|suelta|deja]] {best}.',
+        '[[Queda el tiempo|Registro de quali|Referencia en clasificacion|Tiempo al tablero]]. {pilot} con {best}.',
+        '[[Clasificacion se mueve|La quali cambia|Sube el liston|Hay vuelta buena]]. {pilot} [[firma|clava|registra]] {best}.',
+      ],
+      qualiPole: [
+        '[[Pole en juego|Batalla por la pole|Se aprieta la pole|Clasificacion caliente]]. {p1} y {p2} [[separados por {sec}|a {sec}|con gap {sec}]].',
+        '[[Nada decidido en la pole|La punta de quali sigue viva|La pole no esta cerrada|Ojo con la pole]]. {p1} contra {p2}. [[{sec}|A {sec}|Gap {sec}]].',
+        '[[Quien se queda la pole|Se decide por nada|Esto va por milimetros|Clasificacion fina]]. {p1} [[aguanta|manda|sostiene]] y {p2} [[aprieta|recorta|viene cerca]].'
+      ]
+    };
+
+    const TTS_GEN_AUTO = {
+      pro: TTS_GEN_AUTO_BASE,
+      picante: Object.assign({}, TTS_GEN_AUTO_BASE, {
+        leaderChange: [
+          '[[Se volteo la tortilla|Golpe en la punta|Se mueve el jefe|Cambio bravo arriba]]. {winner} [[se roba|toma|se queda con|agarra]] P1. [[{loser} a perseguir|{loser} baja a segundo|{loser} pierde la punta|{loser} a remar]].',
+          '[[Nuevo patron en pista|Punta que cambia de dueño|Hay mano dura adelante|Se prende arriba]]. [[P1 para {winner}|Manda {winner}|{winner} al frente]]. [[{loser} ahora P2|{loser} en caceria|{loser} tiene que responder]].'
+        ],
+        pass: [
+          '[[Rebase con colmillo|Pase con hambre|Movimiento filoso|Le mete el coche]]. {winner} [[sube a|amarra|se queda con]] P{newPos}. [[{loser} cae a P{oldPos}|{loser} se queda viendo|{loser} pierde el sitio]].',
+          '[[Se la cobra|No perdona|Puesto robado|Golpe de carrera]]. {winner} [[adelante|por delante|hace la chamba]] y [[ya es P{newPos}|queda P{newPos}|se instala en P{newPos}]].'
+        ],
+        battle: [
+          '[[P{pos} en modo cuchillo|Duelazo en P{pos}|P{pos} al rojo vivo|Se pico P{pos}]]. {attacker} [[respira en la nuca|va encima|ya toca la puerta|huele sangre]] de {defender}. [[{sec}|Gap {sec}|A {sec}]].',
+          '[[Esto va a tronar|No hay paz en P{pos}|Se cocina un pase|Huele a cambio]]. {defender} [[aguanta|se defiende|no puede fallar]] y {attacker} [[no perdona|vuelve a cargar|sigue ahi|esta pegado]].'
+        ],
+        closing: [
+          '[[Se viene la bronca|Esto se apreto sabroso|Ya lo tiene en la mira|La tijera viene cerrando]]. {attacker} [[recorta|se acerca|descuenta|ya esta ahi]] sobre {defender}. [[{toSec}|A {toSec}|Gap {toSec}]].',
+          '[[Ahora si|Ya huele a pase|Esto esta calientito|Se puso bueno]]. {defender} [[ya lo siente|lo trae encima|mira espejos|no respira]].'
+        ],
+        battlePodium: [
+          '[[Podio a cuchillo|Trofeo en la lumbre|Zona de podio que arde|Nadie afloja por el trofeo]]. {attacker} [[encima|pegado|ya encima|a la carga]] de {defender}.',
+          '[[Ese podio no esta asegurado|Todavia se vende caro el trofeo|El podio sigue en juego|Hay humo por el trofeo]]. [[Gap {sec}|A {sec}|{sec}]].'
+        ]
+      }),
+      engineer: Object.assign({}, TTS_GEN_AUTO_BASE, {
+        gap: [
+          '[[Lectura tecnica|Dato de referencia|Numero puro|Telemetria rapida]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
+          '[[Delta registrado|Margen operativo|Separacion medida|Gap trazable]]. {front} [[controla|mantiene|sostiene]] [[{sec}|a {sec}|gap {sec}]] sobre {back}.',
+          '[[Ritmo contra posicion|Numero mata chisme|Corte tecnico|Lectura limpia]]. {front} [[sigue delante|esta delante|conserva el frente]] y {back} [[persigue|sigue el delta|responde]].'
+        ],
+        train: [
+          '[[Paquete P2 a P4|Grupo de presion|Stack de posiciones|Cluster de ritmo]]. {p2}, {p3}, {p4}. [[Ventana de error minima|Todo en rango|Sin margen|Compacto total]].',
+          '[[Tres autos en delta corto|Grupo comprimido|Cadena de ataque|Presion encadenada]]. {p2} [[tira del tren|encabeza el grupo|abre el paquete]], {p3} y {p4} [[en rango|sin aire|pegados]].'
+        ],
+        record: [
+          '[[Referencia de ritmo|Vuelta de valor|Dato premium|Tiempo de referencia]]. {pilot} con {best}.',
+          '[[Se actualiza el benchmark|Nueva referencia limpia|Tiempo a seguir|Lectura de velocidad]]. {pilot} [[marca|clava|pone]] {best}.'
+        ]
+      }),
+      narrativo: Object.assign({}, TTS_GEN_AUTO_BASE, {
+        record: [
+          '[[El reloj habla|Queda escrita la vuelta|Se firma una referencia|La pista responde]]. {pilot} [[pone|deja|firma|anota]] {best}.',
+          '[[Hay una vuelta que pesa|Momento de cronometro|Se mueve la historia del ritmo|La referencia cambia]]. {pilot} con {best}.',
+          '[[No fue una vuelta cualquiera|Ese giro tiene mensaje|La carrera deja un dato fino|La vuelta queda en libreta]]. {pilot} [[marca|firma|registra]] {best}.'
+        ],
+        top3: [
+          '[[Asi se cuenta la punta|Foto del frente|La historia arriba va asi|El frente de carrera]]. {p1}, luego {p2}, despues {p3}.',
+          '[[En la cabeza del peloton|Arriba la novela va asi|La punta hoy dice|El relato del frente]]. {p1} manda, {p2} persigue, {p3} espera.'
+        ],
+        closing: [
+          '[[La trama se aprieta|La historia se pone seria|Cada curva pesa mas|El aire se corta]]. {attacker} [[recorta|viene recortando|se pega|crece]] sobre {defender}.',
+          '[[Esto no esta escrito|Todavia falta tinta|Nadie puede respirar tranquilo|La vuelta trae drama]]. [[Gap {toSec}|A {toSec}|{toSec}]].'
+        ]
+      })
+    };
+
+    function ttsGenAutoCompose(type, ctx, style) {
+      try {
+        const st = String(style || 'pro').trim() || 'pro';
+        const dict = (TTS_GEN_AUTO[st] || TTS_GEN_AUTO.pro || {});
+        const bank = dict[type] || ((TTS_GEN_AUTO.pro || {})[type]) || [];
+        if (!Array.isArray(bank) || !bank.length) return '';
+        const out = __ttsGenUse(bank, ctx || {}, 'autogen:' + st + ':' + type, function(txt){
+          return (typeof autoIsUsableText === 'function') ? autoIsUsableText(txt, type) : !!String(txt || '').trim();
+        });
+        return out || '';
+      } catch(e) { return ''; }
+    }
+
+
+    // =========================
+    // TTS SMART v1 - motor contextual
+    // - Decide al vuelo segun evento, gap, sesion, continuidad y tono
+    // - No usa fuentes externas ni bancos externos
+    // - Si no logra una frase usable, cae al motor generativo / clasico
+    // =========================
+    const __ttsSmartState = {
+      follow: new Map(),
+      auto: new Map()
+    };
+    const __ttsStoryState = {
+      follow: new Map(),
+      auto: new Map()
+    };
+    const __ttsRivalState = {
+      follow: new Map(),
+      auto: new Map()
+    };
+
+    function __ttsStoryBag(channel) {
+      try {
+        return (channel === 'follow') ? __ttsStoryState.follow : __ttsStoryState.auto;
+      } catch(e) { return null; }
+    }
+
+    function __ttsStoryCleanup(channel) {
+      try {
+        const bag = __ttsStoryBag(channel);
+        if (!bag || typeof bag.forEach !== 'function') return;
+        const now = Date.now();
+        bag.forEach((v, k) => {
+          if (!v || (now - Number(v.at || 0)) > 90000) bag.delete(k);
+        });
+      } catch(e) {}
+    }
+
+
+    function __ttsRivalBag(channel) {
+      try {
+        return (channel === 'follow') ? __ttsRivalState.follow : __ttsRivalState.auto;
+      } catch(e) { return null; }
+    }
+
+    function __ttsRivalCleanup(channel) {
+      try {
+        const bag = __ttsRivalBag(channel);
+        if (!bag || typeof bag.forEach !== 'function') return;
+        const now = Date.now();
+        bag.forEach((v, k) => {
+          if (!v || (now - Number(v.lastSeen || 0)) > 12 * 60 * 1000) bag.delete(k);
+        });
+      } catch(e) {}
+    }
+
+    function __ttsRivalTouch(channel, pairKey, type, ctx, storyLike) {
+      try {
+        if (!pairKey) return null;
+        __ttsRivalCleanup(channel);
+        const bag = __ttsRivalBag(channel);
+        if (!bag) return null;
+        const now = Date.now();
+        const gapNum = Number(storyLike && storyLike.gapNum);
+        const defender = __ttsSmartName(ctx && ctx.defender, __ttsSmartName(ctx && ctx.pilot, '')).trim();
+        const attacker = __ttsSmartName(ctx && (ctx.attacker || ctx.otherName || ctx.who || ctx.winner), '').trim();
+        const winner = __ttsSmartName(ctx && ctx.winner, '').trim();
+        const loser = __ttsSmartName(ctx && ctx.loser, '').trim();
+        let rec = bag.get(pairKey) || {
+          pairKey: String(pairKey),
+          encounters: 0,
+          closeTicks: 0,
+          pressureTicks: 0,
+          heroDefenseTicks: 0,
+          resolvedCount: 0,
+          lastSeen: 0,
+          lastEncounterAt: 0,
+          lastDefender: '',
+          lastAttacker: '',
+          lastWinner: '',
+          lastLoser: ''
+        };
+        const sameEncounter = rec.lastSeen && ((now - Number(rec.lastSeen || 0)) < 42000);
+        if (!sameEncounter) {
+          rec.encounters = Number(rec.encounters || 0) + 1;
+          rec.lastEncounterAt = now;
+        }
+        if (isFinite(gapNum) && gapNum <= 0.35) rec.closeTicks = Math.min(12, Number(rec.closeTicks || 0) + 1);
+        else rec.closeTicks = Math.max(0, Number(rec.closeTicks || 0) - 1);
+
+        if (/^(attack|defense|fight|battle|battlePodium|closing|pressure)$/.test(String(type || '')) && String((storyLike && storyLike.trend) || '') !== 'opening') {
+          rec.pressureTicks = Math.min(16, Number(rec.pressureTicks || 0) + 1);
+        } else if (!/^(pass|leaderChange)$/.test(String(type || ''))) {
+          rec.pressureTicks = Math.max(0, Number(rec.pressureTicks || 0) - 1);
+        }
+
+        if ((String(type || '') === 'defense' || String(type || '') === 'pressure') && defender) {
+          if (rec.lastDefender === defender && !storyLike?.resolved && (!isFinite(gapNum) || gapNum <= 0.60)) rec.heroDefenseTicks = Math.min(12, Number(rec.heroDefenseTicks || 0) + 1);
+          else rec.heroDefenseTicks = 1;
+        } else if (/^(pass|leaderChange)$/.test(String(type || ''))) {
+          rec.heroDefenseTicks = 0;
+        } else {
+          rec.heroDefenseTicks = Math.max(0, Number(rec.heroDefenseTicks || 0) - 1);
+        }
+
+        if (/^(pass|leaderChange)$/.test(String(type || ''))) {
+          rec.resolvedCount = Math.min(12, Number(rec.resolvedCount || 0) + 1);
+          rec.pressureTicks = 0;
+          rec.closeTicks = 0;
+          rec.heroDefenseTicks = 0;
+        }
+
+        rec.lastSeen = now;
+        rec.lastDefender = defender || rec.lastDefender || '';
+        rec.lastAttacker = attacker || rec.lastAttacker || '';
+        rec.lastWinner = winner || rec.lastWinner || '';
+        rec.lastLoser = loser || rec.lastLoser || '';
+        bag.set(pairKey, rec);
+        const encounters = Number(rec.encounters || 0);
+        const pressureTicks = Number(rec.pressureTicks || 0);
+        const closeTicks = Number(rec.closeTicks || 0);
+        const heroDefenseTicks = Number(rec.heroDefenseTicks || 0);
+        return {
+          pairKey: String(pairKey),
+          encounters,
+          closeTicks,
+          pressureTicks,
+          heroDefenseTicks,
+          resolvedCount: Number(rec.resolvedCount || 0),
+          recurrent: encounters >= 3,
+          relentless: pressureTicks >= 4,
+          heroic: heroDefenseTicks >= 4,
+          hot: (encounters >= 3 && pressureTicks >= 4) || closeTicks >= 5,
+          attacker: rec.lastAttacker || attacker || '',
+          defender: rec.lastDefender || defender || '',
+          winner: rec.lastWinner || winner || '',
+          loser: rec.lastLoser || loser || ''
+        };
+      } catch(e) { return null; }
+    }
+
+    function __ttsStoryPair(a, b) {
+      try {
+        const aa = __ttsSmartName(a, '').trim();
+        const bb = __ttsSmartName(b, '').trim();
+        if (!aa && !bb) return '';
+        return [aa, bb].filter(Boolean).sort((x, y) => String(x).localeCompare(String(y), 'es')).join('|');
+      } catch(e) { return ''; }
+    }
+
+    function __ttsStoryPairKeyFromCtx(channel, type, ctx) {
+      try {
+        const t = String(type || '').trim();
+        if (channel === 'follow') {
+          const other = __ttsSmartName(ctx && (ctx.otherName || ctx.who), '').trim();
+          return other ? ('duel:' + other) : '';
+        }
+        const attacker = __ttsSmartName(ctx && ctx.attacker, '').trim();
+        const defender = __ttsSmartName(ctx && ctx.defender, '').trim();
+        const winner = __ttsSmartName(ctx && ctx.winner, '').trim();
+        const loser = __ttsSmartName(ctx && ctx.loser, '').trim();
+        const pair = __ttsStoryPair(attacker || winner, defender || loser);
+        if (!pair) return '';
+        if (t === 'leaderChange') return 'lead:' + pair;
+        return 'duel:' + pair;
+      } catch(e) { return ''; }
+    }
+
+    function __ttsStoryKey(channel, type, ctx) {
+      try {
+        const t = String(type || '').trim();
+        if (channel === 'follow') {
+          if (t === 'bestlap') return 'time:' + __ttsSmartName(ctx && ctx.pilot, 'self');
+          if (t === 'ritmo_up' || t === 'ritmo_down') return 'pace:' + t;
+          return __ttsStoryPairKeyFromCtx(channel, t, ctx);
+        }
+        if (t === 'record' || t === 'qualiBest') return 'time:' + __ttsSmartName(ctx && ctx.pilot, 'pilot');
+        if (t === 'qualiPole') return 'pole:' + __ttsStoryPair(__ttsSmartName(ctx && ctx.p1, ''), __ttsSmartName(ctx && ctx.p2, ''));
+        if (t === 'top3') return 'top3:' + [__ttsSmartName(ctx && ctx.p1, ''), __ttsSmartName(ctx && ctx.p2, ''), __ttsSmartName(ctx && ctx.p3, '')].filter(Boolean).join('|');
+        if (t === 'train') return 'train:' + [__ttsSmartName(ctx && ctx.p2, ''), __ttsSmartName(ctx && ctx.p3, ''), __ttsSmartName(ctx && ctx.p4, '')].filter(Boolean).join('|');
+        if (t === 'gap') return 'gap:' + __ttsStoryPair(__ttsSmartName(ctx && ctx.front, ''), __ttsSmartName(ctx && ctx.back, ''));
+        if (t === 'pass') return 'pass:' + __ttsStoryPair(__ttsSmartName(ctx && ctx.winner, ''), __ttsSmartName(ctx && ctx.loser, '')) + ':P' + String((ctx && ctx.newPos) || '');
+        return __ttsStoryPairKeyFromCtx(channel, t, ctx);
+      } catch(e) { return ''; }
+    }
+
+    function __ttsStoryTrack(channel, type, ctx) {
+      try {
+        __ttsStoryCleanup(channel);
+        const bag = __ttsStoryBag(channel);
+        if (!bag) return { status:'fresh', trend:'flat', streak:1, key:'', pairKey:'', gapNum:NaN, prev:null, resolvedFrom:null };
+        const key = __ttsStoryKey(channel, type, ctx);
+        const pairKey = __ttsStoryPairKeyFromCtx(channel, type, ctx);
+        const prev = (key && bag.get(key)) || null;
+        const prevPair = (pairKey && bag.get(pairKey)) || null;
+        const basePrev = prev || prevPair || null;
+        const now = Date.now();
+        const gapRaw = (ctx && (ctx.sec || ctx.gapStr || ctx.toSec || ctx.fromSec || ctx.gap || ctx.delta)) || '';
+        const gapNum = __ttsSmartNum(gapRaw);
+        let trend = 'flat';
+        if (basePrev && isFinite(gapNum) && isFinite(Number(basePrev.gapNum))) {
+          const prevGap = Number(basePrev.gapNum);
+          if (gapNum < (prevGap - 0.05)) trend = 'closing';
+          else if (gapNum > (prevGap + 0.08)) trend = 'opening';
+          else trend = 'steady';
+        }
+        const ageMs = basePrev ? (now - Number(basePrev.at || 0)) : 999999;
+        let streak = 1;
+        let status = 'fresh';
+        if (basePrev && ageMs < 28000) {
+          streak = Number(basePrev.streak || 1) + 1;
+          if (trend === 'closing' && streak >= 4) status = 'boiling';
+          else if (trend === 'closing' && streak >= 2) status = 'escalating';
+          else if (trend === 'opening' && streak >= 2) status = 'cooling';
+          else if (streak >= 4) status = 'ongoing';
+          else status = 'continuing';
+        }
+        let resolvedFrom = null;
+        if ((type === 'pass' || type === 'leaderChange') && prevPair && ageMs < 32000 && Number(prevPair.streak || 0) >= 2) {
+          resolvedFrom = Object.assign({}, prevPair);
+          status = Number(prevPair.streak || 0) >= 4 ? 'resolved_hot' : 'resolved';
+          streak = Number(prevPair.streak || 1);
+        }
+        const rivalMeta = __ttsRivalTouch(channel, pairKey || key, type, ctx || {}, {
+          status,
+          trend,
+          streak,
+          gapNum: isFinite(gapNum) ? gapNum : NaN,
+          resolved: !!resolvedFrom
+        });
+        const rec = {
+          at: now,
+          type: String(type || ''),
+          status,
+          trend,
+          streak,
+          gapNum: isFinite(gapNum) ? gapNum : NaN,
+          names: {
+            attacker: __ttsSmartName(ctx && ctx.attacker, ''),
+            defender: __ttsSmartName(ctx && ctx.defender, ''),
+            winner: __ttsSmartName(ctx && ctx.winner, ''),
+            loser: __ttsSmartName(ctx && ctx.loser, ''),
+            other: __ttsSmartName(ctx && (ctx.otherName || ctx.who), ''),
+            pilot: __ttsSmartName(ctx && ctx.pilot, '')
+          },
+          pos: String((ctx && (ctx.pos || ctx.newPos || ctx.oldPos)) || ''),
+          resolved: !!resolvedFrom,
+          rivalMeta: rivalMeta || null
+        };
+        if (key) bag.set(key, rec);
+        if (pairKey) bag.set(pairKey, rec);
+        return { key, pairKey, status, trend, streak, gapNum, prev: basePrev, resolvedFrom, ageMs, rivalMeta: rivalMeta || null };
+      } catch(e) {
+        return { status:'fresh', trend:'flat', streak:1, key:'', pairKey:'', gapNum:NaN, prev:null, resolvedFrom:null };
+      }
+    }
+
+    function __ttsSmartPick(arr, key) {
+      try {
+        if (!Array.isArray(arr) || !arr.length) return '';
+        return String(__ttsGenPick(arr, 'smart:' + String(key || 'k')) || arr[0] || '');
+      } catch(e) { return (Array.isArray(arr) && arr[0]) ? String(arr[0]) : ''; }
+    }
+
+    function __ttsSmartClean(s) {
+      try {
+        let out = String(s || '').replace(/\s+/g, ' ').trim();
+        out = out.replace(/\s+,/g, ',').replace(/\s+\./g, '.');
+        out = out.replace(/,\s*,/g, ',').replace(/\.\s*\./g, '.');
+        out = out.replace(/\s+:/g, ':').replace(/\s+;/g, ';');
+        return spotterSanitizeText(out);
+      } catch(e) { return String(s || '').trim(); }
+    }
+
+    function __ttsSmartName(v, fallback) {
+      try {
+        const s = safeRacerName(v || '') || '';
+        return s || String(fallback || '');
+      } catch(e) { return String(v || fallback || ''); }
+    }
+
+    function __ttsSmartNum(v) {
+      try {
+        if (typeof v === 'number' && isFinite(v)) return v;
+        const s = String(v == null ? '' : v).trim();
+        if (!s) return NaN;
+        if (/\+?\s*\d+\s*v/i.test(s) || /m[aá]s\s+\d+\s+vueltas?/i.test(s)) return 99;
+        const m = s.match(/-?\d+(?:[\.,]\d+)?/);
+        if (!m) return NaN;
+        return Number(String(m[0]).replace(',', '.'));
+      } catch(e) { return NaN; }
+    }
+
+    function __ttsSmartGapBand(sec) {
+      const s = Number(sec);
+      if (!isFinite(s)) return 'unknown';
+      if (s >= 10) return 'lap';
+      if (s <= 0.12) return 'knife';
+      if (s <= 0.22) return 'close';
+      if (s <= 0.45) return 'tight';
+      if (s <= 0.90) return 'mid';
+      return 'open';
+    }
+
+    function __ttsSmartGapSpeech(ctx) {
+      try {
+        const raw = ctx && (ctx.sec || ctx.gapStr || ctx.toSec || ctx.fromSec || ctx.gap || ctx.delta || '');
+        const s = String(raw || '').trim();
+        if (s) return s;
+      } catch(e) {}
+      return '';
+    }
+
+    function __ttsSmartSession() {
+      try {
+        const t = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+        if (t === 'FINAL' || t === 'MANGA' || t === 'TRAIN') return t;
+      } catch(e) {}
+      return 'GEN';
+    }
+
+    function __ttsSmartProgressBand() {
+      try {
+        const rd = raceData || {};
+        const leader = (rd.classification || []).find(r => Number(r && r.pos) === 1) || (rd.classification || [])[0];
+        const lap = Number(leader && leader.lapcount) || 0;
+        const clk = Number(rd.clockMs || rd.clock || 0) || 0;
+        if (clk > 0 && clk < 70000) return 'start';
+        if (lap <= 2) return 'start';
+        if (lap >= 18) return 'late';
+        if (lap >= 10) return 'mid';
+      } catch(e) {}
+      return 'mid';
+    }
+
+    function __ttsSmartRemember(channel, key, payload) {
+      try {
+        const bag = __ttsSmartState[channel];
+        if (!bag || !key) return;
+        bag.set(String(key), Object.assign({ at: Date.now() }, payload || {}));
+      } catch(e) {}
+    }
+
+    function __ttsSmartRecall(channel, key) {
+      try {
+        const bag = __ttsSmartState[channel];
+        if (!bag || !key) return null;
+        return bag.get(String(key)) || null;
+      } catch(e) { return null; }
+    }
+
+    function __ttsSmartTone(type, ctx, style, channel) {
+      try {
+        const sess = __ttsSmartSession();
+        const prog = __ttsSmartProgressBand();
+        const sec = __ttsSmartNum((ctx && (ctx.sec || ctx.toSec || ctx.gapStr)) || NaN);
+        const band = __ttsSmartGapBand(sec);
+        if (channel === 'follow') {
+          if (type === 'blueflag') return 'urgent';
+          if (type === 'bestlap') return 'celebrate';
+          if (type === 'ritmo_down') return 'corrective';
+          if (band === 'knife' || band === 'close') return 'urgent';
+          return (sess === 'MANGA') ? 'precise' : 'command';
+        }
+        if (type === 'gap' || type === 'train') return 'technical';
+        if (type === 'record' || type === 'qualiBest') return (style === 'engineer') ? 'technical' : 'celebrate';
+        if (type === 'leaderChange' && prog === 'late') return 'dramatic';
+        if (band === 'knife' || band === 'close') return (style === 'narrativo') ? 'dramatic' : 'urgent';
+        if (style === 'picante') return 'spicy';
+        if (style === 'engineer') return 'technical';
+        if (style === 'narrativo') return 'dramatic';
+      } catch(e) {}
+      return 'neutral';
+    }
+
+    function __ttsSmartJoin(parts) {
+      return __ttsSmartClean((parts || []).filter(Boolean).join(' '));
+    }
+
+    function __ttsSmartFollowBuilder(type, ctx) {
+      try {
+        const sess = __ttsSmartSession();
+        const prog = __ttsSmartProgressBand();
+        const tone = __ttsSmartTone(type, ctx, 'pro', 'follow');
+        const other = __ttsSmartName(ctx && (ctx.otherName || ctx.who), 'el rival');
+        const gapTxt = __ttsSmartGapSpeech(ctx);
+        const sec = __ttsSmartNum(gapTxt);
+        const band = __ttsSmartGapBand(sec);
+        const story = __ttsStoryTrack('follow', type, ctx || {});
+        const status = String((story && story.status) || 'fresh');
+        const streak = Number((story && story.streak) || 1);
+        const rival = (story && story.rivalMeta) || null;
+        const memKey = type + ':' + other;
+        const prev = __ttsSmartRecall('follow', memKey);
+        let out = '';
+
+        if (type === 'attack' || type === 'defense') {
+          const openAttack = {
+            urgent: ['Atención atrás.', 'Presión real atrás.', 'Ojo en espejos.'],
+            command: ['Hay amenaza atrás.', 'Traes presión seria.', 'Viene a la carga atrás.'],
+            precise: ['Hay rival en rango.', 'Presión medida atrás.', 'Rival cerrando por detrás.']
+          };
+          const openDefense = {
+            urgent: ['Toca defender.', 'Posición bajo fuego.', 'Hay que cuidar la plaza.'],
+            command: ['Hay que cubrir bien.', 'Cierra esa puerta.', 'No regales la cuerda.'],
+            precise: ['Defensa en curso.', 'Posición apretada.', 'Riesgo controlado atrás.']
+          };
+          const storyAttack = {
+            fresh: ['Primera alarma seria.', 'Arranca la presión.', 'Se activa el retrovisor.'],
+            continuing: ['La presión no se va.', 'Sigue la misma sombra atrás.', 'Todavía no respiras.'],
+            escalating: ['Cada vuelta viene más encima.', 'La distancia sigue cayendo.', 'Esto va creciendo.'],
+            boiling: ['Ya está al borde del golpe.', 'La próxima frenada vale doble.', 'Esto huele a maniobra.'],
+            cooling: ['Se abrió un poco, pero no está muerto.', 'Respira medio paso, no más.', 'Bajó tantito, sigue vivo.'],
+            ongoing: ['Llevan rato en esta historia.', 'Es una pelea larga ya.', 'Esto ya tiene varias vueltas cocinándose.']
+          };
+          const storyDefense = {
+            fresh: ['Hay que cerrar bien desde ya.', 'Todavía estás a tiempo de apagarlo.', 'Defensa desde esta vuelta.'],
+            continuing: ['La plaza sigue caliente.', 'No te suelta nada.', 'La defensa sigue viva.'],
+            escalating: ['Cada vuelta pide más manos.', 'La puerta está cada vez más cara.', 'Esto se va poniendo serio.'],
+            boiling: ['Un error y cae la plaza.', 'Ya está en punto crítico.', 'Aquí no cabe una duda.'],
+            cooling: ['Se enfría un poco, pero sigue al acecho.', 'Ganaste aire, no paz.', 'Todavía toca cuidarla.'],
+            ongoing: ['Llevas varias vueltas defendiendo.', 'Es una defensa larga ya.', 'La posición se trabaja cada vuelta.']
+          };
+          const gapLine = gapTxt ? __ttsSmartPick([
+            other + ' a ' + gapTxt + '.',
+            'Gap ' + gapTxt + ' con ' + other + '.',
+            other + ' viene a ' + gapTxt + '.'
+          ], 'follow:gap:' + type + ':' + band) : '';
+          const commandAttack = {
+            knife: ['Una salida fina vale oro.', 'No abras ni media puerta.', 'Sin regalar el apex.'],
+            close: ['Cubre la entrada y sal limpio.', 'Cierra bien y tracciona.', 'Todo con cabeza.'],
+            tight: ['Buena tracción y no regales metros.', 'No te duermas en la salida.', 'Cuida la línea.'],
+            mid: ['Sin errores y lo mantienes ahí.', 'Traza limpio y no lo invites.', 'Haz tu vuelta.'],
+            open: ['Mantén el ritmo y no le des vida.', 'No aflojes la referencia.', 'Sigue fino.'],
+            unknown: ['Todo limpio.', 'Con cabeza.', 'Sin tocar.'],
+            lap: ['No estorbes el flujo.', 'Línea limpia.', 'Hazlo ordenado.']
+          };
+          const commandDefense = {
+            knife: ['Cubre la puerta ya.', 'Cero regalo en la cuerda.', 'Todo fino y sin contacto.'],
+            close: ['Frena derecho y sal limpio.', 'No abras el hueco.', 'Defiende con cabeza.'],
+            tight: ['Línea limpia y buena salida.', 'No le regales tracción.', 'Cuida la plaza.'],
+            mid: ['Que no te recorte más.', 'Sostén la posición.', 'Mantén la calma.'],
+            open: ['Orden y ritmo.', 'Sin errores.', 'No te compliques.'],
+            unknown: ['Defiende limpio.', 'Con calma.', 'Todo bajo control.'],
+            lap: ['Sin bloquear.', 'Línea noble.', 'Hazlo limpio.']
+          };
+          const op = (type === 'attack') ? openAttack : openDefense;
+          const cl = (type === 'attack') ? commandAttack : commandDefense;
+          const st = (type === 'attack') ? storyAttack : storyDefense;
+          const rivalLine = (rival && type === 'defense' && rival.heroic)
+            ? __ttsSmartPick([
+                'Esto ya pide defensa heroica.',
+                'La plaza se está defendiendo con uñas y dientes.',
+                'Ya es una defensa de oficio serio.'
+              ], 'follow:rival:hero:' + other + ':' + streak)
+            : (rival && type === 'attack' && rival.relentless)
+              ? __ttsSmartPick([
+                  'El acoso ya es constante.',
+                  'No te da un respiro atrás.',
+                  'La presión ya viene en serie.'
+                ], 'follow:rival:relent:' + other + ':' + streak)
+              : (rival && rival.recurrent)
+                ? __ttsSmartPick([
+                    'Otra vez ' + other + ' en el radar.',
+                    'Este duelo ya tiene historia con ' + other + '.',
+                    'No es la primera ronda con ' + other + '.'
+                  ], 'follow:rival:recur:' + other + ':' + streak)
+                : '';
+          out = __ttsSmartJoin([
+            __ttsSmartPick((op[tone] || op.command || op.urgent), 'follow:open:' + type + ':' + tone + ':' + status),
+            gapLine,
+            __ttsSmartPick((st[status] || st.continuing || st.fresh), 'follow:story:' + type + ':' + status + ':' + streak),
+            rivalLine,
+            __ttsSmartPick((cl[band] || cl.unknown), 'follow:cmd:' + type + ':' + band + ':' + prog)
+          ]);
+        } else if (type === 'fight') {
+          const open = {
+            urgent: ['Duelo a cuchillo.', 'Esto viene por nada.', 'Batalla de décimas.'],
+            command: ['Pelea directa.', 'Dos autos en guerra limpia.', 'Hay duelo serio.'],
+            precise: ['Separación mínima.', 'Pelea medida.', 'Todo en décimas.']
+          };
+          const storyFight = {
+            fresh: ['La historia apenas prende.', 'Recién se forma el duelo.', 'Arranca la pelea.'],
+            continuing: ['Siguen en la misma vuelta mental.', 'Nadie cede.', 'La pelea no se rompe.'],
+            escalating: ['Cada paso es más apretado.', 'Va subiendo la tensión.', 'Se pone más fino.'],
+            boiling: ['Ya vale oro la siguiente salida.', 'Esto puede cambiar de golpe.', 'No hay espacio para pestañear.'],
+            cooling: ['Se relajó medio paso.', 'Se abrió poquito, pero sigue vivo.', 'Bajó un poco la temperatura.'],
+            ongoing: ['Llevan varias curvas tallando esto.', 'Es una batalla larga.', 'Esto ya tiene continuidad seria.']
+          };
+          const core = [
+            'La mejor salida manda.',
+            'Aquí gana quien falle menos.',
+            'Nada de contacto, puro trazo.',
+            'Cada apex cuenta.'
+          ];
+          const rivalFight = (rival && rival.hot)
+            ? __ttsSmartPick([
+                'Esto ya parece el duelo del rato.',
+                'Estos dos no se han soltado en buen rato.',
+                'Ya es una rivalidad en caliente.'
+              ], 'follow:fight:rival:hot:' + streak)
+            : (rival && rival.recurrent)
+              ? __ttsSmartPick([
+                  'Otra vez se encuentran los mismos dos.',
+                  'Esta pelea ya trae capítulos previos.',
+                  'Es el mismo duelo de hace rato.'
+                ], 'follow:fight:rival:recur:' + streak)
+              : '';
+          out = __ttsSmartJoin([
+            __ttsSmartPick((open[tone] || open.command), 'follow:fight:open:' + tone + ':' + band),
+            gapTxt ? __ttsSmartPick(['Gap ' + gapTxt + '.', 'A ' + gapTxt + '.', 'Separación ' + gapTxt + '.'], 'follow:fight:gap:' + band) : '',
+            __ttsSmartPick((storyFight[status] || storyFight.continuing), 'follow:fight:story:' + status + ':' + streak),
+            rivalFight,
+            __ttsSmartPick(core, 'follow:fight:core:' + prog)
+          ]);
+        } else if (type === 'ritmo_up' || type === 'ritmo_down') {
+          const delta = Math.max(1, Math.round(Math.abs(Number(ctx && ctx.deltaMs) || 0)));
+          const big = delta >= 120;
+          const open = (type === 'ritmo_up')
+            ? (big ? ['Ahí está la ganancia buena.', 'Ese recorte sí pesa.', 'Subida clara de ritmo.'] : ['Ritmo arriba.', 'Pequeña mejora.', 'Algo se ganó.'])
+            : (big ? ['Se fue tiempo serio.', 'Ahí se escapó la vuelta.', 'Caída clara de ritmo.'] : ['Se perdió un poco.', 'Vuelta más lenta.', 'Ojo con el ritmo.']);
+          const core = (type === 'ritmo_up')
+            ? [
+                'Recortaste ' + delta + ' milisegundos.',
+                'Ganaste ' + delta + ' milisegundos.',
+                'Hay mejora de ' + delta + ' milisegundos.'
+              ]
+            : [
+                'Perdiste ' + delta + ' milisegundos.',
+                'Se fueron ' + delta + ' milisegundos.',
+                'Cedes ' + delta + ' milisegundos.'
+              ];
+          const close = (type === 'ritmo_up')
+            ? ['Repite esa vuelta.', 'Misma receta.', 'Esa línea sí sirve.']
+            : ['Respira y vuelve al plan.', 'Recupera la trazada.', 'Sin castigar de más.'];
+          out = __ttsSmartJoin([
+            __ttsSmartPick(open, 'follow:ritmo:' + type + ':open:' + big),
+            __ttsSmartPick(core, 'follow:ritmo:' + type + ':core:' + delta),
+            __ttsSmartPick(close, 'follow:ritmo:' + type + ':close:' + prog)
+          ]);
+        } else if (type === 'bestlap') {
+          const best = String((ctx && ctx.best) || '').trim();
+          const fresh = !!(prev && String(prev.best || '') !== best);
+          const storyBest = {
+            fresh: ['Tiempo de referencia.', 'Eso pone el tono.', 'Ahí está la vuelta buena.'],
+            continuing: ['Sigue encontrando ritmo.', 'Encadena vueltas fuertes.', 'Mantiene la mano fina.'],
+            ongoing: ['Ya son varias vueltas buenas seguidas.', 'Trae racha de ritmo serio.', 'El ritmo está bien amarrado.']
+          };
+          out = __ttsSmartJoin([
+            __ttsSmartPick(fresh ? ['Referencia nueva.', 'Mejor vuelta.', 'Vueltota buena.'] : ['Otra vuelta fuerte.', 'Sigue el ritmo bueno.', 'Vuelta de referencia.'], 'follow:bestlap:open:' + fresh),
+            best ? __ttsSmartPick([best + '.', 'Marca ' + best + '.', 'Tiempo ' + best + '.'], 'follow:bestlap:core:' + best) : '',
+            __ttsSmartPick((storyBest[status] || storyBest.continuing), 'follow:bestlap:story:' + status),
+            __ttsSmartPick(['Quédate ahí.', 'Eso sí sirve.', 'Muy bien, repítelo.'], 'follow:bestlap:close:' + prog)
+          ]);
+        } else if (type === 'blueflag') {
+          const who = __ttsSmartName(ctx && ctx.who, 'el líder');
+          const open = ['Bandera azul.', 'Azul.', 'Tráfico para ti.'];
+          const core = [
+            'Viene ' + who + '.',
+            'Encima llega ' + who + '.',
+            'Ya está ahí ' + who + '.'
+          ];
+          const close = ['Dale pista limpia.', 'Sin estorbar.', 'Suéltalo limpio.'];
+          out = __ttsSmartJoin([
+            __ttsSmartPick(open, 'follow:blue:open'),
+            __ttsSmartPick(core, 'follow:blue:core:' + who),
+            __ttsSmartPick(close, 'follow:blue:close:' + sess)
+          ]);
+        }
+
+        out = __ttsSmartClean(out);
+        if (out) __ttsSmartRemember('follow', memKey, { text: out, best: String((ctx && ctx.best) || '') });
+        return out;
+      } catch(e) { return ''; }
+    }
+
+    function __ttsSmartAutoBuilder(type, ctx, style) {
+      try {
+        const sess = __ttsSmartSession();
+        const prog = __ttsSmartProgressBand();
+        const tone = __ttsSmartTone(type, ctx, style, 'auto');
+        const styleKey = String(style || 'pro');
+        const attacker = __ttsSmartName(ctx && ctx.attacker, 'el perseguidor');
+        const defender = __ttsSmartName(ctx && ctx.defender, 'el de adelante');
+        const winner = __ttsSmartName(ctx && ctx.winner, 'el rival');
+        const loser = __ttsSmartName(ctx && ctx.loser, 'el rival');
+        const pilot = __ttsSmartName(ctx && ctx.pilot, 'el piloto');
+        const secTxt = __ttsSmartGapSpeech(ctx);
+        const fromSec = String((ctx && ctx.fromSec) || '').trim();
+        const toSec = String((ctx && ctx.toSec) || '').trim();
+        const secNum = __ttsSmartNum(secTxt || toSec || fromSec);
+        const band = __ttsSmartGapBand(secNum);
+        const keyCore = [type, winner, loser, attacker, defender, pilot, (ctx && ctx.pos), (ctx && ctx.newPos), (ctx && ctx.oldPos)].join('|');
+        const story = __ttsStoryTrack('auto', type, ctx || {});
+        const status = String((story && story.status) || 'fresh');
+        const streak = Number((story && story.streak) || 1);
+        const rival = (story && story.rivalMeta) || null;
+        const prev = __ttsSmartRecall('auto', keyCore);
+        let out = '';
+
+        if (type === 'leaderChange') {
+          const late = (prog === 'late');
+          const hotResolve = !!(story && (story.status === 'resolved_hot' || story.status === 'resolved'));
+          const open = {
+            dramatic: hotResolve ? ['Se concreta la presión por la punta.', 'Después de insistir, cae el liderato.', 'La historia arriba por fin revienta.'] : ['Cambio grande en la punta.', 'Se mueve el mando de la carrera.', 'Golpe fuerte arriba.'],
+            spicy: hotResolve ? ['Tanto picar y cayó P1.', 'La presión cobró factura arriba.', 'Le cocinaron la punta y se la quitaron.'] : ['Se volteó la tortilla arriba.', 'Hay mano dura en la punta.', 'La carrera cambia de dueño.'],
+            neutral: hotResolve ? ['Se concreta el cambio de líder.', 'La presión termina en relevo de punta.', 'Se resuelve la pelea por P1.'] : ['Cambio de líder.', 'Nueva punta.', 'Líder nuevo.']
+          };
+          const close = late
+            ? ['Esto ya pesa en el cierre.', 'Movimiento serio para la recta final.', 'Golpe con olor a cierre.']
+            : ['Todavía hay respuesta en carrera.', 'Esto sigue abierto.', 'Aún falta tela por cortar.'];
+          const rivalLine = (rival && rival.recurrent)
+            ? __ttsSmartPick([
+                'Otra vez estos dos se mueven arriba.',
+                'La pelea por P1 ya trae varios capítulos.',
+                'No es la primera sacudida entre estos dos.'
+              ], 'auto:leader:rival:' + winner + ':' + loser + ':' + streak)
+            : '';
+          out = __ttsSmartJoin([
+            __ttsSmartPick((open[tone] || open.neutral), 'auto:leader:open:' + tone + ':' + status),
+            __ttsSmartPick([
+              winner + ' toma P1 y ' + loser + ' cae a segundo.',
+              winner + ' pasa al frente. ' + loser + ' queda P2.',
+              'Punta para ' + winner + '. ' + loser + ' a perseguir.'
+            ], 'auto:leader:core:' + winner + ':' + loser),
+            rivalLine,
+            __ttsSmartPick(close, 'auto:leader:close:' + late + ':' + sess)
+          ]);
+        } else if (type === 'pass') {
+          const newPos = String((ctx && ctx.newPos) || '');
+          const oldPos = String((ctx && ctx.oldPos) || '');
+          const weight = (newPos === '1') ? 'grande' : ((newPos === '2' || newPos === '3') ? 'podio' : 'normal');
+          const hotResolve = !!(story && (story.status === 'resolved_hot' || story.status === 'resolved'));
+          const open = {
+            spicy: hotResolve ? ['Tanto insistir y cayó la plaza.', 'La presión terminó en rebase.', 'Se cocinó y se sirvió el pase.'] : (weight === 'grande' ? ['Rebase con premio mayor.', 'Golpe grande de posición.', 'Pase de peso.'] : ['Movimiento con colmillo.', 'Puesto ganado.', 'Adelantamiento bueno.']),
+            technical: hotResolve ? ['Se concreta el cambio tras varias vueltas de presión.', 'La secuencia termina en rebase.', 'La presión sostenida da resultado.'] : ['Cambio de posición.', 'Ajuste en la tabla.', 'Puesto modificado.'],
+            neutral: hotResolve ? ['Se concreta la maniobra.', 'Después de varias vueltas, cae el cambio.', 'La presión por fin se traduce en rebase.'] : ['Rebase confirmado.', 'Cambio de posición.', 'Puesto ganado.']
+          };
+          const close = (weight === 'podio')
+            ? ['Eso mete presión por trofeo.', 'Zona grande de la carrera.', 'Puesto que vale podio.']
+            : (weight === 'grande')
+              ? ['Eso cambia la película completa.', 'Movimiento que reordena todo.', 'Cambio clave arriba.']
+              : ['La pelea sigue viva.', 'No termina ahí.', 'Todavía hay respuesta.'];
+          const rivalLine = (rival && rival.recurrent)
+            ? __ttsSmartPick([
+                'Esto ya venía cocinándose entre los mismos dos.',
+                'Otra vez se cruzan los protagonistas de este duelo.',
+                'La rivalidad terminó cobrando la plaza.'
+              ], 'auto:pass:rival:' + winner + ':' + loser + ':' + streak)
+            : '';
+          out = __ttsSmartJoin([
+            __ttsSmartPick((open[tone] || open.neutral), 'auto:pass:open:' + tone + ':' + weight + ':' + status),
+            __ttsSmartPick([
+              winner + ' sube a P' + newPos + ' y ' + loser + ' baja a P' + oldPos + '.',
+              'P' + newPos + ' para ' + winner + '. ' + loser + ' cae a P' + oldPos + '.',
+              winner + ' gana la plaza. ' + loser + ' ahora es P' + oldPos + '.'
+            ], 'auto:pass:core:' + winner + ':' + loser + ':' + newPos),
+            rivalLine,
+            __ttsSmartPick(close, 'auto:pass:close:' + weight + ':' + prog)
+          ]);
+        } else if (type === 'battle' || type === 'battlePodium') {
+          const pos = String((ctx && ctx.pos) || '');
+          const isPod = (type === 'battlePodium');
+          const openFresh = isPod
+            ? ['Podio en juego.', 'Zona de trofeo bajo presión.', 'Hay guerra por el podio.']
+            : ['Batalla directa.', 'Duelo en posición.', 'Pelea abierta en pista.'];
+          const storyLine = {
+            fresh: ['Apenas prende la historia.', 'Esto recién se forma.', 'Empieza la presión.'],
+            continuing: ['Siguen pegados vuelta a vuelta.', 'Nadie rompe el duelo.', 'La pelea sigue viva.'],
+            escalating: ['La presión viene subiendo.', 'Cada vuelta se acercan más.', 'Esto se está apretando.'],
+            boiling: ['Ya está en punto de ebullición.', 'La siguiente salida puede decidirlo.', 'Esto ya huele a maniobra.'],
+            cooling: ['Se abrió un poco, pero no se murió.', 'Baja tantito la temperatura.', 'Respiran medio paso, nada más.'],
+            ongoing: ['Llevan rato escribiendo esta pelea.', 'Es una historia larga en pista.', 'Esto ya trae varias vueltas encima.']
+          };
+          const mid = [
+            attacker + ' presiona a ' + defender + '.',
+            defender + ' aguanta y ' + attacker + ' sigue encima.',
+            attacker + ' ya está en rango de ' + defender + '.'
+          ];
+          const close = (band === 'knife' || band === 'close')
+            ? ['Esto se decide por milímetros.', 'La siguiente salida puede cambiarlo.', 'No hay aire entre ellos.']
+            : ['Gap ' + (secTxt || 'corto') + '.', 'Separación ' + (secTxt || 'corta') + '.', 'Todo sigue vivo ahí.'];
+          const rivalryLine = (rival && rival.hot)
+            ? __ttsSmartPick([
+                'Ya es el duelo caliente del momento.',
+                'Estos dos ya traen una pelea con memoria.',
+                'La rivalidad está en punto de ebullición.'
+              ], 'auto:battle:rival:hot:' + attacker + ':' + defender + ':' + streak)
+            : (rival && rival.recurrent)
+              ? __ttsSmartPick([
+                  'Otra vez aparecen los mismos protagonistas.',
+                  'Este duelo ya suma varios capítulos.',
+                  'No se han soltado en buen rato.'
+                ], 'auto:battle:rival:recur:' + attacker + ':' + defender + ':' + streak)
+              : '';
+          out = __ttsSmartJoin([
+            __ttsSmartPick(openFresh, 'auto:battle:open:' + type + ':' + pos + ':' + status),
+            __ttsSmartPick(mid, 'auto:battle:mid:' + attacker + ':' + defender),
+            __ttsSmartPick((storyLine[status] || storyLine.continuing), 'auto:battle:story:' + status + ':' + streak),
+            rivalryLine,
+            (pos ? __ttsSmartPick(['Es pelea por P' + pos + '.', 'Todo enfocado en P' + pos + '.', 'La cámara está en P' + pos + '.'], 'auto:battle:pos:' + pos) : ''),
+            __ttsSmartPick(close, 'auto:battle:close:' + band + ':' + secTxt)
+          ]);
+        } else if (type === 'closing' || type === 'pressure') {
+          const deltaNarr = (fromSec && toSec) ? ['De ' + fromSec + ' a ' + toSec + '.', 'Ahora el gap es ' + toSec + '.', 'Recorte hasta ' + toSec + '.'] : (secTxt ? ['Gap ' + secTxt + '.', 'A ' + secTxt + '.', 'Separación ' + secTxt + '.'] : ['La diferencia cae.', 'La presión sube.', 'Se aprieta la historia.']);
+          const open = (type === 'closing')
+            ? ['Se viene cerrando.', 'El perseguidor recorta.', 'Esto se aprieta.']
+            : ['Presión real.', 'No hay margen adelante.', 'La defensa carga espejos.'];
+          const storyLine = {
+            fresh: ['Arranca la persecución.', 'Se enciende la cacería.', 'Primera señal fuerte de recorte.'],
+            continuing: ['Sigue el martillo detrás.', 'La presión no afloja.', 'Viene insistiendo sin pausa.'],
+            escalating: ['Cada vuelta llega más cerca.', 'La diferencia cae y cae.', 'Esto va en subida clara de tensión.'],
+            boiling: ['Ya está a nada del golpe.', 'Esto huele a maniobra inmediata.', 'La siguiente curva puede ser clave.'],
+            cooling: ['Se enfrió un poco la carga.', 'El frente ganó medio respiro.', 'Se abre apenas, no se termina.'],
+            ongoing: ['Es una presión larga ya.', 'Llevan varias vueltas en esta historia.', 'Esto viene cocinándose desde hace rato.']
+          };
+          const close = (band === 'knife' || band === 'close')
+            ? ['Ya huele a pase.', 'La siguiente curva importa mucho.', 'Esto puede cambiar muy pronto.']
+            : ['Todavía toca sostenerlo.', 'La defensa sigue trabajando.', 'Esto no está resuelto.'];
+          const rivalryLine = (rival && rival.heroic)
+            ? __ttsSmartPick([
+                'Defensa heroica de ' + defender + '.',
+                defender + ' lo está aguantando con oficio.',
+                defender + ' sigue resistiendo con mucha cabeza.'
+              ], 'auto:closing:rival:hero:' + defender + ':' + streak)
+            : (rival && rival.relentless)
+              ? __ttsSmartPick([
+                  attacker + ' ya viene martillando vuelta tras vuelta.',
+                  'La presión de ' + attacker + ' ya es sostenida.',
+                  attacker + ' no ha quitado el dedo del renglón.'
+                ], 'auto:closing:rival:relent:' + attacker + ':' + streak)
+              : (rival && rival.recurrent)
+                ? __ttsSmartPick([
+                    'Estos dos vuelven a encontrarse en pista.',
+                    'La misma pelea reaparece otra vez.',
+                    'Otra ronda entre ' + attacker + ' y ' + defender + '.'
+                  ], 'auto:closing:rival:recur:' + attacker + ':' + defender + ':' + streak)
+                : '';
+          out = __ttsSmartJoin([
+            __ttsSmartPick(open, 'auto:closing:open:' + type + ':' + tone),
+            __ttsSmartPick([
+              attacker + ' recorta sobre ' + defender + '.',
+              defender + ' ya siente a ' + attacker + '.',
+              attacker + ' se mete en la pelea con ' + defender + '.'
+            ], 'auto:closing:mid:' + attacker + ':' + defender),
+            __ttsSmartPick(deltaNarr, 'auto:closing:delta:' + fromSec + ':' + toSec + ':' + secTxt),
+            __ttsSmartPick((storyLine[status] || storyLine.continuing), 'auto:closing:story:' + status + ':' + streak),
+            rivalryLine,
+            __ttsSmartPick(close, 'auto:closing:close:' + band + ':' + prog)
+          ]);
+        } else if (type === 'gap') {
+          const front = __ttsSmartName(ctx && ctx.front, 'adelante');
+          const back = __ttsSmartName(ctx && ctx.back, 'atrás');
+          const open = (tone === 'technical') ? ['Lectura técnica.', 'Dato de referencia.', 'Número en pista.'] : ['Gap actual.', 'Diferencia registrada.', 'Separación medida.'];
+          out = __ttsSmartJoin([
+            __ttsSmartPick(open, 'auto:gap:open:' + tone),
+            __ttsSmartPick([
+              front + ' sobre ' + back + ', a ' + (secTxt || 'gap no disponible') + '.',
+              front + ' mantiene ' + (secTxt || 'el margen') + ' sobre ' + back + '.',
+              'La diferencia entre ' + front + ' y ' + back + ' es ' + (secTxt || 'corta') + '.'
+            ], 'auto:gap:mid:' + front + ':' + back + ':' + secTxt)
+          ]);
+        } else if (type === 'top3') {
+          const p1 = __ttsSmartName(ctx && ctx.p1, 'P1');
+          const p2 = __ttsSmartName(ctx && ctx.p2, 'P2');
+          const p3 = __ttsSmartName(ctx && ctx.p3, 'P3');
+          out = __ttsSmartJoin([
+            __ttsSmartPick(['Top tres actual.', 'Así va el podio.', 'Corte del frente.'], 'auto:top3:open:' + prog),
+            __ttsSmartPick([
+              'P1 ' + p1 + ', P2 ' + p2 + ', P3 ' + p3 + '.',
+              p1 + ' manda, ' + p2 + ' persigue y ' + p3 + ' cierra el top tres.',
+              'El frente dice ' + p1 + ', luego ' + p2 + ' y después ' + p3 + '.'
+            ], 'auto:top3:mid:' + p1 + ':' + p2 + ':' + p3)
+          ]);
+        } else if (type === 'train') {
+          const p2 = __ttsSmartName(ctx && ctx.p2, 'P2');
+          const p3 = __ttsSmartName(ctx && ctx.p3, 'P3');
+          const p4 = __ttsSmartName(ctx && ctx.p4, 'P4');
+          const trainStory = {
+            fresh: ['Tren formado.', 'Grupo compacto.', 'Paquete cerrado.'],
+            continuing: ['El tren sigue sin romperse.', 'Siguen tres autos cosidos.', 'El paquete no suelta tensión.'],
+            ongoing: ['Ya es un tren sostenido de tres.', 'Llevan varias vueltas en un mismo vagón.', 'Esto ya es un tren largo y vivo.'],
+            boiling: ['Tren hirviendo.', 'El tren ya está al borde del cambio.', 'Ese grupo está en máxima tensión.'],
+            cooling: ['El tren respira un poco.', 'Se estira medio paso el paquete.', 'El grupo se afloja apenas.']
+          };
+          out = __ttsSmartJoin([
+            __ttsSmartPick((trainStory[status] || trainStory.fresh), 'auto:train:open:' + tone + ':' + status + ':' + streak),
+            __ttsSmartPick([
+              p2 + ', ' + p3 + ' y ' + p4 + ' van en una sola historia.',
+              'P2 a P4 vienen comprimidos con ' + p2 + ' al frente del grupo.',
+              p2 + ' encabeza el paquete y ' + p3 + ' con ' + p4 + ' no se despegan.'
+            ], 'auto:train:mid:' + p2 + ':' + p3 + ':' + p4),
+            __ttsSmartPick(['Cualquier error cambia todo.', 'Nadie puede pestañear ahí.', 'Todo está vivo en ese tren.'], 'auto:train:close:' + prog + ':' + status)
+          ]);
+        } else if (type === 'record' || type === 'qualiBest') {
+          const best = String((ctx && ctx.best) || '').trim();
+          const open = (type === 'qualiBest') ? ['En clasificación hay tiempo fuerte.', 'La quali se mueve.', 'Sube la referencia de manga.'] : ['El reloj habla.', 'Nueva referencia.', 'Tiempo de peso.'];
+          const close = (styleKey === 'engineer')
+            ? ['Dato premium de ritmo.', 'Referencia útil para el resto.', 'Tiempo de mucho valor.']
+            : ['Vuelta que pesa.', 'Tiempo serio.', 'Eso sí mete presión.'];
+          const timeStory = {
+            fresh: ['Marca que ordena la sesión.', 'Tiempo que pone tono.', 'Referencia fresca en pantalla.'],
+            continuing: ['Sigue encontrando décimas.', 'No deja de afinar el reloj.', 'Mantiene la mano sobre la referencia.'],
+            ongoing: ['Trae una racha muy fina.', 'Ya son varias vueltas con filo.', 'Viene construyendo una sesión fuerte.']
+          };
+          out = __ttsSmartJoin([
+            __ttsSmartPick(open, 'auto:record:open:' + type + ':' + styleKey),
+            __ttsSmartPick([
+              pilot + ' marca ' + best + '.',
+              best ? (pilot + ' deja ' + best + '.') : (pilot + ' pone la referencia.'),
+              best ? ('La vuelta de ' + pilot + ' queda en ' + best + '.') : ('La referencia es de ' + pilot + '.')
+            ], 'auto:record:mid:' + type + ':' + pilot + ':' + best),
+            __ttsSmartPick((timeStory[status] || timeStory.continuing), 'auto:record:story:' + status + ':' + pilot),
+            __ttsSmartPick(close, 'auto:record:close:' + styleKey + ':' + prog)
+          ]);
+        } else if (type === 'qualiPole') {
+          const p1 = __ttsSmartName(ctx && ctx.p1, 'P1');
+          const p2 = __ttsSmartName(ctx && ctx.p2, 'P2');
+          out = __ttsSmartJoin([
+            __ttsSmartPick(['Pole en juego.', 'Nada cerrado en la pole.', 'Clasificación caliente.'], 'auto:pole:open:' + band),
+            __ttsSmartPick([
+              p1 + ' contra ' + p2 + ' a ' + (secTxt || 'muy poco') + '.',
+              'La pole provisional es de ' + p1 + ' con ' + p2 + ' a ' + (secTxt || 'nada') + '.',
+              p1 + ' manda la quali y ' + p2 + ' aprieta a ' + (secTxt || 'muy poco') + '.'
+            ], 'auto:pole:mid:' + p1 + ':' + p2 + ':' + secTxt),
+            __ttsSmartPick(['Esto se decide fino.', 'Nada de margen en la pole.', 'Todavía puede cambiar.'], 'auto:pole:close:' + prog)
+          ]);
+        }
+
+        out = __ttsSmartClean(out);
+        if (out) __ttsSmartRemember('auto', keyCore, { text: out });
+        return out;
+      } catch(e) { return ''; }
+    }
+
+    function ttsSmartComposeFollow(type, ctx) {
+
+      try {
+        return __ttsSmartFollowBuilder(String(type || '').trim(), ctx || {});
+      } catch(e) { return ''; }
+    }
+
+    function ttsSmartComposeAuto(type, ctx, style) {
+      try {
+        return __ttsSmartAutoBuilder(String(type || '').trim(), ctx || {}, String(style || 'pro'));
+      } catch(e) { return ''; }
+    }
+
     function msgv2Compose(type, ctx) {
       try {
         const t = String(type || '').trim();
@@ -7440,6 +8958,18 @@ function msgv2DecimasTxt(ms) {
         const now = Date.now();
 
         const urgent = (t === 'blueflag');
+
+        // Motor contextual inteligente: decide que decir segun evento, gap y continuidad
+        try {
+          const smartMsg = ttsSmartComposeFollow(t, ctx || {});
+          if (smartMsg) return smartMsg;
+        } catch(e) {}
+
+        // Motor generativo v1 para Follow/Spotter: mas variedad sin escribir miles a mano
+        try {
+          const genMsg = ttsGenMsgv2Compose(t, ctx || {});
+          if (genMsg) return genMsg;
+        } catch(e) {}
 
         // SPECIAL BLUEFLAG COMPOSE (más variedad, sin tocar lógica de detección)
         if (t === 'blueflag') {
@@ -8184,7 +9714,7 @@ function msgv2DecimasTxt(ms) {
         }).join(' ');
       } catch(e) {}
     }
-    try { setInterval(renderSpeechLog, 800); } catch(e) {}
+    try { setInterval(renderSpeechLog, 1200); } catch(e) {}
 // =========================
     // Helpers globales (compat)
     // =========================
@@ -8297,6 +9827,11 @@ function msgv2DecimasTxt(ms) {
     const lastUpdateInfo  = document.getElementById('lastUpdateInfo');
     const liveIndicator   = document.getElementById('liveIndicator');
     const appHeader      = document.querySelector('.app-header');
+    const diagPanelNote   = document.getElementById('diagPanelNote');
+    const diagErrorBox    = document.getElementById('diagErrorBox');
+    const ttsDiagNote     = document.getElementById('ttsDiagNote');
+    const ttsEventList    = document.getElementById('ttsEventList');
+    const runtimeProfileNote = document.getElementById('runtimeProfileNote');
 
     const pilotSelect     = document.getElementById('pilotSelect');
 
@@ -11364,7 +12899,7 @@ function __duoGuessRole(txt, key) {
         if (precEl) precEl.textContent = `${pr} dcimas`;
         if (voicesEl) voicesEl.textContent = (autoVoiceRotateEnabled ? 'ES + rotacin' : 'ES');
 
-        if (noteEl) noteEl.textContent = `Auto: ${autoSessionPresetsEnabled ? 'ON' : 'OFF'}`;
+        if (noteEl) noteEl.textContent = `Auto: ${autoSessionPresetsEnabled ? 'ON' : 'OFF'} | Runtime: ${__getRuntimeProfileConfig(runtimeProfileKey).label}`;
 
         // active card highlight
         ['TRAIN','MANGA','FINAL'].forEach(k=>{
@@ -11373,6 +12908,7 @@ function __duoGuessRole(txt, key) {
         });
 
         renderPresetCards();
+        try { updateRuntimeDiagUI(); } catch(e) {}
       }catch(e){}
     }
 
@@ -11422,6 +12958,31 @@ function __duoGuessRole(txt, key) {
     let __ttsKeepAliveTimer = 0;
     let __ttsCancelShieldUntil = 0;
 
+    function __isIOSLike(){
+      try {
+        const ua = navigator.userAgent || '';
+        const isTouchMac = (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
+        return /iPad|iPhone|iPod/i.test(ua) || isTouchMac;
+      } catch(e) { return false; }
+    }
+    function __isAndroidLike(){
+      try { return /Android/i.test(navigator.userAgent || ''); } catch(e) { return false; }
+    }
+    function __isChromiumRuntime(){
+      try {
+        const ua = navigator.userAgent || '';
+        const hasChromeLikeUA = /Chrome\/\d+|CriOS\/\d+/i.test(ua);
+        const hasChromeRuntime = !!window.chrome || !!navigator.brave;
+        return (hasChromeLikeUA || hasChromeRuntime) && !/OPR\/|DuckDuckGo\//i.test(ua);
+      } catch(e) { return false; }
+    }
+    function __supportsSpeechEngine(){
+      return !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+    }
+    function __supportsWakeLockApi(){
+      return !!(navigator.wakeLock && navigator.wakeLock.request);
+    }
+
     let autoVoiceRotateEnabled = true; // ON por default
     let __autoVoicePool = [];
     let __autoVoiceIdx = 0;
@@ -11437,12 +12998,10 @@ function __duoGuessRole(txt, key) {
     
     // Default rate: 1.8
     function _isIOSWebKitRate() {
-      const ua = navigator.userAgent || '';
-      return /iPad|iPhone|iPod/i.test(ua);
+      return __isIOSLike();
     }
     function _isAndroidRate() {
-      const ua = navigator.userAgent || '';
-      return /Android/i.test(ua);
+      return __isAndroidLike();
     }
     function detectDefaultTtsRate() {
       return 1.8;
@@ -11552,7 +13111,7 @@ let ms = candidates.filter(v => isMS(v));
 let gg = candidates.filter(v => isGoogle(v));
 
 // En PC (desktop), el Auto Locutor se puede forzar a solo Microsoft para mejor claridad.
-const __isMobileUA = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+const __isMobileUA = (typeof isMobileDevice === 'function') ? isMobileDevice() : (__isAndroidLike() || __isIOSLike());
 // En PC (desktop), limpia el pool: solo voces en español (evita EN como 'David').
 if (!__isMobileUA && ms.length) {
   const _es = ms.filter(v => (((v.lang||'')+'').toLowerCase().startsWith('es')));
@@ -11638,10 +13197,22 @@ __autoVoicePool = inter.map(v => (v.voiceURI || v.name)).filter(Boolean);
         __vtries++;
         refreshVoiceList();
         const v = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-        if ((v && v.length) || __vtries >= 10) clearInterval(__vtimer);
-      }, 250);
+        if ((v && v.length) || __vtries >= 8) clearInterval(__vtimer);
+      }, 350);
 
-      window.speechSynthesis.onvoiceschanged = () => refreshVoiceList();
+      try {
+        if (!window.__spotterVoicesChangedBound) {
+          const __voiceRefreshHandler = () => refreshVoiceList();
+          if (typeof window.speechSynthesis.addEventListener === 'function') {
+            window.speechSynthesis.addEventListener('voiceschanged', __voiceRefreshHandler);
+          } else {
+            window.speechSynthesis.onvoiceschanged = __voiceRefreshHandler;
+          }
+          window.__spotterVoicesChangedBound = true;
+        }
+      } catch(e) {
+        window.speechSynthesis.onvoiceschanged = () => refreshVoiceList();
+      }
 
       // Keep-alive TTS en primer plano: evita que el motor se "duerma" aunque la pantalla esté activa.
       // Solo actúa cuando VOZ está ON, la pestaña está visible y no estamos en estado de "needs unlock".
@@ -11686,7 +13257,7 @@ __autoVoicePool = inter.map(v => (v.voiceURI || v.name)).filter(Boolean);
                 }
               } catch(e) {}
             } catch(e) {}
-          }, 3000);
+          }, Math.max(1800, Number(__ttsFrontKeepAliveIntervalMs || 3000)));
         }
       } catch(e) {}
 
@@ -11731,8 +13302,13 @@ let __ttsStartGuard = 0;
 
         // Normaliza unicode (acentos) para TTS
         try { s = s.normalize('NFC'); } catch(e) {}
+        // Corrige mojibake común antes de hablar
+        s = s
+          .replace(/Ã¡/g, 'á').replace(/Ã©/g, 'é').replace(/Ãí/g, 'í').replace(/Ã³/g, 'ó').replace(/Ãº/g, 'ú')
+          .replace(/Ã‘/g, 'Ñ').replace(/Ã±/g, 'ñ')
+          .replace(/Â¿/g, '¿').replace(/Â¡/g, '¡');
         // TTS-safe: evita que algunas voces pronuncien raro "Clasificación"
-        s = s.replace(/Clasificación/gi, 'Clasificaci\xf3n');
+        s = s.replace(/Clasificación/gi, 'Clasificación');
 
         // Unidades: "123 ms" -> segundos/d\xe9cimas/cent\xe9simas/mil\xe9simas seg\xfan corresponda
         // Nota: esto SOLO aplica cuando "ms" viene con n\xfa mero. "ms" suelto se trata como "m\xe1s" m\xe1s abajo.
@@ -11770,40 +13346,50 @@ let __ttsStartGuard = 0;
         // Diccionario r\xe1pido de tildes y pronunciaci\xf3n (TTS)
         // - evita lecturas raras por falta de acento ("basico") o por encoding/recortes (ej. "líder", "línea")
         const __dict = [
-          [/\bbasico\b/gi, 'b\xe1sico'],
-          [/\bbásico\b/gi, 'b\xe1sico'],
-          [/\bclasificaci[o\xf3]n\b/gi, 'clasificaci\xf3n'],
-          [/\bclasificación\b/gi, 'clasificaci\xf3n'],
-          [/\bclasificacin\b/gi, 'clasificaci\xf3n'],
-          [/\bposicion\b/gi, 'posici\xf3n'],
-          [/\bposición\b/gi, 'posici\xf3n'],
-          [/\buúltima\b/gi, '\xfaúltima'],
-          [/\búltima\b/gi, '\xfaúltima'],
-          [/\blider\b/gi, 'l\xedder'],
-          [/\blder\b/gi, 'l\xedder'],
-          [/\bmas\b/gi, 'm\xe1s'],
-          [/\bms\b/gi, 'm\xe1s'],
-          [/\bpenalizacion\b/gi, 'penalizaci\xf3n'],
-          [/\bpenalizacin\b/gi, 'penalizaci\xf3n'],
-          [/\btrafico\b/gi, 'tr\xe1fico'],
-          [/\btrfico\b/gi, 'tr\xe1fico'],
-          [/\blinea\b/gi, 'l\xednea'],
-          [/\blínea\b/gi, 'l\xednea'],
-          [/\bpresion\b/gi, 'presi\xf3n'],
-          [/\bpresin\b/gi, 'presi\xf3n'],
-          [/\batras\b/gi, 'atr\xe1s'],
-          [/\batrs\b/gi, 'atr\xe1s'],
-          [/\brapido\b/gi, 'r\xe1pido'],
-          [/\brpido\b/gi, 'r\xe1pido'],
-          [/\bdecima\b/gi, 'd\xe9cima'],
-          [/\bdcima\b/gi, 'd\xe9cima'],
-          [/\bdecimas\b/gi, 'd\xe9cimas'],
-          [/\bdcimas\b/gi, 'd\xe9cimas'],
-          [/\benfocate\b/gi, 'enf\xf3cate'],
-          [/\benfcate\b/gi, 'enf\xf3cate'],
-          [/\bcronometro\b/gi, 'cron\xf3metro'],
-          [/\best\b/gi, 'est\xe1'],
-          [/HobbyShopMX/gi, 'HobbyShop M\xe9xico'],
+          [/\bbasico\b/gi, 'básico'],
+          [/\bautomatico\b/gi, 'automático'],
+          [/\bclasificaci[oó]n\b/gi, 'clasificación'],
+          [/\bclasificacin\b/gi, 'clasificación'],
+          [/\bposicion\b/gi, 'posición'],
+          [/\bultima\b/gi, 'última'],
+          [/\bultimas\b/gi, 'últimas'],
+          [/\bultimo\b/gi, 'último'],
+          [/\bultimos\b/gi, 'últimos'],
+          [/\blider\b/gi, 'líder'],
+          [/\blideres\b/gi, 'líderes'],
+          [/\bmas\b/gi, 'más'],
+          [/\bpenalizacion\b/gi, 'penalización'],
+          [/\btrafico\b/gi, 'tráfico'],
+          [/\blinea\b/gi, 'línea'],
+          [/\bpresion\b/gi, 'presión'],
+          [/\batras\b/gi, 'atrás'],
+          [/\brapido\b/gi, 'rápido'],
+          [/\brapida\b/gi, 'rápida'],
+          [/\brapidamente\b/gi, 'rápidamente'],
+          [/\btecnico\b/gi, 'técnico'],
+          [/\btecnica\b/gi, 'técnica'],
+          [/\bepico\b/gi, 'épico'],
+          [/\bepica\b/gi, 'épica'],
+          [/\bcritico\b/gi, 'crítico'],
+          [/\bcritica\b/gi, 'crítica'],
+          [/\bmaximo\b/gi, 'máximo'],
+          [/\bminimo\b/gi, 'mínimo'],
+          [/\bpractica\b/gi, 'práctica'],
+          [/\bpracticas\b/gi, 'prácticas'],
+          [/\banalisis\b/gi, 'análisis'],
+          [/\bcronometro\b/gi, 'cronómetro'],
+          [/\bcronometros\b/gi, 'cronómetros'],
+          [/\bdecima\b/gi, 'décima'],
+          [/\bdecimas\b/gi, 'décimas'],
+          [/\bnumero\b/gi, 'número'],
+          [/\bnumeros\b/gi, 'números'],
+          [/\bcampeon\b/gi, 'campeón'],
+          [/\bsubcampeon\b/gi, 'subcampeón'],
+          [/\benfocate\b/gi, 'enfócate'],
+          [/\baqui\b/gi, 'aquí'],
+          [/\basi\b/gi, 'así'],
+          [/\bMexico\b/g, 'México'],
+          [/\bHobbyShopMX\b/gi, 'HobbyShop México'],
           [/Italia\s*-\s*Messina/gi, 'Italia, Messina'],
         ];
         for (const [re, rep] of __dict) s = s.replace(re, rep);
@@ -12401,6 +13987,174 @@ function __isEssentialSpeech(opts, key, priority){
 // =========================
 let __ttsBlockedSince = 0;
 
+// =========================
+// Speech Arbiter / Filtro editorial
+// - La cola NO debe vomitar mensajes viejos.
+// - Cada frase nace con prioridad + categoría + caducidad.
+// - Mensajes ruidosos (gaps/front/back/mini/ritmo) se caen primero.
+// =========================
+const __speechQueueCfg = {
+  maxQueue: 6,
+  maxQueueBlocked: 4,
+  staleLowMs: 2200,
+  staleNormalMs: 4200,
+  staleHighMs: 9000,
+  sameCatSuppressMs: 3200,
+  recentSpokenSuppressMs: 4500,
+  noisyPendingMax: 2
+};
+const __speechLastCategoryAt = new Map();
+const __speechLastCategoryText = new Map();
+
+function __speechCatFromOpts(opts, key, text){
+  try{
+    const direct = String((opts && (opts.queueCategory || opts.category || opts.semanticCategory)) || '').trim().toLowerCase();
+    if (direct) return direct;
+    const k = String(key || '').toLowerCase();
+    if (!k) return __inferSemCategoryFromKey(text || '') || 'general';
+    if (k.includes('front06')) return 'front06';
+    if (k.includes('back06')) return 'back06';
+    if (k.includes('ritmo')) return 'ritmo';
+    if (k.includes('netgain')) return 'netgain';
+    if (k.includes('estlap')) return 'estlap';
+    if (k.includes('mini')) return 'mini';
+    if (k.includes('top3')) return 'top3';
+    if (k.includes('train')) return 'train';
+    if (k.includes('pressure')) return 'pressure';
+    if (k.includes('attack') || k.includes('defense') || k.includes('fight') || k.includes('duel')) return 'battle';
+    if (k.includes('pos_') || k.includes('pos_manga_') || k.includes('pos_brief_')) return 'pos';
+    if (k.includes('lap_') || k.includes('lastlap')) return 'lap';
+    if (k.includes('best') || k.includes('record')) return 'bestlap';
+    if (k.includes('leader')) return 'leader';
+    if (k.includes('gap')) return 'gaps';
+    if (k.includes('blue')) return 'blueflag';
+    if (k.includes('podio') || k.includes('podium')) return 'podium';
+    if (k.includes('finish') || k.includes('finalizo')) return 'finish';
+    if (k.startsWith('sys_')) return 'system';
+    return __inferSemCategoryFromKey(k) || 'general';
+  }catch(e){ return 'general'; }
+}
+
+function __speechIsNoisyCat(cat){
+  const c = String(cat || '').toLowerCase();
+  return (c === 'gaps' || c === 'front06' || c === 'back06' || c === 'ritmo' || c === 'mini' || c === 'netgain' || c === 'estlap');
+}
+
+function __speechIsCriticalCat(cat, priority, opts, key){
+  try{
+    if (__isEssentialSpeech(opts, key, priority)) return true;
+    const c = String(cat || '').toLowerCase();
+    if (c === 'system' || c === 'finish' || c === 'blueflag' || c === 'podium') return true;
+    if ((Number(priority) || 0) >= 90) return true;
+    return false;
+  }catch(e){ return false; }
+}
+
+function __speechExpiryFor(cat, priority, opts){
+  try{
+    if (opts && typeof opts.textTtlMs === 'number') return Math.max(0, Number(opts.textTtlMs) || 0);
+    if (__speechIsCriticalCat(cat, priority, opts, opts && opts.key)) return 0;
+    const pr = Number(priority || 0) || 0;
+    const c = String(cat || '').toLowerCase();
+    if (c === 'lap') return 1500;
+    if (c === 'pos') return 1800;
+    if (c === 'battle' || c === 'pressure' || c === 'front06' || c === 'back06') return 2400;
+    if (c === 'gaps' || c === 'ritmo' || c === 'mini' || c === 'netgain' || c === 'estlap') return 2000;
+    if (c === 'leader' || c === 'bestlap' || c === 'top3' || c === 'train') return 4200;
+    if (pr >= 80) return __speechQueueCfg.staleHighMs;
+    if (pr <= 35) return __speechQueueCfg.staleLowMs;
+    return __speechQueueCfg.staleNormalMs;
+  }catch(e){ return __speechQueueCfg.staleNormalMs; }
+}
+
+function __speechIsExpired(it, now){
+  try{
+    if (!it) return true;
+    if (__speechIsCriticalCat(it.category, it.priority, it.opts || {}, it.key)) return false;
+    const exp = Number(it.expireAt || 0) || 0;
+    if (exp > 0 && now > exp) return true;
+    return false;
+  }catch(e){ return false; }
+}
+
+function __speechPruneQueue(now){
+  try{
+    const t = Number(now || Date.now()) || Date.now();
+    const keep = [];
+    let noisyCount = 0;
+    for (const it of (speechQueue || [])){
+      if (!it) continue;
+      if (__speechIsExpired(it, t)) continue;
+      const cat = String(it.category || '').toLowerCase();
+      if (__speechIsNoisyCat(cat)) {
+        noisyCount++;
+        if (noisyCount > __speechQueueCfg.noisyPendingMax && !__speechIsCriticalCat(cat, it.priority, it.opts || {}, it.key)) continue;
+      }
+      keep.push(it);
+    }
+    keep.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
+    const maxQ = pendingAutoVoiceUnlock ? __speechQueueCfg.maxQueueBlocked : __speechQueueCfg.maxQueue;
+    speechQueue.length = 0;
+    for (const it of keep.slice(0, maxQ)) speechQueue.push(it);
+  }catch(e){}
+}
+
+function __speechShouldSkipIncoming(clean, key, cat, priority, opts, now){
+  try{
+    const t = Number(now || Date.now()) || Date.now();
+    const critical = __speechIsCriticalCat(cat, priority, opts, key);
+    if (critical) return false;
+
+    __speechPruneQueue(t);
+
+    const maxQ = pendingAutoVoiceUnlock ? __speechQueueCfg.maxQueueBlocked : __speechQueueCfg.maxQueue;
+    if ((speechQueue || []).length >= maxQ) return true;
+
+    const lastCatAt = __speechLastCategoryAt.get(cat) || 0;
+    if (lastCatAt && (t - lastCatAt) < __speechQueueCfg.recentSpokenSuppressMs) {
+      const lastTxt = String(__speechLastCategoryText.get(cat) || '').trim().toLowerCase();
+      const curTxt = String(clean || '').trim().toLowerCase();
+      if (lastTxt && curTxt && (lastTxt === curTxt || __speechIsNoisyCat(cat))) return true;
+    }
+
+    for (const it of (speechQueue || [])){
+      if (!it) continue;
+      const sameCat = String(it.category || '').toLowerCase() === String(cat || '').toLowerCase();
+      if (!sameCat) continue;
+      const age = t - (Number(it.ts || t) || t);
+      if (age > __speechQueueCfg.sameCatSuppressMs) continue;
+      if ((Number(it.priority || 0) || 0) >= (Number(priority || 0) || 0)) return true;
+    }
+
+    if ((speechSpeaking || (speechQueue && speechQueue.length)) && __speechIsNoisyCat(cat) && (Number(priority || 0) || 0) < 80) {
+      return true;
+    }
+
+    return false;
+  }catch(e){ return false; }
+}
+
+function __speechSupersedePending(cat, priority, opts, key, now){
+  try{
+    const t = Number(now || Date.now()) || Date.now();
+    const incomingPr = Number(priority || 0) || 0;
+    const incomingCat = String(cat || '').toLowerCase();
+    if (!incomingCat) return;
+    for (let i = speechQueue.length - 1; i >= 0; i--){
+      const it = speechQueue[i];
+      if (!it) continue;
+      const sameCat = String(it.category || '').toLowerCase() === incomingCat;
+      if (!sameCat) continue;
+      if (__speechIsCriticalCat(it.category, it.priority, it.opts || {}, it.key)) continue;
+      const age = t - (Number(it.ts || t) || t);
+      const itPr = Number(it.priority || 0) || 0;
+      if (__speechIsNoisyCat(incomingCat) || incomingPr > itPr || age > __speechQueueCfg.sameCatSuppressMs) {
+        speechQueue.splice(i, 1);
+      }
+    }
+  }catch(e){}
+}
+
 function __flushSpeechQueueStale(maxAgeMs = 8000){
   try{
     const now = Date.now();
@@ -12499,6 +14253,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         const priority = Number.isFinite(opts.priority) ? opts.priority : 0;
         const interrupt = !!opts.interrupt;
         const dedupe = (opts.dedupe !== false);
+        const queueCategory = __speechCatFromOpts(opts, key, clean);
 
         // Silencio por inactividad: si no hay cambios reales, no hables (salvo esenciales)
         if (__inActivitySilence() && !__isEssentialSpeech(opts, key, priority)) {
@@ -12528,6 +14283,9 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           if (speechQueue.some(it => it.text === clean)) return;
         }
 
+        if (__speechShouldSkipIncoming(clean, key, queueCategory, priority, opts, now)) return;
+        try { __speechSupersedePending(queueCategory, priority, opts, key, now); } catch(e) {}
+
         if (interrupt) {
           speechQueue.length = 0;
           speechSpeaking = false;
@@ -12553,9 +14311,12 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           } catch(e) {}
         }
 
-        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: __voiceURI });
+        const ttlMs = __speechExpiryFor(queueCategory, priority, opts);
+        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: __voiceURI, category: queueCategory, expireAt: ttlMs > 0 ? (now + ttlMs) : 0, opts });
         try { if (pendingAutoVoiceUnlock) __pruneQueueDuringBlock(); } catch(e) {}
+        try { __speechPruneQueue(now); } catch(e) {}
         try { pushSpeechLog({ text: clean, key, priority }); } catch(e) {}
+        try { pushTtsEvent('queue', clean, `q ${speechQueue.length}`); } catch(e) {}
         // prioridad desc, FIFO por tiempo
         speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
 
@@ -12581,6 +14342,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           // Si no hay actividad reciente, es speaking/pending fantasma: cancela y reintenta
           if (lastEv && (now - lastEv) > thr) {
             try { if (!__ttsCancelShieldUntil || now > __ttsCancelShieldUntil) __ss.cancel(); } catch(e){}
+            try { pushTtsEvent('recover', 'Cancel por ghost speaking/pending', 'tts'); } catch(e) {}
             __ttsLastEventAt = now;
             speechSpeaking = false;
             setTimeout(()=>{ try{ pumpSpeechQueue(); }catch(e){} }, 80);
@@ -12602,7 +14364,18 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           } catch(e) { return; }
         }
 
-        const next = speechQueue.shift();
+        try { __speechPruneQueue(Date.now()); } catch(e) {}
+        let next = null;
+        while (speechQueue && speechQueue.length) {
+          const cand = speechQueue.shift();
+          if (!cand) continue;
+          if (__speechIsExpired(cand, Date.now())) {
+            try { pushTtsEvent('drop', cand.text || '', `ttl ${cand.category || ''}`); } catch(e) {}
+            continue;
+          }
+          next = cand;
+          break;
+        }
         if (!next) return;
 
         try { __ttsLastSpeakCallAt = Date.now(); __ttsLastEventAt = __ttsLastSpeakCallAt; __ttsCurrentText = (next.text || ''); } catch(e) {}
@@ -12612,6 +14385,8 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           u.onstart = () => {
             __ttsDidStart = true;
         try { __ttsLastStartAt = Date.now(); __ttsLastEventAt = __ttsLastStartAt; } catch(e) {}
+        try { __speechLastCategoryAt.set(String(next.category || 'general'), __ttsLastStartAt || Date.now()); __speechLastCategoryText.set(String(next.category || 'general'), String(next.text || '')); } catch(e) {}
+        try { pushTtsEvent('start', next.text || '', next.key || 'tts'); } catch(e) {}
                         try { __ttsStartGuardFails = 0; } catch(e) {}
 try { if (__ttsStartGuard) { clearTimeout(__ttsStartGuard); __ttsStartGuard = 0; } } catch(e) {}
           };
@@ -12642,9 +14417,17 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
           }
           if (!v && chosenVoiceURI && !(next && next.voiceURI)) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
           if (!v) v = pickDefaultVoice(voices);
+          const __pickedEs = pickDefaultVoice(voices);
+          const __vLang = String((v && v.lang) || '').toLowerCase();
+          if (v && __pickedEs && !__vLang.startsWith('es')) {
+            try { pushTtsEvent('voice', 'fallback a voz española', next.text || '', next.key || 'tts'); } catch(e) {}
+            v = __pickedEs;
+          }
           if (v) {
             u.voice = v;
             if (v.lang) u.lang = v.lang;
+          } else {
+            u.lang = 'es-MX';
           }
         }
 
@@ -12664,18 +14447,22 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
 
         u.onend = () => {
         try { __ttsLastEndAt = Date.now(); __ttsLastEventAt = __ttsLastEndAt; } catch(e) {}
+          try { pushTtsEvent('end', next.text || '', next.key || 'tts'); } catch(e) {}
           clearWd();
           speechSpeaking = false;
                     try { __ttsStartGuardFails = 0; } catch(e) {}
 try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_title_') === 0) { __autoIntroDoneKeys.add(next.key); } } catch(e) {}
           lastSpokenKeyAt.set(next.key, Date.now());
           try { lastSpokenTextAt.set(next.text, Date.now()); } catch(e) {}
+          try { __speechLastCategoryAt.set(String(next.category || 'general'), Date.now()); __speechLastCategoryText.set(String(next.category || 'general'), String(next.text || '')); } catch(e) {}
+          try { __speechLastCategoryAt.set(String(next.category || 'general'), Date.now()); __speechLastCategoryText.set(String(next.category || 'general'), String(next.text || '')); } catch(e) {}
           const d = Number(next.postDelayMs || 0) || 0;
           if (d > 0) setTimeout(pumpSpeechQueue, d);
           else pumpSpeechQueue();
         };
         u.onerror = () => {
         try { __ttsLastEventAt = Date.now(); } catch(e) {}
+          try { pushTtsEvent('error', next.text || '', next.key || 'tts'); } catch(e) {}
           clearWd();
           speechSpeaking = false;
                     try { __ttsStartGuardFails = 0; } catch(e) {}
@@ -12735,6 +14522,7 @@ lastSpokenKeyAt.set(next.key, Date.now());
                     try { __pruneQueueDuringBlock(); } catch(e) {}
                     try { const vis2 = (document && document.visibilityState) ? document.visibilityState : 'visible'; if (vis2 !== 'visible' && (typeof isIOSWebKit === 'function' ? isIOSWebKit() : false)) __ttsUnlockedOnce = false; } catch(e) {}
                     try { if ((typeof isIOSWebKit === 'function' ? isIOSWebKit() : false) && voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+                    try { pushTtsEvent('unlock', 'Toca la pantalla para reactivar audio', 'ios'); } catch(e) {}
                     try { if ((typeof isIOSWebKit === 'function' ? isIOSWebKit() : false)) showToast('Toca la pantalla para reactivar audio', 1800); } catch(e) {}
                   }
                 }
@@ -12799,8 +14587,13 @@ function speakWithLaps(_laps, message, opts) {
       
     
     function isIOSWebKit() {
-      const ua = navigator.userAgent || '';
-      return /iPad|iPhone|iPod/i.test(ua);
+      try {
+        return __isIOSLike();
+      } catch(e) {
+        const ua = navigator.userAgent || '';
+        const isTouchMac = (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
+        return /iPad|iPhone|iPod/i.test(ua) || isTouchMac;
+      }
     }
 
     function isMobileDevice(){
@@ -13013,6 +14806,7 @@ function setVoiceMaster(on, opts = {}) {
       // Si apagamos VOZ: limpiamos todo.
       // Si prendemos VOZ: NO borres 'needs-unlock' hasta que el motor realmente arranque (onstart).
       if (!turningOn) {
+        try { pushTtsEvent('voice', 'VOZ OFF', 'master'); } catch(e) {}
         try { __lastVoiceRecoverAttemptAt = 0; } catch(e) {}
         try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
         try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
@@ -13026,6 +14820,7 @@ function setVoiceMaster(on, opts = {}) {
       // unlock audio (seleccionar piloto cuenta como gesto)
       try { ensureAudioCtx(); } catch(e) {}
       if (voiceMasterEnabled && !opts.silent) {
+        try { pushTtsEvent('voice', 'VOZ ON', 'master'); } catch(e) {}
         try { showToast('VOZ ON', 900); } catch(e) {}
         try {
           const __isIOS = isIOSWebKit();
@@ -13040,6 +14835,7 @@ function setVoiceMaster(on, opts = {}) {
             // Android: suele funcionar con gesto del boton, lo marcamos como listo.
             __ttsUnlockedOnce = true;
             pendingAutoVoiceUnlock = false;
+            try { pushTtsEvent('unlock-clear', 'Android listo sin tap pendiente', 'tts'); } catch(e) {}
             try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(_e) {}
           } else {
             // Desktop: listo sin gestos extra.
@@ -13088,14 +14884,14 @@ function setVoiceMaster(on, opts = {}) {
     function startTtsHeartbeat() {
       try {
         if (__ttsHeartbeatTimer) return;
-        // Solo desktop (incluye OBS Browser Source)
         const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false;
         const isMob = (typeof isMobileDevice === 'function') ? isMobileDevice() : false;
-        if (isIOS || isMob) return;
+        const gapMs = Number(__ttsHeartbeatIntervalMs || 0);
+        if (isIOS || isMob || gapMs <= 0) return;
 
         __ttsHeartbeatTimer = window.setInterval(() => {
           try { __ttsHeartbeatTick(); } catch(e) {}
-        }, 20000);
+        }, Math.max(12000, gapMs));
       } catch(e) {}
     }
 
@@ -13105,14 +14901,11 @@ function setVoiceMaster(on, opts = {}) {
           window.clearInterval(__ttsHeartbeatTimer);
           __ttsHeartbeatTimer = 0;
         }
-
+      } catch(e) {}
+    }
 
     // ============================================================
     // TTS SAFETY LOOP (anti-apagado)
-    // - Reanuda periodicamente el motor (resume)
-    // - Re-sincroniza speechSpeaking vs speechSynthesis.speaking
-    // - Si hay cola pendiente y el motor esta idle, re-pump
-    // - Inyecta keepalive silencioso (volume=0) si pasan muchos segundos sin eventos
     // ============================================================
     let __ttsSafetyTimer = 0;
     function startTtsSafetyLoop() {
@@ -13125,31 +14918,27 @@ function setVoiceMaster(on, opts = {}) {
 
             const ss = window.speechSynthesis;
             const now = Date.now();
-
-            // Resume suave (Chrome/OBS a veces queda "paused" o dormido)
             try { if (typeof ss.resume === 'function') ss.resume(); } catch(e) {}
 
-            // Desync fix: a veces speechSpeaking queda true pero el motor ya no esta hablando
             try {
               if (speechSpeaking && ss && !ss.speaking && !ss.pending) {
                 const lastEv = (__ttsLastEventAt || 0);
                 if (!lastEv || (now - lastEv) > 2500) {
                   speechSpeaking = false;
+                  try { pushTtsEvent('recover', 'Desync speaking=false', 'tts'); } catch(e) {}
                 }
               }
             } catch(e) {}
 
-            // Si hay cola y no estamos hablando, vuelve a bombear
             try {
               if (!speechSpeaking && Array.isArray(speechQueue) && speechQueue.length > 0) {
                 pumpSpeechQueue();
               }
             } catch(e) {}
 
-            // Keepalive TTS silencioso si pasa mucho sin eventos (mantiene el motor despierto)
             try {
               const lastEv = (__ttsLastEventAt || 0);
-              if (__ttsUnlockedOnce && (!lastEv || (now - lastEv) > 35000)) {
+              if (__ttsUnlockedOnce && (!lastEv || (now - lastEv) > Math.max(25000, Number(__ttsHeartbeatIntervalMs || 30000) + 5000))) {
                 const u = new SpeechSynthesisUtterance(' ');
                 u.volume = 0;
                 u.rate = 1;
@@ -13159,7 +14948,7 @@ function setVoiceMaster(on, opts = {}) {
               }
             } catch(e) {}
           } catch(e) {}
-        }, 2000);
+        }, Math.max(1800, Number(__ttsSafetyIntervalMs || 3000)));
       } catch(e) {}
     }
     function stopTtsSafetyLoop() {
@@ -13168,10 +14957,6 @@ function setVoiceMaster(on, opts = {}) {
           clearInterval(__ttsSafetyTimer);
           __ttsSafetyTimer = 0;
         }
-      } catch(e) {}
-    }
-
-
       } catch(e) {}
     }
 
@@ -13219,10 +15004,7 @@ function setVoiceMaster(on, opts = {}) {
       try {
         if (typeof isMobileDevice === 'function' && isMobileDevice()) return false;
         if (typeof isIOSWebKit === 'function' && isIOSWebKit()) return false;
-
-        const ua = navigator.userAgent || '';
-        const isChrome = /Chrome\/\d+/i.test(ua) && !/Edg\/|OPR\/|Brave\/|Vivaldi\/|DuckDuckGo\//i.test(ua);
-        return !!isChrome;
+        return __isChromiumRuntime();
       } catch(e) { return false; }
     }
 
@@ -13247,6 +15029,7 @@ function setVoiceMaster(on, opts = {}) {
 
         // Reanuda y recupera motor TTS
         try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
+        try { pushTtsEvent('recover', 'Carrera nueva, reenganche TTS', 'auto'); } catch(e) {}
         try { if (voiceMasterEnabled) forceTtsRecover('new_race_auto'); } catch(e) {}
         try { if (voiceMasterEnabled) pumpSpeechQueue(); } catch(e) {}
         try { updateVoiceStatusDot(); } catch(e) {}
@@ -13350,7 +15133,7 @@ function setVoiceMaster(on, opts = {}) {
       // Sync UI del boton VOZ con el estado real al cargar (evita clicks extra)
       try { setVoiceMaster(voiceMasterEnabled, { silent:true }); } catch(e) {}
       try { updateVoiceStatusDot(); } catch(e) {}
-      try { setInterval(()=>{ try{ updateVoiceStatusDot(); }catch(e){} }, 800); } catch(e) {}
+      try { setInterval(()=>{ try{ updateVoiceStatusDot(); }catch(e){} }, 1200); } catch(e) {}
 
       // Botón BÁSICO (solo FOLLOW). Reduce el show: solo laps, última y posición.
     if (typeof basicToggleBtnMini !== 'undefined' && basicToggleBtnMini) {
@@ -13720,70 +15503,95 @@ function toFixedFloor(value, decimals = 0) {
 
     syncPrecisionBadges();
 
+
     let wakeLock = null;
-    async function requestWakeLock() {
+    let wakeLockWanted = false;
+    var backgroundModeEnabled = true;
+
+    function syncWakeLockUI() {
       try {
-        if ('wakeLock' in navigator && navigator.wakeLock.request) {
-          wakeLock = await navigator.wakeLock.request('screen');
-          wakeLockStatus.textContent = 'Pantalla activa';
-          wakeLock.addEventListener('release', () => {
-            // Chrome puede liberar wake lock al cambiar de app / apagar pantalla.
-            // Este Spotter lo mantiene SIEMPRE encendido.
-            wakeLock = null;
-            wakeLockStatus.textContent = 'Pantalla liberada';
-            try { if (wakeLockToggle) wakeLockToggle.classList.add('active'); } catch(e) {}
-            try {
-              if (document.visibilityState === 'visible') {
-                requestWakeLock().catch(()=>{});
-              }
-            } catch(e) {}
-          });
-        } else {
-          wakeLockStatus.textContent = 'Tu navegador no soporta wake lock';
+        if (wakeLockToggle) wakeLockToggle.classList.toggle('active', !!wakeLockWanted);
+        if (!wakeLockStatus) return;
+        if (!wakeLockWanted) {
+          wakeLockStatus.textContent = '';
+          return;
         }
+        wakeLockStatus.textContent = wakeLock ? 'Pantalla activa' : (__supportsWakeLockApi() ? 'Wake lock en espera' : 'Tu navegador no soporta wake lock');
+      } catch(e) {}
+    }
+
+    async function requestWakeLock(force = false) {
+      try {
+        if (!__supportsWakeLockApi()) {
+          syncWakeLockUI();
+          return false;
+        }
+        if (!force && !wakeLockWanted) return false;
+        if (document.visibilityState !== 'visible') {
+          syncWakeLockUI();
+          return false;
+        }
+        if (wakeLock) return true;
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          syncWakeLockUI();
+          try {
+            if (wakeLockWanted && document.visibilityState === 'visible') {
+              setTimeout(() => { try { requestWakeLock(); } catch(e) {} }, 250);
+            }
+          } catch(e) {}
+        });
+        syncWakeLockUI();
+        return true;
       } catch (e) {
         console.error('Error wake lock', e);
-        wakeLockStatus.textContent = 'Toca pantalla para mantener despierta';
+        if (wakeLockStatus) wakeLockStatus.textContent = 'Toca pantalla para mantener despierta';
+        return false;
       }
     }
 
     async function releaseWakeLock() {
       try {
         if (wakeLock) {
-          await wakeLock.release();
+          const wl = wakeLock;
           wakeLock = null;
+          await wl.release();
         }
-        wakeLockStatus.textContent = '';
       } catch (e) {
         console.error('Error liberando wake lock', e);
+      } finally {
+        syncWakeLockUI();
       }
     }
 
-    // Wake Lock SIEMPRE ON (locked)
-    try { if (wakeLockToggle) wakeLockToggle.classList.add('active'); } catch(e) {}
-    try { prefSet('spotterWakeLock','1'); } catch(e) {}
+    try {
+      wakeLockWanted = prefGet('spotterWakeLock', '0') !== '0';
+    } catch(e) { wakeLockWanted = false; }
+    syncWakeLockUI();
 
     if (wakeLockToggle) {
       wakeLockToggle.addEventListener('click', async () => {
-        // Bloqueado en ON
-        try { wakeLockToggle.classList.add('active'); } catch(e) {}
-        try { prefSet('spotterWakeLock','1'); } catch(e) {}
-        await requestWakeLock();
+        wakeLockWanted = !wakeLockWanted;
+        try { prefSet('spotterWakeLock', wakeLockWanted ? '1' : '0'); } catch(e) {}
+        syncWakeLockUI();
+        if (wakeLockWanted) await requestWakeLock(true);
+        else await releaseWakeLock();
       });
     }
 
-    // Intento inmediato (si el navegador lo permite)
-    try { requestWakeLock(); } catch(e) {}
+    if (wakeLockWanted) {
+      try { requestWakeLock(); } catch(e) {}
+    }
 
-    // Reintento en el primer gesto del usuario (por polticas del navegador)
     (function(){
       let __wlGestureDone = false;
       async function __wlTry() {
         if (__wlGestureDone) return;
         __wlGestureDone = true;
         try {
-          if (wakeLockToggle && wakeLockToggle.classList.contains('active')) {
-            await requestWakeLock();
+          if (wakeLockWanted && !wakeLock) {
+            await requestWakeLock(true);
           }
         } catch(e) {}
       }
@@ -13795,14 +15603,12 @@ function toFixedFloor(value, decimals = 0) {
     // =========================
     function setBackgroundStatus() {
       if (!backgroundStatus) return;
-      backgroundStatus.textContent = backgroundModeEnabled ? 'Background ON' : '';
+      backgroundStatus.textContent = backgroundModeEnabled ? 'Background ON' : 'Background OFF';
     }
 
     try {
-      const savedBg = prefGet('spotterBackgroundMode', null);
-      // For this build: Background is ALWAYS ON
-      backgroundModeEnabled = true;
-      try { prefSet('spotterBackgroundMode','1'); } catch(e){}
+      const savedBg = prefGet('spotterBackgroundMode', '1');
+      backgroundModeEnabled = savedBg !== '0';
       if (backgroundToggle) {
         backgroundToggle.classList.toggle('active', backgroundModeEnabled);
       }
@@ -13811,10 +15617,12 @@ function toFixedFloor(value, decimals = 0) {
 
     if (backgroundToggle) {
       backgroundToggle.addEventListener('click', () => {
-        // Background always ON (locked)
-        backgroundModeEnabled = true;
-        backgroundToggle.classList.add('active');
-        try { prefSet('spotterBackgroundMode','1'); } catch(e) {}
+        backgroundModeEnabled = !backgroundModeEnabled;
+        backgroundToggle.classList.toggle('active', backgroundModeEnabled);
+        try { prefSet('spotterBackgroundMode', backgroundModeEnabled ? '1' : '0'); } catch(e) {}
+        if (!backgroundModeEnabled) {
+          try { stopSilentAudioKeepAlive(); } catch(e) {}
+        }
         setBackgroundStatus();
       });
     }
@@ -13823,14 +15631,13 @@ function toFixedFloor(value, decimals = 0) {
     let __visHiddenAt = 0;
     document.addEventListener('visibilitychange', async () => {
       try {
-        const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+        const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : __isIOSLike();
 
         if (document.visibilityState === 'hidden') {
           __visHiddenAt = Date.now();
 
-
           // Desktop/Android: arranca keep-alive silencioso + reanuda motor TTS
-          if (voiceMasterEnabled && !isIOS) {
+          if (voiceMasterEnabled && !isIOS && backgroundModeEnabled) {
             try { startSilentAudioKeepAlive(); } catch(e) {}
             try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
           }
@@ -13847,18 +15654,15 @@ function toFixedFloor(value, decimals = 0) {
         if (document.visibilityState === 'visible') {
           const awayMs = __visHiddenAt ? (Date.now() - __visHiddenAt) : 0;
 
-          // refresh rapido al regresar
           try { loadRaceFromFirebase(); } catch(e) {}
 
-          // Wake lock: reintento si estaba activo
           try {
-            if (wakeLockToggle && wakeLockToggle.classList.contains('active')) {
-              await requestWakeLock();
+            if (wakeLockWanted) {
+              await requestWakeLock(true);
             }
           } catch(e) {}
 
           if (voiceMasterEnabled) {
-            // Desktop/Android: NO forzar "needs-unlock" (si no, se queda mudo al cambiar de pestaña)
             try { if (window.speechSynthesis && typeof window.speechSynthesis.resume === 'function') window.speechSynthesis.resume(); } catch(e) {}
             try { confirmVoiceButtons && confirmVoiceButtons(); } catch(e) {}
 
@@ -13894,7 +15698,7 @@ function toFixedFloor(value, decimals = 0) {
             if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock();
           }
         } catch(e) {}
-        try { if (wakeLockToggle && wakeLockToggle.classList.contains('active')) requestWakeLock().catch(()=>{}); } catch(e) {}
+        try { if (wakeLockWanted) requestWakeLock(true).catch(()=>{}); } catch(e) {}
         try { startBgKeepAlive(); } catch(e) {}
         try { loadRaceFromFirebase(); } catch(e) {}
         try { if (typeof startRaceRealtime === 'function') startRaceRealtime(); } catch(e) {}
@@ -13965,6 +15769,118 @@ function setLiveStatus(isOnline) {
       }
     } catch(e) {}
   }
+}
+
+function __diagSet(cardId, level, stateText, bodyText, titleText=''){
+  try{
+    const el = document.getElementById(cardId);
+    if (!el) return;
+    el.classList.remove('good','warn','bad','off');
+    el.classList.add(level || 'off');
+    const st = el.querySelector('.diag-state');
+    const tx = el.querySelector('.diag-text');
+    if (st) st.textContent = String(stateText || '').trim() || 'OFF';
+    if (tx) tx.textContent = String(bodyText || '').trim() || '-';
+    if (titleText != null) el.title = String(titleText || '');
+  }catch(e){}
+}
+
+function updateRuntimeDiagUI(){
+  try{
+    const now = Date.now();
+    const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : (__isIOSLike ? __isIOSLike() : false);
+    const ss = window.speechSynthesis || null;
+    const voices = (ss && typeof ss.getVoices === 'function') ? (ss.getVoices() || []) : [];
+    const hasSpeech = !!(ss && window.SpeechSynthesisUtterance);
+    const voicesEs = voices.filter(v => String(v.lang || '').toLowerCase().startsWith('es'));
+    const tickAge = __lastGoodTickMs ? (now - __lastGoodTickMs) : 0;
+    const tickTxt = __lastGoodTickMs ? `${(tickAge/1000).toFixed(tickAge < 10000 ? 1 : 0)} s` : 'sin tick';
+    const fallbackActive = !!__fallbackPollTimer;
+    const pollDelay = (__fallbackPollSchedule && __fallbackPollSchedule.length)
+      ? (__fallbackPollSchedule[Math.max(0, Math.min(__fallbackPollStep || 0, __fallbackPollSchedule.length - 1))] || 0)
+      : 0;
+
+    const voiceLevel = !hasSpeech ? 'bad' : (!voiceMasterEnabled ? 'off' : ((voicesEs.length || voices.length) ? 'good' : 'warn'));
+    const voiceState = !hasSpeech ? 'NO' : (!voiceMasterEnabled ? 'OFF' : ((speechSpeaking || (ss && ss.speaking)) ? 'HABLA' : 'OK'));
+    const voiceBody = !hasSpeech
+      ? 'Speech API no disponible'
+      : (!voiceMasterEnabled
+        ? `Motor listo, voces ${voicesEs.length || voices.length}`
+        : `Voces ES ${voicesEs.length} de ${voices.length}, cola ${speechQueue ? speechQueue.length : 0}`);
+    __diagSet('diagVoice', voiceLevel, voiceState, voiceBody, voiceBody);
+
+    let unlockLevel = 'off', unlockState = 'N/A', unlockBody = 'Solo aplica cuando iOS pide tap';
+    if (isIOS) {
+      unlockLevel = pendingAutoVoiceUnlock ? 'warn' : (voiceMasterEnabled ? 'good' : 'off');
+      unlockState = pendingAutoVoiceUnlock ? 'TAP' : (voiceMasterEnabled ? 'OK' : 'OFF');
+      unlockBody = pendingAutoVoiceUnlock
+        ? 'iPhone/iPad pide un toque para revivir voz'
+        : (voiceMasterEnabled ? 'Pipe listo, sin tap pendiente' : 'Voz apagada');
+    }
+    __diagSet('diagUnlock', unlockLevel, unlockState, unlockBody, unlockBody);
+
+    const fbLevel = __firebaseOk ? 'good' : 'bad';
+    const fbState = __firebaseOk ? 'OK' : 'FAIL';
+    const fbBody = __firebaseOk ? 'SDK y runtime arriba' : 'Firebase caido o bloqueado';
+    __diagSet('diagFirebase', fbLevel, fbState, fbBody, fbBody);
+
+    const rtLevel = __raceUnsub ? 'good' : (__firebaseOk ? 'warn' : 'bad');
+    const rtState = __raceUnsub ? 'ON' : (__firebaseOk ? 'FB' : 'OFF');
+    const rtBody = __raceUnsub ? 'onSnapshot suscrito' : (__firebaseOk ? 'Sin realtime, depende fallback' : 'Sin runtime');
+    __diagSet('diagRealtime', rtLevel, rtState, rtBody, rtBody);
+
+    const pollLevel = fallbackActive ? 'warn' : 'good';
+    const pollState = fallbackActive ? 'RUN' : 'STBY';
+    const pollBody = fallbackActive ? `Backoff ${Math.round((pollDelay || 0)/1000)} s, paso ${(__fallbackPollStep || 0)+1}` : 'Fallback en espera';
+    __diagSet('diagPolling', pollLevel, pollState, pollBody, pollBody);
+
+    const wakeSupported = __supportsWakeLockApi ? __supportsWakeLockApi() : false;
+    let wakeLevel = 'off', wakeState = 'OFF', wakeBody = 'Wake Lock desactivado';
+    if (!wakeSupported) {
+      wakeLevel = 'bad'; wakeState = 'N/A'; wakeBody = 'Navegador sin Wake Lock API';
+    } else if (wakeLockWanted && wakeLock) {
+      wakeLevel = 'good'; wakeState = 'ON'; wakeBody = 'Pantalla anclada';
+    } else if (wakeLockWanted && !wakeLock) {
+      wakeLevel = 'warn'; wakeState = 'WAIT'; wakeBody = 'Solicitado, esperando gesto o reenganche';
+    }
+    __diagSet('diagWake', wakeLevel, wakeState, wakeBody, wakeBody);
+
+    let feedLevel = 'bad', feedState = 'OFF', feedBody = `Ultimo tick: ${tickTxt}`;
+    if (__lastGoodTickMs) {
+      if (tickAge <= 4000) { feedLevel = 'good'; feedState = 'OK'; }
+      else if (tickAge <= 10000) { feedLevel = 'warn'; feedState = 'LENTO'; }
+      else { feedLevel = 'bad'; feedState = 'STALE'; }
+      feedBody = `Ultimo tick ${tickTxt}, lecturas ${__feedTickCount || 0}`;
+    }
+    __diagSet('diagFeed', feedLevel, feedState, feedBody, feedBody);
+
+    const vis = (document && document.visibilityState) ? document.visibilityState : 'visible';
+    const visLevel = (vis === 'visible') ? 'good' : (backgroundModeEnabled ? 'warn' : 'off');
+    const visState = (vis === 'visible') ? 'LIVE' : (backgroundModeEnabled ? 'BG ON' : 'HIDDEN');
+    const visBody = (vis === 'visible')
+      ? 'Pestana al frente'
+      : (backgroundModeEnabled ? 'Oculta pero con modo background activo' : 'Oculta y sin background');
+    __diagSet('diagVisibility', visLevel, visState, visBody, visBody);
+
+    const cfg = __getRuntimeProfileConfig(runtimeProfileKey);
+    const note = __firebaseOk
+      ? (fallbackActive ? `Fallback ${Math.round((pollDelay || 0)/1000)} s${__lastFallbackReason ? ' - ' + __lastFallbackReason : ''}` : `Realtime vivo, feed ${tickTxt}`)
+      : 'Sin runtime Firebase';
+    if (diagPanelNote) diagPanelNote.textContent = note + ` | Perfil ${cfg.label}`;
+    try { renderTtsEventLog(); } catch(e) {};
+
+    const err = String(__lastReadErr || '').trim();
+    if (diagErrorBox) {
+      if (err) {
+        const shortErr = err.length > 180 ? (err.slice(0, 177) + '...') : err;
+        diagErrorBox.textContent = `Ultimo error: ${shortErr}`;
+        diagErrorBox.classList.add('show');
+      } else {
+        diagErrorBox.textContent = '';
+        diagErrorBox.classList.remove('show');
+      }
+    }
+  }catch(e){}
 }
     function normalizePilotKey(key) {
       const s = (key || '').toLowerCase().trim();
@@ -16330,19 +18246,19 @@ function updateBlueFlagFromPassEvents() {
     // - No saturar (rate limit + dedupe)
     // =========================
 
-    const commentatorAutoCfg = {
-      // Calma por defecto: el Auto Locutor solo debe hablar cuando hay "accin real"
-      // (cambios de posición, líder, peleas cerradas, best lap/pole en mangas).
-      minIntervalMs: 11000,
-      windowMs: 60000,
-      maxMsgsInWindow: 3,
-      sigDefaultCooldownMs: 24000,
-      top3CooldownMs: 38000,
-      allowUrgentOverLimitScore: 9.0,
-      baseThresholdScore: 4.6,
-      quietMinMs: 30000,// C: mini resumen 30-40s,
-      quietMaxMs: 40000
-    };
+const commentatorAutoCfg = {
+  // Calma por defecto: el Auto Locutor solo debe hablar cuando hay "acción real".
+  // Subimos el filtro para que NO se amontonen mensajes viejos ni comentarios de relleno.
+  minIntervalMs: 14500,
+  windowMs: 70000,
+  maxMsgsInWindow: 2,
+  sigDefaultCooldownMs: 32000,
+  top3CooldownMs: 42000,
+  allowUrgentOverLimitScore: 9.4,
+  baseThresholdScore: 5.2,
+  quietMinMs: 38000,// mini resumen 38-52s,
+  quietMaxMs: 52000
+};
 
     let commentatorAutoState = {
       lastSpeakMs: 0,
@@ -16624,23 +18540,47 @@ function autoStageFromSec(sec) {
 
 function autoRememberPair(pairKey, sec, leaderLap, now) {
   try {
-    if (!pairKey) return { prevSec:null, deltaSec:0, rate:0, lastMentionMs:0 };
-    const st = autoPairState.get(pairKey) || { lastSec:null, lastSec2:null, lastMs:0, lastLap:0, lastMentionMs:0 };
+    if (!pairKey) return { prevSec:null, deltaSec:0, rate:0, lastMentionMs:0, encounterCount:0, closeTicks:0, hotTicks:0, activeMs:0 };
+    const st = autoPairState.get(pairKey) || {
+      lastSec:null, lastSec2:null, lastMs:0, lastLap:0, lastMentionMs:0,
+      encounterCount:0, closeTicks:0, hotTicks:0, encounterStartMs:0
+    };
     const prev = (st.lastSec != null) ? Number(st.lastSec) : null;
     const prev2 = (st.lastSec2 != null) ? Number(st.lastSec2) : null;
+    const sameEncounter = st.lastMs && ((now - Number(st.lastMs || 0)) < 42000);
+    if (!sameEncounter) {
+      st.encounterCount = Number(st.encounterCount || 0) + 1;
+      st.encounterStartMs = now;
+      st.closeTicks = 0;
+      st.hotTicks = 0;
+    }
     st.lastSec2 = prev;
     st.lastSec = Number(sec);
     st.lastMs = now;
     st.lastLap = Number(leaderLap) || st.lastLap || 0;
+    if (Number(sec) <= 0.60) st.closeTicks = Math.min(20, Number(st.closeTicks || 0) + 1);
+    else st.closeTicks = Math.max(0, Number(st.closeTicks || 0) - 1);
+    if (Number(sec) <= 0.35) st.hotTicks = Math.min(20, Number(st.hotTicks || 0) + 1);
+    else st.hotTicks = Math.max(0, Number(st.hotTicks || 0) - 1);
 
     const deltaSec = (prev != null && isFinite(prev)) ? (Number(sec) - prev) : 0;
     // rate aprox: cambio por tick (negativo = cerrando)
     const rate = (prev2 != null && isFinite(prev2)) ? (Number(sec) - prev2) : deltaSec;
+    const activeMs = st.encounterStartMs ? (now - Number(st.encounterStartMs || now)) : 0;
 
     autoPairState.set(pairKey, st);
-    return { prevSec: prev, deltaSec, rate, lastMentionMs: st.lastMentionMs || 0 };
+    return {
+      prevSec: prev,
+      deltaSec,
+      rate,
+      lastMentionMs: st.lastMentionMs || 0,
+      encounterCount: Number(st.encounterCount || 0),
+      closeTicks: Number(st.closeTicks || 0),
+      hotTicks: Number(st.hotTicks || 0),
+      activeMs
+    };
   } catch(e) {
-    return { prevSec:null, deltaSec:0, rate:0, lastMentionMs:0 };
+    return { prevSec:null, deltaSec:0, rate:0, lastMentionMs:0, encounterCount:0, closeTicks:0, hotTicks:0, activeMs:0 };
   }
 }
 
@@ -16651,6 +18591,29 @@ function autoMarkPairMention(pairKey, now) {
     st.lastMentionMs = now;
     autoPairState.set(pairKey, st);
   } catch(e) {}
+}
+
+function autoGetPairNarrativeMeta(pairKey, now) {
+  try {
+    if (!pairKey) return { encounters:0, closeTicks:0, hotTicks:0, activeMs:0, recurrent:false, sustained:false, boiling:false };
+    const st = autoPairState.get(pairKey) || null;
+    if (!st) return { encounters:0, closeTicks:0, hotTicks:0, activeMs:0, recurrent:false, sustained:false, boiling:false };
+    const activeMs = st.encounterStartMs ? ((Number(now) || Date.now()) - Number(st.encounterStartMs || 0)) : 0;
+    const encounters = Number(st.encounterCount || 0);
+    const closeTicks = Number(st.closeTicks || 0);
+    const hotTicks = Number(st.hotTicks || 0);
+    return {
+      encounters,
+      closeTicks,
+      hotTicks,
+      activeMs,
+      recurrent: encounters >= 3,
+      sustained: activeMs >= 22000 || closeTicks >= 4,
+      boiling: hotTicks >= 4
+    };
+  } catch(e) {
+    return { encounters:0, closeTicks:0, hotTicks:0, activeMs:0, recurrent:false, sustained:false, boiling:false };
+  }
 }
 
 function autoFocusMsg(stage, c, style) {
@@ -16733,7 +18696,30 @@ function autoFocusMsg(stage, c, style) {
   };
 
   const pool = BANK[st] || BANK.keep;
-  return autoRandPick(pool, 'auto:focus:' + st + ':' + s)(ctx);
+  let out = autoRandPick(pool, 'auto:focus:' + st + ':' + s)(ctx);
+  try {
+    const extra = [];
+    const encounters = Number(ctx && ctx.encounters) || 0;
+    const activeMs = Number(ctx && ctx.activeMs) || 0;
+    const hotTicks = Number(ctx && ctx.hotTicks) || 0;
+    if (encounters >= 3) extra.push(autoRandPick([
+      'Otra vez aparecen los mismos dos.',
+      'Este duelo ya trae varias rondas.',
+      'La rivalidad sigue escribiendo capítulos.'
+    ], 'auto:focus:rival:' + encounters));
+    if (activeMs >= 22000) extra.push(autoRandPick([
+      'Llevan rato en esta pelea.',
+      'Es una historia larga ya.',
+      'No se han soltado en un buen tramo.'
+    ], 'auto:focus:active:' + Math.floor(activeMs / 5000)));
+    if (hotTicks >= 4) extra.push(autoRandPick([
+      'Ya huele a maniobra grande.',
+      'Esto viene hirviendo.',
+      'La tensión ya está arriba del límite.'
+    ], 'auto:focus:hot:' + hotTicks));
+    if (extra.length) out = [out].concat(extra.slice(0, 1)).join(' ');
+  } catch(e) {}
+  return out;
 }
 
 function autoBuildStoryCandidate(args) {
@@ -16764,7 +18750,8 @@ function autoBuildStoryCandidate(args) {
         if (!b || !isFinite(b.score)) continue;
         const mentionedMs = (b.lastMentionMs || 0);
         const penalty = (now - mentionedMs < 14000) ? 1.2 : 0;
-        const s = b.score - penalty;
+        const metaBonus = ((Number(b.encounters || 0) >= 3) ? 0.9 : 0) + ((Number(b.hotTicks || 0) >= 4) ? 0.8 : 0) + ((Number(b.activeMs || 0) >= 22000) ? 0.5 : 0);
+        const s = b.score - penalty + metaBonus;
         if (s > bestScore) { bestScore = s; best = b; }
       }
       if (!best) return null;
@@ -16776,7 +18763,7 @@ function autoBuildStoryCandidate(args) {
       autoNarratorState.focusSinceMs = now;
       autoNarratorState.focusLastSec = best.secNum;
       autoNarratorState.focusStage = 'intro';
-      autoNarratorState.focusStickyUntilMs = now + 28000; // 18s de hilo antes de cambiar (si sigue viva)
+      autoNarratorState.focusStickyUntilMs = now + ((Number(best.encounters || 0) >= 3) ? 36000 : 28000); // hilo más largo si ya es duelo recurrente
       focus = best;
     }
 
@@ -16818,7 +18805,10 @@ function autoBuildStoryCandidate(args) {
       secNum: sec,
       deltaStr,
       fromSec,
-      toSec
+      toSec,
+      encounters: Number(focus.encounters || 0),
+      hotTicks: Number(focus.hotTicks || 0),
+      activeMs: Number(focus.activeMs || 0)
     }, style);
 
     // score: focus manda pero no todo el tiempo
@@ -16827,6 +18817,9 @@ function autoBuildStoryCandidate(args) {
     if (focus.pos <= 3) score += 1.4;
     if (focus.pos === 1) score += 0.8;
     if (progress > 0.80 && focus.pos <= 5) score += 0.6;
+    if (Number(focus.encounters || 0) >= 3) score += 0.8;
+    if (Number(focus.hotTicks || 0) >= 4) score += 0.8;
+    if (Number(focus.activeMs || 0) >= 22000) score += 0.4;
 
     // manga: menos frecuencia
     if (isMangaSess) score -= 0.7;
@@ -17652,7 +19645,26 @@ function autoPickStyleForType(type) {
 let autoStyleMixCounter = 0;
 
 function autoBuildMessage(type, ctx) {
-      const style = (autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo') ? autoCommentatorMode : 'pro';
+      const style = (typeof autoPickStyleForType === 'function')
+        ? autoPickStyleForType(type)
+        : ((autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo') ? autoCommentatorMode : 'pro');
+
+      // Motor contextual inteligente: decide al vuelo que decir segun carrera, gap y continuidad
+      try {
+        const smartOut = ttsSmartComposeAuto(type, ctx || {}, style);
+        if (smartOut && autoIsUsableText(smartOut, type)) {
+          return autoDecorate(smartOut, type, style);
+        }
+      } catch(e) {}
+
+      // Motor generativo despues: plantillas + variantes = miles de combinaciones
+      try {
+        const genOut = ttsGenAutoCompose(type, ctx || {}, style);
+        if (genOut && autoIsUsableText(genOut, type)) {
+          return autoDecorate(genOut, type, style);
+        }
+      } catch(e) {}
+
       const dict = (AUTO_PHRASES_BY_STYLE && AUTO_PHRASES_BY_STYLE[style]) ? AUTO_PHRASES_BY_STYLE[style] : AUTO_PHRASES_PRO;
       const bank = (dict && dict[type]) ? dict[type] : (AUTO_PHRASES_PRO[type] || []);
       const keyBase = style + ':' + type;
@@ -18301,7 +20313,11 @@ try {
       attacker,
       secNum: sec,
       score: poolScore2 + 0.6,
-      lastMentionMs: rem2.lastMentionMs || 0
+      lastMentionMs: rem2.lastMentionMs || 0,
+      encounters: rem2.encounterCount || 0,
+      closeTicks: rem2.closeTicks || 0,
+      hotTicks: rem2.hotTicks || 0,
+      activeMs: rem2.activeMs || 0
     });
   }
 } catch(e) {}
@@ -19356,6 +21372,26 @@ try {
 // Orden: mayor score, luego mayor prioridad
       candidates.sort((a,b) => (b.score - a.score) || (((b.opts && b.opts.priority) ? b.opts.priority : 0) - ((a.opts && a.opts.priority) ? a.opts.priority : 0)));
 
+      // Filtro editorial follow/RD:
+      // - si ya hubo voz hace nada, baja el ruido y deja solo lo realmente útil
+      try {
+        const sinceLastSpeech = Date.now() - ((__ttsLastEndAt || commentatorAutoState.lastSpeakMs || 0) || 0);
+        const keep = [];
+        for (const c of candidates) {
+          if (!c) continue;
+          const cat = __speechCatFromOpts(c.opts || {}, (c.opts && c.opts.key) || c.id || '', c.text || '');
+          const pr = Number((c.opts && c.opts.priority) || 0) || 0;
+          const noisy = __speechIsNoisyCat(cat);
+          if (sinceLastSpeech < 3200 && noisy && pr < 80) continue;
+          if (sinceLastSpeech < 5200 && cat === 'leader' && pr < 80) continue;
+          keep.push(c);
+        }
+        if (keep.length) {
+          candidates.length = 0;
+          for (const c of keep) candidates.push(c);
+        }
+      } catch(e) {}
+
       // =========================
       // Manual (RD OFF): habla lo encendido, con lmite para no spamear
       // =========================
@@ -19889,6 +21925,27 @@ function checkSessionFinishOnLap() {
       }
     }
 
+    function __parseRawRacePayload(rawJson) {
+      try {
+        if (typeof rawJson !== 'string') return null;
+        const trimmed = rawJson.trim();
+        if (!trimmed) return null;
+        if (trimmed.length > 900000) {
+          console.warn('rawJson descartado por tamaño');
+          return null;
+        }
+        const parsed = JSON.parse(trimmed);
+        if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.classification)) return null;
+        if (parsed.classification.length > 200) {
+          parsed.classification = parsed.classification.slice(0, 200);
+        }
+        return parsed;
+      } catch (e) {
+        console.error('Error parseando rawJson', e);
+        return null;
+      }
+    }
+
     async function loadRaceFromFirebase(_snapDataOverride) {
       // iOS/WebView a veces reporta document.hidden erroneamente; no bloquees la lectura del feed.
       if (!__firebaseOk || !db) { setLiveStatus(false); return; }
@@ -19928,11 +21985,7 @@ function checkSessionFinishOnLap() {
         if (data.parsed && Array.isArray(data.parsed.classification)) {
           rawRace = data.parsed;
         } else if (data.rawJson) {
-          try {
-            rawRace = JSON.parse(data.rawJson);
-          } catch (e) {
-            console.error('Error parseando rawJson', e);
-          }
+          rawRace = __parseRawRacePayload(data.rawJson);
         }
 
         if (!rawRace || !Array.isArray(rawRace.classification)) {
@@ -20117,12 +22170,55 @@ raceData = normalizeRaceData(rawRace);
 
     
 
+
     // =========================
     // Realtime listener (onSnapshot) - mejora background en Chrome/Android/Safari
     // =========================
     let __raceUnsub = null;
     let __pendingSnapData = null;
     let __snapScheduled = false;
+    let __fallbackPollTimer = 0;
+    let __fallbackPollStep = 0;
+    let __fallbackPollSchedule = [1000, 2000, 5000, 10000];
+
+    function stopFallbackPolling() {
+      try {
+        if (__fallbackPollTimer) {
+          clearTimeout(__fallbackPollTimer);
+          __fallbackPollTimer = 0;
+        }
+      } catch(e) {}
+    }
+
+    function __scheduleFallbackPolling(reason = '') {
+      try {
+        __lastFallbackReason = String(reason || '').trim();
+        if (__fallbackPollTimer) return;
+        const idx = Math.max(0, Math.min(__fallbackPollStep, __fallbackPollSchedule.length - 1));
+        const delay = __fallbackPollSchedule[idx];
+        __fallbackPollTimer = setTimeout(async () => {
+          __fallbackPollTimer = 0;
+          try { await loadRaceFromFirebase(); } catch(e) {}
+          const stale = !__lastGoodTickMs || ((Date.now() - __lastGoodTickMs) > 4000);
+          if (stale) {
+            __fallbackPollStep = Math.min(__fallbackPollStep + 1, __fallbackPollSchedule.length - 1);
+            __scheduleFallbackPolling(reason || 'stale');
+          } else {
+            __fallbackPollStep = 0;
+          }
+        }, delay);
+      } catch(e) {}
+    }
+
+    function __bumpFallbackPolling(reason = '') {
+      try {
+        __lastFallbackReason = String(reason || '').trim();
+        try { pushTtsEvent('fallback', __lastFallbackReason || 'fallback', 'feed'); } catch(e) {}
+        __fallbackPollStep = Math.min(__fallbackPollStep + 1, __fallbackPollSchedule.length - 1);
+        stopFallbackPolling();
+        __scheduleFallbackPolling(reason);
+      } catch(e) {}
+    }
 
     function startRaceRealtime() {
       try {
@@ -20134,9 +22230,11 @@ raceData = normalizeRaceData(rawRace);
           try {
             if (!snap || !snap.exists()) {
               setLiveStatus(false);
+              __bumpFallbackPolling('snap-empty');
               return;
             }
-            // Coalesce: si llegan muchos updates por segundo, procesamos el uúltimo en un tick
+            __fallbackPollStep = 0;
+            stopFallbackPolling();
             __pendingSnapData = snap.data() || {};
             if (__snapScheduled) return;
             __snapScheduled = true;
@@ -20144,19 +22242,22 @@ raceData = normalizeRaceData(rawRace);
               __snapScheduled = false;
               const d = __pendingSnapData;
               __pendingSnapData = null;
-              try { loadRaceFromFirebase(d); } catch(e) {}
+              try { loadRaceFromFirebase(d); } catch(e) { __bumpFallbackPolling('snap-load-error'); }
             }, 0);
-          } catch(e) {}
+          } catch(e) {
+            __bumpFallbackPolling('snap-handler-error');
+          }
         }, (err) => {
           try {
             console.warn('onSnapshot error', err);
-            // fallback: el watchdog/polling resolvera
           } catch(e) {}
+          __bumpFallbackPolling('snapshot-error');
         });
 
         return true;
       } catch(e) {
         console.warn('startRaceRealtime fallo', e);
+        __bumpFallbackPolling('realtime-init-fail');
         return false;
       }
     }
@@ -20177,20 +22278,14 @@ raceData = normalizeRaceData(rawRace);
       loadRaceFromFirebase();
       const __rtOk = startRaceRealtime();
       if (!__rtOk) {
-        setInterval(loadRaceFromFirebase, 500);
+        __scheduleFallbackPolling('bootstrap-no-realtime');
       }
-      // Watchdog: si pasan 6s sin actualizacin, marca OFF y fuerza un refresh
-      setInterval(() => {
-        try {
-          const now = Date.now();
-          if (__lastGoodTickMs && (now - __lastGoodTickMs > 6000)) {
-            setLiveStatus(false);
-            if (raceInfo) raceInfo.textContent = 'Sin actualizaciones. Revisando conexin...';
-            // intenta un refresh inmediato
-            try { loadRaceFromFirebase(); } catch(e) {}
-          }
-        } catch(e) {}
-      }, 1500);
+      try { bindRuntimeProfileCards(); } catch(e) {}
+      try { applyRuntimeProfile(runtimeProfileKey, { silent:true }); } catch(e) {}
+      try { startRuntimeWatchdog(); } catch(e) {}
+      try { startRuntimeDiagTicker(); } catch(e) {}
+      try { updateRuntimeDiagUI(); } catch(e) {}
+      try { renderTtsEventLog(); } catch(e) {}
 
     })();
 
