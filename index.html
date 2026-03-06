@@ -1,13 +1,13 @@
 
 
 <!--
-vics_Smart_Spotter_v0.3.82 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.3.83 - Vic Skin PRO (volumen, sombras, bordes 3D) -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.3.82: TTS SMART v3 - memoria narrativa ampliada: rival recurrente, presion sostenida, defensa heroica y tren de tres con continuidad real.
+- v0.3.83: TTS SMART v3 - memoria narrativa ampliada: rival recurrente, presion sostenida, defensa heroica y tren de tres con continuidad real.
 - v0.3.79: TTS SMART v2 - memoria narrativa corta y remates contextuales: el motor sigue historias de duelo, detecta cuando la presion crece, se enfria o se concreta, y ajusta la locucion al vuelo.
 - v0.3.78: TTS SMART - motor contextual de locucion que decide al vuelo que decir segun evento, gap, continuidad, sesion y tono.
 - v0.3.77: TTS GEN - motor generativo de frases para Follow + Auto Locutor, con plantillas, variantes y combinaciones dinamicas para miles de textos.
@@ -24,7 +24,7 @@ Changelog:
 - v0.3.43: FIX BÁSICO en AUTO (ya no se queda mudo) - canta P1: vueltas + última vuelta + 'Nuevo líder' si cambia. Manual alineado.
 - v0.3.37: FIX SyntaxError (try/catch cerrado + cierre init-guard) - vuelve a cargar sin errores.
 - v0.3.36: FIX pageshow/pagehide consolidado (no perder reenganche al volver) + audit TTS/Q TABLA/manual/doc.
-- v0.3.82: Speech Arbiter editorial. La cola ya no escupe backlog viejo: prioridad real + caducidad por tipo de mensaje + supresión por categoría + cap de cola + filtro anti-ruido para FOLLOW/AUTO.
+- v0.3.83: Speech Arbiter editorial. La cola ya no escupe backlog viejo: prioridad real + caducidad por tipo de mensaje + supresión por categoría + cap de cola + filtro anti-ruido para FOLLOW/AUTO.
 - v0.3.36: AUDIT general (dedupe listeners, declara timers TTS, resume duplicado eliminado) + Q TABLA Best Lap usa SOLO bestMs/bestLapMs del feed (sin indices) + manual alineado + doc.
 - v0.3.33: FIX SyntaxError (token inesperado) + Q TABLA - Best Lap ahora SIEMPRE conserva el mejor valor plausible del feed aunque no cambie el tiempo total (anti valores locos) + tooltip con fuente de BL -
 - v0.3.29: Q TABLA - Best Lap ahora toma el valor mas confiable del feed (anti 0:00.xxx, soporte ms/seg/us) + mas color por columnas + blindaje extra TTS (anti 'ghost speaking' en primer plano) -
@@ -82,7 +82,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.3.82</title>
+<title>vics_Smart_Spotter_v0.3.83</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6573,7 +6573,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.82</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.3.83</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7335,7 +7335,7 @@ FIN DOCUMENTACION
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.3.82";
+const APP_NAME = "vics_Smart_Spotter_v0.3.83";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -9253,11 +9253,12 @@ function msgv2DecimasTxt(ms) {
         if (!r) return;
 
         const rn = String(r.raceName || '');
-        if (!rn) return;
+        const sessionSig = getSessionSignature(r);
+        if (!sessionSig) return;
 
-        // cambio de carrera -> reset (aunque por alguna razn el intro no haya hablado)
-        if (rn !== __autoLifeSig) {
-          __autoResetLifecycle(rn);
+        // cambio de sesion real -> reset (aunque el raceName no cambie)
+        if (sessionSig !== __autoLifeSig) {
+          __autoResetLifecycle(sessionSig);
           return;
         }
 
@@ -9470,24 +9471,25 @@ function msgv2DecimasTxt(ms) {
         if (!voiceMasterEnabled) return;
 
         const rn = String(r.raceName || '');
-        if (!rn) return;
+        const sessionSig = getSessionSignature(r);
+        if (!rn || !sessionSig) return;
 
-        const introKey = 'auto_intro_title_' + rn;
+        const introKey = 'auto_intro_title_' + sessionSig;
         const now = Date.now();
 
         // Si ya anunciamos exitosamente este titulo, no repetir
-        if (rn === __autoIntroSig && __autoIntroDoneKeys && __autoIntroDoneKeys.has(introKey)) return;
+        if (sessionSig === __autoIntroSig && __autoIntroDoneKeys && __autoIntroDoneKeys.has(introKey)) return;
 
         // Si aun no se ha podido anunciar (TTS ocupado/errores), reintentar con cooldown corto
-        if (rn === __autoIntroSig && now < (__autoIntroRetryAt || 0)) return;
+        if (sessionSig === __autoIntroSig && now < (__autoIntroRetryAt || 0)) return;
 
         // Carrera nueva real: reset completo
-        const isNewRace = (rn !== __autoIntroSig);
+        const isNewRace = (sessionSig !== __autoIntroSig);
         const sameRace = !isNewRace;
         if (isNewRace) {
-          try { __autoEnsureVoiceReadyOnNewRace(rn); } catch(e) {}
-          __autoIntroSig = rn;
-          try { __autoResetLifecycle(rn); } catch(e) {}
+          try { __autoEnsureVoiceReadyOnNewRace(sessionSig); } catch(e) {}
+          __autoIntroSig = sessionSig;
+          try { __autoResetLifecycle(sessionSig); } catch(e) {}
           try { __autoIntroDoneKeys.clear(); } catch(e) { __autoIntroDoneKeys = new Set(); }
         }
 
@@ -9503,7 +9505,7 @@ function msgv2DecimasTxt(ms) {
           __autoFinishPhase = false;
         }
         // Session info SIEMPRE desde raceName nuevo (evita traer la sesion anterior)
-        const info = parseSessionFromRaceName(rn) || {};
+        const info = resolveSessionInfo(r) || {};
         try { currentSessionInfo = info; } catch(e) {}
 
         const type = String(info.type || '').toUpperCase();
@@ -17654,7 +17656,7 @@ function onPilotSelectedManga(pilotKey) {
     // Asegura session info actual
     try {
       if (raceData && raceData.raceName) {
-        currentSessionInfo = parseSessionFromRaceName(raceData.raceName);
+        currentSessionInfo = resolveSessionInfo(raceData);
        try { applyLapChartPreset(); } catch(e) {}
 try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
       }
@@ -18260,6 +18262,36 @@ const commentatorAutoCfg = {
   quietMaxMs: 52000
 };
 
+function getAutoCommentatorCfg() {
+  try {
+    const bucket = __sessionBucket(currentSessionInfo);
+    if (bucket === 'MANGA') {
+      return Object.assign({}, commentatorAutoCfg, {
+        minIntervalMs: 8500,
+        maxMsgsInWindow: 4,
+        allowUrgentOverLimitScore: 8.8,
+        baseThresholdScore: 4.25,
+        quietMinMs: 22000,
+        quietMaxMs: 32000,
+        top3CooldownMs: 28000
+      });
+    }
+    if (bucket === 'FINAL') {
+      return Object.assign({}, commentatorAutoCfg, {
+        minIntervalMs: 12000,
+        maxMsgsInWindow: 3,
+        allowUrgentOverLimitScore: 9.0,
+        baseThresholdScore: 4.85,
+        quietMinMs: 28000,
+        quietMaxMs: 40000
+      });
+    }
+    return commentatorAutoCfg;
+  } catch(e) {
+    return commentatorAutoCfg;
+  }
+}
+
     let commentatorAutoState = {
       lastSpeakMs: 0,
       lastBasicSpeakMs: 0,
@@ -18477,7 +18509,8 @@ function autoRandPick(list, key) {
       const w = commentatorAutoState.window || [];
       const keep = [];
       for (const t of w) {
-        if (now - t <= commentatorAutoCfg.windowMs) keep.push(t);
+        const cfg = getAutoCommentatorCfg();
+        if (now - t <= cfg.windowMs) keep.push(t);
       }
       commentatorAutoState.window = keep;
       return keep.length;
@@ -18486,7 +18519,8 @@ function autoRandPick(list, key) {
     function autoSigOk(sig, cooldownMs, now) {
       try {
         if (!sig) return true;
-        const cd = Number(cooldownMs || 0) || commentatorAutoCfg.sigDefaultCooldownMs;
+        const cfg = getAutoCommentatorCfg();
+        const cd = Number(cooldownMs || 0) || cfg.sigDefaultCooldownMs;
         const last = commentatorAutoState.recentSig.get(sig) || 0;
         return (now - last) >= cd;
       } catch(e) { return true; }
@@ -18501,6 +18535,7 @@ function autoRandPick(list, key) {
 
     function autoCanSpeak(score, sig, sigCooldownMs, now) {
       try {
+        const cfg = getAutoCommentatorCfg();
         const winCount = autoPruneWindow(now);
         const since = now - (commentatorAutoState.lastSpeakMs || 0);
 
@@ -18508,13 +18543,13 @@ function autoRandPick(list, key) {
         if (!autoSigOk(sig, sigCooldownMs, now)) return false;
 
         // anti metralleta
-        if (since < commentatorAutoCfg.minIntervalMs && score < commentatorAutoCfg.allowUrgentOverLimitScore) return false;
+        if (since < cfg.minIntervalMs && score < cfg.allowUrgentOverLimitScore) return false;
 
         // ventana
-        if (winCount >= commentatorAutoCfg.maxMsgsInWindow && score < commentatorAutoCfg.allowUrgentOverLimitScore) return false;
+        if (winCount >= cfg.maxMsgsInWindow && score < cfg.allowUrgentOverLimitScore) return false;
 
         // umbral dinamico (si ya hablaste mucho, sube la barra)
-        let threshold = commentatorAutoCfg.baseThresholdScore;
+        let threshold = cfg.baseThresholdScore;
         threshold += Math.max(0, winCount - 1) * 0.8;
         if (since < 11000) threshold += 0.6;
 
@@ -19729,7 +19764,7 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
     if (leaderLap < minLap) return;
 
     // Cooldown global (Final mas reactivo, Manga mas conservador)
-    const globalCd = isFinalSess ? 7000 : (isMangaSess ? 11000 : 9000);
+    const globalCd = isFinalSess ? 12000 : (isMangaSess ? 11000 : 9000);
     if (nowMs - __autoBlueLastGlobalMs < globalCd) return;
 
     const sorted = arr.slice().filter(r => r && (r.pos != null));
@@ -19784,10 +19819,10 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
       };
 
       // repetir max cada 2 vueltas del lapeador (Top3)
-      if (best.laperLap && (best.laperLap - st.lastLeaderLap) < 2) continue;
+      if (best.laperLap && (best.laperLap - st.lastLeaderLap) < (isFinalSess ? 3 : 2)) continue;
 
       // cooldown por piloto
-      const pilotCd = isFinalSess ? 16000 : 18000;
+      const pilotCd = isFinalSess ? 22000 : 18000;
       if (nowMs - (st.lastSpeakMs || 0) < pilotCd) continue;
 
       const name = __autoSafeName(r);
@@ -19801,23 +19836,29 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
         ? `Bandera azul. ${name}, detras viene ${who}. Abre en la recta.`
         : `Bandera azul. ${name}, detras viene ${who}. Abre en la recta.`;
 
-      // Azul crtica en Finales: si en 30s ya son 2 veces, sube tono
+      // Escalado en Finales: aviso, ultimo aviso y advertencia de Direccion de Carrera.
       st.blueHits = st.blueHits || 0;
       st.blueWindowMs = st.blueWindowMs || 0;
-      if (!st.blueWindowMs || (nowMs - st.blueWindowMs) > 30000) {
+      if (!st.blueWindowMs || (nowMs - st.blueWindowMs) > 45000) {
         st.blueWindowMs = nowMs;
         st.blueHits = 0;
       }
       st.blueHits++;
-      const useCrit = isFinalSess && st.blueHits >= 2 && (nowMs - st.blueWindowMs) <= 30000;
-      const finalMsg = useCrit
-        ? `Azul critica. ${name}, suelta en la recta. Detras viene ${who}.`
-        : baseMsg;
+
+      let finalMsg = baseMsg;
+      let coolMs = 12000;
+      if (isFinalSess && st.blueHits === 2 && (nowMs - st.blueWindowMs) <= 45000) {
+        finalMsg = `Bandera azul. Ultimo aviso para ${name}. Cede el paso en la recta o habra reporte.`;
+        coolMs = 15000;
+      } else if (isFinalSess && st.blueHits >= 3 && (nowMs - st.blueWindowMs) <= 45000) {
+        finalMsg = `Direccion de carrera para ${name}. Si no cedes el paso en la recta, se aplicaran 5 segundos de castigo.`;
+        coolMs = 22000;
+      }
 
       enqueueSpeech(finalMsg, {
-        key: `auto_blue_${rk}`,
+        key: `auto_blue_${rk}_${Math.min(st.blueHits,3)}`,
         priority: 6,
-        cooldownMs: 8000,
+        cooldownMs: coolMs,
         postDelayMs: 260
       });
 
@@ -20108,7 +20149,7 @@ function handleAutoCommentator() {
                 text,
                 key:'auto_top3',
                 sig:'auto:top3',
-                sigCooldownMs: commentatorAutoCfg.top3CooldownMs,
+                sigCooldownMs: getAutoCommentatorCfg().top3CooldownMs,
                 priority: 3,
                 onCommit: () => {
                   commentatorAutoState.lastTop3Ms = now;
@@ -20481,14 +20522,15 @@ if (isMangaSess) {
           let maxScore = 0;
           for (const c of candidates) maxScore = Math.max(maxScore, Number(c && c.score) || 0);
 
-          const quietCooldownMs = Number(commentatorAutoState.nextQuietCooldownMs || 0) || Math.floor((commentatorAutoCfg.quietMinMs || 30000) + Math.random() * Math.max(0, (commentatorAutoCfg.quietMaxMs || 40000) - (commentatorAutoCfg.quietMinMs || 30000)));
+          const autoCfgNow = getAutoCommentatorCfg();
+          const quietCooldownMs = Number(commentatorAutoState.nextQuietCooldownMs || 0) || Math.floor((autoCfgNow.quietMinMs || 30000) + Math.random() * Math.max(0, (autoCfgNow.quietMaxMs || 40000) - (autoCfgNow.quietMinMs || 30000)));
           const sinceQuiet = now - (commentatorAutoState.lastQuietMs || 0);
 
           const allowMini = !!(vs.pos || vs.podium || vs.total || vs.leadergap || vs.pelea);
           const sinceSpeak = now - (commentatorAutoState.lastSpeakMs || 0);
 
           // Solo si ya arranco y no hay "accion fuerte"; evita perico, pero mantiene narrativa.
-          if (allowMini && sinceQuiet > quietCooldownMs && maxScore < (commentatorAutoCfg.baseThresholdScore || 4.6) && sinceSpeak > 26000 && leaderLap > 0) {
+          if (allowMini && sinceQuiet > quietCooldownMs && maxScore < (autoCfgNow.baseThresholdScore || 4.6) && sinceSpeak > 18000 && leaderLap > 0) {
             // Top 5 (con pausas)
             const top = arr.slice(0, 5);
             const names = top.map((r, idx) => safeRacerName(r && r.racerName) || ('P' + String((Number(r && r.pos) || (idx + 1))))).filter(Boolean);
@@ -20636,7 +20678,8 @@ if (isMangaSess) {
               priority: 2,
               onCommit: () => {
                 commentatorAutoState.lastQuietMs = now;
-                commentatorAutoState.nextQuietCooldownMs = Math.floor((commentatorAutoCfg.quietMinMs || 30000) + Math.random() * Math.max(0, (commentatorAutoCfg.quietMaxMs || 40000) - (commentatorAutoCfg.quietMinMs || 30000)));
+                const autoCfgNext = getAutoCommentatorCfg();
+                    commentatorAutoState.nextQuietCooldownMs = Math.floor((autoCfgNext.quietMinMs || 30000) + Math.random() * Math.max(0, (autoCfgNext.quietMaxMs || 40000) - (autoCfgNext.quietMinMs || 30000)));
               }
             });
           }
@@ -20695,7 +20738,7 @@ try {
 candidates.sort((a,b) => (b.score - a.score) || (b.priority - a.priority));
 
 for (const c of candidates) {
-            const sigCd = Number(c.sigCooldownMs || 0) || commentatorAutoCfg.sigDefaultCooldownMs;
+            const sigCd = Number(c.sigCooldownMs || 0) || getAutoCommentatorCfg().sigDefaultCooldownMs;
             if (!autoCanSpeak(c.score, c.sig, sigCd, now)) continue;
 
             // hablar
@@ -20766,7 +20809,7 @@ function handleVoiceAndBeeps() {
 
       // Actualiza el modo desde raceName (ya viene de Firebase)
       if (raceData && raceData.raceName) {
-        currentSessionInfo = parseSessionFromRaceName(raceData.raceName);
+        currentSessionInfo = resolveSessionInfo(raceData);
        try { applyLapChartPreset(); } catch(e) {}
 try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
       }
@@ -21669,6 +21712,52 @@ let label = 'MODO -';
       return { type, main, durationMs, label, spokenTitle, serie, q, mangaNo };
     }
 
+    function resolveSessionInfo(rawOrName, practiceMaybe) {
+      try {
+        const isObj = !!(rawOrName && typeof rawOrName === 'object');
+        const rn = isObj ? String(rawOrName.raceName || '') : String(rawOrName || '');
+        const prRaw = isObj ? rawOrName.practice : practiceMaybe;
+        const pr = (prRaw == null || prRaw === '') ? null : Number(prRaw);
+        let info = parseSessionFromRaceName(rn) || {};
+
+        if (pr === 1) {
+          const warmTitle = (String(info.type || '').toUpperCase().includes('FINAL')) ? 'Warm up' : 'Practica';
+          return Object.assign({}, info, {
+            type: 'TRAIN',
+            main: '',
+            durationMs: 3 * 60 * 1000,
+            label: 'MODO PRACTICA',
+            spokenTitle: warmTitle
+          });
+        }
+
+        if (!info || !info.type || String(info.type).toUpperCase() === 'UNKNOWN') {
+          if (/FINAL|A\s*MAIN|B\s*MAIN|C\s*MAIN|D\s*MAIN|\bMAIN\b/i.test(rn)) {
+            info = Object.assign({}, info, { type:'FINAL', durationMs: 4 * 60 * 1000, label:'MODO FINAL 4:00' });
+          } else if (/MANGA|Q\d|QUALY|QUALI|CLASIF|CLASIFIC|HEAT|ROUND/i.test(rn)) {
+            info = Object.assign({}, info, { type:'MANGA', durationMs: 3 * 60 * 1000, label:'MODO MANGA 3:00' });
+          }
+        }
+
+        return info || { type:'UNKNOWN', main:'', durationMs:0, label:'MODO -' };
+      } catch(e) {
+        return { type:'UNKNOWN', main:'', durationMs:0, label:'MODO -' };
+      }
+    }
+
+    function getSessionSignature(rawOrName, practiceMaybe) {
+      try {
+        const isObj = !!(rawOrName && typeof rawOrName === 'object');
+        const rn = isObj ? String(rawOrName.raceName || '') : String(rawOrName || '');
+        const prRaw = isObj ? rawOrName.practice : practiceMaybe;
+        const pr = (prRaw == null || prRaw === '') ? '' : String(Number(prRaw));
+        const info = resolveSessionInfo(rawOrName, practiceMaybe) || {};
+        return [rn, pr, String(info.type || ''), String(info.main || ''), String(info.q || ''), String(info.serie || '')].join('||');
+      } catch(e) {
+        return String((rawOrName && rawOrName.raceName) || rawOrName || '');
+      }
+    }
+
 // =========================
 // FIN DE SESIN (por duracin)
 // - MANGA: 3:00 -> "Termin la clasificacin"
@@ -21744,8 +21833,9 @@ function checkSessionFinishOnLap() {
     if (!raceData || !Array.isArray(raceData.classification) || !raceData.classification.length) return;
 
     const rn = String(raceData.raceName || '');
-    if (rn !== sessionFinishSig) {
-      sessionFinishSig = rn;
+    const sessionSig = getSessionSignature(raceData);
+    if (sessionSig !== sessionFinishSig) {
+      sessionFinishSig = sessionSig;
       sessionFinishAnnounced = false;
       sessionFinishPrevByKey = new Map();
     }
@@ -21794,17 +21884,18 @@ function checkSessionFinishOnLap() {
 
     function updateSessionInfo(r) {
       const rn = (r && r.raceName) ? String(r.raceName) : '';
-      currentSessionInfo = parseSessionFromRaceName(rn);
+      currentSessionInfo = resolveSessionInfo(r);
 
       try { applyLapChartPreset(); } catch(e) {}
 // AI Spotter: aplica perfil automatico SIEMPRE (tambien en Auto Locutor)
       try { maybeAutoApplySessionPreset(currentSessionInfo); } catch(e) {}
 
       // Reset de referencias (mejora/best) cuando cambia la sesin
-      if (rn && rn !== lastSessionSigForBest) {
+      const sessionSig = getSessionSignature(r);
+      if (sessionSig && sessionSig !== lastSessionSigForBest) {
         prevBestByKey.clear();
         try { lapDiffSpeakGuard.clear(); } catch(e) {}
-        lastSessionSigForBest = rn;
+        lastSessionSigForBest = sessionSig;
       }
     }
 
@@ -22345,7 +22436,7 @@ raceData = normalizeRaceData(rawRace);
         // Solo mangas/clasificación
         if (!isMangaRaceName(raw.raceName)) return;
 
-        const info = parseSessionFromRaceName(raw.raceName) || {};
+        const info = resolveSessionInfo(raw) || {};
         if (String(info.type || '').toUpperCase() !== 'MANGA') return;
 
         const list = computeQualiList(store);
@@ -22502,7 +22593,7 @@ raceData = normalizeRaceData(rawRace);
       // - Si la carrera trae "Manga A/B/C/D" lo agrega para NO pisar Q1A vs Q1B
       // - Si trae "Serie #" lo agrega para NO pisar series diferentes
       try{
-        const info = parseSessionFromRaceName(raceName) || {};
+        const info = resolveSessionInfo(raceName) || {};
         const q = String(info.q || '').trim();
         if (q){
           let key = 'Q' + q;
@@ -22763,7 +22854,7 @@ try{
         // Solo mangas/clasificación
         if (!isMangaRaceName(raw.raceName)) return;
 
-        const info = parseSessionFromRaceName(raw.raceName) || {};
+        const info = resolveSessionInfo(raw) || {};
         if (String(info.type || '').toUpperCase() !== 'MANGA') return;
 
         const qid = getQualiIdFromRaceName(raw.raceName);
