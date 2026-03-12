@@ -6731,7 +6731,7 @@ html, body{
 <div class="diag-panel" id="diagPanel">
 <div class="diag-header">
 <span>Pit wall tecnico</span>
-<span class="diag-note" id="diagPanelNote">Esperando telemetría...</span>
+<span class="diag-note" id="diagPanelNote">Esperando telemetra...</span>
 </div>
 <div class="diag-grid">
 <div class="diag-item off" id="diagVoice">
@@ -6771,7 +6771,7 @@ html, body{
 <div class="diag-subpanel" id="ttsDiagPanel">
 <div class="diag-subhead">
 <span>Motor de voz en vivo</span>
-<span class="diag-subnote" id="ttsDiagNote">Sin eventos todavía</span>
+<span class="diag-subnote" id="ttsDiagNote">Sin eventos todava</span>
 </div>
 <div class="ttslog-list" id="ttsEventList">
 <div class="ttslog-empty">Esperando eventos TTS...</div>
@@ -6861,14 +6861,14 @@ html, body{
 <div class="precision-row expert-only">
 <div class="controls-label">Precisin de lectura del tiempo</div>
 <div class="precision-buttons">
-<div class="precision-badge active" data-precision="1">1 décima</div>
-<div class="precision-badge" data-precision="2">2 décimas</div>
-<div class="precision-badge" data-precision="3">3 décimas</div>
+<div class="precision-badge active" data-precision="1">1 dcima</div>
+<div class="precision-badge" data-precision="2">2 dcimas</div>
+<div class="precision-badge" data-precision="3">3 dcimas</div>
 </div>
 <select class="spotter-select" id="precisionSelect" style="display:none">
-<option selected="" value="1">1 décima</option>
-<option value="2">2 décimas</option>
-<option value="3">3 décimas</option>
+<option selected="" value="1">1 dcima</option>
+<option value="2">2 dcimas</option>
+<option value="3">3 dcimas</option>
 </select>
 </div>
 </section>
@@ -7148,7 +7148,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.4.9";
+const APP_NAME = "vics_Smart_Spotter_v0.4.9.1";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7293,7 +7293,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.4.9";
         const list = __ttsEventLog.slice(-6).reverse();
         if (!list.length){
           renderSimpleEventLog(ttsEventList, [], { emptyText:'Esperando eventos TTS...', emptyClass:'ttslog-empty' });
-          if (ttsDiagNote) ttsDiagNote.textContent = 'Sin eventos todavía';
+          if (ttsDiagNote) ttsDiagNote.textContent = 'Sin eventos todava';
           return;
         }
         const fmt = (t) => { const d = new Date(t); return String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0'); };
@@ -7826,19 +7826,19 @@ function msgv2DecimasTxt(ms) {
 
     const TTS_GEN_MSGV2 = {
       attack: [
-        '[[Ataca|Presiona|Va encima|Lo trae en la mira]]. [[Atrás viene|Encima está|Al acecho viene]] {otherName}. [[Gap {gapStr}|Están {gapStr}|A {gapStr}]]. [[Traza limpia|Sin regalar apex|Con calma|Sin tocar]].',
+        '[[Ataca|Presiona|Va encima|Lo trae en la mira]]. [[Atrs viene|Encima est|Al acecho viene]] {otherName}. [[Gap {gapStr}|Estn {gapStr}|A {gapStr}]]. [[Traza limpia|Sin regalar apex|Con calma|Sin tocar]].',
         '[[Presion real|Ojo atras|Hay amenaza]]. {otherName} [[pegado|muy cerca|metido en la pelea]]. [[{gapStr}|Gap {gapStr}|A {gapStr}]]. [[No abras la puerta|Cuida la salida|Fino en el volante|Todo limpio]].',
-        '[[Radar prendido|Espejos alertas|No te relajes]]. {otherName} [[ya está ahí|se vino encima|está en rango]]. [[Separación {gapStr}|A {gapStr}|Gap {gapStr}]]. [[Sin errores|Con cabeza|Respira y traza|No regales]].'
+        '[[Radar prendido|Espejos alertas|No te relajes]]. {otherName} [[ya est ah|se vino encima|est en rango]]. [[Separacin {gapStr}|A {gapStr}|Gap {gapStr}]]. [[Sin errores|Con cabeza|Respira y traza|No regales]].'
       ],
       defense: [
-        '[[Defiende|Aguanta|Sostiene la plaza|Cubre la posición]]. [[Detrás viene|Pegado atras]] {otherName}. [[Gap {gapStr}|A {gapStr}|Están {gapStr}]]. [[No dejes hueco|Salida limpia|Todo fino|Sin tocar]].',
-        '[[Toca defender|Hay que cuidar el sitio|No regales la puerta]]. {otherName} [[presiona|viene apretando|está pegado]]. [[{gapStr}|Gap {gapStr}|A {gapStr}]]. [[Con cabeza|Traza limpia|Freno fino|Nada de drama]].',
-        '[[Posición bajo presión|Momento de sangre fria|Hay que cerrar bien]]. {otherName} [[encima|al ataque|sin soltarte]]. [[A {gapStr}|Gap {gapStr}|Están {gapStr}]]. [[Sin volantazos|Limpio|Calma|Sin abrir la puerta]].'
+        '[[Defiende|Aguanta|Sostiene la plaza|Cubre la posicin]]. [[Detrs viene|Pegado atras]] {otherName}. [[Gap {gapStr}|A {gapStr}|Estn {gapStr}]]. [[No dejes hueco|Salida limpia|Todo fino|Sin tocar]].',
+        '[[Toca defender|Hay que cuidar el sitio|No regales la puerta]]. {otherName} [[presiona|viene apretando|est pegado]]. [[{gapStr}|Gap {gapStr}|A {gapStr}]]. [[Con cabeza|Traza limpia|Freno fino|Nada de drama]].',
+        '[[Posicin bajo presin|Momento de sangre fria|Hay que cerrar bien]]. {otherName} [[encima|al ataque|sin soltarte]]. [[A {gapStr}|Gap {gapStr}|Estn {gapStr}]]. [[Sin volantazos|Limpio|Calma|Sin abrir la puerta]].'
       ],
       fight: [
-        '[[Pelea cerrada|Duelo apretado|Batalla viva|Están a cuchillo]]. [[Todo limpio|Sin tocar|Con cabeza|Ojos al apex]].',
-        '[[Dos por decimas|Mano a mano|Esto está vivo|Hay duelo serio]]. [[Traza fina|Nada de regalos|Todo controlado|Salida limpia]].',
-        '[[Batalla directa|Pelea de precisión|Carrera apretada|Se cerró el asunto]]. [[Con calma|Sin errores|Sin panico|Todo limpio]].'
+        '[[Pelea cerrada|Duelo apretado|Batalla viva|Estn a cuchillo]]. [[Todo limpio|Sin tocar|Con cabeza|Ojos al apex]].',
+        '[[Dos por decimas|Mano a mano|Esto est vivo|Hay duelo serio]]. [[Traza fina|Nada de regalos|Todo controlado|Salida limpia]].',
+        '[[Batalla directa|Pelea de precisin|Carrera apretada|Se cerr el asunto]]. [[Con calma|Sin errores|Sin panico|Todo limpio]].'
       ],
       ritmo_up: [
         '[[Buen ritmo|Sube el ritmo|Vas mejorando|Hay ganancia]]. [[Recortas {deltaMs} milisegundas|Recortas {deltaMs} milisegundos|Mejoras {deltaMs} milisegundos]]. [[Sigue asi|Mantelo|Repite eso|Esa linea sirve]].',
@@ -7849,11 +7849,11 @@ function msgv2DecimasTxt(ms) {
         '[[Hay perdida|Se abrio la vuelta|Ritmo abajo|No fue esa]]. [[{deltaMs} milisegundos mas|Se fueron {deltaMs} milisegundos|Pierdes {deltaMs} milisegundos]]. [[Recupera la trazada|Sin castigar llanta|Acomoda la entrada|Vuelve al plan]].'
       ],
       bestlap: [
-        '[[Mejor vuelta|Gran vuelta|Vueltota|Tiempo top]]. [[{best}|Registro {best}|Marca {best}]]. [[Sigue empujando|Ahí está el ritmo|Muy bien|Buena referencia]].',
-        '[[Best lap|Referencia nueva|Ritmo premium|Tiempo fuerte]]. [[{best}|Con {best}|Parando el reloj en {best}]]. [[Eso sirve|Buen dato|Quédate ahí|Limpio]].'
+        '[[Mejor vuelta|Gran vuelta|Vueltota|Tiempo top]]. [[{best}|Registro {best}|Marca {best}]]. [[Sigue empujando|Ah est el ritmo|Muy bien|Buena referencia]].',
+        '[[Best lap|Referencia nueva|Ritmo premium|Tiempo fuerte]]. [[{best}|Con {best}|Parando el reloj en {best}]]. [[Eso sirve|Buen dato|Qudate ah|Limpio]].'
       ],
       blueflag: [
-        '[[Bandera azul|Cortesía de carrera|Atención, tráfico]]. [[Viene {who}|Ya esta encima {who}|Se acerca {who}]]. [[Dale pista limpia|No lo amarres|Sin estorbar|Dejalo pasar limpio]].'
+        '[[Bandera azul|Cortesa de carrera|Atencin, trfico]]. [[Viene {who}|Ya esta encima {who}|Se acerca {who}]]. [[Dale pista limpia|No lo amarres|Sin estorbar|Dejalo pasar limpio]].'
       ]
     };
 
@@ -7878,40 +7878,40 @@ function msgv2DecimasTxt(ms) {
       pass: [
         '[[Rebase confirmado|Cambio de posicion|Puesto ganado|Pase hecho]]. {winner} [[sube a|se mete en|asegura]] P{newPos}. [[{loser} cae a P{oldPos}|{loser} baja a P{oldPos}|{loser} pierde el sitio]].',
         '[[Movimiento limpio|Adelantamiento al conteo|Intercambio cerrado|Posicion nueva]]. [[P{newPos} para {winner}|{winner} toma P{newPos}|{winner} gana la plaza]]. [[{loser} ahora P{oldPos}|{loser} se reacomoda en P{oldPos}|{loser} a perseguir]].',
-        '[[Se concreta el pase|Ya está el cambio|Se mueve la tabla|Puesto que cambia]]. {winner} [[adelante|por delante|hace el trabajo]] y [[queda P{newPos}|se instala en P{newPos}|amarra P{newPos}]].'
+        '[[Se concreta el pase|Ya est el cambio|Se mueve la tabla|Puesto que cambia]]. {winner} [[adelante|por delante|hace el trabajo]] y [[queda P{newPos}|se instala en P{newPos}|amarra P{newPos}]].'
       ],
       battle: [
-        '[[Duelo en P{pos}|P{pos} en pelea|Atención P{pos}|P{pos} caliente]]. {attacker} [[presiona|se viene encima|no suelta|aprieta]] a {defender}. [[Gap {sec}|{sec}|Separacion {sec}]].',
-        '[[P{pos} sin aire|P{pos} al limite|P{pos} apretado|Cámara a P{pos}]]. {attacker} [[pegado|muy cerca|en el espejo|en rango de pase]]. [[{sec}|Gap {sec}|A {sec}]].',
+        '[[Duelo en P{pos}|P{pos} en pelea|Atencin P{pos}|P{pos} caliente]]. {attacker} [[presiona|se viene encima|no suelta|aprieta]] a {defender}. [[Gap {sec}|{sec}|Separacion {sec}]].',
+        '[[P{pos} sin aire|P{pos} al limite|P{pos} apretado|Cmara a P{pos}]]. {attacker} [[pegado|muy cerca|en el espejo|en rango de pase]]. [[{sec}|Gap {sec}|A {sec}]].',
         '[[Batalla directa por P{pos}|Mano a mano en P{pos}|Hay historia en P{pos}|P{pos} en foco]]. {defender} [[aguanta|defiende|resiste]] y {attacker} [[insiste|vuelve a cargar|sigue encima|busca hueco]].'
       ],
       battlePodium: [
-        '[[Podio en juego|Puesto grande en riesgo|Se pelea el podio|Podio bajo presión]]. {attacker} [[caza|persigue|acecha|aprieta]] a {defender} por P{pos}. [[{sec}|Gap {sec}|A {sec}]].',
-        '[[La pelea buena está en el podio|Hay humo en zona de trofeo|P{pos} vale trofeo|Zona podio encendida]]. {attacker} [[encima|en rango|muy cerca|metido]] de {defender}.',
-        '[[Podio en el radar|Podio que no está seguro|Trofeo todavía en disputa|Nadie puede pestaÃ±ear]]. {defender} [[aguanta|resiste|cubre]] y {attacker} [[presiona|no perdona|viene fuerte|no afloja]].'
+        '[[Podio en juego|Puesto grande en riesgo|Se pelea el podio|Podio bajo presin]]. {attacker} [[caza|persigue|acecha|aprieta]] a {defender} por P{pos}. [[{sec}|Gap {sec}|A {sec}]].',
+        '[[La pelea buena est en el podio|Hay humo en zona de trofeo|P{pos} vale trofeo|Zona podio encendida]]. {attacker} [[encima|en rango|muy cerca|metido]] de {defender}.',
+        '[[Podio en el radar|Podio que no est seguro|Trofeo todava en disputa|Nadie puede pestaÃ±ear]]. {defender} [[aguanta|resiste|cubre]] y {attacker} [[presiona|no perdona|viene fuerte|no afloja]].'
       ],
       closing: [
         '[[Se cierra la pelea|Cada vez mas cerca|Se aprieta el duelo|El gap viene abajo]]. {attacker} [[recorta|descuenta|se acerca|viene encima]] sobre {defender}. [[De {fromSec} a {toSec}|Ahora {toSec}|Gap {toSec}]].',
-        '[[Ojo con esta tendencia|Lectura clara|Se está cocinando|Esto cambia]]. {attacker} [[ya lo trae|ya lo tiene cerca|viene a la carga|va acortando]]. [[{toSec}|A {toSec}|Gap {toSec}]].',
+        '[[Ojo con esta tendencia|Lectura clara|Se est cocinando|Esto cambia]]. {attacker} [[ya lo trae|ya lo tiene cerca|viene a la carga|va acortando]]. [[{toSec}|A {toSec}|Gap {toSec}]].',
         '[[La presion sube|La historia aprieta|Se prende el foco|Esto se mueve]]. {defender} [[ya lo siente|lo trae en espejos|no respira]] y {attacker} [[recorta|se mete|llega|amenaza]].'
       ],
       pressure: [
         '[[Presion real|No hay margen|Se juega fino|Momento delicado]]. {attacker} [[encima|a tiro|metido|apretando]] de {defender}. [[{sec}|A {sec}|Gap {sec}]].',
         '[[Sin aire adelante|Defensa en marcha|Todo bajo estres|Alta presion]]. {defender} [[tiene que cerrar|no puede fallar|debe trazar limpio|carga los espejos]].',
-        '[[Se siente el ataque|Esto pide precisión|No hay respiro|Viene la carga]]. {attacker} [[ya toca la puerta|esta muy cerca|huele sangre|no perdona]].'
+        '[[Se siente el ataque|Esto pide precisin|No hay respiro|Viene la carga]]. {attacker} [[ya toca la puerta|esta muy cerca|huele sangre|no perdona]].'
       ],
       gap: [
-        '[[Gap de referencia|Lectura del gap|Dato de separación|Delta actual]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
-        '[[Numero en pista|La diferencia ahora|La película del cronómetro|Dato frío]]. {front} [[mantiene|lleva|conserva]] [[{sec}|a {sec}|gap {sec}]] sobre {back}.',
+        '[[Gap de referencia|Lectura del gap|Dato de separacin|Delta actual]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
+        '[[Numero en pista|La diferencia ahora|La pelcula del cronmetro|Dato fro]]. {front} [[mantiene|lleva|conserva]] [[{sec}|a {sec}|gap {sec}]] sobre {back}.',
         '[[Separacion registrada|Ventana actual|Distancia de carrera|Margen ahora]]. [[{front} adelante|{front} controla|{front} sostiene]] y {back} [[sigue|persigue|responde]].'
       ],
       top3: [
-        '[[Top 3 actual|Así va el podio|Foto del frente|Referencia de punta]]. P1 {p1}, P2 {p2}, P3 {p3}.',
+        '[[Top 3 actual|As va el podio|Foto del frente|Referencia de punta]]. P1 {p1}, P2 {p2}, P3 {p3}.',
         '[[En punta|Orden del podio|Frente de la carrera|Tres primeros]]. {p1}, {p2}, {p3}.',
         '[[Podio provisional|Corte rapido|Estado del frente|Marcador al frente]]. [[Lider {p1}|P1 {p1}]]. [[Luego {p2} y {p3}|Detras {p2} y {p3}|P2 {p2}, P3 {p3}]].'
       ],
       train: [
-        '[[Paquete compacto|Tren formado|Grupo cerrado|Fila apretada]]. P2 {p2}, P3 {p3}, P4 {p4}. [[Cualquier error cambia todo|Nadie sobra ahí|Todo está vivo|Ventana de pase abierta]].',
+        '[[Paquete compacto|Tren formado|Grupo cerrado|Fila apretada]]. P2 {p2}, P3 {p3}, P4 {p4}. [[Cualquier error cambia todo|Nadie sobra ah|Todo est vivo|Ventana de pase abierta]].',
         '[[P2 a P4 en rango|Tres autos en paquete|Grupo por el podio|Cluster caliente]]. {p2}, {p3} y {p4}. [[Sin espacio de sobra|Alta tension|Todo al filo|Precision total]].',
         '[[Hay tren por el podio|Se agrupan fuerte|No se despegan|Todo muy corto]]. [[{p2} delante|Manda {p2} en el grupo|Encabeza {p2}]]. [[{p3} y {p4} pegados|{p3} y {p4} sin aire|{p3} con {p4} encima]].'
       ],
@@ -7927,8 +7927,8 @@ function msgv2DecimasTxt(ms) {
       ],
       qualiPole: [
         '[[Pole en juego|Batalla por la pole|Se aprieta la pole|Clasificacion caliente]]. {p1} y {p2} [[separados por {sec}|a {sec}|con gap {sec}]].',
-        '[[Nada decidido en la pole|La punta de quali sigue viva|La pole no está cerrada|Ojo con la pole]]. {p1} contra {p2}. [[{sec}|A {sec}|Gap {sec}]].',
-        '[[Quien se queda la pole|Se decide por nada|Esto va por milímetros|Clasificación fina]]. {p1} [[aguanta|manda|sostiene]] y {p2} [[aprieta|recorta|viene cerca]].'
+        '[[Nada decidido en la pole|La punta de quali sigue viva|La pole no est cerrada|Ojo con la pole]]. {p1} contra {p2}. [[{sec}|A {sec}|Gap {sec}]].',
+        '[[Quien se queda la pole|Se decide por nada|Esto va por milmetros|Clasificacin fina]]. {p1} [[aguanta|manda|sostiene]] y {p2} [[aprieta|recorta|viene cerca]].'
       ]
     };
 
@@ -7945,22 +7945,22 @@ function msgv2DecimasTxt(ms) {
         ],
         battle: [
           '[[P{pos} en modo cuchillo|Duelazo en P{pos}|P{pos} al rojo vivo|Se pico P{pos}]]. {attacker} [[respira en la nuca|va encima|ya toca la puerta|huele sangre]] de {defender}. [[{sec}|Gap {sec}|A {sec}]].',
-          '[[Esto va a tronar|No hay paz en P{pos}|Se cocina un pase|Huele a cambio]]. {defender} [[aguanta|se defiende|no puede fallar]] y {attacker} [[no perdona|vuelve a cargar|sigue ahí|está pegado]].'
+          '[[Esto va a tronar|No hay paz en P{pos}|Se cocina un pase|Huele a cambio]]. {defender} [[aguanta|se defiende|no puede fallar]] y {attacker} [[no perdona|vuelve a cargar|sigue ah|est pegado]].'
         ],
         closing: [
-          '[[Se viene la bronca|Esto se apreto sabroso|Ya lo tiene en la mira|La tijera viene cerrando]]. {attacker} [[recorta|se acerca|descuenta|ya está ahí]] sobre {defender}. [[{toSec}|A {toSec}|Gap {toSec}]].',
-          '[[Ahora si|Ya huele a pase|Esto está calientito|Se puso bueno]]. {defender} [[ya lo siente|lo trae encima|mira espejos|no respira]].'
+          '[[Se viene la bronca|Esto se apreto sabroso|Ya lo tiene en la mira|La tijera viene cerrando]]. {attacker} [[recorta|se acerca|descuenta|ya est ah]] sobre {defender}. [[{toSec}|A {toSec}|Gap {toSec}]].',
+          '[[Ahora si|Ya huele a pase|Esto est calientito|Se puso bueno]]. {defender} [[ya lo siente|lo trae encima|mira espejos|no respira]].'
         ],
         battlePodium: [
           '[[Podio a cuchillo|Trofeo en la lumbre|Zona de podio que arde|Nadie afloja por el trofeo]]. {attacker} [[encima|pegado|ya encima|a la carga]] de {defender}.',
-          '[[Ese podio no esta asegurado|Todavía se vende caro el trofeo|El podio sigue en juego|Hay humo por el trofeo]]. [[Gap {sec}|A {sec}|{sec}]].'
+          '[[Ese podio no esta asegurado|Todava se vende caro el trofeo|El podio sigue en juego|Hay humo por el trofeo]]. [[Gap {sec}|A {sec}|{sec}]].'
         ]
       }),
       engineer: Object.assign({}, TTS_GEN_AUTO_BASE, {
         gap: [
-          '[[Lectura técnica|Dato de referencia|Número puro|Telemetría rápida]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
+          '[[Lectura tcnica|Dato de referencia|Nmero puro|Telemetra rpida]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
           '[[Delta registrado|Margen operativo|Separacion medida|Gap trazable]]. {front} [[controla|mantiene|sostiene]] [[{sec}|a {sec}|gap {sec}]] sobre {back}.',
-          '[[Ritmo contra posicion|Numero mata chisme|Corte técnico|Lectura limpia]]. {front} [[sigue delante|está delante|conserva el frente]] y {back} [[persigue|sigue el delta|responde]].'
+          '[[Ritmo contra posicion|Numero mata chisme|Corte tcnico|Lectura limpia]]. {front} [[sigue delante|est delante|conserva el frente]] y {back} [[persigue|sigue el delta|responde]].'
         ],
         train: [
           '[[Paquete P2 a P4|Grupo de presion|Stack de posiciones|Cluster de ritmo]]. {p2}, {p3}, {p4}. [[Ventana de error minima|Todo en rango|Sin margen|Compacto total]].',
@@ -7974,7 +7974,7 @@ function msgv2DecimasTxt(ms) {
       narrativo: Object.assign({}, TTS_GEN_AUTO_BASE, {
         record: [
           '[[El reloj habla|Queda escrita la vuelta|Se firma una referencia|La pista responde]]. {pilot} [[pone|deja|firma|anota]] {best}.',
-          '[[Hay una vuelta que pesa|Momento de cronómetro|Se mueve la historia del ritmo|La referencia cambia]]. {pilot} con {best}.',
+          '[[Hay una vuelta que pesa|Momento de cronmetro|Se mueve la historia del ritmo|La referencia cambia]]. {pilot} con {best}.',
           '[[No fue una vuelta cualquiera|Ese giro tiene mensaje|La carrera deja un dato fino|La vuelta queda en libreta]]. {pilot} [[marca|firma|registra]] {best}.'
         ],
         top3: [
@@ -7983,7 +7983,7 @@ function msgv2DecimasTxt(ms) {
         ],
         closing: [
           '[[La trama se aprieta|La historia se pone seria|Cada curva pesa mas|El aire se corta]]. {attacker} [[recorta|viene recortando|se pega|crece]] sobre {defender}.',
-          '[[Esto no está escrito|Todavía falta tinta|Nadie puede respirar tranquilo|La vuelta trae drama]]. [[Gap {toSec}|A {toSec}|{toSec}]].'
+          '[[Esto no est escrito|Todava falta tinta|Nadie puede respirar tranquilo|La vuelta trae drama]]. [[Gap {toSec}|A {toSec}|{toSec}]].'
         ]
       })
     };
@@ -9447,7 +9447,7 @@ function msgv2DecimasTxt(ms) {
             'Final C. Limpio y constante. Vamos a arrancar, pueden calentar.',
             'Final C. Si te equivocas, pagas. Vamos a arrancar, pueden calentar.',
             'Final C. Que se note el progreso. Vamos a arrancar, pueden calentar.',
-            'Final C. Practica hecha, ahora cuenta. Vamos a arrancar, pueden calentar.',
+            'Final C. Ya se acabÃ³ el calentamiento. Vamos a arrancar, pueden calentar.',
             'Final C. Vamos a divertirnos, pero con control. Vamos a arrancar, pueden calentar.'
           ];
           const mm = (m || 'X');
@@ -9830,7 +9830,7 @@ function msgv2DecimasTxt(ms) {
     // Botones VOZ (desktop + mini)
     const voiceToggleBtns = Array.from(document.querySelectorAll('[data-voice-toggle]'));
 
-    // Precision badges (1/2/3 décimas)
+    // Precision badges (1/2/3 dcimas)
     const precisionSelect = document.getElementById('precisionSelect');
     const precisionBadges = Array.from(document.querySelectorAll('.precision-badge'));
 
@@ -16032,8 +16032,21 @@ function updateRuntimeDiagUI(){
 
     function getPilotKey(row) {
       if (!row) return '';
-      const nameRaw = row.racerName != null ? String(row.racerName).trim() : '';
-      return (nameRaw || '').toLowerCase().trim();
+      const nameRaw = (
+        row.driverName != null ? row.driverName :
+        (row.racerName != null ? row.racerName :
+         (row.name != null ? row.name :
+          (row.pilotName != null ? row.pilotName : '')))
+      );
+      const numRaw = (
+        row.driverNumber != null ? row.driverNumber :
+        (row.racerNumber != null ? row.racerNumber :
+         (row.number != null ? row.number : ''))
+      );
+      const nameKey = String(nameRaw || '').trim().toLowerCase();
+      if (nameKey) return nameKey;
+      const numKey = String(numRaw || '').trim();
+      return numKey ? ('#' + numKey).toLowerCase() : '';
     }
 
 
@@ -17034,11 +17047,26 @@ function drawLapChartTop3Auto(){
       const result = {
         raceName: rawRace.raceName || '',
         lapCount: rawRace.lapCount || 0,
-        // Nuevo feed (watcher): reloj y modo
+        // Feed nuevo / watcher
         clockMs: (typeof rawRace.clockMs === 'number') ? rawRace.clockMs : ((typeof rawRace.clock === 'number') ? rawRace.clock : 0),
         clockFmt: (rawRace.clockFmt != null) ? String(rawRace.clockFmt) : '',
+        clockShowMs: (typeof rawRace.clockShowMs === 'number') ? rawRace.clockShowMs : 0,
+        clockShowFmt: (rawRace.clockShowFmt != null) ? String(rawRace.clockShowFmt) : '',
         practice: (rawRace.practice != null) ? Number(rawRace.practice) : null,
         mode: (rawRace.mode != null) ? String(rawRace.mode) : '',
+        sessionType: (rawRace.sessionType != null) ? String(rawRace.sessionType) : '',
+        sessionEventName: (rawRace.sessionEventName != null) ? String(rawRace.sessionEventName) : '',
+        sessionEventCode: (rawRace.sessionEventCode != null) ? Number(rawRace.sessionEventCode) : null,
+        gridResetDetected: !!rawRace.gridResetDetected,
+        gridReadyForAnnouncement: !!rawRace.gridReadyForAnnouncement,
+        raceDuration: (rawRace.raceDuration != null) ? rawRace.raceDuration : 0,
+        raceDurationType: (rawRace.raceDurationType != null) ? String(rawRace.raceDurationType) : '',
+        raceDurationMs: (typeof rawRace.raceDurationMs === 'number') ? rawRace.raceDurationMs : 0,
+        raceDurationFmt: (rawRace.raceDurationFmt != null) ? String(rawRace.raceDurationFmt) : '',
+        sessionElapsedMs: (typeof rawRace.sessionElapsedMs === 'number') ? rawRace.sessionElapsedMs : 0,
+        sessionRemainingMs: (typeof rawRace.sessionRemainingMs === 'number') ? rawRace.sessionRemainingMs : 0,
+        sessionProgressPct: (rawRace.sessionProgressPct != null) ? Number(rawRace.sessionProgressPct) : 0,
+        extraTopLevelPreview: rawRace.extraTopLevelPreview || {},
         bestLapTime: parseTimeToMs(rawRace.bestLapTime),
         classification: []
       };
@@ -17055,11 +17083,16 @@ function drawLapChartTop3Auto(){
 
       (rawRace.classification || []).forEach(row => {
         const key = getPilotKey(row);
-        const lap = Number(row.lapcount) || 0;
+        const lap = Number(row.lapcount ?? row.laps ?? 0) || 0;
+
+        const driverNumber = String(row.driverNumber ?? row.racerNumber ?? row.number ?? '').trim();
+        const driverName = safeRacerName(row.driverName ?? row.racerName ?? row.name ?? row.pilotName ?? '');
 
         let totalMs = 0;
         const timeStr = row.time != null ? String(row.time) : '';
-        if (typeof row.timeMs === 'number') {
+        if (typeof row.totalMs === 'number') {
+          totalMs = row.totalMs;
+        } else if (typeof row.timeMs === 'number') {
           totalMs = row.timeMs;
         } else if (timeStr) {
           totalMs = parseTimeToMs(timeStr);
@@ -17082,28 +17115,34 @@ const meanTimeRaw =
 let meanMs = parseTimeToMs(meanTimeRaw);
         const estMs  = parseTimeToMs((row.estTime != null) ? row.estTime : (row.estTimeMs != null ? row.estTimeMs : 0));
 
-        let lastMs = 0;
+        let lastMs = parseTimeToMs(
+          (row.lastTime != null) ? row.lastTime :
+          ((row.lastLapMs != null) ? row.lastLapMs :
+           ((row.lastLapTime != null) ? row.lastLapTime :
+            ((row.lastLapTimeMs != null) ? row.lastLapTimeMs : 0)))
+        );
         const prev = prevByKey.get(key);
-        if (prev) {
+        if ((!lastMs || lastMs <= 0) && prev) {
           const prevLaps = Number(prev.lapcount) || 0;
           if (lap > prevLaps && totalMs > prev.time) {
             lastMs = totalMs - prev.time;
-            // registrar evento de paso por meta para lgica de bandera azul (Ãºltimo paso por piloto)
-            if (!lastPassEvents || typeof lastPassEvents.set !== 'function') {
-              lastPassEvents = new Map();
-            }
-            lastPassEvents.set(key, {
-              key,
-              pos: row.pos,
-              name: safeRacerName(row.racerName),
-              lap,
-              time: totalMs
-            });
           } else if (lap === prevLaps && prev.lastTime && prev.lastTime > 0) {
             lastMs = prev.lastTime;
           } else if (lap === 0) {
             lastMs = 0;
           }
+        }
+        if (lap > 0 && totalMs > 0) {
+          if (!lastPassEvents || typeof lastPassEvents.set !== 'function') {
+            lastPassEvents = new Map();
+          }
+          lastPassEvents.set(key, {
+            key,
+            pos: row.pos,
+            name: driverName,
+            lap,
+            time: totalMs
+          });
         }
 
         lastMs = normalizeLapMs(lastMs);
@@ -17130,20 +17169,27 @@ let meanMs = parseTimeToMs(meanTimeRaw);
 
         const normalized = {
           pos:         row.pos,
-          racerNumber: row.racerNumber,
-          racerName:   safeRacerName(row.racerName),
+          racerNumber: driverNumber,
+          driverNumber: driverNumber,
+          racerName:   driverName,
+          driverName:  driverName,
           lapcount:    lap,
           time:        totalMs,
           timeStr:     timeStr,
           lastTime:    lastMs,
-          gap:         row.gap || "",
-          diff:        row.diff || "",
+          gap:         row.gapText || row.gap || "",
+          gapText:     row.gapText || row.gap || "",
+          diff:        row.diffText || row.diff || row.interval || "",
+          diffText:    row.diffText || row.diff || row.interval || "",
           best:        bestMs,
-          bestLap:     row.bestLap,
+          bestLap:     (row.bestLapIndex != null) ? row.bestLapIndex : row.bestLap,
+          bestLapIndex:(row.bestLapIndex != null) ? row.bestLapIndex : row.bestLap,
           mean:        meanMs,
           estLap:      row.estLap || 0,
           estTime:     estMs,
-          consistency: row.consistency
+          consistency: (row.consPct != null) ? row.consPct : row.consistency,
+          sigmaStr:    row.sigmaStr || row.stdDev || '',
+          extraRowPreview: row.extraRowPreview || {}
         };
 
         result.classification.push(normalized);
@@ -17358,13 +17404,15 @@ function resetAutoNarratorState() {
         return;
       }
 
-      pilotNameEl.textContent = safeRacerName(p.racerName) || 'Sin nombre';
-      pilotMetaEl.textContent = String((p.lapcount != null ? p.lapcount : 0)) + " v";
+      const cardName = safeRacerName(p.driverName || p.racerName) || 'Sin nombre';
+      const cardNum = String(p.driverNumber || p.racerNumber || '').trim();
+      pilotNameEl.textContent = cardNum ? ('#' + cardNum + ' ' + cardName) : cardName;
+      pilotMetaEl.textContent = String((p.lapcount != null ? p.lapcount : 0)) + " v" + (cardNum ? ('  Auto ' + cardNum) : '');
 
       posTextEl.textContent = p.pos ? `P ${p.pos}` : 'P -';
       try { applyPilotSelectPosTheme(p.pos); } catch(e) {}
 
-      const gapText = formatoGapVueltas(p.gap);
+      const gapText = formatoGapVueltas(p.gapText || p.gap);
       const meanStr = p.mean ? msToMinSec(p.mean) : '-:--.---';
       const totalStr = p.time ? msToMinSec(p.time) : '-:--.---';
 
@@ -17619,8 +17667,9 @@ function computeSessionBestMs() {
 
       raceData.classification.forEach(row => {
         const key = getPilotKey(row);
-        const name = safeRacerName(row.racerName) || '(sin nombre)';
-        const label = name;
+        const name = safeRacerName(row.driverName || row.racerName) || '(sin nombre)';
+        const num = String(row.driverNumber || row.racerNumber || '').trim();
+        const label = num ? ('#' + num + ' ' + name) : name;
         options.push({ value: key, label });
       });
 
@@ -18829,18 +18878,18 @@ function autoFocusMsg(stage, c, style) {
       'Tenemos tema.'
     ],
     picante: [
-      'Se prendió.',
+      'Se prendi.',
       'Uy.',
-      'Ahí viene.',
+      'Ah viene.',
       'Huele a pase.',
-      'Ahora sí.',
+      'Ahora s.',
       'Aguas.',
       'Esto va a tronar.'
     ],
     engineer: [
-      'Telemetría rápida.',
+      'Telemetra rpida.',
       'Lectura de ritmo.',
-      'Número mata chisme.',
+      'Nmero mata chisme.',
       'Datos en corto.',
       'AquÃ­i hay delta.',
       'Lo que importa.'
@@ -18852,7 +18901,7 @@ function autoFocusMsg(stage, c, style) {
       'Y ojo, porque...',
       'La pelea sigue viva.',
       'Sin soltar el volante...',
-      'Atención, que esto cambia.',
+      'Atencin, que esto cambia.',
       'Del otro lado...'
     ]
   };
@@ -18865,13 +18914,13 @@ function autoFocusMsg(stage, c, style) {
       (x) => `${c0} ${x.defender} aguanta en P${x.pos}. ${x.attacker} sigue pegado a ${x.sec}.`,
       (x) => `${c0} La pelea por P${x.pos} no se suelta: ${x.attacker} a ${x.sec} de ${x.defender}.`,
       (x) => `${c0} P${x.pos}: ${x.defender} adelante, ${x.attacker} atras. Gap ${x.sec}.`,
-      (x) => `${c0} P${x.pos} está en modo espejo: ${x.attacker} no lo suelta a ${x.defender}.`
+      (x) => `${c0} P${x.pos} est en modo espejo: ${x.attacker} no lo suelta a ${x.defender}.`
     ],
     closing: [
-      (x) => `${c0} Se está cerrando P${x.pos}: ${x.attacker} recorta ${x.delta} y ya está a ${x.toSec || x.sec} de ${x.defender}.`,
+      (x) => `${c0} Se est cerrando P${x.pos}: ${x.attacker} recorta ${x.delta} y ya est a ${x.toSec || x.sec} de ${x.defender}.`,
       (x) => `${c0} P${x.pos} se aprieta: de ${x.fromSec} baja a ${x.toSec}. ${x.attacker} viene encima.`,
       (x) => `${c0} P${x.pos}: ${x.attacker} acorta el gap. ${x.defender} ya lo trae en el espejo a ${x.toSec || x.sec}.`,
-      (x) => `${c0} P${x.pos} se está cocinando. ${x.attacker} viene recortando y ya está a ${x.toSec || x.sec}.`
+      (x) => `${c0} P${x.pos} se est cocinando. ${x.attacker} viene recortando y ya est a ${x.toSec || x.sec}.`
     ],
     opening: [
       (x) => `${c0} Se abre un poco la pelea en P${x.pos}. ${x.defender} estira a ${x.sec}.`,
@@ -18879,9 +18928,9 @@ function autoFocusMsg(stage, c, style) {
       (x) => `${c0} P${x.pos} afloja tantito. ${x.attacker} pierde el contacto, gap ${x.sec}.`
     ],
     pass: [
-      (x) => `${c0} Cambio de mando en P${x.pos}. ${x.attacker} le quita la posición a ${x.defender}.`,
+      (x) => `${c0} Cambio de mando en P${x.pos}. ${x.attacker} le quita la posicin a ${x.defender}.`,
       (x) => `${c0} Pase hecho en P${x.pos}. ${x.attacker} se mete por delante de ${x.defender}.`,
-      (x) => `${c0} P${x.pos} ya cambió. ${x.attacker} adelante, ${x.defender} a perseguir.`
+      (x) => `${c0} P${x.pos} ya cambi. ${x.attacker} adelante, ${x.defender} a perseguir.`
     ]
   };
 
@@ -19089,7 +19138,7 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Se concreta el intercambio. ' + c.winner + ' arriba a P' + c.newPos + '.',
         (c) => 'Adelantamiento al conteo. ' + c.winner + ' sube. ' + c.loser + ' baja.',
         (c) => 'P' + c.newPos + ' cambia de manos. ' + c.winner + ' toma la plaza.',
-        (c) => 'Buen pase. ' + c.winner + ' ya está delante de ' + c.loser + '. P' + c.newPos + '.',
+        (c) => 'Buen pase. ' + c.winner + ' ya est delante de ' + c.loser + '. P' + c.newPos + '.',
         (c) => 'Rebase cerrado: ' + c.winner + ' gana P' + c.newPos + ', ' + c.loser + ' a P' + c.oldPos + '.'
       ],
 
@@ -19099,10 +19148,10 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Ojo P' + c.pos + '. ' + c.attacker + ' trae el ataque. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' caliente. ' + c.defender + ' defiende, ' + c.attacker + ' insiste. ' + c.sec + '.',
         (c) => 'Rango de pase en P' + c.pos + '. ' + c.attacker + ' pegado. ' + c.sec + '.',
-        (c) => 'Cámara a P' + c.pos + '. ' + c.attacker + ' en el espejo de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Separación mínima en P' + c.pos + ': ' + c.sec + '. ' + c.attacker + ' encima.',
+        (c) => 'Cmara a P' + c.pos + '. ' + c.attacker + ' en el espejo de ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'Separacin mnima en P' + c.pos + ': ' + c.sec + '. ' + c.attacker + ' encima.',
         (c) => 'P' + c.pos + ' sin aire. ' + c.attacker + ' no se despega. ' + c.sec + '.',
-        (c) => 'Atención P' + c.pos + '. ' + c.attacker + ' busca hueco con ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'Atencin P' + c.pos + '. ' + c.attacker + ' busca hueco con ' + c.defender + '. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' en mano a mano. ' + c.attacker + ' contra ' + c.defender + '. ' + c.sec + '.',
         (c) => 'Duelo directo. P' + c.pos + ' con gap ' + c.sec + '.',
         (c) => 'P' + c.pos + ' bajo fuego. ' + c.attacker + ' viene encima. ' + c.sec + '.'
@@ -19128,18 +19177,18 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Recorte en P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + '.',
         (c) => 'Gap en P' + c.pos + ' cae: ' + c.fromSec + ' a ' + c.toSec + '.',
-        (c) => 'Se acerca en P' + c.pos + '. ' + c.attacker + ' ya está a ' + c.toSec + ' de ' + c.defender + '.',
+        (c) => 'Se acerca en P' + c.pos + '. ' + c.attacker + ' ya est a ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Tendencia positiva P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + '.',
         (c) => 'Ojo P' + c.pos + '. ' + c.attacker + ' recorta ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Cierre confirmado. P' + c.pos + ' ahora ' + c.toSec + '.',
         (c) => 'Se aprieta P' + c.pos + '. ' + c.attacker + ' trae el gap en ' + c.toSec + '.',
-        (c) => 'P' + c.pos + ' se está cerrando. ' + c.toSec + ' entre ellos.',
+        (c) => 'P' + c.pos + ' se est cerrando. ' + c.toSec + ' entre ellos.',
         (c) => 'Recorte constante. P' + c.pos + ' de ' + c.fromSec + ' a ' + c.toSec + '.'
       ],
 
       gap: [
         (c) => 'Gap P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
-        (c) => 'Separación P' + c.pos + ': ' + c.sec + 's. ' + c.defender + ' adelante.',
+        (c) => 'Separacin P' + c.pos + ': ' + c.sec + 's. ' + c.defender + ' adelante.',
         (c) => 'P' + c.pos + ' entre ' + c.defender + ' y ' + c.attacker + ': ' + c.sec + 's.',
         (c) => 'Distancia P' + c.pos + '. ' + c.attacker + ' marca ' + c.sec + 's.',
         (c) => 'Gap estable en P' + c.pos + ': ' + c.sec + 's.',
@@ -19151,16 +19200,16 @@ function autoBuildStoryCandidate(args) {
       ],
 
       pressure: [
-        (c) => 'Presión en P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '.',
+        (c) => 'Presin en P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' defendiendo. ' + c.defender + ' con ' + c.attacker + ' pegado.',
         (c) => 'Ataque en P' + c.pos + '. ' + c.attacker + ' con opcion.',
         (c) => 'P' + c.pos + ' sin margen. ' + c.attacker + ' lo trae.',
         (c) => 'Defensa activa en P' + c.pos + '. ' + c.defender + ' aguanta.',
-        (c) => 'P' + c.pos + ' bajo presión. Ojo en la siguiente curva.',
+        (c) => 'P' + c.pos + ' bajo presin. Ojo en la siguiente curva.',
         (c) => 'P' + c.pos + ' en modo espejo. ' + c.attacker + ' no suelta.',
         (c) => 'Sombra en P' + c.pos + '. ' + c.attacker + ' pegado.',
         (c) => 'P' + c.pos + ' con ataque constante de ' + c.attacker + '.',
-        (c) => 'Presión sostenida en P' + c.pos + '. No hay respiro.'
+        (c) => 'Presin sostenida en P' + c.pos + '. No hay respiro.'
       ],
 
       top3: [
@@ -19600,10 +19649,10 @@ function autoBuildStoryCandidate(args) {
         (c) => 'P' + c.pos + '. ' + c.attacker + ' marca ' + c.sec + 's al de adelante.'
       ],
       pressure: [
-        (c) => 'Presión en P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' bajo presión. ' + c.attacker + ' a ' + c.sec + 's. Ojo defensa.',
+        (c) => 'Presin en P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' bajo presin. ' + c.attacker + ' a ' + c.sec + 's. Ojo defensa.',
         (c) => 'Defensa en P' + c.pos + '. ' + c.defender + ' se sostiene con ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' en modo defensa. ' + c.attacker + ' está encima, ' + c.sec + 's.'
+        (c) => 'P' + c.pos + ' en modo defensa. ' + c.attacker + ' est encima, ' + c.sec + 's.'
       ],
       top3: [
         (c) => 'Top 3: P1 ' + c.p1 + '. P2 ' + c.p2 + '. P3 ' + c.p3 + '.',
@@ -19674,12 +19723,12 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Cambio de guion. ' + (c.winner||c.attacker) + ' lidera. ' + (c.loser||c.defender) + ' responde.',
         (c) => 'Se reescribe la Final. ' + (c.winner||c.attacker) + ' primero. ' + (c.loser||c.defender) + ' segundo.',
         (c) => 'Nueva punta. ' + (c.winner||c.attacker) + ' arriba. ' + (c.loser||c.defender) + ' detras.',
-        (c) => 'Punta para ' + (c.winner||c.attacker) + '. Esto está vivo.',
+        (c) => 'Punta para ' + (c.winner||c.attacker) + '. Esto est vivo.',
         (c) => 'Cambio en la cima. ' + (c.winner||c.attacker) + ' se queda con P1.'
       ],
 
       pass: [
-        (c) => 'Pase confirmado. ' + (c.winner||c.attacker) + ' ya está en P' + (c.newPos||c.pos) + '.',
+        (c) => 'Pase confirmado. ' + (c.winner||c.attacker) + ' ya est en P' + (c.newPos||c.pos) + '.',
         (c) => 'Lo hizo. ' + (c.winner||c.attacker) + ' se mete por dentro y gana la plaza.',
         (c) => 'Movimiento limpio. ' + (c.winner||c.attacker) + ' pasa a ' + (c.loser||c.defender) + '. P' + (c.newPos||c.pos) + '.',
         (c) => 'Se concreta el intercambio. ' + (c.winner||c.attacker) + ' por delante.',
@@ -19689,7 +19738,7 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Lo cierra y lo firma. ' + (c.winner||c.attacker) + ' gana el lugar.',
         (c) => 'P' + (c.newPos||c.pos) + ' cambia de manos. ' + (c.winner||c.attacker) + ' se lo queda.',
         (c) => 'Pase al limite. ' + (c.winner||c.attacker) + ' por delante.',
-        (c) => 'Rebase completo. ' + (c.winner||c.attacker) + ' ya está arriba.',
+        (c) => 'Rebase completo. ' + (c.winner||c.attacker) + ' ya est arriba.',
         (c) => 'Se confirma el pase. ' + (c.winner||c.attacker) + ' gana la plaza.'
       ],
 
@@ -19702,9 +19751,9 @@ function autoBuildStoryCandidate(args) {
         (c) => 'P' + c.pos + ' sin respiro. ' + c.attacker + ' no suelta. ' + (c.sec||c.deltaStr) + '.',
         (c) => 'Rango de ataque en P' + c.pos + '. ' + c.attacker + ' con opcion.',
         (c) => 'Ojo esa pelea. ' + c.attacker + ' trae mejor linea sobre ' + c.defender + '.',
-        (c) => 'P' + c.pos + ' en la mira. ' + c.attacker + ' está listo.',
+        (c) => 'P' + c.pos + ' en la mira. ' + c.attacker + ' est listo.',
         (c) => 'Se ven espejos. P' + c.pos + ' con gap ' + (c.sec||c.deltaStr) + '.',
-        (c) => 'P' + c.pos + ' apretado. Todo se decide por milímetros.',
+        (c) => 'P' + c.pos + ' apretado. Todo se decide por milmetros.',
         (c) => 'Duelo continuo en P' + c.pos + '. ' + (c.sec||c.deltaStr) + '.'
       ],
 
@@ -19720,16 +19769,16 @@ function autoBuildStoryCandidate(args) {
         (c) => 'P' + c.pos + ' en disputa. Cualquier error y cambia el podio.',
         (c) => 'Podio en fuego. ' + c.attacker + ' a tiro. ' + (c.sec||c.deltaStr) + '.',
         (c) => 'Se aprieta el podio. Gap ' + (c.sec||c.deltaStr) + '.',
-        (c) => 'P' + c.pos + ' por podio. Esto está bravo.'
+        (c) => 'P' + c.pos + ' por podio. Esto est bravo.'
       ],
 
       closing: [
         (c) => 'Recorte. P' + c.pos + ' de ' + c.fromSec + ' a ' + c.toSec + '. ' + c.attacker + ' se acerca.',
         (c) => 'Se viene. ' + c.attacker + ' baja a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Gap cayendo en P' + c.pos + '. ' + c.toSec + ' ahora.',
-        (c) => 'Cierre confirmado. P' + c.pos + ' ya está en ' + c.toSec + '.',
+        (c) => 'Cierre confirmado. P' + c.pos + ' ya est en ' + c.toSec + '.',
         (c) => 'Tendencia clara. ' + c.attacker + ' recorta y pone presion.',
-        (c) => 'Atención. P' + c.pos + ' se aprieta rápido.',
+        (c) => 'Atencin. P' + c.pos + ' se aprieta rpido.',
         (c) => 'Se compacta P' + c.pos + '. Se huele el pase.',
         (c) => 'Recorte constante. ' + c.attacker + ' viene con ritmo.',
         (c) => 'De ' + c.fromSec + ' a ' + c.toSec + '. Eso es recortar.',
@@ -20912,7 +20961,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       gap: [
         { id:'pro.train.gap.1', text:'Sin aire entre ellos.', weight:3 },
         { id:'pro.train.gap.2', text:'Todo comprimido en el grupo.', weight:2 },
-        { id:'pro.train.gap.3', text:'Nadie se despega ahí.', weight:2 }
+        { id:'pro.train.gap.3', text:'Nadie se despega ah.', weight:2 }
       ],
       impact: [
         { id:'pro.train.impact.1', text:'Una maniobra cambia todo.', weight:3 },
@@ -20933,7 +20982,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       ],
       delta: [
         { id:'pro.story.delta.1', text:'De {fromSec} a {toSec}.', weight:3 },
-        { id:'pro.story.delta.2', text:'Ahora están {toSec}.', weight:3 },
+        { id:'pro.story.delta.2', text:'Ahora estn {toSec}.', weight:3 },
         { id:'pro.story.delta.3', text:'Todo queda en {toSec}.', weight:2 }
       ],
       memory: [
@@ -20943,7 +20992,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       ],
       end: [
         { id:'pro.story.end.1', text:'Esto sigue cocinandose.', weight:2 },
-        { id:'pro.story.end.2', text:'Nada está resuelto.', weight:2 },
+        { id:'pro.story.end.2', text:'Nada est resuelto.', weight:2 },
         { id:'pro.story.end.3', text:'Puede cambiar en cualquier vuelta.', weight:1 }
       ]
     },
@@ -20978,7 +21027,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       front: [
         { id:'pro.qualiPole.front.1', text:'{p1} manda con {p2} pegado.', weight:4 },
         { id:'pro.qualiPole.front.2', text:'{p1} contra {p2} por la mejor manga.', weight:3 },
-        { id:'pro.qualiPole.front.3', text:'La pole está entre {p1} y {p2}.', weight:2 }
+        { id:'pro.qualiPole.front.3', text:'La pole est entre {p1} y {p2}.', weight:2 }
       ],
       gap: [
         { id:'pro.qualiPole.gap.1', text:'Todo a {sec}.', weight:4 },
@@ -20986,7 +21035,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
         { id:'pro.qualiPole.gap.3', text:'Los separa {sec}.', weight:2 }
       ],
       impact: [
-        { id:'pro.qualiPole.impact.1', text:'Nada está definido.', weight:2 },
+        { id:'pro.qualiPole.impact.1', text:'Nada est definido.', weight:2 },
         { id:'pro.qualiPole.impact.2', text:'Una vuelta buena la cambia.', weight:2 },
         { id:'pro.qualiPole.impact.3', text:'Esto se decide al milimetro.', weight:1 }
       ]
@@ -20995,7 +21044,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       open: [
         { id:'pro.mini.open.1', text:'Resumen rapido.', weight:4 },
         { id:'pro.mini.open.2', text:'Foto del momento.', weight:3 },
-        { id:'pro.mini.open.3', text:'Así va la sesión.', weight:2 }
+        { id:'pro.mini.open.3', text:'As va la sesin.', weight:2 }
       ],
       top: [
         { id:'pro.mini.top.1', text:'Top cinco: {p1}, {p2}, {p3}, {p4}, {p5}.', weight:4 },
@@ -21003,7 +21052,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
         { id:'pro.mini.top.3', text:'Los cinco del frente son {p1}, {p2}, {p3}, {p4} y {p5}.', weight:2 }
       ],
       battle: [
-        { id:'pro.mini.battle.1', text:'La pelea más cerrada está en P{battlePos}: {battleAttacker} a {battleGap} de {battleDefender}.', weight:3 },
+        { id:'pro.mini.battle.1', text:'La pelea ms cerrada est en P{battlePos}: {battleAttacker} a {battleGap} de {battleDefender}.', weight:3 },
         { id:'pro.mini.battle.2', text:'Ojo P{battlePos}, {battleAttacker} trae a tiro a {battleDefender}. {battleGap}.', weight:2 },
         { id:'pro.mini.battle.3', text:'El cierre del momento va en P{battlePos}.', weight:1 }
       ],
@@ -21034,7 +21083,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       gap: [
         { id:'pic.train.gap.1', text:'No cabe una servilleta.', weight:3 },
         { id:'pic.train.gap.2', text:'Van amarrados.', weight:2 },
-        { id:'pic.train.gap.3', text:'Eso ya está para bronca fina.', weight:2 }
+        { id:'pic.train.gap.3', text:'Eso ya est para bronca fina.', weight:2 }
       ],
       impact: [
         { id:'pic.train.impact.1', text:'Uno pestaÃ±ea y se arma.', weight:3 },
@@ -21238,7 +21287,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
     mini: {
       open: [
         { id:'eng.mini.open.1', text:'Resumen operativo.', weight:4 },
-        { id:'eng.mini.open.2', text:'Estado de sesión.', weight:3 },
+        { id:'eng.mini.open.2', text:'Estado de sesin.', weight:3 },
         { id:'eng.mini.open.3', text:'Lectura global.', weight:2 }
       ],
       top: [
@@ -21308,8 +21357,8 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
         { id:'nar.story.memory.3', text:'Es una rivalidad que no se apaga.', weight:1 }
       ],
       end: [
-        { id:'nar.story.end.1', text:'Todavía queda una página por escribir.', weight:2 },
-        { id:'nar.story.end.2', text:'Nada está dicho todavía.', weight:2 },
+        { id:'nar.story.end.1', text:'Todava queda una pgina por escribir.', weight:2 },
+        { id:'nar.story.end.2', text:'Nada est dicho todava.', weight:2 },
         { id:'nar.story.end.3', text:'La escena sigue viva.', weight:1 }
       ]
     },
@@ -21440,7 +21489,7 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
       ],
       end: [
         { id:'pro.pressure.end.1', text:'La respuesta tiene que ser limpia.', weight:2 },
-        { id:'pro.pressure.end.2', text:'Aquí se decide con precisión.', weight:2 },
+        { id:'pro.pressure.end.2', text:'Aqu se decide con precisin.', weight:2 },
         { id:'pro.pressure.end.3', text:'Un pestaÃ±eo cambia todo.', weight:1 }
       ]
     },
@@ -21591,8 +21640,8 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
         { id:'pic.top3.order.5', text:'Manda {p1}; persiguen {p2} y {p3}.', weight:2 }
       ],
       end: [
-        { id:'pic.top3.end.1', text:'Ahí arriba nadie se relaja.', weight:2 },
-        { id:'pic.top3.end.2', text:'Todavía no repartan nada.', weight:1 }
+        { id:'pic.top3.end.1', text:'Ah arriba nadie se relaja.', weight:2 },
+        { id:'pic.top3.end.2', text:'Todava no repartan nada.', weight:1 }
       ]
     },
     leaderChange: {
@@ -21656,16 +21705,16 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
     },
     gap: {
       open: [
-        { id:'eng.gap.open.3', text:'Lectura técnica del gap.', weight:2 },
+        { id:'eng.gap.open.3', text:'Lectura tcnica del gap.', weight:2 },
         { id:'eng.gap.open.4', text:'Actualizacion de referencia.', weight:1 }
       ],
       state: [
-        { id:'eng.gap.state.1', text:'Rango todavía gestionable.', weight:2 },
-        { id:'eng.gap.state.2', text:'El margen sigue útil para ataque.', weight:1 }
+        { id:'eng.gap.state.1', text:'Rango todava gestionable.', weight:2 },
+        { id:'eng.gap.state.2', text:'El margen sigue til para ataque.', weight:1 }
       ],
       end: [
         { id:'eng.gap.end.1', text:'Falta ver tendencia.', weight:2 },
-        { id:'eng.gap.end.2', text:'La siguiente vuelta dirá mucho.', weight:1 }
+        { id:'eng.gap.end.2', text:'La siguiente vuelta dir mucho.', weight:1 }
       ]
     },
     top3: {
@@ -21764,8 +21813,8 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
         { id:'nar.pass.open.5', text:'Cambio de papel en esa pelea.', weight:1 }
       ],
       end: [
-        { id:'nar.pass.end.1', text:'La respuesta todavía puede llegar.', weight:2 },
-        { id:'nar.pass.end.2', text:'No es el último capítulo.', weight:1 }
+        { id:'nar.pass.end.1', text:'La respuesta todava puede llegar.', weight:2 },
+        { id:'nar.pass.end.2', text:'No es el ltimo captulo.', weight:1 }
       ]
     },
     record: {
@@ -23247,9 +23296,9 @@ function collectAutoMiniSummaryCandidate(ctx) {
     const styleMini = (autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo') ? autoCommentatorMode : 'pro';
     const MINI_HDR = {
       pro: { manga: ['Clasificacion.', 'Clasificacion en vivo.', 'Como va la clasificaciÃ³n.'], final: ['Carrera.', 'Carrera en vivo.', 'Como va la carrera.'], other: ['Seguimos.', 'Actualizacion.', 'Estado.'] },
-      picante: { manga: ['Clasificación.', 'Clasificación, sin llorar.', 'Clasificación, a ver quién trae manos.'], final: ['Carrera.', 'Carrera, sin piedad.', 'Carrera, esto ya se prendio.'], other: ['Seguimos.', 'Ojo.', 'Atención.'] },
-      engineer: { manga: ['Clasificación.', 'Control. Clasificación.', 'Dato. Clasificación.'], final: ['Carrera.', 'Control. Carrera.', 'Dato. Carrera.'], other: ['Control.', 'Dato.', 'Info.'] },
-      narrativo: { manga: ['Clasificacion.', 'Cambiamos camara. Clasificacion.', 'Vamos con la clasificaciÃ³n.'], final: ['Carrera.', 'Cambiamos camara. Carrera.', 'Vamos con la carrera.'], other: ['Seguimos.', 'Cambiamos cámara.', 'Atención.'] }
+      picante: { manga: ['Clasificacin.', 'Clasificacin, sin llorar.', 'Clasificacin, a ver quin trae manos.'], final: ['Carrera.', 'Carrera, sin piedad.', 'Carrera, esto ya se prendio.'], other: ['Seguimos.', 'Ojo.', 'Atencin.'] },
+      engineer: { manga: ['Clasificacin.', 'Control. Clasificacin.', 'Dato. Clasificacin.'], final: ['Carrera.', 'Control. Carrera.', 'Dato. Carrera.'], other: ['Control.', 'Dato.', 'Info.'] },
+      narrativo: { manga: ['Clasificacion.', 'Cambiamos camara. Clasificacion.', 'Vamos con la clasificaciÃ³n.'], final: ['Carrera.', 'Cambiamos camara. Carrera.', 'Vamos con la carrera.'], other: ['Seguimos.', 'Cambiamos cmara.', 'Atencin.'] }
     };
     const MINI_TOP = {
       pro: ['Top cinco', 'Top 5', 'Los primeros cinco'],
@@ -24141,7 +24190,7 @@ function buildSelectedPilotVoiceContext(p) {
           const nm = safeRacerName(fbCtx.backName) || '';
           const genTxt = ttsGenV2MaybeFollowText('pressure', {
             pos: Number((p && p.pos) || 0) || 0,
-            attacker: nm || 'el de atrás',
+            attacker: nm || 'el de atrs',
             defender: pilotName,
             sec: gapToSpeech(sec, 'pressure'),
             secNum: sec,
@@ -24149,7 +24198,7 @@ function buildSelectedPilotVoiceContext(p) {
             leaderLap,
             progress
           }, { pairKey: otherKey + '::' + selectedPilotKey, priority: (isFinal ? 70 : 18), leaderLap, progress });
-          const txt = genTxt || (nm ? ('Atrás presión. ' + nm + ' a ' + secStr + ' segundos') : ('Atrás presión. A ' + secStr + ' segundos'));
+          const txt = genTxt || (nm ? ('Atrs presin. ' + nm + ' a ' + secStr + ' segundos') : ('Atrs presin. A ' + secStr + ' segundos'));
           pushCand('back06', isFinal ? 70 : 18, txt,
             { key: 'back06_' + otherKey, priority: 55, cooldownMs: 2500, dedupe: true },
             () => {
@@ -24213,7 +24262,7 @@ function buildSelectedPilotVoiceContext(p) {
             const eventType = (Number((p && p.pos) || 0) <= 3) ? 'battlePodium' : 'battle';
             const genTxt = ttsGenV2MaybeFollowText(eventType, {
               pos: Number((p && p.pos) || 0) || 0,
-              attacker: nm || 'el de atrás',
+              attacker: nm || 'el de atrs',
               defender: pilotName,
               sec: secStr,
               secNum: sec,
@@ -24250,7 +24299,7 @@ function buildSelectedPilotVoiceContext(p) {
         if (!fightLatch.active && inFight) {
           const posNow = Number((p && p.pos) || 0) || 0;
           const frontNm = safeRacerName(fbCtx.frontName) || 'el de adelante';
-          const backNm = safeRacerName(fbCtx.backName) || 'el de atrás';
+          const backNm = safeRacerName(fbCtx.backName) || 'el de atrs';
           const eventType = (posNow <= 3) ? 'battlePodium' : 'story';
           const genTxt = ttsGenV2MaybeFollowText(eventType, {
             pos: posNow,
@@ -24354,12 +24403,12 @@ function buildSelectedPilotVoiceContext(p) {
       try {
         if (!(typeof basicModeEnabled !== 'undefined' && basicModeEnabled)) {
           const leader = raceData.classification.find(r => Number(r && r.pos) === 1);
-          const leaderName = safeRacerName(leader && leader.racerName) || 'líder';
+          const leaderName = safeRacerName(leader && leader.racerName) || 'lder';
           const gapText = ttsGenV2MaybeFollowText('gap', {
             pos: Number((ctx.p && ctx.p.pos) || 0) || 0,
             front: leaderName,
             back: ctx.pilotName,
-            sec: msg.replace(/^L[ií]der\s*/i, '').trim() || msg,
+            sec: msg.replace(/^L[i]der\s*/i, '').trim() || msg,
             secNum: 0,
             pairKey: 'leader::' + selectedPilotKey,
             leaderLap: ctx.leaderLap,
@@ -24751,30 +24800,70 @@ let label = 'MODO -';
         const rn = isObj ? String(rawOrName.raceName || '') : String(rawOrName || '');
         const prRaw = isObj ? rawOrName.practice : practiceMaybe;
         const pr = (prRaw == null || prRaw === '') ? null : Number(prRaw);
-        let info = parseSessionFromRaceName(rn) || {};
+        const hintedSessionType = isObj ? String(rawOrName.sessionType || '').toUpperCase() : '';
+        const eventName = isObj ? String(rawOrName.sessionEventName || '') : '';
+        const eventCode = isObj && rawOrName.sessionEventCode != null ? Number(rawOrName.sessionEventCode) : NaN;
+        const gridReady = isObj ? !!(rawOrName.gridReadyForAnnouncement || rawOrName.gridResetDetected) : false;
 
-        if (pr === 1) {
-          const warmTitle = (String(info.type || '').toUpperCase().includes('FINAL')) ? 'Warm up' : 'Practica';
+        let info = parseSessionFromRaceName(rn) || {};
+        let type = String(info.type || '').toUpperCase();
+
+        if ((!type || type === 'UNKNOWN') && (hintedSessionType === 'MANGA' || hintedSessionType === 'FINAL' || hintedSessionType === 'TRAIN')) {
+          info = Object.assign({}, info, { type: hintedSessionType });
+          type = hintedSessionType;
+        }
+
+        let durationMs = 0;
+        if (isObj) {
+          durationMs = Number(rawOrName.raceDurationMs || 0) || 0;
+          if (!durationMs) {
+            const rawDur = Number(rawOrName.raceDuration || 0) || 0;
+            const durType = String(rawOrName.raceDurationType || '').toLowerCase();
+            if (rawDur > 0) {
+              if (durType.startsWith('min')) durationMs = Math.round(rawDur * 60000);
+              else if (durType.startsWith('sec')) durationMs = Math.round(rawDur * 1000);
+              else if (durType === 'ms' || durType.startsWith('mill')) durationMs = Math.round(rawDur);
+              else durationMs = rawDur > 1000 ? Math.round(rawDur) : Math.round(rawDur * 1000);
+            }
+          }
+        }
+        if (durationMs > 0) info.durationMs = durationMs;
+
+        const explicitRaceSession = (type === 'MANGA' || type === 'FINAL');
+        if (explicitRaceSession) {
+          const prestart = !!gridReady || pr === 1 || /PRESTART|GRID|WARM/i.test(eventName) || eventCode === 120 || eventCode === 210;
           return Object.assign({}, info, {
-            type: 'TRAIN',
-            main: '',
-            durationMs: 3 * 60 * 1000,
-            label: 'MODO PRACTICA',
-            spokenTitle: warmTitle
+            type,
+            phase: prestart ? 'PRESTART' : 'LIVE',
+            warmup: prestart,
+            label: info.label || (type === 'MANGA' ? 'MODO MANGA' : 'MODO FINAL')
           });
         }
 
-        if (!info || !info.type || String(info.type).toUpperCase() === 'UNKNOWN') {
+        if (!info || !info.type || type === 'UNKNOWN') {
           if (/FINAL|A\s*MAIN|B\s*MAIN|C\s*MAIN|D\s*MAIN|\bMAIN\b/i.test(rn)) {
-            info = Object.assign({}, info, { type:'FINAL', durationMs: 4 * 60 * 1000, label:'MODO FINAL 4:00' });
+            info = Object.assign({}, info, { type:'FINAL', durationMs: durationMs || 4 * 60 * 1000, label:'MODO FINAL' });
           } else if (/MANGA|Q\d|QUALY|QUALI|CLASIF|CLASIFIC|HEAT|ROUND/i.test(rn)) {
-            info = Object.assign({}, info, { type:'MANGA', durationMs: 3 * 60 * 1000, label:'MODO MANGA 3:00' });
+            info = Object.assign({}, info, { type:'MANGA', durationMs: durationMs || 3 * 60 * 1000, label:'MODO MANGA' });
           }
         }
 
-        return info || { type:'UNKNOWN', main:'', durationMs:0, label:'MODO -' };
+        type = String(info.type || '').toUpperCase();
+        if (type === 'TRAIN' || /(?:\bLIBRE\b|ENTRENAMIENTO|PRACTICE|TRAINING|WARM\s?UP)/i.test(rn) || pr === 1) {
+          return Object.assign({}, info, {
+            type: 'TRAIN',
+            main: '',
+            durationMs: durationMs || 3 * 60 * 1000,
+            label: 'MODO PRACTICA',
+            spokenTitle: /WARM\s?UP/i.test(rn) ? 'Warm up' : 'Practica',
+            phase: 'LIVE',
+            warmup: false
+          });
+        }
+
+        return Object.assign({ type:'UNKNOWN', main:'', durationMs:0, label:'MODO -', phase:'LIVE', warmup:false }, info || {});
       } catch(e) {
-        return { type:'UNKNOWN', main:'', durationMs:0, label:'MODO -' };
+        return { type:'UNKNOWN', main:'', durationMs:0, label:'MODO -', phase:'LIVE', warmup:false };
       }
     }
 
@@ -24783,8 +24872,9 @@ let label = 'MODO -';
         const isObj = !!(rawOrName && typeof rawOrName === 'object');
         const rn = isObj ? String(rawOrName.raceName || '') : String(rawOrName || '');
         const prRaw = isObj ? rawOrName.practice : practiceMaybe;
-        const pr = (prRaw == null || prRaw === '') ? '' : String(Number(prRaw));
         const info = resolveSessionInfo(rawOrName, practiceMaybe) || {};
+        const type = String(info.type || '').toUpperCase();
+        const pr = (type === 'MANGA' || type === 'FINAL') ? '' : ((prRaw == null || prRaw === '') ? '' : String(Number(prRaw)));
         return [rn, pr, String(info.type || ''), String(info.main || ''), String(info.q || ''), String(info.serie || '')].join('||');
       } catch(e) {
         return String((rawOrName && rawOrName.raceName) || rawOrName || '');
@@ -25249,19 +25339,25 @@ raceData = normalizeRaceData(rawRace);
 
         // --- Gate de voz: despues de practica, silencio hasta que el reloj elapsed arranque ---
         try{
-          const pNow = (normRace && normRace.practice != null) ? Number(normRace.practice) : null;
-          const prNow = (pNow === 1) ? 1 : 0; // null -> carrera
+          const pNow = (rawRace && rawRace.practice != null) ? Number(rawRace.practice) : null;
+          const prNow = (pNow === 1) ? 1 : 0;
           const elapsedNow = __pickElapsedClockMs(rawRace);
+          const sessNow = resolveSessionInfo(rawRace) || {};
+          const explicitRaceSession = ['MANGA','FINAL'].includes(String(sessNow.type || '').toUpperCase());
           if (__prevPracticeFlag === null) __prevPracticeFlag = prNow;
 
-          // Transicion: practica -> carrera (o armando manga/final). Silencia y limpia cola.
+          // Si ZRound cambia tarde a practice=0, no mates la locucion si ya estamos en Manga/Final viva.
           if (__prevPracticeFlag === 1 && prNow === 0){
-            __silenceUntilClockRuns = true;
-            try { speechQueue.length = 0; } catch(e){}
-            try { const __s = getSpeechEngine(); if (__s && typeof __s.cancel === 'function' && canTtsCancelNow(Date.now())) __s.cancel(); } catch(e){}
+            const shouldSilence = !(explicitRaceSession && elapsedNow >= 250);
+            if (shouldSilence) {
+              __silenceUntilClockRuns = true;
+              try { speechQueue.length = 0; } catch(e){}
+              try { const __s = getSpeechEngine(); if (__s && typeof __s.cancel === 'function' && canTtsCancelNow(Date.now())) __s.cancel(); } catch(e){}
+            } else {
+              __silenceUntilClockRuns = false;
+            }
           }
 
-          // Si el reloj ya arranco, se permite locucion otra vez.
           if (__silenceUntilClockRuns && elapsedNow >= 250){
             __silenceUntilClockRuns = false;
           }
