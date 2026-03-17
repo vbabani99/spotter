@@ -1,12 +1,16 @@
 
 
 <!--
-vics_Smart_Spotter_v0.4.9 - Vic Skin PRO (volumen, sombras, bordes 3D) -
+vics_Smart_Spotter_v0.5.0.1 - SessionDirector FSM: lifecycle limpio por sesión -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
+- v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
+- v0.4.10.2: anti-repeat del raceName - el intro de titulo ya no se reencola varias veces, se cancela al arrancar PRACTICA/QUALI/CARRERA y se blinda con latch por sesion.
+- v0.4.9.2: FIX quali sin voz - activitySig ampliada, silencio por inactividad menos agresivo, Speech Arbiter menos estricto en MANGA, prioridades de pole provisional arriba y recovery TTS afinado para Chrome.
 - v0.3.83: TTS SMART v3 - memoria narrativa ampliada: rival recurrente, presion sostenida, defensa heroica y tren de tres con continuidad real.
 - v0.3.79: TTS SMART v2 - memoria narrativa corta y remates contextuales: el motor sigue historias de duelo, detecta cuando la presion crece, se enfria o se concreta, y ajusta la locucion al vuelo.
 - v0.3.78: TTS SMART - motor contextual de locucion que decide al vuelo que decir segun evento, gap, continuidad, sesion y tono.
@@ -82,7 +86,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.4.9</title>
+<title>vics_Smart_Spotter_v0.5.0.1</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -4008,6 +4012,10 @@ body {
     .ttslog-time{font-size:10px; opacity:0.58; font-weight:700; white-space:nowrap;}
     .ttslog-text{font-size:10.5px; line-height:1.25; opacity:0.90; word-break:break-word;}
     .ttslog-empty{font-size:10.5px; opacity:0.55;}
+    .audit-toolbar{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap;}
+    .audit-actions{display:flex; gap:6px; flex-wrap:wrap;}
+    .audit-summary{font-size:10px; opacity:0.70; font-weight:700;}
+    .audit-tag{display:inline-flex; align-items:center; gap:4px; padding:2px 6px; border-radius:999px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);}
     .runtime-profiles{margin-top:10px;}
     .runtime-profiles-header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;}
     .runtime-profiles-title{font-size:12px; font-weight:900; opacity:0.9;}
@@ -6573,7 +6581,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.4.9</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.1</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -6775,6 +6783,23 @@ html, body{
 </div>
 <div class="ttslog-list" id="ttsEventList">
 <div class="ttslog-empty">Esperando eventos TTS...</div>
+</div>
+</div>
+<div class="diag-subpanel" id="auditDiagPanel">
+<div class="diag-subhead">
+<span>Auditoría spotter</span>
+<span class="diag-subnote" id="auditDiagNote">Sin eventos todavía</span>
+</div>
+<div class="audit-toolbar">
+<div class="audit-actions">
+<button class="btn-mini" id="auditExportBtn" title="Exportar auditoría JSON" type="button">EXPORT</button>
+<button class="btn-mini" id="auditCopyBtn" title="Copiar auditoría JSON" type="button">COPIAR</button>
+<button class="btn-mini" id="auditClearBtn" title="Limpiar bitácora" type="button">LIMPIAR</button>
+</div>
+<div class="audit-summary" id="auditSummaryMini">0 ev</div>
+</div>
+<div class="ttslog-list" id="auditEventList">
+<div class="ttslog-empty">Esperando eventos de auditoría...</div>
 </div>
 </div>
 </div>
@@ -7148,7 +7173,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.4.9.1";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.1";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7169,6 +7194,12 @@ const APP_NAME = "vics_Smart_Spotter_v0.4.9.1";
     let __lastFallbackReason = '';
     const __ttsEventLog = [];
     const __TTS_EVENT_LIMIT = 12;
+    const __spotterAuditLog = [];
+    const __SPOTTER_AUDIT_LIMIT = 3000;
+    let __spotterAuditDropped = 0;
+    let __spotterAuditLastSig = '';
+    let __spotterAuditLastAt = 0;
+    let __spotterAuditSessionSig = '';
 
     const __managedIntervals = new Map();
     const __managedTimeouts = new Map();
@@ -7314,6 +7345,191 @@ const APP_NAME = "vics_Smart_Spotter_v0.4.9.1";
       }catch(e){}
     }
 
+    function __auditFmtClock(t){
+      try { const d = new Date(t || Date.now()); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0'); } catch(e) {}
+      return '--:--:--';
+    }
+
+    function __auditClip(v, maxLen = 180){
+      const s = String(v == null ? '' : v).replace(/\s+/g,' ').trim();
+      if (!s) return '';
+      return s.length > maxLen ? (s.slice(0, maxLen - 1) + '…') : s;
+    }
+
+    function __auditSnapshot(extra = {}){
+      const raw = (extra.rawRace && typeof extra.rawRace === 'object') ? extra.rawRace : ((raceData && typeof raceData === 'object') ? raceData : {});
+      const sess = (extra.sessionInfo && typeof extra.sessionInfo === 'object') ? extra.sessionInfo : (currentSessionInfo || {});
+      let synth = null;
+      try { synth = getSpeechEngine(); } catch(e) {}
+      return {
+        raceName: String((extra.raceName != null ? extra.raceName : (raw && raw.raceName)) || '').trim(),
+        sessionType: String((extra.sessionType != null ? extra.sessionType : ((sess && sess.type) || (raw && raw.sessionType))) || '').trim(),
+        lifecycleEventName: String((extra.lifecycleEventName != null ? extra.lifecycleEventName : (raw && raw.lifecycleEventName)) || '').trim(),
+        sessionEventName: String((extra.sessionEventName != null ? extra.sessionEventName : (raw && raw.sessionEventName)) || '').trim(),
+        reason: String((extra.reason != null ? extra.reason : (raw && raw.transitionReason)) || '').trim(),
+        selectedPilot: String((extra.selectedPilot != null ? extra.selectedPilot : (selectedPilotKey || '')) || '').trim(),
+        queueLength: Array.isArray(speechQueue) ? speechQueue.length : 0,
+        speaking: !!speechSpeaking,
+        pending: !!(synth && synth.pending),
+        phase: String((typeof __autoPhase !== 'undefined' ? __autoPhase : '') || '').trim(),
+        modeBadge: String((raceModeBadge && raceModeBadge.textContent) || '').trim(),
+        key: String((extra.key != null ? extra.key : '') || '').trim(),
+        category: String((extra.category != null ? extra.category : '') || '').trim()
+      };
+    }
+
+    function pushSpotterAudit(action, detail = '', extra = {}){
+      try{
+        const now = Date.now();
+        const snap = __auditSnapshot(extra);
+        const item = Object.assign({
+          t: now,
+          action: String(action || 'info').trim() || 'info',
+          detail: __auditClip(detail, Number(extra.maxLen || 220) || 220)
+        }, snap);
+        const dedupeKey = String((extra && extra.dedupeKey) || [item.action, item.detail, item.raceName, item.sessionType, item.lifecycleEventName, item.sessionEventName, item.selectedPilot, item.key].join('|'));
+        const throttleMs = (extra && Object.prototype.hasOwnProperty.call(extra, 'throttleMs')) ? Number(extra.throttleMs || 0) : 1200;
+        if (throttleMs > 0 && dedupeKey === __spotterAuditLastSig && ((now - __spotterAuditLastAt) < throttleMs)) return false;
+        __spotterAuditLastSig = dedupeKey;
+        __spotterAuditLastAt = now;
+        __spotterAuditLog.push(item);
+        while (__spotterAuditLog.length > __SPOTTER_AUDIT_LIMIT) { __spotterAuditLog.shift(); __spotterAuditDropped++; }
+        if (isDebugModeActive()) {
+          try { renderSpotterAuditLog(); } catch(e) {}
+        }
+        return true;
+      }catch(e){ return false; }
+    }
+
+    function __auditMaybeSessionSwitch(info, raw){
+      try{
+        const sessionSig = getSessionSignature(raw || raceData || {});
+        const sess = info || currentSessionInfo || {};
+        const type = String((sess && sess.type) || '').trim().toUpperCase();
+        const label = String((sess && sess.label) || '').trim();
+        const sig = String(sessionSig || '') + '|' + type + '|' + label;
+        if (!sig) return;
+        if (sig === __spotterAuditSessionSig) return;
+        __spotterAuditSessionSig = sig;
+        pushSpotterAudit('mode_switch', (type || '-') + (label ? (' - ' + label) : ''), { rawRace: raw, sessionInfo: sess, dedupeKey: 'mode|' + sig, throttleMs: 0 });
+      }catch(e){}
+    }
+
+    function renderSpotterAuditLog(){
+      try{
+        if (!isDebugModeActive()) return;
+        if (!auditEventList) return;
+        const list = __spotterAuditLog.slice(-10).reverse();
+        if (!list.length){
+          renderSimpleEventLog(auditEventList, [], { emptyText:'Esperando eventos de auditoría...', emptyClass:'ttslog-empty' });
+          if (auditDiagNote) auditDiagNote.textContent = 'Sin eventos todavía';
+          if (auditSummaryMini) auditSummaryMini.textContent = '0 ev';
+          return;
+        }
+        const rows = list.map(it => {
+          const tags = [];
+          if (it.sessionType) tags.push(it.sessionType);
+          if (it.lifecycleEventName) tags.push(it.lifecycleEventName);
+          else if (it.sessionEventName) tags.push(it.sessionEventName);
+          if (Number.isFinite(it.queueLength)) tags.push('q ' + String(it.queueLength));
+          return {
+            metaPrimary: String(it.action || 'info').replace(/[<>]/g,'') + (tags.length ? (' - ' + tags.join(' • ')) : ''),
+            metaSecondary: __auditFmtClock(it.t),
+            text: __auditClip((it.detail || '-') + (it.reason ? (' | ' + it.reason) : ''), 220).replace(/[<>]/g,'')
+          };
+        });
+        renderSimpleEventLog(auditEventList, rows, {
+          itemClass:'ttslog-item',
+          metaClass:'ttslog-meta',
+          typeClass:'ttslog-type',
+          timeClass:'ttslog-time',
+          textClass:'ttslog-text'
+        });
+        const recent = __spotterAuditLog.slice(-80);
+        const counts = { q:0, s:0, t:0, w:0 };
+        recent.forEach(it => {
+          const a = String(it.action || '').toLowerCase();
+          if (a.indexOf('queue_') === 0) counts.q++;
+          if (a.indexOf('suppress_') === 0) counts.s++;
+          if (a.indexOf('tts_') === 0) counts.t++;
+          if (a.indexOf('watcher_') === 0 || a === 'mode_switch') counts.w++;
+        });
+        if (auditDiagNote) {
+          const last = list[0];
+          auditDiagNote.textContent = String(last.action || 'info').toUpperCase() + (last.sessionType ? (' - ' + last.sessionType) : '');
+        }
+        if (auditSummaryMini) auditSummaryMini.textContent = recent.length + ' ev • watcher ' + counts.w + ' • cola ' + counts.q + ' • sup ' + counts.s + ' • tts ' + counts.t;
+      }catch(e){}
+    }
+
+    function getSpotterAuditExport(){
+      try{
+        return {
+          generatedAt: new Date().toISOString(),
+          appVersion: 'vics_Smart_Spotter_v0.5.0.1',
+          totalItems: __spotterAuditLog.length,
+          droppedItems: __spotterAuditDropped,
+          items: __spotterAuditLog.slice()
+        };
+      }catch(e){
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.1', totalItems: 0, droppedItems: 0, items: [] };
+      }
+    }
+
+    function exportSpotterAuditJson(){
+      try{
+        const payload = JSON.stringify(getSpotterAuditExport(), null, 2);
+        const blob = new Blob([payload], { type:'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const stamp = new Date().toISOString().replace(/[.:]/g,'-');
+        a.href = url;
+        a.download = 'spotter_audit_' + stamp + '.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => { try { URL.revokeObjectURL(url); } catch(e) {} }, 1000);
+        try { showToast('Auditoría exportada', 1400); } catch(e) {}
+      }catch(e){}
+    }
+
+    async function copySpotterAuditJson(){
+      try{
+        const payload = JSON.stringify(getSpotterAuditExport(), null, 2);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(payload);
+          try { showToast('Auditoría copiada', 1400); } catch(e) {}
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = payload;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch(e) {}
+          ta.remove();
+          try { showToast('Auditoría copiada', 1400); } catch(e) {}
+        }
+      }catch(e){
+        try { showToast('No se pudo copiar la auditoría', 1600); } catch(_e) {}
+      }
+    }
+
+    function clearSpotterAuditLog(){
+      try{
+        __spotterAuditLog.length = 0;
+        __spotterAuditDropped = 0;
+        __spotterAuditLastSig = '';
+        __spotterAuditLastAt = 0;
+        renderSpotterAuditLog();
+        try { showToast('Bitácora limpia', 1200); } catch(e) {}
+      }catch(e){}
+    }
+
+    onDomReady(() => {
+      try { if (auditExportBtn) auditExportBtn.addEventListener('click', exportSpotterAuditJson); } catch(e) {}
+      try { if (auditCopyBtn) auditCopyBtn.addEventListener('click', () => { copySpotterAuditJson(); }); } catch(e) {}
+      try { if (auditClearBtn) auditClearBtn.addEventListener('click', clearSpotterAuditLog); } catch(e) {}
+    });
+
     function startRuntimeDiagTicker(){
       try { clearManagedInterval("__diagUiTimer"); } catch(e) {}
       __diagUiTimer = 0;
@@ -7322,10 +7538,12 @@ const APP_NAME = "vics_Smart_Spotter_v0.4.9.1";
         __diagUiTimer = setManagedInterval("__diagUiTimer", () => {
           try { updateRuntimeDiagUI(); } catch(e) {}
           try { renderTtsEventLog(); } catch(e) {}
+          try { renderSpotterAuditLog(); } catch(e) {}
         }, Math.max(700, Number(__diagUiIntervalMs || 1000)));
       } catch(e) {}
       try { updateRuntimeDiagUI(); } catch(e) {}
       try { renderTtsEventLog(); } catch(e) {}
+      try { renderSpotterAuditLog(); } catch(e) {}
     }
 
     function startRuntimeWatchdog(){
@@ -8994,6 +9212,7 @@ function msgv2DecimasTxt(ms) {
     // =========================
     let __autoIntroSig = '';
     let __autoIntroDoneKeys = new Set();
+    let __autoIntroQueuedKeys = new Set();
     let __autoIntroRetryAt = 0;
     let __autoFinishSig = '';
     let __autoFinishPrevByKey = new Map();
@@ -9106,8 +9325,9 @@ function msgv2DecimasTxt(ms) {
           }
         }
 
-        const bestMs = Number(r && (r.bestLapMs || r.bestLapMsRaw || r.bestLapTimeMs || r.bestLapMsValue)) || 0;
-        const bestTime = Number(r && (r.bestLapTime || 0)) || 0;
+        const bestSuppressed = !!(r && r.bestLapResidualSuppressed);
+        const bestMs = bestSuppressed ? 0 : (Number(r && (r.bestLapMs || r.bestLapMsRaw || r.bestLapTimeMs || r.bestLapMsValue)) || 0);
+        const bestTime = bestSuppressed ? 0 : (Number(r && (r.bestLapTime || 0)) || 0);
         const bestAny = bestMs || bestTime;
 
         return { maxLap, maxTotalMs, maxLastLapMs, bestAny };
@@ -9218,12 +9438,14 @@ function msgv2DecimasTxt(ms) {
           if (isFinal) {
             __autoPhase = 'CLOSING';
             __autoCloseStartedMs = now;
+            try { __purgeSpeechForPhase('CLOSING'); } catch(e) {}
             return;
           } else {
             // Manga: anunciar cierre + Top3 y luego silencio
             try { __autoAnnounceTop3Summary(r, 'Termin la clasificacin'); } catch(e) {}
             __autoPhase = 'FINISHED';
             __autoCloseStartedMs = now;
+            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
         }
@@ -9237,6 +9459,7 @@ function msgv2DecimasTxt(ms) {
           if (activeCount > 0 && announcedCount >= activeCount) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
+            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
 
@@ -9248,6 +9471,7 @@ function msgv2DecimasTxt(ms) {
           if (sinceCloseMs > 7000 && idleMs > 12000) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
+            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
 
@@ -9255,6 +9479,7 @@ function msgv2DecimasTxt(ms) {
           if (activeCount > 0 && announcedCount >= Math.max(1, activeCount - 1) && idleMs > 8000) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
+            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
 
@@ -9262,6 +9487,7 @@ function msgv2DecimasTxt(ms) {
           if (__autoCloseStartedMs && sinceCloseMs > 70000) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
+            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
           return;
@@ -9275,7 +9501,10 @@ function msgv2DecimasTxt(ms) {
         // Manga: si ya pas el tiempo y no hay actividad, acabar
         if (!isFinal && maxTotalMs >= dur) {
           const idleMs = now - (__autoLastActivityMs || now);
-          if (idleMs > 8000) __autoPhase = 'FINISHED';
+          if (idleMs > 8000) {
+            __autoPhase = 'FINISHED';
+            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
+          }
         }
       } catch(e) {}
     }
@@ -9376,9 +9605,18 @@ function msgv2DecimasTxt(ms) {
 
         const introKey = 'auto_intro_title_' + sessionSig;
         const now = Date.now();
+        const lifeEvt = String(r.lifecycleEventName || '').trim().toUpperCase();
+        const sessEvt = String(r.sessionEventName || '').trim().toUpperCase();
 
-        // Si ya anunciamos exitosamente este titulo, no repetir
+        // Si ya lo anunciamos o ya lo dejamos en cola para esta sesion, no repetir.
         if (sessionSig === __autoIntroSig && __autoIntroDoneKeys && __autoIntroDoneKeys.has(introKey)) return;
+        if (sessionSig === __autoIntroSig && __autoIntroQueuedKeys && __autoIntroQueuedKeys.has(introKey)) return;
+
+        // No metas el titulo tarde cuando la sesion ya esta arrancando.
+        if (lifeEvt === 'PRACTICE_ACTIVITY_START' || lifeEvt === 'QUALI_ACTIVITY_START' || lifeEvt === 'RACE_ACTIVITY_START' ||
+            sessEvt === 'PRACTICE_RUNNING_WITH_GRID' || sessEvt === 'RACE_RUNNING') {
+          return;
+        }
 
         // Si aun no se ha podido anunciar (TTS ocupado/errores), reintentar con cooldown corto
         if (sessionSig === __autoIntroSig && now < (__autoIntroRetryAt || 0)) return;
@@ -9391,6 +9629,7 @@ function msgv2DecimasTxt(ms) {
           __autoIntroSig = sessionSig;
           try { __autoResetLifecycle(sessionSig); } catch(e) {}
           try { __autoIntroDoneKeys.clear(); } catch(e) { __autoIntroDoneKeys = new Set(); }
+          try { __autoIntroQueuedKeys.clear(); } catch(e) { __autoIntroQueuedKeys = new Set(); }
         }
 
         __autoIntroRetryAt = now + 3000;
@@ -9480,7 +9719,22 @@ function msgv2DecimasTxt(ms) {
           return parts.join(', ');
         }
 
-        if (type === 'MANGA') {
+        const parsedRaceTitleInfo = parseSessionFromRaceName(rn) || {};
+        const parsedRaceType = String(parsedRaceTitleInfo.type || '').toUpperCase();
+
+        if (type === 'TRAIN') {
+          // En practica no anunciamos solo "Practica"; anunciamos el titulo real de la sesion que acaba de llegar.
+          // Ejemplos: "Clasificacion, Q1, Manga, B, Serie 1" o "Final A".
+          if (parsedRaceType === 'MANGA') {
+            introText = __buildMangaTitleTts2(parsedRaceTitleInfo);
+          } else if (parsedRaceType === 'FINAL') {
+            introText = String(parsedRaceTitleInfo.spokenTitle || '').trim() || ('Final ' + String(parsedRaceTitleInfo.main || '').trim()).trim() || 'Final';
+          } else {
+            const label = String(parsedRaceTitleInfo.label || info.label || '').trim();
+            const spokenTitle = String(parsedRaceTitleInfo.spokenTitle || info.spokenTitle || '').trim() || (label ? label.replace('MODO ', '').trim() : '');
+            introText = (spokenTitle ? spokenTitle : 'Nueva carrera');
+          }
+        } else if (type === 'MANGA') {
           introText = __buildMangaTitleTts2(info);
         } else if (type === 'FINAL') {
           // main es A/B/C si existe
@@ -9499,6 +9753,7 @@ function msgv2DecimasTxt(ms) {
           dedupe: true,
           maxAgeMs: 60000
         });
+        try { __autoIntroQueuedKeys.add(introKey); } catch(e) {}
       } catch(e) {}
     }
 
@@ -9752,6 +10007,12 @@ function msgv2DecimasTxt(ms) {
     const diagErrorBox    = document.getElementById('diagErrorBox');
     const ttsDiagNote     = document.getElementById('ttsDiagNote');
     const ttsEventList    = document.getElementById('ttsEventList');
+    const auditDiagNote   = document.getElementById('auditDiagNote');
+    const auditEventList  = document.getElementById('auditEventList');
+    const auditExportBtn  = document.getElementById('auditExportBtn');
+    const auditCopyBtn    = document.getElementById('auditCopyBtn');
+    const auditClearBtn   = document.getElementById('auditClearBtn');
+    const auditSummaryMini = document.getElementById('auditSummaryMini');
     const runtimeProfileNote = document.getElementById('runtimeProfileNote');
 
     const pilotSelect     = document.getElementById('pilotSelect');
@@ -12761,9 +13022,9 @@ function __duoGuessRole(txt, key) {
 
     const AI_SMART_PROFILES = {
       FOLLOW: {
-        TRAIN: { rdMode:'engineer', autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
-        MANGA: { rdMode:'minimal',  autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true,  ritmo:false, estlap:false, bestlap:true,  leadergap:false, pos:true, gaps:false, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
-        FINAL: { rdMode:'coach',    autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:false, bestlap:true, leadergap:true, pos:true, gaps:true, podium:true,  front06:true,  back06:true,  attack:true,  defense:true,  pelea:false, total:false, cons10:false, box:false, netgain:false } }
+        TRAIN: { rdMode:'engineer', autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:true, estlap:true, bestlap:true, leadergap:false, pos:true, gaps:false, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
+        MANGA: { rdMode:'minimal',  autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
+        FINAL: { rdMode:'coach',    autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:false, bestlap:true, leadergap:true, pos:true, gaps:true, podium:true,  front06:true,  back06:true,  attack:true,  defense:true,  pelea:true,  total:false, cons10:false, box:false, netgain:false } }
       },
       AUTO: {
         TRAIN: { rdMode:'minimal',  autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:false, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } },
@@ -12773,7 +13034,9 @@ function __duoGuessRole(txt, key) {
     };
 
     function _applyBasicOverride(sess, mode){
-      // Aplica en AUTO y FOLLOW. En FOLLOW incluye POS; en AUTO solo deja lo esencial.
+      // BÁSICO:
+      // - FOLLOW: vuelta a vuelta + posición estable de vez en cuando + azul solo en finales
+      // - AUTO: solo lo esencial, sin narrativa rica
       try{
         if (!basicModeEnabled) return false;
         const bmode = mode || __modeBucket();
@@ -12781,13 +13044,10 @@ function __duoGuessRole(txt, key) {
         const next = { ...DEFAULT_VOICE_SETTINGS };
         // Siempre activo
         next.laps = true;
-        // BASICO ultra limpio:
-        // - Solo last lap (siempre) + posicion (solo en FOLLOW, cambios estables)
-        // - Cero extras: no azul, no gaps, no best, no contexto.
-        next.pos = true; // BÁSICO también en AUTO (reporta P1)
+        next.pos = true;
         next.gaps = false;
         next.leadergap = false;
-        next.blueflag = false;
+        next.blueflag = !!(bmode === 'FOLLOW');
         next.ritmo = false;
         next.estlap = false;
         next.bestlap = false;
@@ -13364,6 +13624,9 @@ __autoVoicePool = inter.map(v => (v.voiceURI || v.name)).filter(Boolean);
     let speechWatchdog = 0;
     const lastSpokenKeyAt = new Map();
     const lastSpokenTextAt = new Map();
+    const __recentEnqueueAt = new Map();
+    let __sessionIntroGuardUntil = 0;
+    let __sessionIntroGuardName = '';
 let __ttsStartGuard = 0;
     let __ttsStartGuardFails = 0; // conteo de fallos de arranque (para no exigir tap a la primera)
     let __ttsLastEventAt = 0;
@@ -13371,6 +13634,7 @@ let __ttsStartGuard = 0;
     let __ttsLastEndAt = 0;
     let __ttsLastSpeakCallAt = 0;
     let __ttsCurrentText = '';
+    let __ttsCurrentKey = '';
  // si el utterance no arranca, no drenar cola (iOS/Android post-idle)
 
     
@@ -13625,8 +13889,6 @@ return s;
     }
 
     function __maybeAnnounceRemainingMs(remMs){
-      // TTS de tiempo restante desactivado (sin anuncio final).
-      return;
       try{
         if (!voiceMasterEnabled) return;
         if (!remMs || remMs < 0) remMs = 0;
@@ -14030,7 +14292,7 @@ function __semRemember(cat, text, windowMs){
 // =========================
 let __activitySig = '';
 let __lastActivityChangeTs = Date.now();
-let __silenceAfterMs = 20000; // 20s sin cambios = silencio
+let __silenceAfterMs = 45000; // 45s sin cambios = silencio
 
 function __setActivitySig(sig){
   try{
@@ -14053,7 +14315,11 @@ function __isEssentialSpeech(opts, key, priority){
     const k = String(key||'').toLowerCase();
     const cat = String((opts && (opts.semanticCategory || opts.category)) || '').toLowerCase();
     if (cat === 'ess' || cat === 'system' || cat === 'critical') return true;
-    if (k.includes('blue') || k.includes('bandera') || k.includes('leader') || k.includes('líder') || k.includes('finish') || k.includes('cuadros') || k.includes('podium')) return true;
+    try {
+      const sess = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+      if (sess === 'MANGA' && (cat === 'leader' || cat === 'bestlap' || cat === 'quali')) return true;
+    } catch(e) {}
+    if (k.includes('blue') || k.includes('bandera') || k.includes('leader') || k.includes('líder') || k.includes('finish') || k.includes('cuadros') || k.includes('podium') || k.includes('quali')) return true;
     if (k.includes('tts_test') || k.includes('unlock') || k.includes('audio listo')) return true;
     return false;
   }catch(e){ return false; }
@@ -14073,14 +14339,14 @@ let __ttsBlockedSince = 0;
 // - Mensajes ruidosos (gaps/front/back/mini/ritmo) se caen primero.
 // =========================
 const __speechQueueCfg = {
-  maxQueue: 6,
-  maxQueueBlocked: 4,
+  maxQueue: 8,
+  maxQueueBlocked: 6,
   staleLowMs: 2200,
   staleNormalMs: 4200,
   staleHighMs: 9000,
-  sameCatSuppressMs: 3200,
-  recentSpokenSuppressMs: 4500,
-  noisyPendingMax: 2
+  sameCatSuppressMs: 1800,
+  recentSpokenSuppressMs: 2600,
+  noisyPendingMax: 3
 };
 const __speechLastCategoryAt = new Map();
 const __speechLastCategoryText = new Map();
@@ -14139,7 +14405,7 @@ function __speechExpiryFor(cat, priority, opts){
     if (c === 'pos') return 1800;
     if (c === 'battle' || c === 'pressure' || c === 'front06' || c === 'back06') return 2400;
     if (c === 'gaps' || c === 'ritmo' || c === 'mini' || c === 'netgain' || c === 'estlap') return 2000;
-    if (c === 'leader' || c === 'bestlap' || c === 'top3' || c === 'train') return 4200;
+    if (c === 'leader' || c === 'bestlap' || c === 'top3' || c === 'train' || c === 'quali') return 6500;
     if (pr >= 80) return __speechQueueCfg.staleHighMs;
     if (pr <= 35) return __speechQueueCfg.staleLowMs;
     return __speechQueueCfg.staleNormalMs;
@@ -14231,6 +14497,98 @@ function __speechSupersedePending(cat, priority, opts, key, now){
         speechQueue.splice(i, 1);
       }
     }
+  }catch(e){}
+}
+
+
+function __speechSystemTtsMuted(clean, key, cat, opts){
+  try{
+    const c = String(cat || (opts && opts.category) || '').trim().toLowerCase();
+    const k = String(key || (opts && opts.key) || '').trim().toLowerCase();
+    const txt = String(clean || '').trim().toLowerCase();
+    const mutedKeys = new Set(['sys_voice_ready']);
+    const mutedTexts = new Set(['voz lista']);
+    if (c !== 'system' && !k.startsWith('sys_')) return false;
+    return mutedKeys.has(k) || mutedTexts.has(txt);
+  }catch(e){ return false; }
+}
+
+function __speechSessionTypeNow(){
+  try{
+    const info = currentSessionInfo || {};
+    const t = String(info.type || info.sessionType || '').trim().toUpperCase();
+    if (t) return t;
+  }catch(e){}
+  try{
+    const t2 = String((raceData && (raceData.sessionType || (raceData.sessionInfo && raceData.sessionInfo.type))) || '').trim().toUpperCase();
+    return t2 || '';
+  }catch(e){ return ''; }
+}
+
+function __speechHardMuteForSession(clean, key, cat, opts){
+  try{
+    const sess = __speechSessionTypeNow();
+    const c = String(cat || '').trim().toLowerCase();
+    const k = String(key || (opts && opts.key) || '').trim().toLowerCase();
+    const txt = String(clean || '').trim().toLowerCase();
+    if (!sess) return false;
+
+    if (sess !== 'TRAIN') {
+      if (c === 'train' || k.includes('train')) return true;
+      return false;
+    }
+
+    const hardCats = new Set(['battle','pressure']);
+    if (hardCats.has(c)) return true;
+    if (c === 'podium' && /(trofeo|podio|podium|top 3|p[234] a p[345]|puesto grande)/i.test(txt)) return true;
+
+    const violentKey = /(attack|defense|fight|duel|battle|pressure|leaderchange|leader_change|pass|podium|podio)/i;
+    if (violentKey.test(k)) return true;
+
+    const violentText = /(duelo|batalla|pelea|ataque|defensa|guerra|presiona|acecha|caza|podio comprometido|podio en juego|trofeo|zona de riesgo t[áa]ctico|lectura del enfrentamiento|duelo persistente|a cuchillo|nadie afloja|cambio de lider|cambio de líder|encima de|pelea por p\d+)/i;
+    if (violentText.test(txt)) return true;
+
+    return false;
+  }catch(e){ return false; }
+}
+
+function __speechPhaseBlocks(clean, key, cat, opts){
+  try{
+    const phase = String(__autoPhase || '').trim().toUpperCase();
+    if (!phase || phase === 'IDLE' || phase === 'WAIT_START' || phase === 'RUNNING') return false;
+    const c = String(cat || '').trim().toLowerCase();
+    const k = String(key || (opts && opts.key) || '').trim().toLowerCase();
+    const isLifecycle = (c === 'lifecycle' || k.indexOf('watcher_life_') === 0);
+    const isFinish = (c === 'finish' || k.indexOf('session_finish_') === 0 || k.indexOf('auto_finalizo_') === 0);
+    const isSystem = (c === 'system' || k.indexOf('sys_') === 0);
+    if (phase === 'CLOSING') return !(isLifecycle || isFinish || isSystem);
+    if (phase === 'FINISHED') return !(isLifecycle || isFinish || isSystem);
+    return false;
+  }catch(e){ return false; }
+}
+
+function __speechIntroGuardBlocks(cat, key, now){
+  try{
+    const t = Number(now || Date.now()) || Date.now();
+    if (!__sessionIntroGuardUntil || t >= __sessionIntroGuardUntil) return false;
+    const c = String(cat || '').trim().toLowerCase();
+    const k = String(key || '').trim().toLowerCase();
+    if (c === 'lifecycle' || k.indexOf('watcher_life_') === 0) return false;
+    return true;
+  }catch(e){ return false; }
+}
+
+function __armSessionIntroGuard(ms, name){
+  try{
+    __sessionIntroGuardUntil = Date.now() + Math.max(600, Number(ms || 1600) || 1600);
+    __sessionIntroGuardName = String(name || '').trim();
+  }catch(e){}
+}
+
+function __clearSessionIntroGuard(){
+  try{
+    __sessionIntroGuardUntil = 0;
+    __sessionIntroGuardName = '';
   }catch(e){}
 }
 
@@ -14380,7 +14738,7 @@ function enqueueSpeech(text, opts = {}) {
             const tTTL = (typeof opts.textTtlMs === 'number') ? opts.textTtlMs : 4500;
             if (tTTL > 0) {
               const lastT = lastSpokenTextAt.get(clean) || 0;
-              if ((now - lastT) < tTTL) return;
+              if ((now - lastT) < tTTL) { try { pushSpotterAudit('suppress_text_ttl', clean, { key: k0, throttleMs: 600, dedupeKey:'sup_ttl|' + clean }); } catch(e) {} return; }
             }
           }
         } catch(e) {}
@@ -14388,22 +14746,43 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         const cooldownMs = Number(opts.cooldownMs || 0) || 0;
         if (cooldownMs > 0) {
           const last = lastSpokenKeyAt.get(key) || 0;
-          if (now - last < cooldownMs) return;
+          if (now - last < cooldownMs) { try { pushSpotterAudit('suppress_cooldown', clean, { key, throttleMs: 600, dedupeKey:'sup_cd|' + key + '|' + clean }); } catch(e) {} return; }
         }
         const priority = Number.isFinite(opts.priority) ? opts.priority : 0;
         const interrupt = !!opts.interrupt;
         const dedupe = (opts.dedupe !== false);
         const queueCategory = __speechCatFromOpts(opts, key, clean);
 
+        if (__speechSystemTtsMuted(clean, key, queueCategory, opts)) {
+          try { pushSpotterAudit('suppress_system_tts', clean, { key, category: queueCategory, throttleMs: 600, dedupeKey:'sup_sys|' + key + '|' + clean }); } catch(e) {}
+          return;
+        }
+
+        if (__speechHardMuteForSession(clean, key, queueCategory, opts)) {
+          try { pushSpotterAudit('suppress_session_policy', clean, { key, category: queueCategory, sessionType: __speechSessionTypeNow(), throttleMs: 600, dedupeKey:'sup_sess|' + String(__speechSessionTypeNow() || '') + '|' + key + '|' + clean }); } catch(e) {}
+          return;
+        }
+
+        if (__speechPhaseBlocks(clean, key, queueCategory, opts)) {
+          try { pushSpotterAudit('suppress_phase', clean, { key, category: queueCategory, phase: String(__autoPhase || ''), throttleMs: 600, dedupeKey:'sup_phase|' + String(__autoPhase || '') + '|' + key + '|' + clean }); } catch(e) {}
+          return;
+        }
+
+        if (__speechIntroGuardBlocks(queueCategory, key, now)) {
+          try { pushSpotterAudit('suppress_intro_guard', clean, { key, category: queueCategory, guard: __sessionIntroGuardName || '', throttleMs: 600, dedupeKey:'sup_intro|' + key + '|' + clean }); } catch(e) {}
+          return;
+        }
+
         // Silencio por inactividad: si no hay cambios reales, no hables (salvo esenciales)
         if (__inActivitySilence() && !__isEssentialSpeech(opts, key, priority)) {
+          try { pushSpotterAudit('suppress_prestart', clean, { key, category: queueCategory, throttleMs: 800, dedupeKey:'sup_pre|' + key + '|' + clean }); } catch(e) {}
           return;
         }
 
         // Si el TTS esta bloqueado y espera reactivacion por gesto,
         // no acumules backlog: solo dejamos pasar mensajes esenciales.
         if (pendingAutoVoiceUnlock) {
-          if (!__isEssentialSpeech(opts, key, priority)) return;
+          if (!__isEssentialSpeech(opts, key, priority)) { try { pushSpotterAudit('suppress_unlock', clean, { key, category: queueCategory, throttleMs: 800, dedupeKey:'sup_unlock|' + key + '|' + clean }); } catch(e) {} return; }
         }
 
 
@@ -14414,19 +14793,20 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         if (opts.semanticDedupe !== false && __semCat && !__semSkipCategory(__semCat)) {
           const thr = (opts.semanticThreshold != null) ? Number(opts.semanticThreshold) : 0.78;
           const win = (opts.semanticWindowMs != null) ? Number(opts.semanticWindowMs) : 25000;
-          if (__semIsRepeat(__semCat, clean, thr, win)) return;
+          if (__semIsRepeat(__semCat, clean, thr, win)) { try { pushSpotterAudit('suppress_semantic', clean, { key, category: __semCat, throttleMs: 1000, dedupeKey:'sup_sem|' + __semCat + '|' + clean }); } catch(e) {} return; }
           // solo recordamos si va a entrar a cola
           __semRemember(__semCat, clean, win);
         }
 
         if (dedupe) {
-          if (speechQueue.some(it => it.text === clean)) return;
+          if (speechQueue.some(it => it.text === clean)) { try { pushSpotterAudit('suppress_queue_dup', clean, { key, category: queueCategory, throttleMs: 600, dedupeKey:'sup_qdup|' + clean }); } catch(e) {} return; }
         }
 
-        if (__speechShouldSkipIncoming(clean, key, queueCategory, priority, opts, now)) return;
+        if (__speechShouldSkipIncoming(clean, key, queueCategory, priority, opts, now)) { try { pushSpotterAudit('suppress_policy', clean, { key, category: queueCategory, throttleMs: 700, dedupeKey:'sup_policy|' + key + '|' + clean }); } catch(e) {} return; }
         try { __speechSupersedePending(queueCategory, priority, opts, key, now); } catch(e) {}
 
         if (interrupt) {
+          try { pushSpotterAudit('queue_flush', 'Interrupt TTS', { key, category: queueCategory, throttleMs: 0 }); } catch(e) {}
           speechQueue.length = 0;
           speechSpeaking = false;
           try { const __s = getSpeechEngine(); if (__s && typeof __s.cancel === 'function' && canTtsCancelNow(Date.now())) __s.cancel(); } catch (e) {}
@@ -14451,8 +14831,25 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           } catch(e) {}
         }
 
+        const recentEnqKey = String(key || '').trim().toLowerCase() + '|' + String(clean || '').trim().toLowerCase();
+        const recentEnqWin = Math.max(0, Number(opts.queueDedupeMs != null ? opts.queueDedupeMs : 1200) || 1200);
+        if (recentEnqWin > 0) {
+          const prevEnq = __recentEnqueueAt.get(recentEnqKey) || 0;
+          if (prevEnq && (now - prevEnq) < recentEnqWin) {
+            try { pushSpotterAudit('suppress_enqueue_dup', clean, { key, category: queueCategory, throttleMs: 600, dedupeKey:'sup_enq|' + recentEnqKey }); } catch(e) {}
+            return;
+          }
+        }
         const ttlMs = __speechExpiryFor(queueCategory, priority, opts);
         speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: __voiceURI, category: queueCategory, expireAt: ttlMs > 0 ? (now + ttlMs) : 0, opts });
+        try { __recentEnqueueAt.set(recentEnqKey, now); } catch(e) {}
+        try {
+          if (__recentEnqueueAt.size > 1200) {
+            const cut = now - 10000;
+            for (const [rk, rv] of __recentEnqueueAt.entries()) { if ((rv || 0) < cut) __recentEnqueueAt.delete(rk); }
+          }
+        } catch(e) {}
+        try { pushSpotterAudit('queue_add', clean, { key, category: queueCategory, throttleMs: 0 }); } catch(e) {}
         try { if (pendingAutoVoiceUnlock) __pruneQueueDuringBlock(); } catch(e) {}
         try { __speechPruneQueue(now); } catch(e) {}
         try { pushSpeechLog({ text: clean, key, priority }); } catch(e) {}
@@ -14478,11 +14875,12 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         if (__ss && (__ss.speaking || __ss.pending)){
           const now = Date.now();
           const lastEv = (__ttsLastEventAt || 0);
-          const thr = __ss.speaking ? 9000 : 4500;
+          const thr = __ss.speaking ? 6500 : 2800;
           // Si no hay actividad reciente, es speaking/pending fantasma: cancela y reintenta
           if (lastEv && (now - lastEv) > thr) {
             try { if (canTtsCancelNow(now)) __ss.cancel(); } catch(e){}
             try { pushTtsEvent('recover', 'Cancel por ghost speaking/pending', 'tts'); } catch(e) {}
+            try { pushSpotterAudit('tts_recover', 'Ghost speaking/pending', { throttleMs: 0 }); } catch(e) {}
             __ttsLastEventAt = now;
             speechSpeaking = false;
             scheduleSpeechPump(80);
@@ -14511,6 +14909,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           if (!cand) continue;
           if (__speechIsExpired(cand, Date.now())) {
             try { pushTtsEvent('drop', cand.text || '', `ttl ${cand.category || ''}`); } catch(e) {}
+            try { pushSpotterAudit('queue_drop_ttl', cand.text || '', { key: cand.key || '', category: cand.category || '', throttleMs: 0 }); } catch(e) {}
             continue;
           }
           next = cand;
@@ -14518,7 +14917,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         }
         if (!next) return;
 
-        try { __ttsLastSpeakCallAt = Date.now(); __ttsLastEventAt = __ttsLastSpeakCallAt; __ttsCurrentText = (next.text || ''); } catch(e) {}
+        try { __ttsLastSpeakCallAt = Date.now(); __ttsLastEventAt = __ttsLastSpeakCallAt; __ttsCurrentText = (next.text || ''); __ttsCurrentKey = (next.key || ''); } catch(e) {}
         const u = new SpeechSynthesisUtterance(normalizeTtsText(next.text));
         let __ttsDidStart = false;
         try {
@@ -14527,6 +14926,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         try { __ttsLastStartAt = Date.now(); __ttsLastEventAt = __ttsLastStartAt; } catch(e) {}
         try { __speechLastCategoryAt.set(String(next.category || 'general'), __ttsLastStartAt || Date.now()); __speechLastCategoryText.set(String(next.category || 'general'), String(next.text || '')); } catch(e) {}
         try { pushTtsEvent('start', next.text || '', next.key || 'tts'); } catch(e) {}
+        try { pushSpotterAudit('tts_start', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
                         try { __ttsStartGuardFails = 0; } catch(e) {}
 try { clearTtsStartGuard(); } catch(e) {}
           };
@@ -14579,22 +14979,43 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
         u.onend = () => {
         try { __ttsLastEndAt = Date.now(); __ttsLastEventAt = __ttsLastEndAt; } catch(e) {}
           try { pushTtsEvent('end', next.text || '', next.key || 'tts'); } catch(e) {}
+          try { pushSpotterAudit('tts_end', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
           clearSpeechWatchdog();
           speechSpeaking = false;
                     try { __ttsStartGuardFails = 0; } catch(e) {}
-try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_title_') === 0) { __autoIntroDoneKeys.add(next.key); } } catch(e) {}
+try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_title_') === 0) { __autoIntroDoneKeys.add(next.key); __autoIntroQueuedKeys.add(next.key); } } catch(e) {}
           lastSpokenKeyAt.set(next.key, Date.now());
           try { lastSpokenTextAt.set(next.text, Date.now()); } catch(e) {}
           try { __speechLastCategoryAt.set(String(next.category || 'general'), Date.now()); __speechLastCategoryText.set(String(next.category || 'general'), String(next.text || '')); } catch(e) {}
+          try { __ttsCurrentKey = ''; } catch(e) {}
           const d = Number(next.postDelayMs || 0) || 0;
           scheduleSpeechPump(d);
         };
         u.onerror = () => {
         try { __ttsLastEventAt = Date.now(); } catch(e) {}
           try { pushTtsEvent('error', next.text || '', next.key || 'tts'); } catch(e) {}
+          try { pushSpotterAudit('tts_error', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
           clearSpeechWatchdog();
           speechSpeaking = false;
                     try { __ttsStartGuardFails = 0; } catch(e) {}
+          try { __ttsCurrentKey = ''; __ttsCurrentText = ''; } catch(e) {}
+          try {
+            const canRetryLifecycle = !!(next && typeof next.key === 'string' && next.key.indexOf('watcher_life_') === 0 && !(next.opts && next.opts.__criticalRetryDone));
+            if (canRetryLifecycle) {
+              const retryOpts = Object.assign({}, next.opts || {}, { __criticalRetryDone: true });
+              const retryItem = Object.assign({}, next, {
+                ts: Date.now(),
+                priority: Math.max(Number(next.priority || 0) || 0, 96),
+                postDelayMs: Math.max(120, Number(next.postDelayMs || 0) || 0),
+                expireAt: 0,
+                opts: retryOpts
+              });
+              try { speechQueue.unshift(retryItem); } catch(e) {}
+              try { pushSpotterAudit('tts_retry', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
+              scheduleSpeechPump(260);
+              return;
+            }
+          } catch(e) {}
 lastSpokenKeyAt.set(next.key, Date.now());
           try { lastSpokenTextAt.set(next.text, Date.now()); } catch(e) {}
           const d = Number(next.postDelayMs || 0) || 0;
@@ -14658,6 +15079,7 @@ lastSpokenKeyAt.set(next.key, Date.now());
                     try { const vis2 = (document && document.visibilityState) ? document.visibilityState : 'visible'; if (vis2 !== 'visible' && (typeof isIOSWebKit === 'function' ? isIOSWebKit() : false)) __ttsUnlockedOnce = false; } catch(e) {}
                     try { if ((typeof isIOSWebKit === 'function' ? isIOSWebKit() : false) && voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
                     try { pushTtsEvent('unlock', 'Toca la pantalla para reactivar audio', 'ios'); } catch(e) {}
+                    try { pushSpotterAudit('tts_unlock_needed', 'Toca la pantalla para reactivar audio', { throttleMs: 0 }); } catch(e) {}
                     try { if ((typeof isIOSWebKit === 'function' ? isIOSWebKit() : false)) showToast('Toca la pantalla para reactivar audio', 1800); } catch(e) {}
                   }
                 }
@@ -15186,6 +15608,26 @@ function setVoiceMaster(on, opts = {}) {
         }catch(e){ return !!pendingAutoVoiceUnlock; }
       }
 
+
+      function __announceVoiceArmed(){
+        try{
+          if (!voiceMasterEnabled) return;
+          enqueueSpeech('Voz activada.', {
+            key:'user_voice_on',
+            priority: 99,
+            cooldownMs: 0,
+            dedupe: false,
+            textTtlMs: 0,
+            category:'lifecycle',
+            semanticDedupe:false,
+            force:true,
+            user:true,
+            interrupt:false
+          });
+          try { scheduleSpeechPump(40); } catch(e) {}
+        }catch(e){}
+      }
+
             function __onVoiceToggle(ev){
               try{ if (ev && ev.preventDefault) ev.preventDefault(); }catch(e){}
               try{ if (ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
@@ -15226,7 +15668,7 @@ function setVoiceMaster(on, opts = {}) {
                 if (__isIOS){
                   try { unlockTTSOnce('voice-btn'); } catch(e) {}
                   setManagedTimeout("__voiceBtnReadySpeak", ()=>{
-                    try { speakText('Voz lista', { priority: 90, category: 'system', force: true, dedupe: false, semanticDedupe: false, textTtlMs: 0, cooldownMs: 0, key: 'sys_voice_on' }); } catch(e) {}
+                    try { __announceVoiceArmed(); } catch(e) {}
                     try { forceTtsRecover('voice-btn'); } catch(e) {}
                     try { scheduleSpeechPump(0); } catch(e) {}
                   }, 140);
@@ -15235,7 +15677,7 @@ function setVoiceMaster(on, opts = {}) {
               } catch(e) {}
 
               // Desktop/Android: confirmacion inmediata
-              try { speakText('Voz lista', { priority:'high', dedupe:false, semantic:false, cooldownMs:0, key:'sys_voice_on' }); } catch(e) {}
+              try { __announceVoiceArmed(); } catch(e) {}
               try { forceTtsRecover('voice-btn'); } catch(e) {}
               try { scheduleSpeechPump(80); } catch(e) {}
             }
@@ -15291,9 +15733,24 @@ function setVoiceMaster(on, opts = {}) {
             try { playBeep('tap'); } catch(e) {}
             try { _updateBasicBtnUI(); } catch(e) {}
 
-            // feedback corto (si voz activa)
+            // feedback corto UI + confirmación breve de voz
+            try { showToast(basicModeEnabled ? 'BÁSICO activado' : 'BÁSICO apagado', { tone: 'info' }); } catch(e) {}
             try {
-              if (voiceMasterEnabled) speakText(basicModeEnabled ? 'Básico activado' : 'Básico desactivado', { priority: 90, category: 'system', force: true, dedupe: false, semanticDedupe: false, textTtlMs: 0, cooldownMs: 0, key: (basicModeEnabled ? 'sys_basic_on' : 'sys_basic_off') });
+              if (voiceMasterEnabled) {
+                enqueueSpeech(basicModeEnabled ? 'Básico activado.' : 'Básico apagado.', {
+                  key: basicModeEnabled ? 'sys_basic_on' : 'sys_basic_off',
+                  priority: 97,
+                  cooldownMs: 250,
+                  dedupe: true,
+                  semanticDedupe: false,
+                  textTtlMs: 1200,
+                  category:'system',
+                  force:true,
+                  user:true,
+                  interrupt:false
+                });
+                try { scheduleSpeechPump(40); } catch(e) {}
+              }
             } catch(e) {}
           } catch(e) {}
         });
@@ -17057,6 +17514,12 @@ function drawLapChartTop3Auto(){
         sessionType: (rawRace.sessionType != null) ? String(rawRace.sessionType) : '',
         sessionEventName: (rawRace.sessionEventName != null) ? String(rawRace.sessionEventName) : '',
         sessionEventCode: (rawRace.sessionEventCode != null) ? Number(rawRace.sessionEventCode) : null,
+        lifecycleEventName: (rawRace.lifecycleEventName != null) ? String(rawRace.lifecycleEventName) : '',
+        transitionReason: (rawRace.transitionReason != null) ? String(rawRace.transitionReason) : '',
+        stateBefore: (rawRace.stateBefore != null) ? String(rawRace.stateBefore) : '',
+        stateAfter: (rawRace.stateAfter != null) ? String(rawRace.stateAfter) : '',
+        raceNameChanged: !!rawRace.raceNameChanged,
+        practiceChanged: !!rawRace.practiceChanged,
         gridResetDetected: !!rawRace.gridResetDetected,
         gridReadyForAnnouncement: !!rawRace.gridReadyForAnnouncement,
         raceDuration: (rawRace.raceDuration != null) ? rawRace.raceDuration : 0,
@@ -17067,6 +17530,9 @@ function drawLapChartTop3Auto(){
         sessionRemainingMs: (typeof rawRace.sessionRemainingMs === 'number') ? rawRace.sessionRemainingMs : 0,
         sessionProgressPct: (rawRace.sessionProgressPct != null) ? Number(rawRace.sessionProgressPct) : 0,
         extraTopLevelPreview: rawRace.extraTopLevelPreview || {},
+        bestLapMs: (typeof rawRace.bestLapMs === 'number') ? rawRace.bestLapMs : 0,
+        bestLapMsRaw: (typeof rawRace.bestLapMsRaw === 'number') ? rawRace.bestLapMsRaw : 0,
+        bestLapResidualSuppressed: !!rawRace.bestLapResidualSuppressed,
         bestLapTime: parseTimeToMs(rawRace.bestLapTime),
         classification: []
       };
@@ -17544,7 +18010,7 @@ function refreshSessionBestCache() {
     }
 
     // 3) último recurso: raceData.bestLapTime (sin dueo seguro)
-    if ((!best || best <= 0) && raceData && typeof raceData.bestLapTime !== 'undefined') {
+    if ((!best || best <= 0) && raceData && !raceData.bestLapResidualSuppressed && typeof raceData.bestLapTime !== 'undefined') {
       const fb = normalizeLapMs(normalizeIncomingLapValue(raceData.bestLapTime));
       if (fb) {
         best = fb;
@@ -17814,15 +18280,31 @@ function selectPilotByKey(key, opts = {}) {
             try { resetAutoCommentatorState();
         if (announce){
           try { showToast('AUTO LOCUTOR activo', { tone: 'info' }); } catch(e) {}
-          try { if (voiceMasterEnabled) speakText('Auto locutor activado'); } catch(e) {}
         } } catch(e) {}
 
             // UI/voz: avisar que estas en Auto Locutor
             try {
               if ((opts && opts.source === 'select') || (opts && opts.source === 'restore')) {
                 showToast('Auto Locutor activo');
-                if (announce && voiceMasterEnabled) {
-                  speakText('Auto locutor activado');
+                if (announce) {
+                  try { pushSpotterAudit('system_ui', 'Auto locutor activado', { throttleMs: 300, dedupeKey:'sys_ui_auto_on' }); } catch(e) {}
+                  try {
+                    if (voiceMasterEnabled) {
+                      enqueueSpeech('Auto Locutor activado.', {
+                        key:'sys_auto_on',
+                        priority: 97,
+                        cooldownMs: 250,
+                        dedupe: true,
+                        semanticDedupe: false,
+                        textTtlMs: 1200,
+                        category:'system',
+                        force:true,
+                        user:true,
+                        interrupt:false
+                      });
+                      try { scheduleSpeechPump(40); } catch(e) {}
+                    }
+                  } catch(e) {}
                 }
               }
             } catch(e) {}
@@ -18287,6 +18769,7 @@ function updateBlueFlagFromPassEvents() {
         const BLUE_PROX_MS = 800;
         const sessionType = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
         const isFinal = (sessionType === 'FINAL');
+        if (typeof basicModeEnabled !== 'undefined' && basicModeEnabled && !isFinal) return;
 
         const arr = raceData.classification.slice().filter(r => r && (r.pos != null));
         if (!arr.length) return;
@@ -18964,6 +19447,8 @@ function autoFocusMsg(stage, c, style) {
 function autoBuildStoryCandidate(args) {
   try {
     const { battles, now, leaderLap, progress, isMangaSess } = args;
+    const __sessionTypeNow = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+    if (__sessionTypeNow === 'TRAIN') return null;
     if (!battles || !battles.length) return null;
 
     // 1) si hay foco vigente, intentamos seguirlo
@@ -22393,11 +22878,35 @@ function ttsGenV2StoryBeatText(beat) {
   return 'La pelea apenas empieza a tomar forma';
 }
 
+function __ttsGenV2SessionTagNormalized(rawSession) {
+  try {
+    const s = String(rawSession || '').trim().toLowerCase();
+    if (s === 'practice' || s === 'train' || s === 'training') return 'train';
+    if (s === 'quali' || s === 'manga' || s === 'classification') return 'manga';
+    if (s === 'final' || s === 'race') return 'final';
+    return s || 'unknown';
+  } catch(e) { return 'unknown'; }
+}
+
+function __ttsGenV2ShouldSuppressEvent(eventType, sessionTag) {
+  try {
+    const evt = String(eventType || '').trim().toLowerCase();
+    const sess = __ttsGenV2SessionTagNormalized(sessionTag);
+    if (!evt) return false;
+    // category/train queda fuera del relato normal: ni en práctica ni en quali/final.
+    if (evt === 'train') return true;
+    // En práctica no queremos narrativa de pelea ni duelos.
+    if (sess === 'train' && ['story','battle','battlepodium','attack','defense','fight','pass','leaderchange','closing','pressure'].includes(evt)) return true;
+    return false;
+  } catch(e) { return false; }
+}
+
 function ttsGenV2ComposeAutoEvent(eventType, ctx, opts) {
   try {
     const options = opts || {};
     const mode = ttsGenV2NormalizeMode(options.mode || autoCommentatorMode);
     const session = options.session || ttsGenV2GetSessionTag();
+    if (__ttsGenV2ShouldSuppressEvent(eventType, session)) return '';
     const event = {
       type: String(eventType || ''),
       priority: Number(options.priority || 60)
@@ -22831,6 +23340,7 @@ function ttsGenV2ComposeFollowEvent(eventType, ctx, opts) {
     if (typeof basicModeEnabled !== 'undefined' && basicModeEnabled) return '';
     const options = opts || {};
     const session = options.session || ttsGenV2GetSessionTag();
+    if (__ttsGenV2ShouldSuppressEvent(eventType, session)) return '';
     const event = {
       type: String(eventType || ''),
       priority: Number(options.priority || 60)
@@ -22933,7 +23443,8 @@ function collectAutoBattleCandidates(ctx) {
     const battles = (ctx && ctx.battles);
     if (!vs.pelea || typeof addCand !== 'function' || !Array.isArray(battles)) return;
 
-    if (arr.length >= 4) {
+    const allowTrainNarrative = false;
+    if (allowTrainNarrative && arr.length >= 4) {
       const a2 = arr[1], a3 = arr[2], a4 = arr[3];
       const sameLap = (Number(a2.lapcount)||0)===(Number(a3.lapcount)||0) && (Number(a3.lapcount)||0)===(Number(a4.lapcount)||0);
       if (sameLap && a2.time!=null && a3.time!=null && a4.time!=null) {
@@ -23657,7 +24168,7 @@ if ((vs.pelea || vs.attack || vs.defense) && battles && battles.length) {
 }
 
 // ====== MANGA (clasificación): pole/best lap (menos ruido, más sustancia)
-if (isMangaSess) {
+if (sessionType === 'MANGA') {
   collectAutoQualiCandidates({ arr, vs, now, addCand });
 }
 // ====== si no hay acción real, mini resumen
@@ -23672,7 +24183,7 @@ if (isMangaSess) {
 // MANGA: reduce ruido (menos swaps, ms info til)
 if (isMangaSess && candidates && candidates.length) {
   // Top3 + cierres + trenes. Lo dems en manga suele ser "ruido" por salida escalonada.
-  const allow = new Set(['top3','closing','train','story','qualiBest','qualiPole','mini']);
+  const allow = new Set(['top3','closing','story','qualiBest','qualiPole','mini']);
   const filtered = [];
   for (const c of candidates) {
     if (c && c.type && allow.has(c.type)) filtered.push(c);
@@ -23720,7 +24231,7 @@ for (const c of candidates) {
 
             // hablar
             speakWithLaps(leaderLap, c.text, { voiceURI: nextAutoVoiceURI(), key: c.key || c.sig || ('auto_' + c.type), priority: c.priority || 0, cooldownMs: 2500, dedupe: true,
-              mood: (c.type==='battle' || c.type==='closing' || c.type==='leaderChange' || c.type==='pass' || c.type==='pressure' || c.type==='train') ? 'hype' : (c.type==='qualiBest' || c.type==='qualiPole') ? 'serious' : 'calm' });
+              mood: (c.type==='battle' || c.type==='closing' || c.type==='leaderChange' || c.type==='pass' || c.type==='pressure') ? 'hype' : (c.type==='qualiBest' || c.type==='qualiPole') ? 'serious' : 'calm' });
 
             commentatorAutoState.lastSpeakMs = now;
             commentatorAutoState.window.push(now);
@@ -24214,6 +24725,13 @@ function buildSelectedPilotVoiceContext(p) {
 
     function collectSelectedPilotBattleCandidates(pushCand, ctx, fbCtx) {
       const { lapsNow, isManga, isFinal, pilotName, leaderLap, progress, p } = ctx;
+      const sessionTypeNow = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+      if (sessionTypeNow === 'TRAIN') {
+        attackLatch.active = false;
+        defenseLatch.active = false;
+        fightLatch.active = false;
+        return;
+      }
       if (fbCtx && (voiceSettings.attack || voiceSettings.defense) && fbCtx.duelActive) {
         if (voiceSettings.attack && fbCtx.duelKind === 'ATTACK' && fbCtx.sameFrontLap && fbCtx.frontSecEma != null) {
           const sec = fbCtx.frontSecEma;
@@ -24794,24 +25312,53 @@ let label = 'MODO -';
       return { type, main, durationMs, label, spokenTitle, serie, q, mangaNo };
     }
 
+    function __buildRaceTitleLifecycleTts(rawOrRace) {
+      try {
+        const isObj = !!(rawOrRace && typeof rawOrRace === 'object');
+        const rn = isObj ? String(rawOrRace.raceName || '') : String(rawOrRace || '');
+        const parsed = parseSessionFromRaceName(rn) || {};
+        const pType = String(parsed.type || '').toUpperCase();
+        if (pType === 'MANGA') {
+          const parts = ['Clasificacion'];
+          const q = String(parsed.q || '').trim();
+          const mLetter = String(parsed.main || '').trim();
+          const mNo = String(parsed.mangaNo || '').trim();
+          const serie = String(parsed.serie || '').trim();
+          if (q) parts.push('Q' + q);
+          if (mLetter) { parts.push('Manga'); parts.push(mLetter); }
+          else if (mNo) { parts.push('Manga'); parts.push(mNo); }
+          if (serie) parts.push('Serie ' + serie);
+          return parts.join(', ');
+        }
+        if (pType === 'FINAL') {
+          const spoken = String(parsed.spokenTitle || '').trim();
+          if (spoken) return spoken;
+          const main = String(parsed.main || '').trim();
+          return (main ? ('Final ' + main) : 'Final');
+        }
+        const info = resolveSessionInfo(rawOrRace) || {};
+        const spoken = String(info.spokenTitle || '').trim();
+        if (spoken) return spoken;
+        const label = String(info.label || '').trim();
+        if (label) return label.replace(/^MODO\s+/i, '').trim();
+        return '';
+      } catch(e) { return ''; }
+    }
+
     function resolveSessionInfo(rawOrName, practiceMaybe) {
       try {
         const isObj = !!(rawOrName && typeof rawOrName === 'object');
         const rn = isObj ? String(rawOrName.raceName || '') : String(rawOrName || '');
         const prRaw = isObj ? rawOrName.practice : practiceMaybe;
         const pr = (prRaw == null || prRaw === '') ? null : Number(prRaw);
-        const hintedSessionType = isObj ? String(rawOrName.sessionType || '').toUpperCase() : '';
-        const eventName = isObj ? String(rawOrName.sessionEventName || '') : '';
+        const hintedSessionTypeRaw = isObj ? String(rawOrName.sessionType || '').trim().toLowerCase() : '';
+        const eventName = isObj ? String(rawOrName.sessionEventName || '').trim().toUpperCase() : '';
+        const lifecycleName = isObj ? String(rawOrName.lifecycleEventName || '').trim().toUpperCase() : '';
         const eventCode = isObj && rawOrName.sessionEventCode != null ? Number(rawOrName.sessionEventCode) : NaN;
         const gridReady = isObj ? !!(rawOrName.gridReadyForAnnouncement || rawOrName.gridResetDetected) : false;
 
         let info = parseSessionFromRaceName(rn) || {};
         let type = String(info.type || '').toUpperCase();
-
-        if ((!type || type === 'UNKNOWN') && (hintedSessionType === 'MANGA' || hintedSessionType === 'FINAL' || hintedSessionType === 'TRAIN')) {
-          info = Object.assign({}, info, { type: hintedSessionType });
-          type = hintedSessionType;
-        }
 
         let durationMs = 0;
         if (isObj) {
@@ -24829,19 +25376,42 @@ let label = 'MODO -';
         }
         if (durationMs > 0) info.durationMs = durationMs;
 
-        const explicitRaceSession = (type === 'MANGA' || type === 'FINAL');
-        if (explicitRaceSession) {
-          const prestart = !!gridReady || pr === 1 || /PRESTART|GRID|WARM/i.test(eventName) || eventCode === 120 || eventCode === 210;
+        const hintedSessionType = (
+          hintedSessionTypeRaw === 'practice' ? 'TRAIN' :
+          hintedSessionTypeRaw === 'quali' ? 'MANGA' :
+          hintedSessionTypeRaw === 'final' ? 'FINAL' :
+          ((hintedSessionTypeRaw === 'race' && type === 'FINAL') ? 'FINAL' :
+           ((hintedSessionTypeRaw === 'race' && type === 'MANGA') ? 'MANGA' : ''))
+        );
+
+        const watcherSaysPractice = (
+          lifecycleName === 'PRACTICE_FLAG_ON' ||
+          lifecycleName === 'PRACTICE_ACTIVITY_START' ||
+          lifecycleName === 'PRACTICE_RESET_REAL' ||
+          eventName.indexOf('PRACTICE_') === 0 ||
+          hintedSessionTypeRaw === 'practice' ||
+          pr === 1
+        );
+
+        if (watcherSaysPractice || /(?:LIBRE|ENTRENAMIENTO|PRACTICE|TRAINING|WARM\s?UP)/i.test(rn)) {
           return Object.assign({}, info, {
-            type,
-            phase: prestart ? 'PRESTART' : 'LIVE',
-            warmup: prestart,
-            label: info.label || (type === 'MANGA' ? 'MODO MANGA' : 'MODO FINAL')
+            type: 'TRAIN',
+            main: '',
+            durationMs: durationMs || 3 * 60 * 1000,
+            label: 'MODO PRACTICA',
+            spokenTitle: /WARM\s?UP/i.test(rn) ? 'Warm up' : 'Practica',
+            phase: (lifecycleName === 'PRACTICE_RESET_REAL' || eventName === 'PRACTICE_TO_GRID_RESET') ? 'PRESTART' : 'LIVE',
+            warmup: false
           });
         }
 
+        if ((!type || type === 'UNKNOWN') && hintedSessionType) {
+          info = Object.assign({}, info, { type: hintedSessionType });
+          type = hintedSessionType;
+        }
+
         if (!info || !info.type || type === 'UNKNOWN') {
-          if (/FINAL|A\s*MAIN|B\s*MAIN|C\s*MAIN|D\s*MAIN|\bMAIN\b/i.test(rn)) {
+          if (/FINAL|A\s*MAIN|B\s*MAIN|C\s*MAIN|D\s*MAIN|MAIN/i.test(rn)) {
             info = Object.assign({}, info, { type:'FINAL', durationMs: durationMs || 4 * 60 * 1000, label:'MODO FINAL' });
           } else if (/MANGA|Q\d|QUALY|QUALI|CLASIF|CLASIFIC|HEAT|ROUND/i.test(rn)) {
             info = Object.assign({}, info, { type:'MANGA', durationMs: durationMs || 3 * 60 * 1000, label:'MODO MANGA' });
@@ -24849,15 +25419,21 @@ let label = 'MODO -';
         }
 
         type = String(info.type || '').toUpperCase();
-        if (type === 'TRAIN' || /(?:\bLIBRE\b|ENTRENAMIENTO|PRACTICE|TRAINING|WARM\s?UP)/i.test(rn) || pr === 1) {
+        const explicitRaceSession = (type === 'MANGA' || type === 'FINAL');
+        if (explicitRaceSession) {
+          const prestart = (
+            lifecycleName === 'SESSION_PRESTART' ||
+            eventName === 'SESSION_PRESTART' ||
+            eventName === 'RACE_PRESTART' ||
+            !!gridReady ||
+            /PRESTART|GRID|WARM/i.test(eventName) ||
+            eventCode === 120 || eventCode === 210
+          );
           return Object.assign({}, info, {
-            type: 'TRAIN',
-            main: '',
-            durationMs: durationMs || 3 * 60 * 1000,
-            label: 'MODO PRACTICA',
-            spokenTitle: /WARM\s?UP/i.test(rn) ? 'Warm up' : 'Practica',
-            phase: 'LIVE',
-            warmup: false
+            type,
+            phase: prestart ? 'PRESTART' : 'LIVE',
+            warmup: prestart,
+            label: info.label || (type === 'MANGA' ? 'MODO MANGA' : 'MODO FINAL')
           });
         }
 
@@ -24876,6 +25452,23 @@ let label = 'MODO -';
         const type = String(info.type || '').toUpperCase();
         const pr = (type === 'MANGA' || type === 'FINAL') ? '' : ((prRaw == null || prRaw === '') ? '' : String(Number(prRaw)));
         return [rn, pr, String(info.type || ''), String(info.main || ''), String(info.q || ''), String(info.serie || '')].join('||');
+      } catch(e) {
+        return String((rawOrName && rawOrName.raceName) || rawOrName || '');
+      }
+    }
+
+    function getDirectorSessionSignature(rawOrName) {
+      try {
+        const isObj = !!(rawOrName && typeof rawOrName === 'object');
+        const rn = isObj ? String(rawOrName.raceName || '') : String(rawOrName || '');
+        const parsed = parseSessionFromRaceName(rn) || {};
+        return [
+          rn,
+          String(parsed.type || ''),
+          String(parsed.main || ''),
+          String(parsed.q || ''),
+          String(parsed.serie || '')
+        ].join('||');
       } catch(e) {
         return String((rawOrName && rawOrName.raceName) || rawOrName || '');
       }
@@ -24992,11 +25585,12 @@ function checkSessionFinishOnLap() {
     if (totalMs < dur) return;
 
     const msg = buildSessionFinishMessage(row);
+    try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
     enqueueSpeech(msg, {
       key: 'session_finish_' + sessionFinishSig,
       priority: 97,
       cooldownMs: 0,
-          dedupe: true
+      dedupe: true
     });
 
     sessionFinishAnnounced = true;
@@ -25008,6 +25602,7 @@ function checkSessionFinishOnLap() {
     function updateSessionInfo(r) {
       const rn = (r && r.raceName) ? String(r.raceName) : '';
       currentSessionInfo = resolveSessionInfo(r);
+      try { __auditMaybeSessionSwitch(currentSessionInfo, r); } catch(e) {}
 
       try { applyLapChartPreset(); } catch(e) {}
 // AI Spotter: aplica perfil automatico SIEMPRE (tambien en Auto Locutor)
@@ -25027,8 +25622,8 @@ function checkSessionFinishOnLap() {
 
       updateSessionInfo(r);
 
-      // Auto Locutor: al cambiar carrera, anunciar nombre + participantes
-      try { __maybeAnnounceAutoIntro(r); } catch(e) {}
+      // SessionDirector FSM: el titulo de sesión se anuncia solo desde lifecycle.
+      // Evita repeticiones y mantiene el patrón: llega carrera -> se anuncia una vez.
 
       function __formatRaceTitleForHeader(name) {
         let s = (name == null) ? '' : String(name);
@@ -25283,29 +25878,45 @@ raceData = normalizeRaceData(rawRace);
         updateLapHistoryAll();
         refreshSessionBestCache();
         updateRecordCarreraUI();
+        try { __handleWatcherLifecycleSignals(rawRace, raceData); } catch(e) {}
         updateHeaderFromRace(raceData);
 
         // Activity signature: detecta si el estado realmente cambia
         try {
           const cls = (raceData && Array.isArray(raceData.classification)) ? raceData.classification.slice() : [];
           cls.sort((a,b) => (Number(a.pos||999)-Number(b.pos||999)));
-          const top3 = cls.slice(0,3).map(p => {
+          const top5 = cls.slice(0,5).map(p => {
             const pk = getPilotKey(p);
+            const pos = Number(p.pos||0)||0;
             const laps = Number(p.lapcount ?? p.laps ?? 0) || 0;
             const gap = String(p.gap ?? p.diff ?? p.interval ?? '').trim();
-            return [pk, Number(p.pos||0)||0, laps, gap];
+            const totalMs = Number(p.totalMs ?? p.timeMs ?? p.elapsedMs ?? 0) || 0;
+            const bestMs = Number(p.bestMs ?? p.bestLapMs ?? 0) || 0;
+            const lastMs = Number(p.lastLapMs ?? p.lapMs ?? 0) || 0;
+            const timeTxt = String(p.time ?? p.totalTime ?? '').trim();
+            const bestTxt = String(p.bestLap ?? p.bestTime ?? '').trim();
+            const lastTxt = String(p.lastLap ?? p.lastTime ?? '').trim();
+            return [pk, pos, laps, gap, totalMs, bestMs, lastMs, timeTxt, bestTxt, lastTxt];
           });
           const leader = cls[0] || null;
           const leaderLaps = leader ? (Number(leader.lapcount ?? leader.laps ?? 0) || 0) : 0;
-          let selPos = null, selLaps = null;
+          const leaderTimeMs = leader ? (Number(leader.totalMs ?? leader.timeMs ?? leader.elapsedMs ?? 0) || 0) : 0;
+          const leaderBestMs = leader ? (Number(leader.bestMs ?? leader.bestLapMs ?? 0) || 0) : 0;
+          const leaderLastMs = leader ? (Number(leader.lastLapMs ?? leader.lapMs ?? 0) || 0) : 0;
+          const leaderGap = leader ? String(leader.gap ?? leader.diff ?? leader.interval ?? '').trim() : '';
+          const sessionTypeSig = String((((currentSessionInfo && currentSessionInfo.type) || ((resolveSessionInfo(rawRace) || {}).type) || ''))).toUpperCase();
+          const maxTotalMs = cls.reduce((mx, p) => Math.max(mx, Number(p.totalMs ?? p.timeMs ?? p.elapsedMs ?? 0) || 0), 0);
+          let selPos = null, selLaps = null, selBestMs = 0, selLastMs = 0;
           if (selectedPilotKey) {
             const sp = cls.find(r => getPilotKey(r) === selectedPilotKey) || null;
             if (sp) {
               selPos = Number(sp.pos||0)||0;
               selLaps = Number(sp.lapcount ?? sp.laps ?? 0) || 0;
+              selBestMs = Number(sp.bestMs ?? sp.bestLapMs ?? 0) || 0;
+              selLastMs = Number(sp.lastLapMs ?? sp.lapMs ?? 0) || 0;
             }
           }
-          const sigObj = { rn: String(newRaceName||''), leaderLaps, top3, selPos, selLaps };
+          const sigObj = { rn: String(newRaceName||''), st: sessionTypeSig, leaderLaps, leaderTimeMs, leaderBestMs, leaderLastMs, leaderGap, maxTotalMs, top5, selPos, selLaps, selBestMs, selLastMs };
           __setActivitySig(JSON.stringify(sigObj));
         } catch(e) {}
 
@@ -25337,39 +25948,39 @@ raceData = normalizeRaceData(rawRace);
         try { checkSessionFinishOnLap(); } catch(e) {}
         }
 
-        // --- Gate de voz: despues de practica, silencio hasta que el reloj elapsed arranque ---
+        // --- Gate de voz: prioridad a lifecycleEventName/sessionEventName del watcher ---
         try{
-          const pNow = (rawRace && rawRace.practice != null) ? Number(rawRace.practice) : null;
-          const prNow = (pNow === 1) ? 1 : 0;
-          const elapsedNow = __pickElapsedClockMs(rawRace);
-          const sessNow = resolveSessionInfo(rawRace) || {};
-          const explicitRaceSession = ['MANGA','FINAL'].includes(String(sessNow.type || '').toUpperCase());
-          if (__prevPracticeFlag === null) __prevPracticeFlag = prNow;
+          const usedWatcherLifecycle = __handleWatcherLifecycleSignals(rawRace, raceData);
+          if (!usedWatcherLifecycle) {
+            const pNow = (rawRace && rawRace.practice != null) ? Number(rawRace.practice) : null;
+            const prNow = (pNow === 1) ? 1 : 0;
+            const elapsedNow = __pickElapsedClockMs(rawRace);
+            const sessNow = resolveSessionInfo(rawRace) || {};
+            const explicitRaceSession = ['MANGA','FINAL'].includes(String(sessNow.type || '').toUpperCase());
+            if (__prevPracticeFlag === null) __prevPracticeFlag = prNow;
 
-          // Si ZRound cambia tarde a practice=0, no mates la locucion si ya estamos en Manga/Final viva.
-          if (__prevPracticeFlag === 1 && prNow === 0){
-            const shouldSilence = !(explicitRaceSession && elapsedNow >= 250);
-            if (shouldSilence) {
-              __silenceUntilClockRuns = true;
-              try { speechQueue.length = 0; } catch(e){}
-              try { const __s = getSpeechEngine(); if (__s && typeof __s.cancel === 'function' && canTtsCancelNow(Date.now())) __s.cancel(); } catch(e){}
-            } else {
+            if (__prevPracticeFlag === 1 && prNow === 0){
+              const shouldSilence = !(explicitRaceSession && elapsedNow >= 250);
+              if (shouldSilence) {
+                __silenceUntilClockRuns = true;
+                __cancelSpotterSpeechBacklog();
+              } else {
+                __silenceUntilClockRuns = false;
+              }
+            }
+
+            if (__silenceUntilClockRuns && elapsedNow >= 250){
               __silenceUntilClockRuns = false;
             }
-          }
 
-          if (__silenceUntilClockRuns && elapsedNow >= 250){
-            __silenceUntilClockRuns = false;
+            __prevPracticeFlag = prNow;
           }
-
-          __prevPracticeFlag = prNow;
 
           if (!__silenceUntilClockRuns){
             handleVoiceAndBeeps();
             handleAutoCommentator();
           }
         } catch(e){
-          // En caso de error, no mates el spotter: deja la logica original
           try { handleVoiceAndBeeps(); } catch(_){}
           try { handleAutoCommentator(); } catch(_){}
         }
@@ -25396,6 +26007,369 @@ raceData = normalizeRaceData(rawRace);
     let __fallbackPollTimer = 0;
     let __fallbackPollStep = 0;
     let __fallbackPollSchedule = [1000, 2000, 5000, 10000];
+    let __watcherLifeSig = '';
+    let __watcherLifeSeen = new Set();
+    let __watcherAuditLastSig = '';
+    let __lastWatcherLifecycleHandled = '';
+    let __lastWatcherLifecycleHandledAt = 0;
+    let __sessionDirector = {
+      sessionSig: '',
+      sessionType: '',
+      eventPhase: '',
+      state: 'IDLE',
+      lastEvent: '',
+      titleAnnounced: false,
+      practiceStarted: false,
+      practiceStopped: false,
+      raceStarted: false,
+      raceFinished: false,
+      lastResetSig: ''
+    };
+
+    function __resetWatcherLifecycleState(sessionSig) {
+      try {
+        __watcherLifeSig = String(sessionSig || '');
+        __watcherLifeSeen = new Set();
+        __watcherAuditLastSig = '';
+      } catch(e) {}
+    }
+
+    function __resetSessionDirector(sessionSig, src) {
+      try {
+        const sess = parseSessionFromRaceName((src && src.raceName) || '') || {};
+        const t = String(((sess && sess.type) || (resolveSessionInfo(src) || {}).type || '')).toUpperCase();
+        __sessionDirector = {
+          sessionSig: String(sessionSig || ''),
+          sessionType: t,
+          eventPhase: (t === 'FINAL') ? 'FINALS' : ((t === 'MANGA') ? 'CLASSIFICATIONS' : ''),
+          state: 'IDLE',
+          lastEvent: '',
+          titleAnnounced: false,
+          practiceStarted: false,
+          practiceStopped: false,
+          raceStarted: false,
+          raceFinished: false,
+          lastResetSig: ''
+        };
+      } catch(e) {}
+    }
+
+    function __sessionDirectorStateSwitch(nextState, src, detail = '') {
+      try {
+        const prevState = String(__sessionDirector.state || 'IDLE');
+        const ns = String(nextState || prevState || 'IDLE');
+        if (prevState === ns) return;
+        __sessionDirector.state = ns;
+        pushSpotterAudit('director_state', prevState + ' -> ' + ns + (detail ? (' - ' + detail) : ''), { rawRace: src, dedupeKey: 'director|' + String(__sessionDirector.sessionSig || '') + '|' + prevState + '|' + ns + '|' + detail, throttleMs: 0 });
+      } catch(e) {}
+    }
+
+    function __hardResetSessionAudio(reason = '') {
+      try { pushSpotterAudit('session_hard_reset', String(reason || 'session_change'), { throttleMs: 0 }); } catch(e) {}
+      try { clearSpeechWatchdog(); } catch(e) {}
+      try { clearTtsStartGuard(); } catch(e) {}
+      try { clearManagedTimeout('__speechPumpTimer'); } catch(e) {}
+      try { speechQueue.length = 0; } catch(e) {}
+      try { speechSpeaking = false; } catch(e) {}
+      try { __ttsCurrentKey = ''; __ttsCurrentText = ''; } catch(e) {}
+      try { __ttsLastEventAt = Date.now(); __ttsLastSpeakCallAt = 0; __ttsLastStartAt = 0; __ttsLastEndAt = 0; } catch(e) {}
+      try { __ttsStartGuardFails = 0; } catch(e) {}
+      try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+      try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+      try { lastSpokenKeyAt.clear(); } catch(e) {}
+      try { lastSpokenTextAt.clear(); } catch(e) {}
+      try { __lastWatcherLifecycleHandled = ''; __lastWatcherLifecycleHandledAt = 0; } catch(e) {}
+      try { __recentEnqueueAt.clear(); } catch(e) {}
+      try { __speechLastCategoryAt.clear(); } catch(e) {}
+      try { __speechLastCategoryText.clear(); } catch(e) {}
+      try { __semMem.clear(); } catch(e) {}
+      try { const s = getSpeechEngine(); if (s && typeof s.cancel === 'function' && canTtsCancelNow(Date.now())) s.cancel(); } catch(e) {}
+    }
+
+    function __forceCancelSpotterSpeech(reason = 'Cancelando backlog TTS', purgeQueue = true) {
+      try { pushSpotterAudit('queue_flush', String(reason || 'Cancelando backlog TTS'), { throttleMs: 0 }); } catch(e) {}
+      try { clearSpeechWatchdog(); } catch(e) {}
+      try { clearTtsStartGuard(); } catch(e) {}
+      try { if (purgeQueue) speechQueue.length = 0; } catch(e) {}
+      try { speechSpeaking = false; } catch(e) {}
+      try { __ttsCurrentKey = ''; __ttsCurrentText = ''; } catch(e) {}
+      try {
+        const s = getSpeechEngine();
+        if (s && typeof s.cancel === 'function') {
+          try { __ttsCancelShieldUntil = 0; } catch(_e) {}
+          s.cancel();
+        }
+      } catch(e) {}
+    }
+
+    function __cancelSpotterSpeechBacklog(force = false) {
+      try {
+        if (force) {
+          __forceCancelSpotterSpeech('Cancelando backlog TTS', true);
+          return;
+        }
+        pushSpotterAudit('queue_flush', 'Cancelando backlog TTS', { throttleMs: 0 });
+      } catch(e) {}
+      try { speechQueue.length = 0; } catch(e) {}
+      try {
+        const s = getSpeechEngine();
+        if (s && typeof s.cancel === 'function' && canTtsCancelNow(Date.now())) s.cancel();
+      } catch(e) {}
+    }
+
+    function __purgeSpeechForPhase(phase = '') {
+      try {
+        const ph = String(phase || '').trim().toUpperCase();
+        if (!ph) return;
+        const keep = [];
+        for (const it of (speechQueue || [])) {
+          if (!it) continue;
+          const cat = String(it.category || __speechCatFromOpts(it.opts || {}, it.key || '', it.text || '') || '').toLowerCase();
+          const key = String(it.key || '').toLowerCase();
+          const isLifecycle = (cat === 'lifecycle' || key.indexOf('watcher_life_') === 0);
+          const isFinish = (cat === 'finish' || key.indexOf('session_finish_') === 0 || key.indexOf('auto_finalizo_') === 0);
+          const isSystem = (cat === 'system' || key.indexOf('sys_') === 0);
+          if (ph === 'CLOSING') {
+            if (isLifecycle || isFinish || isSystem) keep.push(it);
+          } else if (ph === 'FINISHED') {
+            if (isLifecycle || isFinish || isSystem) keep.push(it);
+          }
+        }
+        speechQueue.length = 0;
+        for (const it of keep) speechQueue.push(it);
+        if (ph === 'FINISHED') {
+          try {
+            const activeCat = String(__speechCatFromOpts({}, __ttsCurrentKey || '', __ttsCurrentText || '') || '').toLowerCase();
+            const activeKey = String(__ttsCurrentKey || '').toLowerCase();
+            const activeLifecycle = (activeCat === 'lifecycle' || activeKey.indexOf('watcher_life_') === 0);
+            const activeFinish = (activeCat === 'finish' || activeKey.indexOf('session_finish_') === 0 || activeKey.indexOf('auto_finalizo_') === 0);
+            const activeSystem = (activeCat === 'system' || activeKey.indexOf('sys_') === 0);
+            if (__ttsCurrentKey && !(activeLifecycle || activeFinish || activeSystem)) {
+              __forceCancelSpotterSpeech('Purgando audio fuera de fase', false);
+            }
+          } catch(e) {}
+        }
+      } catch(e) {}
+    }
+
+    function __speakWatcherLifecycleOnce(sessionSig, evt, text, opts = {}) {
+      try {
+        if (!text || !voiceMasterEnabled) return;
+        const k = String(sessionSig || '') + '::' + String(evt || '');
+        if (__watcherLifeSeen.has(k)) return;
+        __watcherLifeSeen.add(k);
+        try { pushSpotterAudit('watcher_say', String(evt || '') + ' - ' + String(text || ''), { dedupeKey: 'watcher_say|' + k, throttleMs: 0 }); } catch(e) {}
+        const enqueueOpts = Object.assign({
+          key: 'watcher_life_' + String(evt || '').toLowerCase() + '_' + String(sessionSig || ''),
+          priority: 94,
+          cooldownMs: 0,
+          dedupe: true,
+          maxAgeMs: 12000,
+          semanticCategory: 'lifecycle',
+          semanticThreshold: 0.92,
+          semanticWindowMs: 20000
+        }, opts || {});
+        const deferMs = Math.max(0, Number(enqueueOpts.deferMs || 0) || 0);
+        try { delete enqueueOpts.deferMs; } catch(e) {}
+        const runner = () => {
+          try {
+            if (String(sessionSig || '') !== String(__watcherLifeSig || '')) return;
+            enqueueSpeech(String(text), enqueueOpts);
+          } catch(e) {}
+        };
+        if (deferMs > 0) {
+          const timerKey = '__watcherLifeSpeak_' + String(evt || '').toLowerCase();
+          try { setManagedTimeout(timerKey, runner, deferMs); } catch(e) { setTimeout(runner, deferMs); }
+        } else {
+          runner();
+        }
+      } catch(e) {}
+    }
+
+    function __cancelPendingAutoIntro(sessionSig) {
+      try {
+        const sig = String(sessionSig || '').trim();
+        const introKey = sig ? ('auto_intro_title_' + sig) : '';
+        let hadPendingIntro = false;
+        if (Array.isArray(speechQueue) && speechQueue.length) {
+          const prevLen = speechQueue.length;
+          speechQueue = speechQueue.filter(it => {
+            if (!it || typeof it.key !== 'string') return true;
+            const isIntro = introKey ? (it.key === introKey) : (it.key.indexOf('auto_intro_title_') === 0);
+            if (isIntro) hadPendingIntro = true;
+            return !isIntro;
+          });
+          hadPendingIntro = hadPendingIntro || (speechQueue.length !== prevLen);
+        }
+        const activeIntro = !!(__ttsCurrentKey && (introKey ? (__ttsCurrentKey === introKey) : String(__ttsCurrentKey).indexOf('auto_intro_title_') === 0));
+        if (hadPendingIntro || activeIntro) {
+          try { pushSpotterAudit('queue_flush', activeIntro ? 'Cancelando intro activa' : 'Cancelando intro pendiente', { dedupeKey: 'flush_intro|' + sig + '|' + (activeIntro ? 'active' : 'pending'), throttleMs: 0 }); } catch(e) {}
+        }
+        if (activeIntro) {
+          try {
+            const __s = getSpeechEngine();
+            if (__s && typeof __s.cancel === 'function' && canTtsCancelNow(Date.now())) __s.cancel();
+          } catch(e) {}
+        }
+        if (introKey && (hadPendingIntro || activeIntro)) {
+          try { __autoIntroQueuedKeys.add(introKey); } catch(e) {}
+          try { __autoIntroDoneKeys.add(introKey); } catch(e) {}
+        }
+      } catch(e) {}
+    }
+
+    function __handleWatcherLifecycleSignals(rawRace, raceNorm) {
+      try {
+        const src = (raceNorm && typeof raceNorm === 'object') ? raceNorm : ((rawRace && typeof rawRace === 'object') ? rawRace : null);
+        if (!src) return false;
+
+        const hasWatcherSignals = !!(
+          (src && (src.lifecycleEventName || src.sessionEventName || src.raceNameChanged || src.practiceChanged)) ||
+          (rawRace && (rawRace.lifecycleEventName || rawRace.sessionEventName || rawRace.raceNameChanged || rawRace.practiceChanged))
+        );
+        if (!hasWatcherSignals) return false;
+
+        const sessionSig = getDirectorSessionSignature(src);
+        if (sessionSig && sessionSig !== __watcherLifeSig) {
+          __resetWatcherLifecycleState(sessionSig);
+          __resetSessionDirector(sessionSig, src);
+        }
+        if (!__sessionDirector.sessionSig) __resetSessionDirector(sessionSig, src);
+
+        const evt = String((src.lifecycleEventName || src.sessionEventName || '')).trim().toUpperCase();
+        if (!evt) return true;
+
+        const lifecycleHandleSig = String(sessionSig || '') + '|' + evt + '|' + String(src.stateBefore || '') + '|' + String(src.stateAfter || '');
+        const lifecycleNow = Date.now();
+        if (lifecycleHandleSig && lifecycleHandleSig === __lastWatcherLifecycleHandled && (lifecycleNow - (__lastWatcherLifecycleHandledAt || 0)) < 1200) {
+          return true;
+        }
+        __lastWatcherLifecycleHandled = lifecycleHandleSig;
+        __lastWatcherLifecycleHandledAt = lifecycleNow;
+
+        try {
+          const evtDetail = evt + (src.stateBefore || src.stateAfter ? (' [' + String(src.stateBefore || '') + ' -> ' + String(src.stateAfter || '') + ']') : '');
+          const evtAuditSig = String(sessionSig || '') + '|' + evtDetail;
+          if (evtAuditSig !== __watcherAuditLastSig) {
+            __watcherAuditLastSig = evtAuditSig;
+            pushSpotterAudit('watcher_event', evtDetail, { rawRace: src, dedupeKey: 'watcher_evt|' + evtAuditSig, throttleMs: 0 });
+          }
+        } catch(e) {}
+
+        const titleText = __buildRaceTitleLifecycleTts(src);
+        const typeInfo = parseSessionFromRaceName((src && src.raceName) || '') || resolveSessionInfo(src) || {};
+        const stableType = String(typeInfo.type || __sessionDirector.sessionType || '').toUpperCase();
+        if (stableType) {
+          __sessionDirector.sessionType = stableType;
+          __sessionDirector.eventPhase = (stableType === 'FINAL') ? 'FINALS' : ((stableType === 'MANGA') ? 'CLASSIFICATIONS' : '');
+        }
+
+        const speakLifecycle = (sEvt, text, opts = {}) => {
+          try { __speakWatcherLifecycleOnce(sessionSig, sEvt, text, opts); } catch(e) {}
+        };
+
+        if ((src.raceNameChanged || evt === 'NEW_RACE_NAME') && __sessionDirector.lastResetSig !== sessionSig) {
+          try { __hardResetSessionAudio('new_race'); } catch(e) {}
+          try { __clearSessionIntroGuard(); } catch(e) {}
+          __silenceUntilClockRuns = false;
+          __sessionDirector.lastResetSig = String(sessionSig || '');
+          __sessionDirector.titleAnnounced = false;
+          __sessionDirector.practiceStarted = false;
+          __sessionDirector.practiceStopped = false;
+          __sessionDirector.raceStarted = false;
+          __sessionDirector.raceFinished = false;
+          __sessionDirector.lastEvent = 'NEW_RACE_NAME';
+          __sessionDirectorStateSwitch('SESSION_ANNOUNCED', src, 'new_race');
+          if (titleText && !__sessionDirector.titleAnnounced) {
+            __sessionDirector.titleAnnounced = true;
+            speakLifecycle('SESSION_TITLE', titleText, { priority: 97, interrupt: false, deferMs: 180, force: true, cooldownMs: 0, dedupe: true, maxAgeMs: 12000 });
+          }
+        }
+
+        switch (evt) {
+          case 'PRACTICE_FLAG_ON':
+            __silenceUntilClockRuns = true;
+            __sessionDirector.lastEvent = evt;
+            if (String(__sessionDirector.state || '') === 'IDLE') __sessionDirectorStateSwitch('SESSION_ANNOUNCED', src, 'practice_flag');
+            break;
+
+          case 'PRACTICE_ACTIVITY_START':
+            __silenceUntilClockRuns = false;
+            if (!__sessionDirector.practiceStarted) {
+              __sessionDirector.practiceStarted = true;
+              __sessionDirector.practiceStopped = false;
+              __sessionDirector.raceStarted = false;
+              try { __clearSessionIntroGuard(); } catch(e) {}
+              __armSessionIntroGuard(1400, 'PRACTICE_ACTIVITY_START');
+              __forceCancelSpotterSpeech('Lifecycle: práctica', true);
+              speakLifecycle('PRACTICE_ACTIVITY_START', 'Práctica en marcha. Calentando.', { priority: 96, interrupt: false, deferMs: 160 });
+            }
+            __sessionDirector.lastEvent = evt;
+            __sessionDirectorStateSwitch('PRACTICE_RUNNING', src, 'practice_start');
+            break;
+
+          case 'PRACTICE_RESET_REAL':
+            __silenceUntilClockRuns = true;
+            if (__sessionDirector.practiceStarted && !__sessionDirector.practiceStopped) {
+              __sessionDirector.practiceStopped = true;
+              __forceCancelSpotterSpeech('Lifecycle: fin de práctica', true);
+              speakLifecycle('PRACTICE_STOP', 'Práctica terminada. Preparando salida.', { priority: 95, interrupt: false, deferMs: 120 });
+            }
+            __sessionDirector.lastEvent = evt;
+            __sessionDirectorStateSwitch('PRACTICE_STOPPED', src, 'practice_stop');
+            break;
+
+          case 'SESSION_PRESTART':
+          case 'RACE_PRESTART':
+            __silenceUntilClockRuns = true;
+            __sessionDirector.lastEvent = evt;
+            __sessionDirectorStateSwitch('PRESTART', src, 'prestart');
+            break;
+
+          case 'QUALI_ACTIVITY_START':
+            __silenceUntilClockRuns = false;
+            if (!__sessionDirector.raceStarted) {
+              __sessionDirector.raceStarted = true;
+              __sessionDirector.practiceStopped = true;
+              __armSessionIntroGuard(1600, 'QUALI_ACTIVITY_START');
+              __forceCancelSpotterSpeech('Lifecycle: quali', true);
+              speakLifecycle('QUALI_ACTIVITY_START', 'Clasificación en marcha.', { priority: 96, interrupt: false, deferMs: 180 });
+            }
+            __sessionDirector.lastEvent = evt;
+            __sessionDirectorStateSwitch('RACE_RUNNING', src, 'quali_start');
+            break;
+
+          case 'RACE_ACTIVITY_START':
+            __silenceUntilClockRuns = false;
+            if (!__sessionDirector.raceStarted) {
+              __sessionDirector.raceStarted = true;
+              __sessionDirector.practiceStopped = true;
+              __armSessionIntroGuard(1600, 'RACE_ACTIVITY_START');
+              __forceCancelSpotterSpeech('Lifecycle: carrera', true);
+              speakLifecycle('RACE_ACTIVITY_START', 'Carrera en marcha.', { priority: 96, interrupt: false, deferMs: 180 });
+            }
+            __sessionDirector.lastEvent = evt;
+            __sessionDirectorStateSwitch('RACE_RUNNING', src, 'race_start');
+            break;
+
+          default:
+            if (evt.indexOf('FINISH') >= 0 || evt.indexOf('FINISHED') >= 0 || String(src.stateAfter || '').toUpperCase() === 'FINISHED') {
+              __sessionDirector.raceFinished = true;
+              __sessionDirector.lastEvent = evt;
+              __sessionDirectorStateSwitch('RACE_FINISHED', src, 'finish');
+            } else if (String(src.sessionEventName || '').toUpperCase() === 'RACE_RUNNING') {
+              __silenceUntilClockRuns = false;
+              __sessionDirector.lastEvent = 'RACE_RUNNING';
+              __sessionDirectorStateSwitch('RACE_RUNNING', src, 'running');
+            }
+            break;
+        }
+
+        return true;
+      } catch(e) {
+        return false;
+      }
+    }
 
     function stopFallbackPolling() {
       try {
@@ -25589,9 +26563,9 @@ raceData = normalizeRaceData(rawRace);
         const now = Date.now();
 
         // Cooldowns (anti-spam)
-        const changeCooldown = 9000;
-        const improveCooldown = 14000;
-        const closeCooldown = 18000;
+        const changeCooldown = 7000;
+        const improveCooldown = 11000;
+        const closeCooldown = 14000;
 
         const prevKey = String(__qualiLeaderState.leaderKey || '');
         const prevTime = Number(__qualiLeaderState.leaderTimeMs || 0) || 0;
@@ -25622,7 +26596,7 @@ raceData = normalizeRaceData(rawRace);
           const t = msToMinSec(lTimeMs);
           enqueueSpeech(
             `Atención, nueva pole provisional. ${leaderName} se pone líder con ${lLaps} vueltas en ${t}.`,
-            { key: 'quali_leader_change', cooldownMs: changeCooldown, semanticCategory: 'leader', priority: 30 }
+            { key: 'quali_leader_change', cooldownMs: changeCooldown, semanticCategory: 'leader', priority: 62 }
           );
           __qualiLeaderState.lastAnnounceTs = now;
 
@@ -25632,7 +26606,7 @@ raceData = normalizeRaceData(rawRace);
             if (isFinite(gap) && gap > 0 && gap <= 90 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
               enqueueSpeech(
                 `Y ojo, ${secondName} está a ${__fmtGapMs(gap)} del líder.`,
-                { key: 'quali_close', cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 12 }
+                { key: 'quali_close', cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 40 }
               );
               __qualiLeaderState.lastCloseTs = now;
             }
@@ -25649,12 +26623,12 @@ raceData = normalizeRaceData(rawRace);
           if (lapGain){
             enqueueSpeech(
               `El líder aprieta. ${leaderName} sube a ${lLaps} vueltas.`,
-              { key: 'quali_leader_improve', cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 18 }
+              { key: 'quali_leader_improve', cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 48 }
             );
           } else {
             enqueueSpeech(
               `El líder mejora. ${leaderName} baja su tiempo.`,
-              { key: 'quali_leader_improve', cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 18 }
+              { key: 'quali_leader_improve', cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 48 }
             );
           }
           __qualiLeaderState.lastImproveTs = now;
@@ -25666,7 +26640,7 @@ raceData = normalizeRaceData(rawRace);
           if (isFinite(gap) && gap > 0 && gap <= 90 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
             enqueueSpeech(
               `Esto está apretado. ${secondName} a ${__fmtGapMs(gap)} del líder.`,
-              { key: 'quali_close', cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 10 }
+              { key: 'quali_close', cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 36 }
             );
             __qualiLeaderState.lastCloseTs = now;
           }
