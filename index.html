@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.3 - SessionDirector FSM: lifecycle limpio por sesión -
+vics_Smart_Spotter_v0.5.0.4 - SessionDirector FSM + pole/QTABLE + cierres + más voz TRAIN/MANGA -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -86,7 +86,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.3</title>
+<title>vics_Smart_Spotter_v0.5.0.4</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6581,7 +6581,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.3</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.4</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7173,7 +7173,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.3";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.4";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7466,13 +7466,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.3";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.3',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.4',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.3', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.4', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -9600,6 +9600,199 @@ function msgv2DecimasTxt(ms) {
       } catch(e) {
         return { names: [], extra: 0 };
       }
+    }
+
+
+    let __provisionalPoleSig = '';
+    let __provisionalPoleLastAt = 0;
+    let __sessionSummarySig = '';
+    let __sessionSummaryDone = false;
+    let __ambientSessionLastAt = 0;
+    let __ambientSessionSig = '';
+
+    function __topRowsByPos(r, limit = 3) {
+      try {
+        const rows = (r && Array.isArray(r.classification)) ? r.classification.slice() : [];
+        rows.sort((a,b) => (Number(a && a.pos || 999) - Number(b && b.pos || 999)));
+        return rows.filter(x => x && Number(x.pos || 0) > 0).slice(0, Math.max(1, limit|0));
+      } catch(e) { return []; }
+    }
+
+    function __getRowBestMsSafe(row) {
+      try {
+        return Number(row && (row.bestMs ?? row.bestLapMs ?? row.best ?? row.bestLapTimeMs ?? 0)) || 0;
+      } catch(e) { return 0; }
+    }
+
+    function __getRowEstTimeMsSafe(row) {
+      try {
+        return Number(row && (row.estTime ?? row.estTimeMs ?? 0)) || 0;
+      } catch(e) { return 0; }
+    }
+
+    function __getRowEstLapSafe(row) {
+      try {
+        return Number(row && (row.estLap ?? 0)) || 0;
+      } catch(e) { return 0; }
+    }
+
+    function __maybeAnnounceSessionSummary(r) {
+      try {
+        if (!r || !Array.isArray(r.classification) || !r.classification.length) return;
+        const life = String((r.lifecycleEventName || r.sessionEventName || '')).toUpperCase();
+        const dirState = String((__sessionDirector && __sessionDirector.state) || '').toUpperCase();
+        const phase = String(__autoPhase || '').toUpperCase();
+        const finishedLike = (life.indexOf('FINISH') >= 0 || dirState === 'RACE_FINISHED' || phase === 'FINISHED');
+        if (!finishedLike) return;
+
+        const sig = String((r.raceName || '')) + '|finish';
+        if (__sessionSummarySig !== sig) {
+          __sessionSummarySig = sig;
+          __sessionSummaryDone = false;
+        }
+        if (__sessionSummaryDone) return;
+
+        const rows = __topRowsByPos(r, 3);
+        if (!rows.length) return;
+        const p1 = rows[0], p2 = rows[1], p3 = rows[2];
+        const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
+        const p2Name = safeRacerName(p2 && p2.racerName) || '';
+        const p3Name = safeRacerName(p3 && p3.racerName) || '';
+        const p1Laps = Number(p1 && (p1.lapcount ?? p1.laps ?? 0)) || 0;
+        const p1TotalMs = getRowTotalMs(p1) || 0;
+        const p1BestMs = __getRowBestMsSafe(p1);
+        const sess = String((currentSessionInfo && currentSessionInfo.type) || (__sessionDirector && __sessionDirector.sessionType) || '').toUpperCase();
+        const rn = String(r.raceName || '');
+        const isFinalA = /final\s*a|a-main|main\s*a/i.test(rn);
+        let msg = '';
+        if (sess === 'MANGA' || sess === 'QUALI') {
+          msg = 'Terminó la clasificación. Pole para ' + p1Name + '.';
+          if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
+          if (p1TotalMs > 0) msg += ' Tiempo total ' + __speechTime2(p1TotalMs) + '.';
+          if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
+          if (p2Name) msg += ' Segundo ' + p2Name + '.';
+          if (p3Name) msg += ' Tercero ' + p3Name + '.';
+        } else {
+          msg = 'Carrera terminada. Ganador ' + p1Name + '.';
+          if (p2Name) msg += ' Segundo ' + p2Name + '.';
+          if (p3Name) msg += ' Tercero ' + p3Name + '.';
+          if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
+          if (p1TotalMs > 0) msg += ' Tiempo total ' + __speechTime2(p1TotalMs) + '.';
+          if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
+          if (isFinalA) msg += ' Evento terminado. Campeón de la noche, ' + p1Name + '.';
+        }
+        enqueueSpeech(msg, {
+          key: 'session_finish_' + sig,
+          priority: 99,
+          cooldownMs: 0,
+          dedupe: true,
+          semanticCategory: 'finish',
+          semanticThreshold: 0.90,
+          semanticWindowMs: 60000,
+          interrupt: false
+        });
+        __sessionSummaryDone = true;
+      } catch(e) {}
+    }
+
+    function __maybeAnnounceProvisionalPole(r) {
+      try {
+        if (!r || selectedPilotKey) return;
+        const sess = String((currentSessionInfo && currentSessionInfo.type) || (__sessionDirector && __sessionDirector.sessionType) || '').toUpperCase();
+        const dirState = String((__sessionDirector && __sessionDirector.state) || '').toUpperCase();
+        if (!(sess === 'MANGA' || sess === 'QUALI')) return;
+        if (dirState !== 'RACE_RUNNING') return;
+        const rows = __topRowsByPos(r, 2);
+        if (rows.length < 1) return;
+        const p1 = rows[0], p2 = rows[1] || null;
+        const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
+        const estLap1 = __getRowEstLapSafe(p1);
+        const estTime1 = __getRowEstTimeMsSafe(p1);
+        const best1 = __getRowBestMsSafe(p1);
+        const laps1 = Number(p1 && (p1.lapcount ?? p1.laps ?? 0)) || 0;
+        const gapMs = p2 ? Math.abs((__getRowEstTimeMsSafe(p2) || __getRowBestMsSafe(p2) || 0) - (estTime1 || best1 || 0)) : 0;
+        const leadBasis = (estTime1 > 0 ? ('|' + estLap1 + '|' + estTime1) : ('|best|' + best1 + '|laps|' + laps1));
+        const sig = String(r.raceName || '') + '|' + p1Name + leadBasis;
+        const now = Date.now();
+        if (__provisionalPoleSig === sig && (now - (__provisionalPoleLastAt || 0)) < 45000) return;
+        if (estTime1 <= 0 && best1 <= 0) return;
+        if (laps1 <= 0 && estLap1 <= 0) return;
+        const sessionElapsed = Number(r.clockMs || r.clock || 0) || 0;
+        if (sessionElapsed < 8000) return;
+        let msg = 'Atención, nueva pole provisional. ' + p1Name + '.';
+        if (estLap1 > 0 && estTime1 > 0) {
+          msg += ' Proyecta ' + Math.floor(estLap1) + ' vueltas en ' + __speechTime2(estTime1) + '.';
+        } else if (best1 > 0) {
+          msg += ' Referencia de ' + __speechTime2(best1) + '.';
+        }
+        if (p2 && gapMs > 0 && gapMs <= 1500) {
+          msg += ' ' + (safeRacerName(p2 && p2.racerName) || 'P2') + ' a ' + __speechTime2(gapMs) + '.';
+        }
+        enqueueSpeech(msg, {
+          key: 'pole_live_' + sig,
+          priority: 92,
+          cooldownMs: 0,
+          dedupe: true,
+          semanticCategory: 'qualiPole',
+          semanticThreshold: 0.88,
+          semanticWindowMs: 30000
+        });
+        __provisionalPoleSig = sig;
+        __provisionalPoleLastAt = now;
+      } catch(e) {}
+    }
+
+    function __maybeAnnounceAmbientSessionCommentary(r) {
+      try {
+        if (!r || selectedPilotKey || !voiceMasterEnabled) return;
+        const sess = String((currentSessionInfo && currentSessionInfo.type) || (__sessionDirector && __sessionDirector.sessionType) || '').toUpperCase();
+        const dirState = String((__sessionDirector && __sessionDirector.state) || '').toUpperCase();
+        if (!(sess === 'TRAIN' || sess === 'MANGA' || sess === 'QUALI')) return;
+        if (!(dirState === 'PRACTICE_RUNNING' || dirState === 'RACE_RUNNING')) return;
+        const now = Date.now();
+        const rn = String(r.raceName || '');
+        const ambientSig = rn + '|' + sess;
+        const gapNeed = (sess === 'TRAIN') ? 18000 : 14000;
+        if (__ambientSessionSig === ambientSig && (now - (__ambientSessionLastAt || 0)) < gapNeed) return;
+        const rows = __topRowsByPos(r, 4);
+        if (!rows.length) return;
+        let msg = '';
+        if (sess === 'TRAIN') {
+          const p1 = safeRacerName(rows[0] && rows[0].racerName) || 'P1';
+          const best = __getRowBestMsSafe(rows[0]);
+          const est = __getRowEstTimeMsSafe(rows[0]);
+          msg = 'Entrenamiento en marcha. ' + p1 + ' marca la referencia';
+          if (best > 0) msg += ' con ' + __speechTime2(best);
+          else if (est > 0) msg += ' proyectando ' + __speechTime2(est);
+          msg += '.';
+        } else {
+          const p1 = rows[0], p2 = rows[1] || null;
+          const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
+          const p2Name = safeRacerName(p2 && p2.racerName) || '';
+          const e1 = __getRowEstTimeMsSafe(p1);
+          const e2 = __getRowEstTimeMsSafe(p2);
+          const b1 = __getRowBestMsSafe(p1);
+          const b2 = __getRowBestMsSafe(p2);
+          msg = 'Clasificación viva. ' + p1Name + ' al frente.';
+          if (e1 > 0) msg += ' Proyección ' + __speechTime2(e1) + '.';
+          else if (b1 > 0) msg += ' Referencia ' + __speechTime2(b1) + '.';
+          if (p2Name) {
+            const dg = Math.abs((e2 || b2 || 0) - (e1 || b1 || 0));
+            if (dg > 0 && dg <= 2000) msg += ' ' + p2Name + ' a ' + __speechTime2(dg) + '.';
+          }
+        }
+        enqueueSpeech(msg, {
+          key: 'ambient_' + ambientSig + '_' + Math.floor(now / gapNeed),
+          priority: 58,
+          cooldownMs: 0,
+          dedupe: true,
+          semanticCategory: (sess === 'TRAIN' ? 'train' : 'qualiBest'),
+          semanticThreshold: 0.90,
+          semanticWindowMs: 12000
+        });
+        __ambientSessionSig = ambientSig;
+        __ambientSessionLastAt = now;
+      } catch(e) {}
     }
 
     function __maybeAnnounceAutoIntro(r) {
@@ -25942,6 +26135,9 @@ raceData = normalizeRaceData(rawRace);
         try { __handleWatcherLifecycleSignals(rawRace, raceData); } catch(e) {}
         // Nuevo feed: reloj global (elapsed) para anuncios de tiempo restante (incluye practica)
         try { __updateSessionClockFromFeed(rawRace, raceData); } catch(e) {}
+        try { __maybeAnnounceProvisionalPole(raceData); } catch(e) {}
+        try { __maybeAnnounceAmbientSessionCommentary(raceData); } catch(e) {}
+        try { __maybeAnnounceSessionSummary(raceData); } catch(e) {}
         updateLapHistoryAll();
         refreshSessionBestCache();
         updateRecordCarreraUI();
@@ -26423,6 +26619,7 @@ raceData = normalizeRaceData(rawRace);
               __sessionDirector.raceFinished = true;
               __sessionDirector.lastEvent = evt;
               __sessionDirectorStateSwitch('RACE_FINISHED', src, 'finish');
+              try { __maybeAnnounceSessionSummary(src); } catch(e) {}
             } else if (String(src.sessionEventName || '').toUpperCase() === 'RACE_RUNNING') {
               __silenceUntilClockRuns = false;
               __sessionDirector.lastEvent = 'RACE_RUNNING';
