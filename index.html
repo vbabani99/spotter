@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.5 - SessionDirector FSM + pole/QTABLE estable + más voz TRAIN/MANGA -
+vics_Smart_Spotter_v0.5.0.6 - SessionDirector FSM + pole/QTABLE estable + más voz TRAIN/MANGA -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -86,7 +86,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.5</title>
+<title>vics_Smart_Spotter_v0.5.0.6</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6581,7 +6581,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.5</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.6</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7173,7 +7173,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.5";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.6";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -9535,6 +9535,15 @@ function msgv2DecimasTxt(ms) {
       try {
         if (!r || !Array.isArray(r.classification) || !r.classification.length) return;
 
+        const dirState = String((__sessionDirector && __sessionDirector.state) || '').toUpperCase();
+        const practiceFlag = (r && r.practice != null) ? Number(r.practice) : NaN;
+        const practiceContext =
+          practiceFlag === 1 ||
+          dirState === 'PRACTICE_RUNNING' ||
+          dirState === 'PRACTICE_STOPPED' ||
+          (!!(__sessionDirector && __sessionDirector.practiceStarted) && !(__sessionDirector && __sessionDirector.raceStarted));
+        if (practiceContext) return;
+
         const rn = String(r.raceName || '');
         if (!rn) return;
 
@@ -9642,6 +9651,13 @@ function msgv2DecimasTxt(ms) {
         const life = String((r.lifecycleEventName || r.sessionEventName || '')).toUpperCase();
         const dirState = String((__sessionDirector && __sessionDirector.state) || '').toUpperCase();
         const phase = String(__autoPhase || '').toUpperCase();
+        const practiceFlag = (r && r.practice != null) ? Number(r.practice) : NaN;
+        const practiceContext =
+          practiceFlag === 1 ||
+          dirState === 'PRACTICE_RUNNING' ||
+          dirState === 'PRACTICE_STOPPED' ||
+          (!!(__sessionDirector && __sessionDirector.practiceStarted) && !(__sessionDirector && __sessionDirector.raceStarted));
+        if (practiceContext) return;
         const finishedLike = (life.indexOf('FINISH') >= 0 || dirState === 'RACE_FINISHED' || phase === 'FINISHED');
         if (!finishedLike) return;
 
