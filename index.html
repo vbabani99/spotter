@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.6 - SessionDirector FSM + pole/QTABLE estable + más voz TRAIN/MANGA -
+vics_Smart_Spotter_v0.5.0.7 - SessionDirector FSM + pole/QTABLE estable + más voz TRAIN/MANGA -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -86,7 +86,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.6</title>
+<title>vics_Smart_Spotter_v0.5.0.7</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6581,7 +6581,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.6</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.7</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7173,7 +7173,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.6";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.7";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -9645,6 +9645,32 @@ function msgv2DecimasTxt(ms) {
       } catch(e) { return 0; }
     }
 
+    function __sessionHasMeaningfulResults(r) {
+      try {
+        const rows = __topRowsByPos(r, 3);
+        if (!rows.length) return false;
+        return rows.some(row => {
+          const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
+          const totalMs = getRowTotalMs(row) || 0;
+          const bestMs = __getRowBestMsSafe(row);
+          return laps > 0 || totalMs > 0 || bestMs > 0;
+        });
+      } catch(e) { return false; }
+    }
+
+    function __looksLikeReopenedFinishedSession(r) {
+      try {
+        if (!r) return false;
+        const life = String((r.lifecycleEventName || r.sessionEventName || '')).toUpperCase();
+        if (life !== 'NEW_RACE_NAME') return false;
+        const practiceFlag = (r && r.practice != null) ? Number(r.practice) : NaN;
+        if (practiceFlag === 1) return false;
+        const dirState = String((__sessionDirector && __sessionDirector.state) || '').toUpperCase();
+        if (dirState === 'PRACTICE_RUNNING' || dirState === 'PRACTICE_STOPPED' || dirState === 'PRESTART') return false;
+        return __sessionHasMeaningfulResults(r);
+      } catch(e) { return false; }
+    }
+
     function __maybeAnnounceSessionSummary(r) {
       try {
         if (!r || !Array.isArray(r.classification) || !r.classification.length) return;
@@ -9658,8 +9684,10 @@ function msgv2DecimasTxt(ms) {
           dirState === 'PRACTICE_STOPPED' ||
           (!!(__sessionDirector && __sessionDirector.practiceStarted) && !(__sessionDirector && __sessionDirector.raceStarted));
         if (practiceContext) return;
-        const finishedLike = (life.indexOf('FINISH') >= 0 || dirState === 'RACE_FINISHED' || phase === 'FINISHED');
+        const reopenedFinishedSession = __looksLikeReopenedFinishedSession(r);
+        const finishedLike = (life.indexOf('FINISH') >= 0 || dirState === 'RACE_FINISHED' || (__sessionDirector && __sessionDirector.raceFinished) || phase === 'FINISHED' || reopenedFinishedSession);
         if (!finishedLike) return;
+        if (life === 'NEW_RACE_NAME' && !reopenedFinishedSession) return;
 
         const sig = String((r.raceName || '')) + '|finish';
         if (__sessionSummarySig !== sig) {
@@ -26297,6 +26325,9 @@ raceData = normalizeRaceData(rawRace);
           raceFinished: false,
           lastResetSig: ''
         };
+        try { __autoPhase = 'IDLE'; } catch(e) {}
+        try { __sessionSummarySig = ''; __sessionSummaryDone = false; } catch(e) {}
+        try { __autoFinishSummarySig = ''; __autoFinishSummaryDone = false; } catch(e) {}
       } catch(e) {}
     }
 
@@ -26517,6 +26548,9 @@ raceData = normalizeRaceData(rawRace);
         if ((src.raceNameChanged || evt === 'NEW_RACE_NAME') && __sessionDirector.lastResetSig !== sessionSig) {
           try { __hardResetSessionAudio('new_race'); } catch(e) {}
           try { __clearSessionIntroGuard(); } catch(e) {}
+          try { __autoPhase = 'IDLE'; } catch(e) {}
+          try { __sessionSummarySig = ''; __sessionSummaryDone = false; } catch(e) {}
+          try { __autoFinishSummarySig = ''; __autoFinishSummaryDone = false; } catch(e) {}
           __silenceUntilClockRuns = false;
           __sessionDirector.lastResetSig = String(sessionSig || '');
           __sessionDirector.titleAnnounced = false;
