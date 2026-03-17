@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.1 - SessionDirector FSM: lifecycle limpio por sesión -
+vics_Smart_Spotter_v0.5.0.2 - SessionDirector FSM: lifecycle limpio por sesión -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -86,7 +86,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.1</title>
+<title>vics_Smart_Spotter_v0.5.0.2</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6581,7 +6581,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.1</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.2</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7173,7 +7173,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.1";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.2";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7466,13 +7466,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.1";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.1',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.2',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.1', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.2', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -9445,6 +9445,7 @@ function msgv2DecimasTxt(ms) {
             try { __autoAnnounceTop3Summary(r, 'Termin la clasificacin'); } catch(e) {}
             __autoPhase = 'FINISHED';
             __autoCloseStartedMs = now;
+            try { __stopSessionClockTicker(); } catch(e) {}
             try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
@@ -9459,6 +9460,7 @@ function msgv2DecimasTxt(ms) {
           if (activeCount > 0 && announcedCount >= activeCount) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
+            try { __stopSessionClockTicker(); } catch(e) {}
             try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
@@ -9471,6 +9473,7 @@ function msgv2DecimasTxt(ms) {
           if (sinceCloseMs > 7000 && idleMs > 12000) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
+            try { __stopSessionClockTicker(); } catch(e) {}
             try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
@@ -9479,6 +9482,7 @@ function msgv2DecimasTxt(ms) {
           if (activeCount > 0 && announcedCount >= Math.max(1, activeCount - 1) && idleMs > 8000) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
+            try { __stopSessionClockTicker(); } catch(e) {}
             try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
@@ -9487,6 +9491,7 @@ function msgv2DecimasTxt(ms) {
           if (__autoCloseStartedMs && sinceCloseMs > 70000) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
+            try { __stopSessionClockTicker(); } catch(e) {}
             try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
             return;
           }
@@ -9503,6 +9508,7 @@ function msgv2DecimasTxt(ms) {
           const idleMs = now - (__autoLastActivityMs || now);
           if (idleMs > 8000) {
             __autoPhase = 'FINISHED';
+            try { __stopSessionClockTicker(); } catch(e) {}
             try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
           }
         }
@@ -9527,9 +9533,6 @@ function msgv2DecimasTxt(ms) {
 
     function __autoAnnounceTop3Summary(r, forcedLabel) {
       try {
-        // Si el usuario est siguiendo a un piloto, NO anunciamos el Top 3 al finalizar.
-        // Solo se anuncian los datos del piloto seguido (fin de sesin).
-        if (selectedPilotKey) return;
         if (!r || !Array.isArray(r.classification) || !r.classification.length) return;
 
         const rn = String(r.raceName || '');
@@ -9544,30 +9547,41 @@ function msgv2DecimasTxt(ms) {
         const info = currentSessionInfo || {};
         const type = String(info.type || '').toUpperCase();
         const isManga = (type === 'MANGA');
-        const isFinal = (type === 'FINAL');
+        const isFinal = (type === 'FINAL' || type.startsWith('FINAL'));
+        const isFinalA = /final\s*a|a-main|main\s*a/i.test(rn);
 
         const rows = r.classification.slice().filter(x => x && Number(x.pos || 0) > 0);
         rows.sort((a,b) => (Number(a.pos)||999) - (Number(b.pos)||999));
         const top = rows.slice(0,3);
         if (!top.length) return;
 
-        let head = forcedLabel ? String(forcedLabel) : (isManga ? 'Termin la clasificacin.' : 'Carrera terminada.');
-        if (!head.endsWith('.')) head += '.';
+        const p1 = top[0];
+        const p2 = top[1] || null;
+        const p3 = top[2] || null;
+        const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
+        const p2Name = p2 ? (safeRacerName(p2 && p2.racerName) || 'P2') : '';
+        const p3Name = p3 ? (safeRacerName(p3 && p3.racerName) || 'P3') : '';
+        const p1Laps = Number(p1 && (p1.lapcount ?? p1.laps ?? 0)) || 0;
+        const p1TotalMs = getRowTotalMs(p1) || 0;
+        const p1BestMs = Number(p1 && (p1.bestMs ?? p1.bestLapMs ?? 0)) || 0;
 
-        const part = (row, idx) => {
-          const nm = safeRacerName(row && row.racerName) || ('P' + (idx+1));
-          const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
-          const totalMs = getRowTotalMs(row) || 0;
-          let s = (idx===0 ? ' Primero ' : idx===1 ? ' Segundo ' : ' Tercero ');
-          s += nm + '.';
-          if (laps > 0) s += ' ' + laps + ' vueltas.';
-          if (totalMs > 0) s += ' ' + formatClockMs(totalMs) + '.';
-          return s;
-        };
-
-        let msg = head + part(top[0],0);
-        if (top[1]) msg += part(top[1],1);
-        if (top[2]) msg += part(top[2],2);
+        let msg = '';
+        if (isManga) {
+          msg = 'Terminó la clasificación. Pole para ' + p1Name + '.';
+          if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
+          if (p1TotalMs > 0) msg += ' Tiempo total ' + __speechTime2(p1TotalMs) + '.';
+          if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
+          if (p2Name) msg += ' Segundo ' + p2Name + '.';
+          if (p3Name) msg += ' Tercero ' + p3Name + '.';
+        } else {
+          msg = 'Carrera terminada. Ganador ' + p1Name + '.';
+          if (p2Name) msg += ' Segundo ' + p2Name + '.';
+          if (p3Name) msg += ' Tercero ' + p3Name + '.';
+          if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
+          if (p1TotalMs > 0) msg += ' Tiempo total ' + __speechTime2(p1TotalMs) + '.';
+          if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
+          if (isFinalA) msg += ' Campeón de la noche, ' + p1Name + '.';
+        }
 
         enqueueSpeech(msg, {
           key: 'auto_top3_finish_' + rn,
@@ -13848,6 +13862,8 @@ return s;
     let __sessClockSig = '';
     let __sessClockLastTargetMs = 0;
     let __sessClockLastFeedElapsedMs = 0;
+    let __sessClockLive = false;
+    let __sessClockLastPredictedMs = 0;
 
     function __pickElapsedClockMs(rawRace){
       try{
@@ -13862,6 +13878,40 @@ return s;
       } catch(e){
         return 0;
       }
+    }
+
+    function __isClockSessionLive(normRace){
+      try{
+        const life = String((normRace && normRace.lifecycleEventName) || '').toUpperCase();
+        const sessEvt = String((normRace && normRace.sessionEventName) || '').toUpperCase();
+        const st = String((normRace && normRace.sessionType) || '').toUpperCase();
+        const phase = String(__autoPhase || '').toUpperCase();
+        if (phase === 'FINISHED' || phase === 'CLOSING' || phase === 'WAIT_START') return false;
+        if (life === 'PRACTICE_ACTIVITY_START' || life === 'QUALI_ACTIVITY_START' || life === 'RACE_ACTIVITY_START') return true;
+        if (phase === 'RUNNING' && (st === 'TRAIN' || st === 'MANGA' || st === 'FINAL')) return true;
+        if (sessEvt === 'PRACTICE_RUNNING' || sessEvt === 'PRACTICE_RUNNING_WITH_GRID') return true;
+        return false;
+      } catch(e){ return false; }
+    }
+
+    function __getRemainingMarksForSession(){
+      try{
+        const st = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+        if (st === 'MANGA' || st === 'QUALI') return [60000, 30000, 10000];
+        if (st === 'FINAL' || st.startsWith('FINAL')) return [120000, 60000, 30000];
+        return [120000, 60000, 30000];
+      } catch(e){ return [120000, 60000, 30000]; }
+    }
+
+    function __speechTime2(ms){
+      try{
+        const v = Math.max(0, Math.floor(Number(ms) || 0));
+        const mm = Math.floor(v / 60000);
+        const ss = Math.floor((v % 60000) / 1000);
+        const cc = Math.floor((v % 1000) / 10);
+        if (mm > 0) return __intToEs(mm) + ' minutos ' + __intToEs(ss) + ' segundos punto ' + String(cc).padStart(2,'0');
+        return __intToEs(ss) + ' segundos punto ' + String(cc).padStart(2,'0');
+      } catch(e){ return formatClockMs(ms); }
     }
 
     function __inferTargetMsFromEst(raceData){
@@ -13891,29 +13941,22 @@ return s;
     function __maybeAnnounceRemainingMs(remMs){
       try{
         if (!voiceMasterEnabled) return;
+        if (!__sessClockLive) return;
         if (!remMs || remMs < 0) remMs = 0;
 
-        // Umbrales (ms)
-        const marks = [
-          120000, 60000, 30000
-        ];
-
-        // Detecta cruces hacia abajo
+        const marks = __getRemainingMarksForSession();
         const prev = (__sessClockLastRemainingMs == null) ? remMs : __sessClockLastRemainingMs;
         __sessClockLastRemainingMs = remMs;
 
         for (const m of marks){
           if (prev > m && remMs <= m && !__sessClockAnnounced.has(m)){
             __sessClockAnnounced.add(m);
-
             let txt = '';
             if (m === 120000) txt = 'Quedan dos minutos.';
             else if (m === 60000) txt = 'Último minuto.';
             else if (m === 30000) txt = 'Treinta segundos.';
-
-            if (txt) {
-              enqueueSpeech(txt, { key: 'time_mark_' + m + '_' + __sessClockSig, priority: 86, cooldownMs: 15000, dedupe: true });
-            }
+            else if (m === 10000) txt = 'Diez segundos.';
+            if (txt) enqueueSpeech(txt, { key: 'time_mark_' + m + '_' + __sessClockSig, priority: 86, cooldownMs: 15000, dedupe: true });
             break;
           }
         }
@@ -13928,8 +13971,10 @@ return s;
           if (!__sessClockRxAt) return;
           if (!__sessClockTargetMs || __sessClockTargetMs <= 0) return;
 
+          if (!__sessClockLive) return;
           const now = Date.now();
           const elapsedNow = Math.max(0, __sessClockBaseElapsedMs + (now - __sessClockRxAt));
+          __sessClockLastPredictedMs = elapsedNow;
           const remMs = Math.max(0, __sessClockTargetMs - elapsedNow);
 
           __maybeAnnounceRemainingMs(remMs);
@@ -13947,6 +13992,8 @@ return s;
       __sessClockSig = '';
       __sessClockLastTargetMs = 0;
       __sessClockLastFeedElapsedMs = 0;
+      __sessClockLive = false;
+      __sessClockLastPredictedMs = 0;
     }
 
     function __updateSessionClockFromFeed(rawRace, normRace){
@@ -13955,46 +14002,59 @@ return s;
         const pr = (normRace && normRace.practice != null) ? Number(normRace.practice) : null;
         const sig = rn + '|' + String(pr);
         if (sig !== __sessClockSig){
-          // carrera nueva
           __sessClockSig = sig;
           __sessClockAnnounced = new Set();
           __sessClockLastRemainingMs = null;
           __sessClockLastTargetMs = 0;
           __sessClockLastFeedElapsedMs = 0;
+          __sessClockLastPredictedMs = 0;
+          __sessClockLive = false;
+        }
+
+        const liveNow = __isClockSessionLive(normRace);
+        if (!liveNow){
+          __sessClockLive = false;
+          __sessClockRxAt = 0;
+          __sessClockBaseElapsedMs = 0;
+          __sessClockLastRemainingMs = null;
+          return;
         }
 
         const elapsedFeed = __pickElapsedClockMs(rawRace);
-        // si el feed se reinicia (elapsed baja fuerte), reset interno
+        const target = __inferTargetMsFromEst(normRace);
+        if (!target || target <= 0){
+          __sessClockLive = false;
+          __sessClockTargetMs = 0;
+          return;
+        }
+
         if (__sessClockLastFeedElapsedMs && elapsedFeed + 2000 < __sessClockLastFeedElapsedMs){
           __sessClockAnnounced = new Set();
           __sessClockLastRemainingMs = null;
         }
         __sessClockLastFeedElapsedMs = elapsedFeed;
 
-        const target = __inferTargetMsFromEst(normRace);
-        // si cambian minutos en caliente (target se mueve), ajustar y limpiar marks futuros
-        if (__sessClockLastTargetMs && target && Math.abs(target - __sessClockLastTargetMs) > 5000){
-          // conserva lo ya anunciado por debajo del nuevo remaining, pero re-habilita los mayores
-          const newSet = new Set();
-          for (const m of __sessClockAnnounced){
-            // si ya lo cruzamos, lo dejamos
-            newSet.add(m);
-          }
-          __sessClockAnnounced = newSet;
+        if (__sessClockLastTargetMs && Math.abs(target - __sessClockLastTargetMs) > 5000){
           __sessClockLastRemainingMs = null;
         }
         __sessClockLastTargetMs = target;
 
-        // Si no hay target (feed sin est), no hacemos anuncios.
-        if (!target || target <= 0){
-          __sessClockTargetMs = 0;
-          return;
+        const now = Date.now();
+        const predicted = (__sessClockRxAt > 0) ? Math.max(0, __sessClockBaseElapsedMs + (now - __sessClockRxAt)) : 0;
+        const drift = Math.abs(elapsedFeed - predicted);
+
+        __sessClockTargetMs = target;
+        __sessClockLive = true;
+
+        if (!__sessClockRxAt || drift > 500){
+          __sessClockBaseElapsedMs = elapsedFeed;
+          __sessClockRxAt = now;
+        } else if (drift > 80){
+          const corrected = predicted + ((elapsedFeed - predicted) * 0.35);
+          __sessClockBaseElapsedMs = Math.max(0, corrected);
+          __sessClockRxAt = now;
         }
 
-        // Update base
-        __sessClockTargetMs = target;
-        __sessClockBaseElapsedMs = elapsedFeed;
-        __sessClockRxAt = Date.now();
         __startSessionClockTicker();
       } catch(e) {}
     }
