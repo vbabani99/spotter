@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.4 - SessionDirector FSM + pole/QTABLE + cierres + más voz TRAIN/MANGA -
+vics_Smart_Spotter_v0.5.0.5 - SessionDirector FSM + pole/QTABLE estable + más voz TRAIN/MANGA -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -86,7 +86,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.4</title>
+<title>vics_Smart_Spotter_v0.5.0.5</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6581,7 +6581,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.4</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.5</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7173,7 +7173,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.4";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.5";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -9697,48 +9697,8 @@ function msgv2DecimasTxt(ms) {
 
     function __maybeAnnounceProvisionalPole(r) {
       try {
-        if (!r || selectedPilotKey) return;
-        const sess = String((currentSessionInfo && currentSessionInfo.type) || (__sessionDirector && __sessionDirector.sessionType) || '').toUpperCase();
-        const dirState = String((__sessionDirector && __sessionDirector.state) || '').toUpperCase();
-        if (!(sess === 'MANGA' || sess === 'QUALI')) return;
-        if (dirState !== 'RACE_RUNNING') return;
-        const rows = __topRowsByPos(r, 2);
-        if (rows.length < 1) return;
-        const p1 = rows[0], p2 = rows[1] || null;
-        const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
-        const estLap1 = __getRowEstLapSafe(p1);
-        const estTime1 = __getRowEstTimeMsSafe(p1);
-        const best1 = __getRowBestMsSafe(p1);
-        const laps1 = Number(p1 && (p1.lapcount ?? p1.laps ?? 0)) || 0;
-        const gapMs = p2 ? Math.abs((__getRowEstTimeMsSafe(p2) || __getRowBestMsSafe(p2) || 0) - (estTime1 || best1 || 0)) : 0;
-        const leadBasis = (estTime1 > 0 ? ('|' + estLap1 + '|' + estTime1) : ('|best|' + best1 + '|laps|' + laps1));
-        const sig = String(r.raceName || '') + '|' + p1Name + leadBasis;
-        const now = Date.now();
-        if (__provisionalPoleSig === sig && (now - (__provisionalPoleLastAt || 0)) < 45000) return;
-        if (estTime1 <= 0 && best1 <= 0) return;
-        if (laps1 <= 0 && estLap1 <= 0) return;
-        const sessionElapsed = Number(r.clockMs || r.clock || 0) || 0;
-        if (sessionElapsed < 8000) return;
-        let msg = 'Atención, nueva pole provisional. ' + p1Name + '.';
-        if (estLap1 > 0 && estTime1 > 0) {
-          msg += ' Proyecta ' + Math.floor(estLap1) + ' vueltas en ' + __speechTime2(estTime1) + '.';
-        } else if (best1 > 0) {
-          msg += ' Referencia de ' + __speechTime2(best1) + '.';
-        }
-        if (p2 && gapMs > 0 && gapMs <= 1500) {
-          msg += ' ' + (safeRacerName(p2 && p2.racerName) || 'P2') + ' a ' + __speechTime2(gapMs) + '.';
-        }
-        enqueueSpeech(msg, {
-          key: 'pole_live_' + sig,
-          priority: 92,
-          cooldownMs: 0,
-          dedupe: true,
-          semanticCategory: 'qualiPole',
-          semanticThreshold: 0.88,
-          semanticWindowMs: 30000
-        });
-        __provisionalPoleSig = sig;
-        __provisionalPoleLastAt = now;
+        // Desactivado: la pole provisional vive ahora desde Q TABLE / store estable.
+        return;
       } catch(e) {}
     }
 
@@ -9752,19 +9712,27 @@ function msgv2DecimasTxt(ms) {
         const now = Date.now();
         const rn = String(r.raceName || '');
         const ambientSig = rn + '|' + sess;
-        const gapNeed = (sess === 'TRAIN') ? 18000 : 14000;
+        const gapNeed = (sess === 'TRAIN') ? 10000 : 11000;
         if (__ambientSessionSig === ambientSig && (now - (__ambientSessionLastAt || 0)) < gapNeed) return;
         const rows = __topRowsByPos(r, 4);
         if (!rows.length) return;
         let msg = '';
         if (sess === 'TRAIN') {
-          const p1 = safeRacerName(rows[0] && rows[0].racerName) || 'P1';
-          const best = __getRowBestMsSafe(rows[0]);
-          const est = __getRowEstTimeMsSafe(rows[0]);
-          msg = 'Entrenamiento en marcha. ' + p1 + ' marca la referencia';
-          if (best > 0) msg += ' con ' + __speechTime2(best);
-          else if (est > 0) msg += ' proyectando ' + __speechTime2(est);
-          msg += '.';
+          const p1 = rows[0], p2 = rows[1] || null;
+          const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
+          const p2Name = safeRacerName(p2 && p2.racerName) || '';
+          const best1 = __getRowBestMsSafe(p1);
+          const best2 = __getRowBestMsSafe(p2);
+          const est1 = __getRowEstTimeMsSafe(p1);
+          const est2 = __getRowEstTimeMsSafe(p2);
+          const closeGap = (best1 > 0 && best2 > 0) ? Math.abs(best2 - best1) : ((est1 > 0 && est2 > 0) ? Math.abs(est2 - est1) : 0);
+          const variants = [];
+          if (best1 > 0) variants.push('Entrenamiento vivo. ' + p1Name + ' trae la referencia con ' + __speechTime2(best1) + '.');
+          if (est1 > 0) variants.push('Práctica con ritmo. ' + p1Name + ' proyecta ' + __speechTime2(est1) + '.');
+          if (p2Name && closeGap > 0 && closeGap <= 300) variants.push('Se aprieta la práctica. ' + p1Name + ' y ' + p2Name + ' están a ' + __speechTime2(closeGap) + '.');
+          if (p2Name) variants.push('Práctica en marcha. ' + p1Name + ' y ' + p2Name + ' ya marcan referencias.');
+          variants.push('Entrenamiento en marcha. Hay que afinar trazada y ritmo.');
+          msg = variants[Math.floor((now / gapNeed)) % variants.length];
         } else {
           const p1 = rows[0], p2 = rows[1] || null;
           const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
@@ -9773,13 +9741,13 @@ function msgv2DecimasTxt(ms) {
           const e2 = __getRowEstTimeMsSafe(p2);
           const b1 = __getRowBestMsSafe(p1);
           const b2 = __getRowBestMsSafe(p2);
-          msg = 'Clasificación viva. ' + p1Name + ' al frente.';
-          if (e1 > 0) msg += ' Proyección ' + __speechTime2(e1) + '.';
-          else if (b1 > 0) msg += ' Referencia ' + __speechTime2(b1) + '.';
-          if (p2Name) {
-            const dg = Math.abs((e2 || b2 || 0) - (e1 || b1 || 0));
-            if (dg > 0 && dg <= 2000) msg += ' ' + p2Name + ' a ' + __speechTime2(dg) + '.';
-          }
+          const dg = p2Name ? Math.abs((e2 || b2 || 0) - (e1 || b1 || 0)) : 0;
+          const variants = [];
+          if (e1 > 0) variants.push('Clasificación viva. ' + p1Name + ' proyecta ' + __speechTime2(e1) + '.');
+          if (b1 > 0) variants.push('La referencia de la manga la trae ' + p1Name + ' con ' + __speechTime2(b1) + '.');
+          if (p2Name && dg > 0 && dg <= 250) variants.push('La quali está fina. ' + p2Name + ' está a ' + __speechTime2(dg) + ' de la referencia.');
+          variants.push('Clasificación en marcha. Cada vuelta cuenta.');
+          msg = variants[Math.floor((now / gapNeed)) % variants.length];
         }
         enqueueSpeech(msg, {
           key: 'ambient_' + ambientSig + '_' + Math.floor(now / gapNeed),
@@ -26758,7 +26726,8 @@ raceData = normalizeRaceData(rawRace);
       leaderTimeMs: 0,
       lastAnnounceTs: 0,
       lastImproveTs: 0,
-      lastCloseTs: 0
+      lastCloseTs: 0,
+      lastProjectionSig: ''
     };
 
     function __qualiRankTuple(it){
@@ -26804,6 +26773,16 @@ raceData = normalizeRaceData(rawRace);
 
     function __buildLiveQualiEstimate(raw, store){
       try{
+        const stable = (computeQualiList(store) || []).filter(it => {
+          const laps = Number(it && it.laps) || 0;
+          const timeMs = Number(it && it.timeMs) || 0;
+          return laps > 0 && timeMs > 0 && timeMs < Number.MAX_SAFE_INTEGER;
+        });
+        if (stable.length){
+          return stable.map(it => Object.assign({ basis:'qtable' }, it));
+        }
+      }catch(e){}
+      try{
         const cls = (raw && Array.isArray(raw.classification)) ? raw.classification : [];
         const live = [];
         for (const r of cls){
@@ -26814,7 +26793,7 @@ raceData = normalizeRaceData(rawRace);
           const racerName = String(r.racerName ?? r.driverName ?? r.name ?? '').trim();
           const pilotKey = String(getQualiPilotKey(r, store) || getPilotKey(r) || racerName).trim();
           if (!pilotKey || !racerName) continue;
-          if (estLap > 0 && estTimeMs > 0){
+          if (estLap >= 2 && estTimeMs > 0){
             live.push({
               pilotKey,
               racerName,
@@ -26837,9 +26816,7 @@ raceData = normalizeRaceData(rawRace);
           return live;
         }
       }catch(e){}
-      try{
-        return (computeQualiList(store) || []).map(it => Object.assign({ basis:'qtable' }, it));
-      }catch(e){ return []; }
+      return [];
     }
 
     function __maybeAnnounceQualiLeaderFromStore(raw, store){
@@ -26873,12 +26850,14 @@ raceData = normalizeRaceData(rawRace);
         const lT = __qualiRankTuple(leader);
         const lLaps = lT.laps;
         const lTimeMs = lT.timeMs;
+        const sessionElapsed = Number(raw.clockMs || raw.clock || 0) || 0;
+        if (sessionElapsed < 18000 && lLaps < 2) return;
 
         const now = Date.now();
 
-        const changeCooldown = 7000;
-        const improveCooldown = 11000;
-        const closeCooldown = 14000;
+        const changeCooldown = 18000;
+        const improveCooldown = 22000;
+        const closeCooldown = 26000;
 
         const prevKey = String(__qualiLeaderState.leaderKey || '');
         const prevTime = Number(__qualiLeaderState.leaderTimeMs || 0) || 0;
@@ -26889,6 +26868,8 @@ raceData = normalizeRaceData(rawRace);
         const second = (list.length >= 2) ? list[1] : null;
         const secondName = second ? String(second.racerName || '').trim() : '';
         const sT = second ? __qualiRankTuple(second) : { laps: 0, timeMs: Number.MAX_SAFE_INTEGER };
+        const projTxt = __speechQualiProjection(lLaps, lTimeMs);
+        const projectionSig = leaderKey + '|' + lLaps + '|' + Math.round(lTimeMs / 10);
 
         __qualiLeaderState.leaderKey = leaderKey;
         __qualiLeaderState.leaderName = leaderName;
@@ -26897,24 +26878,25 @@ raceData = normalizeRaceData(rawRace);
 
         if (firstTime){
           __qualiLeaderState.lastAnnounceTs = now;
+          __qualiLeaderState.lastProjectionSig = projectionSig;
           return;
         }
 
-        const projTxt = __speechQualiProjection(lLaps, lTimeMs);
         const changed = (prevKey && prevKey !== leaderKey);
-        if (changed && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
+        if (changed && projTxt && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
           enqueueSpeech(
             `Atención, nueva pole provisional. ${leaderName} proyecta ${projTxt}.`,
-            { key: 'quali_leader_change', cooldownMs: changeCooldown, semanticCategory: 'leader', priority: 62 }
+            { key: 'quali_leader_change_' + leaderKey + '_' + lLaps, cooldownMs: changeCooldown, semanticCategory: 'leader', priority: 62 }
           );
           __qualiLeaderState.lastAnnounceTs = now;
+          __qualiLeaderState.lastProjectionSig = projectionSig;
 
           if (second && secondName && sT.laps === lLaps){
             const gap = sT.timeMs - lTimeMs;
-            if (isFinite(gap) && gap > 0 && gap <= 200 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
+            if (isFinite(gap) && gap > 0 && gap <= 120 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
               enqueueSpeech(
                 `Y ojo, ${secondName} está a ${__speechTime2(gap)} de la pole.`,
-                { key: 'quali_close', cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 40 }
+                { key: 'quali_close_' + leaderKey + '_' + secondName, cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 40 }
               );
               __qualiLeaderState.lastCloseTs = now;
             }
@@ -26925,28 +26907,30 @@ raceData = normalizeRaceData(rawRace);
         const lapGain = (lLaps > prevLaps);
         const timeDrop = (prevTime > 0 && lTimeMs < prevTime);
         const dropMs = timeDrop ? (prevTime - lTimeMs) : 0;
+        const projectionChanged = (__qualiLeaderState.lastProjectionSig !== projectionSig);
 
-        if ((lapGain || (dropMs >= 40)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
+        if (projectionChanged && (lapGain || (dropMs >= 120)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
           if (lapGain){
             enqueueSpeech(
               `La pole provisional mejora. ${leaderName} proyecta ${projTxt}.`,
-              { key: 'quali_leader_improve', cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 48 }
+              { key: 'quali_leader_improve_' + leaderKey + '_' + lLaps, cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 48 }
             );
           } else {
             enqueueSpeech(
-              `La pole provisional se aprieta. ${leaderName} baja a ${projTxt}.`,
-              { key: 'quali_leader_improve', cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 48 }
+              `La pole provisional baja. ${leaderName} proyecta ${projTxt}.`,
+              { key: 'quali_leader_improve_' + leaderKey + '_' + Math.round(lTimeMs/10), cooldownMs: improveCooldown, semanticCategory: 'leader', priority: 48 }
             );
           }
           __qualiLeaderState.lastImproveTs = now;
+          __qualiLeaderState.lastProjectionSig = projectionSig;
         }
 
         if (second && secondName && sT.laps === lLaps){
           const gap = sT.timeMs - lTimeMs;
-          if (isFinite(gap) && gap > 0 && gap <= 200 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
+          if (isFinite(gap) && gap > 0 && gap <= 120 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
             enqueueSpeech(
               `Esto está apretado. ${secondName} a ${__speechTime2(gap)} de la pole.`,
-              { key: 'quali_close', cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 36 }
+              { key: 'quali_close_' + leaderKey + '_' + secondName, cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 36 }
             );
             __qualiLeaderState.lastCloseTs = now;
           }
