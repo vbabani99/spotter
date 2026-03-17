@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.10 - SessionDirector FSM + pole/QTABLE estable + más voz TRAIN/MANGA -
+vics_Smart_Spotter_v0.5.0.11 - SessionDirector FSM + cierre quali por QTABLE vueltas/tiempo -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -86,7 +86,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.10</title>
+<title>vics_Smart_Spotter_v0.5.0.11</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -9576,9 +9576,25 @@ function msgv2DecimasTxt(ms) {
 
         let msg = '';
         if (isManga) {
-          msg = 'Terminó la clasificación. Pole para ' + p1Name + '.';
-          if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
-          if (p1TotalMs > 0) msg += ' Tiempo total ' + __speechTime2(p1TotalMs) + '.';
+          const qctx = __getQualiFinishContext(r);
+          const qTop = qctx && qctx.qTop ? qctx.qTop : null;
+          const qTopName = qctx && qctx.qTopName ? qctx.qTopName : '';
+          const qTopTuple = qctx && qctx.qTopTuple ? qctx.qTopTuple : { laps:0, timeMs:0 };
+          const currentIsQTop = !!(qctx && qctx.currentIsQTop);
+          msg = 'Terminó la clasificación.';
+          if (currentIsQTop) {
+            msg += ' Nueva pole para ' + p1Name + '.';
+            if (p1Laps > 0 && p1TotalMs > 0) msg += ' ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs) + '.';
+            else if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
+          } else if (qTopName && qTopTuple.laps > 0 && qTopTuple.timeMs > 0) {
+            msg += ' ' + p1Name + ' gana esta manga';
+            if (p1Laps > 0 && p1TotalMs > 0) msg += ' con ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs);
+            else if (p1Laps > 0) msg += ' con ' + p1Laps + ' vueltas';
+            msg += '. La pole sigue siendo de ' + qTopName + ' con ' + qTopTuple.laps + ' vueltas en ' + __speechTime2(qTopTuple.timeMs) + '.';
+          } else {
+            msg += ' ' + p1Name + ' cierra al frente.';
+            if (p1Laps > 0 && p1TotalMs > 0) msg += ' ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs) + '.';
+          }
           if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
           if (p2Name) msg += ' Segundo ' + p2Name + '.';
           if (p3Name) msg += ' Tercero ' + p3Name + '.';
@@ -9658,6 +9674,66 @@ function msgv2DecimasTxt(ms) {
       } catch(e) { return false; }
     }
 
+    function __rankTupleFromStoreRow(row) {
+      try {
+        return {
+          laps: Number(row && (row.laps ?? row.lapcount ?? 0)) || 0,
+          timeMs: Number(row && (row.timeMs ?? row.totalMs ?? row.estTime ?? row.estTimeMs ?? 0)) || 0
+        };
+      } catch(e) { return { laps:0, timeMs:0 }; }
+    }
+
+    function __rankTupleFromRaceRow(row) {
+      try {
+        return {
+          laps: Number(row && (row.lapcount ?? row.laps ?? 0)) || 0,
+          timeMs: getRowTotalMs(row) || 0
+        };
+      } catch(e) { return { laps:0, timeMs:0 }; }
+    }
+
+    function __sameVueltasTiempo(a, b) {
+      try {
+        const al = Number(a && a.laps || 0) || 0;
+        const bl = Number(b && b.laps || 0) || 0;
+        const at = Number(a && a.timeMs || 0) || 0;
+        const bt = Number(b && b.timeMs || 0) || 0;
+        return al > 0 && at > 0 && al === bl && Math.abs(at - bt) <= 5;
+      } catch(e) { return false; }
+    }
+
+    function __betterVueltasTiempo(a, b) {
+      try {
+        const al = Number(a && a.laps || 0) || 0;
+        const bl = Number(b && b.laps || 0) || 0;
+        if (al !== bl) return al > bl;
+        const at = Number(a && a.timeMs || Number.MAX_SAFE_INTEGER);
+        const bt = Number(b && b.timeMs || Number.MAX_SAFE_INTEGER);
+        return at < bt;
+      } catch(e) { return false; }
+    }
+
+    function __getQualiFinishContext(r) {
+      try {
+        const currentRows = __topRowsByPos(r, 3);
+        const currentTop = currentRows[0] || null;
+        const rn = String((r && r.raceName) || '');
+        const store = loadQualiStoreFor(rn);
+        const qList = computeQualiList(store);
+        const qTop = qList && qList.length ? qList[0] : null;
+        const currentTuple = __rankTupleFromRaceRow(currentTop);
+        const qTopTuple = __rankTupleFromStoreRow(qTop);
+        const currentName = safeRacerName(currentTop && currentTop.racerName) || '';
+        const qTopName = safeRacerName(qTop && qTop.racerName) || '';
+        const currentIsQTop = __sameVueltasTiempo(currentTuple, qTopTuple) && currentName && qTopName && normalizeNameKey(currentName) === normalizeNameKey(qTopName);
+        return {
+          currentRows, currentTop, qTop, currentTuple, qTopTuple, currentName, qTopName, currentIsQTop
+        };
+      } catch(e) {
+        return { currentRows: [], currentTop:null, qTop:null, currentTuple:{laps:0,timeMs:0}, qTopTuple:{laps:0,timeMs:0}, currentName:'', qTopName:'', currentIsQTop:false };
+      }
+    }
+
     function __looksLikeReopenedFinishedSession(r) {
       try {
         if (!r) return false;
@@ -9710,9 +9786,25 @@ function msgv2DecimasTxt(ms) {
         const isFinalA = /final\s*a|a-main|main\s*a/i.test(rn);
         let msg = '';
         if (sess === 'MANGA' || sess === 'QUALI') {
-          msg = 'Terminó la clasificación. Pole para ' + p1Name + '.';
-          if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
-          if (p1TotalMs > 0) msg += ' Tiempo total ' + __speechTime2(p1TotalMs) + '.';
+          const qctx = __getQualiFinishContext(r);
+          const qTop = qctx && qctx.qTop ? qctx.qTop : null;
+          const qTopName = qctx && qctx.qTopName ? qctx.qTopName : '';
+          const qTopTuple = qctx && qctx.qTopTuple ? qctx.qTopTuple : { laps:0, timeMs:0 };
+          const currentIsQTop = !!(qctx && qctx.currentIsQTop);
+          msg = 'Terminó la clasificación.';
+          if (currentIsQTop) {
+            msg += ' Nueva pole para ' + p1Name + '.';
+            if (p1Laps > 0 && p1TotalMs > 0) msg += ' ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs) + '.';
+            else if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
+          } else if (qTopName && qTopTuple.laps > 0 && qTopTuple.timeMs > 0) {
+            msg += ' ' + p1Name + ' gana esta manga';
+            if (p1Laps > 0 && p1TotalMs > 0) msg += ' con ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs);
+            else if (p1Laps > 0) msg += ' con ' + p1Laps + ' vueltas';
+            msg += '. La pole sigue siendo de ' + qTopName + ' con ' + qTopTuple.laps + ' vueltas en ' + __speechTime2(qTopTuple.timeMs) + '.';
+          } else {
+            msg += ' ' + p1Name + ' cierra al frente.';
+            if (p1Laps > 0 && p1TotalMs > 0) msg += ' ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs) + '.';
+          }
           if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
           if (p2Name) msg += ' Segundo ' + p2Name + '.';
           if (p3Name) msg += ' Tercero ' + p3Name + '.';
