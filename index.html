@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.9 - SessionDirector FSM + pole/QTABLE estable + más voz TRAIN/MANGA -
+vics_Smart_Spotter_v0.5.0.10 - SessionDirector FSM + pole/QTABLE estable + más voz TRAIN/MANGA -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -86,7 +86,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.9</title>
+<title>vics_Smart_Spotter_v0.5.0.10</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6581,7 +6581,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.9</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.10</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7173,7 +7173,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.9";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.10";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -14125,6 +14125,17 @@ return s;
         const cc = Math.floor((v % 1000) / 10);
         if (mm > 0) return __intToEs(mm) + ' minutos ' + __intToEs(ss) + ' segundos punto ' + String(cc).padStart(2,'0');
         return __intToEs(ss) + ' segundos punto ' + String(cc).padStart(2,'0');
+      } catch(e){ return formatClockMs(ms); }
+    }
+
+    function __speechTime1(ms){
+      try{
+        const v = Math.max(0, Math.floor(Number(ms) || 0));
+        const mm = Math.floor(v / 60000);
+        const ss = Math.floor((v % 60000) / 1000);
+        const d1 = Math.floor((v % 1000) / 100);
+        if (mm > 0) return __intToEs(mm) + ' minutos ' + __intToEs(ss) + ' segundos punto ' + String(d1);
+        return __intToEs(ss) + ' segundos punto ' + String(d1);
       } catch(e){ return formatClockMs(ms); }
     }
 
@@ -26827,9 +26838,9 @@ raceData = normalizeRaceData(rawRace);
       try{
         const l = Math.max(0, Number(laps || 0) || 0);
         const t = Math.max(0, Number(timeMs || 0) || 0);
-        if (l > 0 && t > 0) return l + ' vueltas estimadas en ' + __speechTime2(t) + ' estimados';
-        if (l > 0) return l + ' vueltas estimadas';
-        if (t > 0) return 'tiempo estimado de ' + __speechTime2(t);
+        if (l > 0 && t > 0) return l + ' vueltas en ' + __speechTime1(t);
+        if (l > 0) return l + ' vueltas';
+        if (t > 0) return __speechTime1(t);
         return '';
       }catch(e){ return ''; }
     }
