@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.11 - SessionDirector FSM + cierre quali por QTABLE vueltas/tiempo -
+vics_Smart_Spotter_v0.5.0.14 - SessionDirector FSM + cierre quali por QTABLE vueltas/tiempo -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -86,7 +86,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.11</title>
+<title>vics_Smart_Spotter_v0.5.0.14</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6581,7 +6581,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.10</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.14</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7173,7 +7173,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.10";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.14";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7466,13 +7466,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.10";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.4',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.14',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.4', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.14', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -9433,13 +9433,20 @@ function msgv2DecimasTxt(ms) {
         const type = String(info.type || '').toUpperCase();
         const isFinal = (type.startsWith('FINAL') || String(info.label||'').toUpperCase().includes('FINAL'));
 
-        // Al cruzar el tiempo objetivo entramos en cierre
+        // Al cruzar el tiempo objetivo no mates la narración en finales.
+        // Primero esperamos señales reales de cierre.
         if ((__autoPhase === 'RUNNING') && maxTotalMs >= dur) {
           if (isFinal) {
-            __autoPhase = 'CLOSING';
-            __autoCloseStartedMs = now;
-            try { __purgeSpeechForPhase('CLOSING'); } catch(e) {}
-            return;
+            const idleMs = now - (__autoLastActivityMs || now);
+            const activeCount = (__autoActiveKeys && __autoActiveKeys.size) ? __autoActiveKeys.size : 0;
+            const announcedCount = (__autoFinishAnnouncedByKey && __autoFinishAnnouncedByKey.size) ? __autoFinishAnnouncedByKey.size : 0;
+            const shouldCloseFinal = (idleMs > 9000) || (activeCount > 0 && announcedCount >= Math.max(1, activeCount - 1));
+            if (shouldCloseFinal) {
+              __autoPhase = 'CLOSING';
+              __autoCloseStartedMs = now;
+              try { __purgeSpeechForPhase('CLOSING'); } catch(e) {}
+              return;
+            }
           } else {
             // Manga: anunciar cierre + Top3 y luego silencio
             try { __autoAnnounceTop3Summary(r, 'Termin la clasificacin'); } catch(e) {}
@@ -9451,12 +9458,14 @@ function msgv2DecimasTxt(ms) {
           }
         }
 
-        // CLOSING: solo finalizo y luego silencio
+        // CLOSING: remata y luego silencio
         if (__autoPhase === 'CLOSING') {
           const activeCount = (__autoActiveKeys && __autoActiveKeys.size) ? __autoActiveKeys.size : 0;
           const announcedCount = (__autoFinishAnnouncedByKey && __autoFinishAnnouncedByKey.size) ? __autoFinishAnnouncedByKey.size : 0;
+          const idleMs = now - (__autoLastActivityMs || now);
+          const sinceCloseMs = __autoCloseStartedMs ? (now - __autoCloseStartedMs) : 0;
 
-          // Si ya anunciamos a todos los que arrancaron, acab
+          // Si ya anunciamos a todos los que arrancaron, acabó
           if (activeCount > 0 && announcedCount >= activeCount) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
@@ -9465,12 +9474,8 @@ function msgv2DecimasTxt(ms) {
             return;
           }
 
-          // Cierre inteligente: si ya no hay movimiento (ni laps ni totalMs), cerrar por inactividad
-          const idleMs = now - (__autoLastActivityMs || now);
-          const sinceCloseMs = __autoCloseStartedMs ? (now - __autoCloseStartedMs) : 0;
-
-          // Caso comun: algunos no tienen totalMs o no cruzan "bonito" -> no te quedes atorado
-          if (sinceCloseMs > 7000 && idleMs > 12000) {
+          // Caso comun: algunos no tienen totalMs o no cruzan bonito -> no te quedes atorado
+          if (sinceCloseMs > 12000 && idleMs > 15000) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
             try { __stopSessionClockTicker(); } catch(e) {}
@@ -9478,8 +9483,8 @@ function msgv2DecimasTxt(ms) {
             return;
           }
 
-          // Si ya casi todos estan anunciados, y no hay actividad, cerramos rapido
-          if (activeCount > 0 && announcedCount >= Math.max(1, activeCount - 1) && idleMs > 8000) {
+          // Si ya casi todos estan anunciados y no hay actividad, cerramos
+          if (activeCount > 0 && announcedCount >= Math.max(1, activeCount - 1) && idleMs > 12000) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
             try { __stopSessionClockTicker(); } catch(e) {}
@@ -9487,8 +9492,8 @@ function msgv2DecimasTxt(ms) {
             return;
           }
 
-          // Failsafe: si ya pas mucho tiempo, acab
-          if (__autoCloseStartedMs && sinceCloseMs > 70000) {
+          // Failsafe: si ya pasó mucho tiempo, acabó
+          if (__autoCloseStartedMs && sinceCloseMs > 90000) {
             try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
             __autoPhase = 'FINISHED';
             try { __stopSessionClockTicker(); } catch(e) {}
@@ -9833,8 +9838,102 @@ function msgv2DecimasTxt(ms) {
 
     function __maybeAnnounceProvisionalPole(r) {
       try {
-        // Desactivado: la pole provisional vive ahora desde Q TABLE / store estable.
-        return;
+        if (!r || !Array.isArray(r.classification) || !r.classification.length) return;
+        const sess = String((currentSessionInfo && currentSessionInfo.type) || (__sessionDirector && __sessionDirector.sessionType) || '').toUpperCase();
+        if (!(sess === 'MANGA' || sess === 'QUALI')) return;
+        const rn = String((r && r.raceName) || '');
+        if (!isMangaRaceName(rn)) return;
+        const list = __topRowsByPos(r, 4);
+        if (!list.length) return;
+        const leader = list[0];
+        const leaderKey = normalizeNameKey(leader && leader.racerName);
+        const leaderName = safeRacerName(leader && leader.racerName) || 'P1';
+        const leaderTuple = __rankTupleFromRaceRow(leader);
+        if (!(leaderKey && leaderTuple && leaderTuple.laps > 0 && leaderTuple.timeMs > 0)) return;
+
+        const now = Date.now();
+        const sessionSig = String(rn || '').trim().toLowerCase();
+        if (sessionSig !== String(__qualiLeaderState.sessionSig || '')) {
+          __qualiLeaderState = {
+            leaderKey: '', leaderName: '', leaderLaps: 0, leaderTimeMs: 0,
+            lastAnnounceTs: 0, lastImproveTs: 0, lastCloseTs: 0,
+            lastProjectionSig: '', candidateSig: '', candidateCount: 0, sessionSig,
+            lastGlobalPoleSig: ''
+          };
+        }
+
+        const projectionSig = leaderKey + '|' + leaderTuple.laps + '|' + Math.round(leaderTuple.timeMs / 10);
+        if (__qualiLeaderState.candidateSig === projectionSig) {
+          __qualiLeaderState.candidateCount = Number(__qualiLeaderState.candidateCount || 0) + 1;
+        } else {
+          __qualiLeaderState.candidateSig = projectionSig;
+          __qualiLeaderState.candidateCount = 1;
+        }
+        if (Number(__qualiLeaderState.candidateCount || 0) < 2) return;
+
+        const store = loadQualiStoreFor(rn);
+        const qList = computeQualiList(store);
+        const qTop = qList && qList.length ? qList[0] : null;
+        const qTopTuple = __rankTupleFromStoreRow(qTop);
+        const qTopName = safeRacerName(qTop && qTop.racerName) || '';
+        const qTopKey = normalizeNameKey(qTopName);
+        const beatsGlobal = !qTop || __betterVueltasTiempo(leaderTuple, qTopTuple) || (__sameVueltasTiempo(leaderTuple, qTopTuple) && leaderKey === qTopKey);
+        const tiesLapsOnly = !!qTop && leaderTuple.laps === qTopTuple.laps && leaderTuple.timeMs > qTopTuple.timeMs;
+        const projectionTxt = __speechQualiProjection(leaderTuple.laps, leaderTuple.timeMs);
+        const globalSig = leaderKey + '|' + leaderTuple.laps + '|' + Math.round(leaderTuple.timeMs / 10) + '|' + (qTopKey || 'none') + '|' + (qTopTuple.laps || 0) + '|' + Math.round((qTopTuple.timeMs || 0) / 10);
+        if (__qualiLeaderState.lastGlobalPoleSig === globalSig) return;
+
+        const second = (list.length >= 2) ? list[1] : null;
+        const secondName = second ? safeRacerName(second.racerName) : '';
+        const secondTuple = second ? __rankTupleFromRaceRow(second) : { laps:0, timeMs:0 };
+        const closeGapMs = (secondTuple.laps === leaderTuple.laps && secondTuple.timeMs > leaderTuple.timeMs) ? (secondTuple.timeMs - leaderTuple.timeMs) : 0;
+
+        let msg = '';
+        let key = '';
+        let prio = 62;
+        let cd = 6000;
+
+        if (beatsGlobal) {
+          const samePilot = (qTopKey && leaderKey === qTopKey);
+          if (!qTop || !qTopKey) {
+            msg = `Pole provisional global para ${leaderName}. ${projectionTxt}.`;
+            key = 'quali_global_open_' + leaderKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
+          } else if (samePilot) {
+            msg = `La pole global mejora con ${leaderName}. ${projectionTxt}.`;
+            key = 'quali_global_improve_' + leaderKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
+            prio = 56;
+          } else {
+            msg = `Nueva pole provisional global. ${leaderName} se mete arriba con ${projectionTxt}.`;
+            key = 'quali_global_change_' + leaderKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
+          }
+        } else if (tiesLapsOnly && qTopName) {
+          msg = `${leaderName} gana la manga en vueltas, pero la pole global sigue en ${qTopName}.`;
+          key = 'quali_global_hold_' + leaderKey + '_' + qTopKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
+          prio = 46;
+          cd = 7000;
+        } else {
+          return;
+        }
+
+        enqueueSpeech(msg, { key, cooldownMs: cd, semanticCategory: 'qualiPole', priority: prio });
+        __qualiLeaderState.lastGlobalPoleSig = globalSig;
+        __qualiLeaderState.lastAnnounceTs = now;
+        __qualiLeaderState.lastProjectionSig = projectionSig;
+        __qualiLeaderState.leaderKey = leaderKey;
+        __qualiLeaderState.leaderName = leaderName;
+        __qualiLeaderState.leaderLaps = leaderTuple.laps;
+        __qualiLeaderState.leaderTimeMs = leaderTuple.timeMs;
+
+        if (second && secondName && closeGapMs > 0 && closeGapMs <= 250 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > 8000)) {
+          const secondProjTxt = __speechQualiProjection(secondTuple.laps, secondTuple.timeMs);
+          enqueueSpeech(`Nada cerrado. ${secondName} sigue a tiro con ${secondProjTxt}.`, {
+            key: 'quali_global_close_' + leaderKey + '_' + normalizeNameKey(secondName) + '_' + secondTuple.laps + '_' + Math.round(secondTuple.timeMs/10),
+            cooldownMs: 8000,
+            semanticCategory: 'qualiPole',
+            priority: 36
+          });
+          __qualiLeaderState.lastCloseTs = now;
+        }
       } catch(e) {}
     }
 
@@ -9848,7 +9947,7 @@ function msgv2DecimasTxt(ms) {
         const now = Date.now();
         const rn = String(r.raceName || '');
         const ambientSig = rn + '|' + sess;
-        const gapNeed = (sess === 'TRAIN') ? 10000 : 11000;
+        const gapNeed = (sess === 'TRAIN') ? 7000 : ((sess === 'QUALI' || sess === 'MANGA') ? 8500 : 9000);
         if (__ambientSessionSig === ambientSig && (now - (__ambientSessionLastAt || 0)) < gapNeed) return;
         const rows = __topRowsByPos(r, 4);
         if (!rows.length) return;
@@ -14922,14 +15021,14 @@ function __speechHardMuteForSession(clean, key, cat, opts){
       return false;
     }
 
-    const hardCats = new Set(['battle','pressure']);
+    const hardCats = new Set(['battle']);
     if (hardCats.has(c)) return true;
     if (c === 'podium' && /(trofeo|podio|podium|top 3|p[234] a p[345]|puesto grande)/i.test(txt)) return true;
 
-    const violentKey = /(attack|defense|fight|duel|battle|pressure|leaderchange|leader_change|pass|podium|podio)/i;
+    const violentKey = /(attack|fight|duel|battle|leaderchange|leader_change|pass|podium|podio)/i;
     if (violentKey.test(k)) return true;
 
-    const violentText = /(duelo|batalla|pelea|ataque|defensa|guerra|presiona|acecha|caza|podio comprometido|podio en juego|trofeo|zona de riesgo t[áa]ctico|lectura del enfrentamiento|duelo persistente|a cuchillo|nadie afloja|cambio de lider|cambio de líder|encima de|pelea por p\d+)/i;
+    const violentText = /(duelo|batalla|pelea|ataque|defensa total|guerra|trofeo|zona de riesgo t[áa]ctico|lectura del enfrentamiento|duelo persistente|a cuchillo|nadie afloja|cambio de lider|cambio de líder|encima de|pelea por p\d+)/i;
     if (violentText.test(txt)) return true;
 
     return false;
@@ -14945,7 +15044,8 @@ function __speechPhaseBlocks(clean, key, cat, opts){
     const isLifecycle = (c === 'lifecycle' || k.indexOf('watcher_life_') === 0);
     const isFinish = (c === 'finish' || k.indexOf('session_finish_') === 0 || k.indexOf('auto_finalizo_') === 0);
     const isSystem = (c === 'system' || k.indexOf('sys_') === 0);
-    if (phase === 'CLOSING') return !(isLifecycle || isFinish || isSystem);
+    const isRaceLight = (c === 'gap' || c === 'top3' || c === 'record' || c === 'quali' || c === 'train' || c === 'story' || c === 'mini');
+    if (phase === 'CLOSING') return !(isLifecycle || isFinish || isSystem || isRaceLight);
     if (phase === 'FINISHED') return !(isLifecycle || isFinish || isSystem);
     return false;
   }catch(e){ return false; }
@@ -17092,6 +17192,37 @@ function getConsistencyFromFirebase(p) {
   return 0;
 }
 
+function getSigmaFromFirebase(p) {
+  if (!p) return NaN;
+  const candidates = [
+    p.sigmaMs,
+    p.sigma,
+    p.stdDevMs,
+    p.stddevMs,
+    p.stdDev,
+    p.stddev,
+    p.sigmaStr,
+    p.stdDevStr
+  ];
+  for (const v of candidates) {
+    if (v == null || v === '') continue;
+    if (typeof v === 'number') {
+      if (isFinite(v) && v > 0) {
+        return v >= 10 ? (v / 1000) : v;
+      }
+      continue;
+    }
+    if (typeof v === 'string') {
+      const m = v.replace(',', '.').match(/(\d+(?:\.\d+)?)/);
+      if (!m) continue;
+      const n = Number(m[1]);
+      if (!isFinite(n) || n <= 0) continue;
+      return n >= 10 ? (n / 1000) : n;
+    }
+  }
+  return NaN;
+}
+
 function statsFromTimes(arr) {
       if (!arr || !arr.length) return { n: 0, best: 0, mean: 0, sigma: 0, last: 0 };
       const n = arr.length;
@@ -18038,6 +18169,7 @@ let meanMs = parseTimeToMs(meanTimeRaw);
           estLap:      row.estLap || 0,
           estTime:     estMs,
           consistency: (row.consPct != null) ? row.consPct : row.consistency,
+          sigmaMs:     row.sigmaMs != null ? row.sigmaMs : (row.stdDevMs != null ? row.stdDevMs : null),
           sigmaStr:    row.sigmaStr || row.stdDev || '',
           extraRowPreview: row.extraRowPreview || {}
         };
@@ -18287,7 +18419,8 @@ function resetAutoNarratorState() {
         if (consistencyValEl) consistencyValEl.textContent = consPct ? (consPct + '%') : '--%';
       } catch(e) {}
       try {
-        const sig = (computed && computed.sigma && isFinite(computed.sigma)) ? (computed.sigma / 1000) : NaN;
+        const sigFb = getSigmaFromFirebase(p);
+        const sig = (isFinite(sigFb) && sigFb > 0) ? sigFb : ((computed && computed.sigma && isFinite(computed.sigma)) ? (computed.sigma / 1000) : NaN);
         if (sigmaValEl) sigmaValEl.textContent = (isFinite(sig) && sig > 0) ? sig.toFixed(3) : '-.---';
       } catch(e) {}
 
@@ -22887,11 +23020,11 @@ function ttsGenV2ExtendBanksPhase2(banks) {
       }
     };
     const rules = {
-      train: { cooldownMs:16000, requires:['p2','p3','p4'], sessions:['manga','final','other'] },
-      story: { cooldownMs:18000, requires:['attacker','defender','toSec'], sessions:['manga','final','other'] },
-      qualiBest: { cooldownMs:18000, requires:['pilot','best'], sessions:['quali','manga','other'] },
-      qualiPole: { cooldownMs:14000, requires:['p1','p2','sec'], sessions:['quali','manga','other'] },
-      mini: { cooldownMs:26000, requires:['p1','p2','p3'], sessions:['quali','manga','final','other'] }
+      train: { cooldownMs:8000, requires:['p2','p3','p4'], sessions:['manga','final','other'] },
+      story: { cooldownMs:11000, requires:['attacker','defender','toSec'], sessions:['manga','final','other'] },
+      qualiBest: { cooldownMs:7000, requires:['pilot','best'], sessions:['quali','manga','other'] },
+      qualiPole: { cooldownMs:6000, requires:['p1','p2','sec'], sessions:['quali','manga','other'] },
+      mini: { cooldownMs:10000, requires:['p1','p2','p3'], sessions:['quali','manga','final','other'] }
     };
     for (const style of ['pro','picante','engineer','narrativo']) {
       const preset = TTS_GEN_V2_STYLE_PRESETS[style] || TTS_GEN_V2_STYLE_PRESETS.pro || {};
@@ -25529,7 +25662,8 @@ speakBtn.addEventListener('click', () => {
         if (consistencyValEl) consistencyValEl.textContent = consPct ? (consPct + '%') : '--%';
       } catch(e) {}
       try {
-        const sig = (computed && computed.sigma && isFinite(computed.sigma)) ? (computed.sigma / 1000) : NaN;
+        const sigFb = getSigmaFromFirebase(p);
+        const sig = (isFinite(sigFb) && sigFb > 0) ? sigFb : ((computed && computed.sigma && isFinite(computed.sigma)) ? (computed.sigma / 1000) : NaN);
         if (sigmaValEl) sigmaValEl.textContent = (isFinite(sig) && sig > 0) ? sig.toFixed(3) : '-.---';
       } catch(e) {}
 
