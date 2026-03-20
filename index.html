@@ -1,12 +1,15 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.14 - SessionDirector FSM + cierre quali por QTABLE vueltas/tiempo -
+vics_Smart_Spotter_v0.5.0.18 - SessionDirector FSM + cierre quali por QTABLE vueltas/tiempo -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.5.0.15: TTS quali projection - el estimado de pole/proyeccion ahora se lee como vueltas + tiempo en minutos, segundos y centesimas. Ejemplo: "21 vueltas en tres minutos con ocho segundos punto cincuenta y cuatro".
+- v0.5.0.17: intro generativo de finales segun Q tabla. Final A/B/C ya no entra plano; usa contexto de parrilla y corte de qualy.
+- v0.5.0.18: bandera azul contextual. En qualy/manga deja de sonar como azul de carrera y habla de trafico/rezago; en finales, si ya va lapeado, lo dice y exige ceder el paso.
 - v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
 - v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
 - v0.4.10.2: anti-repeat del raceName - el intro de titulo ya no se reencola varias veces, se cancela al arrancar PRACTICA/QUALI/CARRERA y se blinda con latch por sesion.
@@ -86,7 +89,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.14</title>
+<title>vics_Smart_Spotter_v0.5.0.18</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6581,7 +6584,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.14</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7173,7 +7176,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.14";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7466,13 +7469,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.14";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.14',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.14', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -8774,17 +8777,35 @@ function msgv2DecimasTxt(ms) {
           ]);
         } else if (type === 'blueflag') {
           const who = __ttsSmartName(ctx && ctx.who, 'el líder');
-          const open = ['Bandera azul.', 'Azul.', 'Tráfico para ti.'];
-          const core = [
-            'Viene ' + who + '.',
-            'Encima llega ' + who + '.',
-            'Ya está ahí ' + who + '.'
-          ];
-          const close = ['Dale pista limpia.', 'Sin estorbar.', 'Suéltalo limpio.'];
+          const isFinalCtx = !!(ctx && ctx.isFinal);
+          const lapDiff = Math.max(1, Number((ctx && ctx.lapDiff) || 1) || 1);
+          const lapTxt = __blueFlagLapText(lapDiff, isFinalCtx ? 'lap' : 'rezago');
+          let open = [];
+          let core = [];
+          let close = [];
+
+          if (isFinalCtx) {
+            open = ['Bandera azul.', 'Azul real.', 'Bandera azul, atención.'];
+            core = [
+              lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '. Viene ' + who + '.',
+              'Viene ' + who + '. ' + lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '.',
+              who + ' ya te llegó. ' + lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '.'
+            ];
+            close = ['Cede el paso en la recta.', 'No pelees esa posición. Suéltalo limpio.', 'Abre pista y sigue tu carrera.'];
+          } else {
+            open = ['Tráfico de punta.', 'Referencia rápida detrás.', 'Ojo con la punta detrás.'];
+            core = [
+              lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '. Viene ' + who + '.',
+              'Viene ' + who + '. ' + lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '.',
+              who + ' llega por detrás. ' + lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '.'
+            ];
+            close = ['No te enganches y deja pista limpia.', 'Respeta la línea y suéltalo limpio.', 'No arruines tu vuelta ni la del rápido.'];
+          }
+
           out = __ttsSmartJoin([
-            __ttsSmartPick(open, 'follow:blue:open'),
-            __ttsSmartPick(core, 'follow:blue:core:' + who),
-            __ttsSmartPick(close, 'follow:blue:close:' + sess)
+            __ttsSmartPick(open, 'follow:blue:open:' + (isFinalCtx ? 'final' : 'manga')),
+            __ttsSmartPick(core, 'follow:blue:core:' + who + ':' + lapDiff + ':' + (isFinalCtx ? 'final' : 'manga')),
+            __ttsSmartPick(close, 'follow:blue:close:' + (isFinalCtx ? 'final' : 'manga'))
           ]);
         }
 
@@ -9237,6 +9258,7 @@ function msgv2DecimasTxt(ms) {
     let __autoActiveKeys = new Set(); // pilotos que ya "arrancaron" (laps>0 o time>0)
 
     let __autoDbg = { phase:'IDLE', maxLap:0, maxTotalMs:0, dur:0, isFinal:false, idleMs:0, trend:'?' };
+    let __finishResultSettle = { sessionSig:'', lastSig:'', stableSince:0, ready:false };
 
     function __autoDbgMs(ms){
       const n = Number(ms) || 0;
@@ -9283,6 +9305,7 @@ function msgv2DecimasTxt(ms) {
         __autoLastMaxLap = 0;
         __autoLastMaxTotalMs = 0;
         __autoActiveKeys = new Set();
+        __finishResultSettle = { sessionSig:String(raceName || ''), lastSig:'', stableSince:0, ready:false };
       } catch(e) {}
     }
 
@@ -9448,12 +9471,10 @@ function msgv2DecimasTxt(ms) {
               return;
             }
           } else {
-            // Manga: anunciar cierre + Top3 y luego silencio
-            try { __autoAnnounceTop3Summary(r, 'Termin la clasificacin'); } catch(e) {}
-            __autoPhase = 'FINISHED';
+            // Manga: esperar a que el resultado final se estabilice antes de leer posiciones
+            __autoPhase = 'CLOSING';
             __autoCloseStartedMs = now;
-            try { __stopSessionClockTicker(); } catch(e) {}
-            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
+            try { __purgeSpeechForPhase('CLOSING'); } catch(e) {}
             return;
           }
         }
@@ -9465,39 +9486,32 @@ function msgv2DecimasTxt(ms) {
           const idleMs = now - (__autoLastActivityMs || now);
           const sinceCloseMs = __autoCloseStartedMs ? (now - __autoCloseStartedMs) : 0;
 
+          if (!isFinal) {
+            __autoTryFinishSummary(r, 'Terminó la clasificación');
+            return;
+          }
+
           // Si ya anunciamos a todos los que arrancaron, acabó
           if (activeCount > 0 && announcedCount >= activeCount) {
-            try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
-            __autoPhase = 'FINISHED';
-            try { __stopSessionClockTicker(); } catch(e) {}
-            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
+            if (__autoTryFinishSummary(r, 'Carrera terminada')) return;
             return;
           }
 
           // Caso comun: algunos no tienen totalMs o no cruzan bonito -> no te quedes atorado
           if (sinceCloseMs > 12000 && idleMs > 15000) {
-            try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
-            __autoPhase = 'FINISHED';
-            try { __stopSessionClockTicker(); } catch(e) {}
-            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
+            if (__autoTryFinishSummary(r, 'Carrera terminada')) return;
             return;
           }
 
           // Si ya casi todos estan anunciados y no hay actividad, cerramos
           if (activeCount > 0 && announcedCount >= Math.max(1, activeCount - 1) && idleMs > 12000) {
-            try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
-            __autoPhase = 'FINISHED';
-            try { __stopSessionClockTicker(); } catch(e) {}
-            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
+            if (__autoTryFinishSummary(r, 'Carrera terminada')) return;
             return;
           }
 
           // Failsafe: si ya pasó mucho tiempo, acabó
           if (__autoCloseStartedMs && sinceCloseMs > 90000) {
-            try { __autoAnnounceTop3Summary(r, 'Carrera terminada'); } catch(e) {}
-            __autoPhase = 'FINISHED';
-            try { __stopSessionClockTicker(); } catch(e) {}
-            try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
+            if (__autoTryFinishSummary(r, 'Carrera terminada')) return;
             return;
           }
           return;
@@ -9518,6 +9532,75 @@ function msgv2DecimasTxt(ms) {
           }
         }
       } catch(e) {}
+    }
+
+
+    function __getFinishResultSettleMs(r) {
+      try {
+        const info = currentSessionInfo || {};
+        const type = String(info.type || '').toUpperCase();
+        const label = String(info.label || '').toUpperCase();
+        const rn = String((r && r.raceName) || '').toUpperCase();
+        const isFinal = type.startsWith('FINAL') || label.includes('FINAL') || /FINAL\s*[ABC]?|A-MAIN|MAIN\s*A/.test(rn);
+        return isFinal ? 5200 : 4200;
+      } catch(e) { return 4500; }
+    }
+
+    function __buildFinishResultSig(r) {
+      try {
+        const rows = __topRowsByPos(r, 3);
+        if (!rows.length) return '';
+        const sess = String(getSessionSignature(r) || (r && r.raceName) || '');
+        const parts = [sess];
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i] || {};
+          const pos = Number(row.pos || (i + 1)) || (i + 1);
+          const key = normalizeNameKey(row && row.racerName) || ('p' + pos);
+          const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
+          const totalMs = getRowTotalMs(row) || 0;
+          parts.push(pos + ':' + key + ':' + laps + ':' + Math.round(totalMs / 10));
+        }
+        return parts.join('|');
+      } catch(e) { return ''; }
+    }
+
+    function __finishResultsStable(r) {
+      try {
+        if (!r || !Array.isArray(r.classification) || !r.classification.length) return false;
+        const sessionSig = String(getSessionSignature(r) || (r && r.raceName) || '');
+        const sig = __buildFinishResultSig(r);
+        if (!sessionSig || !sig) return false;
+        const now = __autoNowMs();
+        if (!__finishResultSettle || typeof __finishResultSettle !== 'object') {
+          __finishResultSettle = { sessionSig:'', lastSig:'', stableSince:0, ready:false };
+        }
+        if (String(__finishResultSettle.sessionSig || '') !== sessionSig) {
+          __finishResultSettle = { sessionSig, lastSig:sig, stableSince:now, ready:false };
+          return false;
+        }
+        if (String(__finishResultSettle.lastSig || '') !== sig) {
+          __finishResultSettle.lastSig = sig;
+          __finishResultSettle.stableSince = now;
+          __finishResultSettle.ready = false;
+          return false;
+        }
+        const waitMs = __getFinishResultSettleMs(r);
+        const stableFor = now - (Number(__finishResultSettle.stableSince) || now);
+        __finishResultSettle.ready = stableFor >= waitMs;
+        return !!__finishResultSettle.ready;
+      } catch(e) { return false; }
+    }
+
+    function __autoTryFinishSummary(r, forcedLabel) {
+      try {
+        if (!__finishResultsStable(r)) return false;
+        try { __autoAnnounceTop3Summary(r, forcedLabel); } catch(e) {}
+        __autoPhase = 'FINISHED';
+        __autoCloseStartedMs = __autoNowMs();
+        try { __stopSessionClockTicker(); } catch(e) {}
+        try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
+        return true;
+      } catch(e) { return false; }
     }
 
     function __buildParticipantsList(rows, maxNames=12) {
@@ -9557,6 +9640,7 @@ function msgv2DecimasTxt(ms) {
           __autoFinishSummaryDone = false;
         }
         if (__autoFinishSummaryDone) return;
+        if (!__finishResultsStable(r)) return;
 
         const info = currentSessionInfo || {};
         const type = String(info.type || '').toUpperCase();
@@ -9624,6 +9708,10 @@ function msgv2DecimasTxt(ms) {
         });
 
         __autoFinishSummaryDone = true;
+        try {
+          __sessionSummarySig = String((r.raceName || '')) + '|finish';
+          __sessionSummaryDone = true;
+        } catch(e) {}
       } catch(e) {}
     }
 
@@ -9776,6 +9864,7 @@ function msgv2DecimasTxt(ms) {
           __sessionSummaryDone = false;
         }
         if (__sessionSummaryDone) return;
+        if (!__finishResultsStable(r)) return;
 
         const rows = __topRowsByPos(r, 3);
         if (!rows.length) return;
@@ -10076,13 +10165,33 @@ function msgv2DecimasTxt(ms) {
         // - FINALES: anuncio por Final A/B/C con arranque + calentamiento
         let introText = '';
 
-                function __pickFinalIntro(mainLetter) {
+                function __finalMainIndex(mainLetter) {
+          const m = String(mainLetter || '').trim().toUpperCase();
+          if (!m) return 0;
+          const c = m.charCodeAt(0);
+          return (c >= 65 && c <= 90) ? (c - 64) : 0;
+        }
+
+        function __finalGridNames(rawRace) {
+          const rows = Array.isArray(rawRace && rawRace.classification) ? rawRace.classification : [];
+          const out = [];
+          const seen = new Set();
+          for (const row of rows) {
+            const nm = String(row && (row.racerName ?? row.name) || '').trim();
+            const nk = normalizeNameKey(nm);
+            if (!nk || seen.has(nk)) continue;
+            seen.add(nk);
+            out.push({ name: nm, key: nk });
+          }
+          return out;
+        }
+
+        function __pickFinalIntroLegacy(mainLetter) {
           const m = String(mainLetter || '').toUpperCase();
-          // Default (acordado): FINALES = HYPE, PRO y divertido sin pasarse.
           const A = [
             'Final A. La elite en pista. Vamos a arrancar, pueden calentar.',
             'Final A. Top de pilotos. Vamos a arrancar, pueden calentar.',
-            'Final A. Aquíi se corre fino. Vamos a arrancar, pueden calentar.',
+            'Final A. Aqui se corre fino. Vamos a arrancar, pueden calentar.',
             'Final A. Puro nivel. Vamos a arrancar, pueden calentar.',
             'Final A. Los mejores, sin excusas. Vamos a arrancar, pueden calentar.',
             'Final A. Ojos al apex. Vamos a arrancar, pueden calentar.',
@@ -10092,7 +10201,7 @@ function msgv2DecimasTxt(ms) {
           const B = [
             'Final B. Se pone bueno. Vamos a arrancar, pueden calentar.',
             'Final B. Segunda linea de fuego. Vamos a arrancar, pueden calentar.',
-            'Final B. Aquíi se pelea de verdad. Vamos a arrancar, pueden calentar.',
+            'Final B. Aqui se pelea de verdad. Vamos a arrancar, pueden calentar.',
             'Final B. Sin regalos. Vamos a arrancar, pueden calentar.',
             'Final B. Carrera dura, manos suaves. Vamos a arrancar, pueden calentar.',
             'Final B. El podio se gana en paciencia. Vamos a arrancar, pueden calentar.',
@@ -10101,12 +10210,12 @@ function msgv2DecimasTxt(ms) {
           ];
           const C = [
             'Final C. Carrera con hambre. Vamos a arrancar, pueden calentar.',
-            'Final C. Aquíi todos quieren subir. Vamos a arrancar, pueden calentar.',
+            'Final C. Aqui todos quieren subir. Vamos a arrancar, pueden calentar.',
             'Final C. Cero contactos, mucha cabeza. Vamos a arrancar, pueden calentar.',
             'Final C. Limpio y constante. Vamos a arrancar, pueden calentar.',
             'Final C. Si te equivocas, pagas. Vamos a arrancar, pueden calentar.',
             'Final C. Que se note el progreso. Vamos a arrancar, pueden calentar.',
-            'Final C. Ya se acabó el calentamiento. Vamos a arrancar, pueden calentar.',
+            'Final C. Ya se acabo el calentamiento. Vamos a arrancar, pueden calentar.',
             'Final C. Vamos a divertirnos, pero con control. Vamos a arrancar, pueden calentar.'
           ];
           const mm = (m || 'X');
@@ -10117,8 +10226,89 @@ function msgv2DecimasTxt(ms) {
             'Final ' + mm + '. Ritmo y cabeza. Vamos a arrancar, pueden calentar.'
           ];
           const bag = (m==='A') ? A : (m==='B') ? B : (m==='C') ? C : O;
-          // Rotacion real sin repeticion reciente
-          return autoRandPick(bag, 'introFinal:' + (m || 'X')) || bag[0];
+          return autoRandPick(bag, 'introFinalLegacy:' + (m || 'X')) || bag[0];
+        }
+
+        function __buildFinalIntroFromQTable(rawRace, mainLetter) {
+          const m = String(mainLetter || '').trim().toUpperCase() || 'X';
+          const label = 'Final ' + m;
+          try {
+            const store = loadQualiStoreFor(String(rawRace && rawRace.raceName || ''));
+            const quali = computeQualiList(store);
+            if (!Array.isArray(quali) || !quali.length) return '';
+
+            const grid = __finalGridNames(rawRace);
+            const gridCount = Math.max(0, Number(grid.length || 0));
+            const gridKeys = new Set(grid.map(x => x.key));
+            let lineup = [];
+            for (let i = 0; i < quali.length; i++) {
+              const it = quali[i];
+              const nk = normalizeNameKey(it && it.racerName || '');
+              if (!nk || !gridKeys.has(nk)) continue;
+              lineup.push({ ...it, qRank: i + 1 });
+            }
+            lineup.sort((a, b) => Number(a.qRank || 0) - Number(b.qRank || 0));
+
+            const mainIdx = __finalMainIndex(m);
+            if ((!lineup.length || lineup.length < Math.min(2, gridCount || 2)) && mainIdx > 0 && gridCount > 0) {
+              const start = (mainIdx - 1) * gridCount;
+              lineup = quali.slice(start, start + gridCount).map((it, idx) => ({ ...it, qRank: start + idx + 1 }));
+            }
+            if (!lineup.length) return '';
+
+            const p1 = String(lineup[0] && lineup[0].racerName || '').trim();
+            const p2 = String(lineup[1] && lineup[1].racerName || '').trim();
+            const p3 = String(lineup[2] && lineup[2].racerName || '').trim();
+            const p1Rank = Number(lineup[0] && lineup[0].qRank || 0) || 0;
+            const cut = Math.max(1, gridCount || 0);
+            const missABy = Math.max(0, p1Rank - cut);
+
+            const front3 = [p1, p2, p3].filter(Boolean);
+            const frontRow = [p1, p2].filter(Boolean);
+            const tail = 'Vamos a arrancar, pueden calentar.';
+            const qTag = 'segun la Q tabla';
+            const front3Txt = (front3.length >= 3)
+              ? (front3[0] + ', ' + front3[1] + ' y ' + front3[2])
+              : (front3.length === 2 ? (front3[0] + ' y ' + front3[1]) : (front3[0] || ''));
+            const front2Txt = (frontRow.length >= 2) ? (frontRow[0] + ' y ' + frontRow[1]) : (frontRow[0] || '');
+            const justMissedA = (missABy === 1);
+            const nearA = (missABy > 0 && missABy <= 2);
+
+            const A = [
+              label + '. Pole para ' + p1 + '. Detras salen ' + (p2 || 'el resto de la primera fila') + (p3 ? (' y ' + p3) : '') + '. Aqui esta la crema del ' + qTag + '. ' + tail,
+              label + '. ' + p1 + ' abre desde la uno; ' + (front2Txt || p1) + (p3 ? (', con ' + p3 + ' respirando atras') : '') + '. Esta parrilla viene cargada de nivel ' + qTag + '. ' + tail,
+              label + '. Primera referencia para ' + p1 + '. Detras vienen ' + (front3Txt || p1) + '. Esto ya es la mesa grande del ' + qTag + '. ' + tail,
+              label + '. ' + p1 + ' manda la salida y ' + (p2 || 'la primera fila') + (p3 ? (' junto con ' + p3) : '') + ' van encima. Aqui se corre con bisturi, ' + qTag + '. ' + tail
+            ];
+            const B = [
+              label + '. ' + p1 + ' encabeza a los que tocaron la puerta de la A ' + qTag + '. Detras salen ' + (p2 || 'todos bien pegados') + (p3 ? (' y ' + p3) : '') + '. ' + tail,
+              label + '. ' + p1 + (justMissedA ? ' se quedo a una casilla de la A' : (nearA ? ' se quedo rozando la A' : ' abre el siguiente bloque fuerte del ' + qTag)) + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'compania') + ' van atras') : 'Esta parrilla viene cerrada') + '. ' + tail,
+              label + '. Punta para ' + p1 + ', con ' + (front3Txt || p1) + ' al frente del grupo. Aqui nadie viene de paseo; todos llegaron con cuentas pendientes del ' + qTag + '. ' + tail,
+              label + '. ' + p1 + ' sale desde la uno de esta final. ' + (p2 ? (p2 + ' y ' + (p3 || 'el resto') + ' vienen oliendo la A') : 'Hay hambre de subir') + '. ' + tail
+            ];
+            const C = [
+              label + '. ' + p1 + ' abre este bloque ' + qTag + ', con ' + (p2 || 'el grupo') + (p3 ? (' y ' + p3) : '') + ' detras. Aqui toca correr fino y subir escalones. ' + tail,
+              label + '. Punta para ' + p1 + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'compania') + ' van pegados') : 'La parrilla viene apretada') + '. Esto tambien tiene lectura en la Q tabla y nada esta regalado. ' + tail,
+              label + '. ' + p1 + ' lidera la salida de esta final ' + qTag + '. Detras vienen ' + (front3Txt || p1) + '. Aqui se corre por orgullo, ritmo y progreso. ' + tail,
+              label + '. ' + p1 + ' abre la puerta. ' + (p2 ? (p2 + ' y ' + (p3 || 'el resto') + ' van a morder desde temprano') : 'No hay margen para regalar nada') + '. ' + tail
+            ];
+            const O = [
+              label + '. ' + p1 + ' sale al frente ' + qTag + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'el resto') + ' vienen detras') : 'Parrilla apretada desde el arranque') + '. ' + tail,
+              label + '. Punta para ' + p1 + ', con ' + (front3Txt || p1) + ' como referencia del grupo. ' + tail,
+              label + '. ' + p1 + ' abre la formacion y esto viene acomodado por ' + qTag + '. ' + tail
+            ];
+
+            const bag = (m === 'A') ? A : (m === 'B') ? B : (m === 'C') ? C : O;
+            return autoRandPick(bag, 'introFinalQ:' + (m || 'X') + ':' + (p1 || 'NA')) || bag[0] || '';
+          } catch (e) {
+            return '';
+          }
+        }
+
+        function __pickFinalIntro(mainLetter, rawRace) {
+          const smart = __buildFinalIntroFromQTable(rawRace, mainLetter);
+          if (smart) return smart;
+          return __pickFinalIntroLegacy(mainLetter);
         }
 
 
@@ -10148,7 +10338,7 @@ function msgv2DecimasTxt(ms) {
           if (parsedRaceType === 'MANGA') {
             introText = __buildMangaTitleTts2(parsedRaceTitleInfo);
           } else if (parsedRaceType === 'FINAL') {
-            introText = String(parsedRaceTitleInfo.spokenTitle || '').trim() || ('Final ' + String(parsedRaceTitleInfo.main || '').trim()).trim() || 'Final';
+            introText = __pickFinalIntro(parsedRaceTitleInfo.main || '', r);
           } else {
             const label = String(parsedRaceTitleInfo.label || info.label || '').trim();
             const spokenTitle = String(parsedRaceTitleInfo.spokenTitle || info.spokenTitle || '').trim() || (label ? label.replace('MODO ', '').trim() : '');
@@ -10158,7 +10348,7 @@ function msgv2DecimasTxt(ms) {
           introText = __buildMangaTitleTts2(info);
         } else if (type === 'FINAL') {
           // main es A/B/C si existe
-          introText = __pickFinalIntro(main || '');
+          introText = __pickFinalIntro(main || '', r);
         } else {
           // fallback
           const label = String(info.label || '').trim();
@@ -18355,6 +18545,57 @@ function resetAutoNarratorState() {
     let lastBlueWarnLeaderLap = 0;
     let blueFlagConfirm = { pilotKey:'', leaderKey:'', lap:0, hits:0, t:0 };
 
+    function __blueFlagLapText(n, mode) {
+      try {
+        const v = Math.max(1, Number(n) || 1);
+        const rezago = (mode === 'rezago');
+        if (v <= 1) return rezago ? 'vas rezagado' : 'vas lapeado';
+        if (v === 2) return 'vas dos vueltas abajo';
+        if (v === 3) return 'vas tres vueltas abajo';
+        return 'vas ' + v + ' vueltas abajo';
+      } catch(e) {
+        return (mode === 'rezago') ? 'vas rezagado' : 'vas lapeado';
+      }
+    }
+
+    function __bluePick(list, key) {
+      try {
+        if (!Array.isArray(list) || !list.length) return '';
+        if (typeof autoRandPick === 'function') return String(autoRandPick(list, key || 'blue') || '');
+        return String(list[Math.floor(Math.random() * list.length)] || '');
+      } catch(e) { return (Array.isArray(list) && list[0]) ? String(list[0]) : ''; }
+    }
+
+    function __blueFlagAutoCompose(name, who, opt) {
+      try {
+        const isFinal = !!(opt && opt.isFinal);
+        const lapDiff = Math.max(1, Number(opt && opt.lapDiff) || 1);
+        const hitCount = Math.max(1, Number(opt && opt.hitCount) || 1);
+        const lapTxt = __blueFlagLapText(lapDiff, isFinal ? 'lap' : 'rezago');
+        if (!isFinal) {
+          return __bluePick([
+            `Tráfico de punta. ${name}, ${lapTxt}. Viene ${who}. No te enganches y deja pista limpia.`,
+            `Referencia rápida detrás. ${name}, ${lapTxt}. Viene ${who}. Respeta la línea y suéltalo limpio.`,
+            `Ojo con la punta detrás. ${name}, ${lapTxt}. Viene ${who}. No arruines tu vuelta ni la del rápido.`
+          ], 'blue:auto:manga:' + String(name || '') + ':' + String(lapDiff || 1));
+        }
+        if (hitCount >= 3) {
+          return `Dirección de carrera para ${name}. ${lapTxt}. Viene ${who}. Cede el paso de inmediato o se aplicarán 5 segundos de castigo.`;
+        }
+        if (hitCount === 2) {
+          return __bluePick([
+            `Bandera azul. Último aviso para ${name}. ${lapTxt}. Viene ${who}. Cede el paso en la recta.`,
+            `Último aviso de azul para ${name}. ${lapTxt}. Viene ${who}. No pelees esa posición y abre pista limpio.`
+          ], 'blue:auto:final:last:' + String(name || '') + ':' + String(lapDiff || 1));
+        }
+        return __bluePick([
+          `Bandera azul. ${name}, ${lapTxt}. Viene ${who}. Cede el paso en la recta.`,
+          `Azul para ${name}. ${lapTxt}. Viene ${who}. No pelees esa posición y abre pista limpio.`,
+          `Bandera azul para ${name}. ${lapTxt}. ${who} ya te llegó. Cede el paso y sigue tu carrera.`
+        ], 'blue:auto:final:' + String(name || '') + ':' + String(lapDiff || 1));
+      } catch(e) { return ''; }
+    }
+
     function renderPilotCard(p) {
       if (!p) {
         pilotNameEl.textContent = 'Auto Locutor';
@@ -19346,7 +19587,7 @@ function updateBlueFlagFromPassEvents() {
         const who = (laperPos === 1) ? ('el líder P1 ' + laperNameClean) : ('P' + laperPos + ' ' + laperNameClean);
 
         pendingBlueFlagForPilotKey = selectedPilotKey;
-        pendingBlueFlagMessage = msgv2Compose('blueflag', { who: who, isFinal: !!isFinal, pilotKey: (typeof selectedPilotKey !== 'undefined' ? selectedPilotKey : '') });
+        pendingBlueFlagMessage = msgv2Compose('blueflag', { who: who, isFinal: !!isFinal, sessionType: sessionType, lapDiff: (best && best.lapDiff) || 1, pilotKey: (typeof selectedPilotKey !== 'undefined' ? selectedPilotKey : '') });
         lastBlueFlagPilotLap = selLap || lastBlueFlagPilotLap;
         lastBlueFlagLeaderLap = best.laperLap || lastBlueFlagLeaderLap;
         blueFlagConfirm.hits = 0;
@@ -21061,10 +21302,6 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
       if (!laperName) continue;
       const who = (laperPos === 1) ? ('el líder P1 ' + laperName) : ('P' + laperPos + ' ' + laperName);
 
-      const baseMsg = isFinalSess
-        ? `Bandera azul. ${name}, detras viene ${who}. Abre en la recta.`
-        : `Bandera azul. ${name}, detras viene ${who}. Abre en la recta.`;
-
       // Escalado en Finales: aviso, ultimo aviso y advertencia de Direccion de Carrera.
       st.blueHits = st.blueHits || 0;
       st.blueWindowMs = st.blueWindowMs || 0;
@@ -21074,13 +21311,12 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
       }
       st.blueHits++;
 
-      let finalMsg = baseMsg;
-      let coolMs = 12000;
+      const lapDiff = Math.max(1, Number(best && best.lapDiff) || 1);
+      let finalMsg = __blueFlagAutoCompose(name, who, { isFinal: !!isFinalSess, lapDiff, hitCount: st.blueHits });
+      let coolMs = isFinalSess ? 12000 : 11000;
       if (isFinalSess && st.blueHits === 2 && (nowMs - st.blueWindowMs) <= 45000) {
-        finalMsg = `Bandera azul. Ultimo aviso para ${name}. Cede el paso en la recta o habra reporte.`;
         coolMs = 15000;
       } else if (isFinalSess && st.blueHits >= 3 && (nowMs - st.blueWindowMs) <= 45000) {
-        finalMsg = `Direccion de carrera para ${name}. Si no cedes el paso en la recta, se aplicaran 5 segundos de castigo.`;
         coolMs = 22000;
       }
 
@@ -27060,13 +27296,65 @@ raceData = normalizeRaceData(rawRace);
       }catch(e){ return false; }
     }
 
+    function __speechCountText(n, opts){
+      try{
+        const v = Math.max(0, Math.floor(Number(n) || 0));
+        const o = opts || {};
+        let txt = (typeof numeroATexto0a999 === 'function') ? numeroATexto0a999(v) : String(v);
+        if (o.apocope) {
+          txt = txt
+            .replace(/\bveintiuno\b/g, 'veintiun')
+            .replace(/\by\s+uno\b/g, 'y un')
+            .replace(/\buno\b/g, 'un');
+        }
+        return txt;
+      }catch(e){ return String(n); }
+    }
+
+    function __speechCentiText(cc){
+      try{
+        const v = Math.max(0, Math.floor(Number(cc) || 0));
+        if (v <= 0) return '';
+        if (v < 10) return 'cero ' + __speechCountText(v, { apocope:true });
+        return __speechCountText(v, { apocope:true });
+      }catch(e){ return String(cc || ''); }
+    }
+
+    function __speechLapCountText(laps){
+      try{
+        const v = Math.max(0, Math.floor(Number(laps) || 0));
+        if (v === 1) return 'una';
+        return __speechCountText(v, { apocope:true });
+      }catch(e){ return String(laps || ''); }
+    }
+
+    function __speechTimeQualiProjection(ms){
+      try{
+        const v = Math.max(0, Math.floor(Number(ms) || 0));
+        const mm = Math.floor(v / 60000);
+        const ss = Math.floor((v % 60000) / 1000);
+        const cc = Math.floor((v % 1000) / 10);
+        const secTxt = __speechCountText(ss, { apocope:true });
+        const secWord = (ss === 1) ? 'segundo' : 'segundos';
+        const fracTxt = (cc > 0) ? (' punto ' + __speechCentiText(cc)) : '';
+        if (mm > 0) {
+          const minTxt = __speechCountText(mm, { apocope:true });
+          const minWord = (mm === 1) ? 'minuto' : 'minutos';
+          return minTxt + ' ' + minWord + ' con ' + secTxt + ' ' + secWord + fracTxt;
+        }
+        return secTxt + ' ' + secWord + fracTxt;
+      }catch(e){ return __speechTime2(ms); }
+    }
+
     function __speechQualiProjection(laps, timeMs){
       try{
         const l = Math.max(0, Number(laps || 0) || 0);
         const t = Math.max(0, Number(timeMs || 0) || 0);
-        if (l > 0 && t > 0) return l + ' vueltas en ' + __speechTime1(t);
-        if (l > 0) return l + ' vueltas';
-        if (t > 0) return __speechTime1(t);
+        const lapTxt = __speechLapCountText(l);
+        const lapWord = (l === 1) ? 'vuelta' : 'vueltas';
+        if (l > 0 && t > 0) return lapTxt + ' ' + lapWord + ' en ' + __speechTimeQualiProjection(t);
+        if (l > 0) return lapTxt + ' ' + lapWord;
+        if (t > 0) return __speechTimeQualiProjection(t);
         return '';
       }catch(e){ return ''; }
     }
