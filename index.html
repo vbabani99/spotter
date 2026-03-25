@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18 - SessionDirector FSM + cierre quali por QTABLE vueltas/tiempo -
+vics_Smart_Spotter_v0.5.0.19 - voz básica/súper básica + pole por estimado + azul más precisa -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -9,6 +9,7 @@ Origen: Spotter_5.0.1.html
 Changelog:
 - v0.5.0.15: TTS quali projection - el estimado de pole/proyeccion ahora se lee como vueltas + tiempo en minutos, segundos y centesimas. Ejemplo: "21 vueltas en tres minutos con ocho segundos punto cincuenta y cuatro".
 - v0.5.0.17: intro generativo de finales segun Q tabla. Final A/B/C ya no entra plano; usa contexto de parrilla y corte de qualy.
+- v0.5.0.19: refactor de voz. Nuevo modo Súper Básico, BÁSICO por sesión, sin cortes de locución, pole solo por estimado consolidado, bandera azul más precisa y textos limpiados de ms/argot fuera de contexto.
 - v0.5.0.18: bandera azul contextual. En qualy/manga deja de sonar como azul de carrera y habla de trafico/rezago; en finales, si ya va lapeado, lo dice y exige ceder el paso.
 - v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
 - v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
@@ -89,7 +90,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18</title>
+<title>vics_Smart_Spotter_v0.5.0.19</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6584,7 +6585,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.19</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -6619,7 +6620,7 @@ html, body{
 <button class="btn-secondary btn-hot btn-voice btn-voice-mini" data-voice-toggle="" id="voiceToggleBtnMini" type="button">
              ACTIVAR VOZ
           </button>
-<button class="btn-secondary btn-hot btn-basic-mini" id="basicToggleBtnMini" title="Modo básico: solo vueltas, lap time y posición (AUTO y FOLLOW)" type="button">BÁSICO</button>
+<button class="btn-secondary btn-hot btn-basic-mini" id="basicToggleBtnMini" title="Modo de voz FOLLOW. Cicla: OFF, BÁSICO, SÚPER BÁSICO" type="button">BÁSICO</button>
 
 <label class="btn-secondary btn-hot saylaps-toggle" id="sayLapsWrap" title="Decir vueltas (prefijo). Solo en FOLLOW y con BÁSICO OFF.">
   <input type="checkbox" id="sayLapsChk" />
@@ -7176,7 +7177,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.19";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7469,13 +7470,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.19',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.19', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -7744,9 +7745,17 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18";
 
 function msgv2DecimasTxt(ms) {
       const abs = Math.abs(Number(ms) || 0);
-      const dec = Math.max(1, Math.round(abs / 100));
-      if (dec === 1) return 'una décima';
-      return String(dec) + ' décimas';
+      if (!isFinite(abs) || abs <= 0) return '';
+      if (abs >= 100) {
+        const dec = Math.max(1, Math.round(abs / 100));
+        return dec === 1 ? 'una décima' : (String(dec) + ' décimas');
+      }
+      if (abs >= 10) {
+        const cen = Math.max(1, Math.round(abs / 10));
+        return cen === 1 ? 'una centésima' : (String(cen) + ' centésimas');
+      }
+      const mil = Math.max(1, Math.round(abs));
+      return mil === 1 ? 'una milésima' : (String(mil) + ' milésimas');
     }
 
     // Bancos por tipo: combinación por bloques (apertura + dato + acción + cierre)
@@ -9930,6 +9939,7 @@ function msgv2DecimasTxt(ms) {
         if (!r || !Array.isArray(r.classification) || !r.classification.length) return;
         const sess = String((currentSessionInfo && currentSessionInfo.type) || (__sessionDirector && __sessionDirector.sessionType) || '').toUpperCase();
         if (!(sess === 'MANGA' || sess === 'QUALI')) return;
+        try { if (getVoiceMode() !== 'AUTO') return; } catch(e) {}
         const rn = String((r && r.raceName) || '');
         if (!isMangaRaceName(rn)) return;
         const list = __topRowsByPos(r, 4);
@@ -9985,14 +9995,14 @@ function msgv2DecimasTxt(ms) {
         if (beatsGlobal) {
           const samePilot = (qTopKey && leaderKey === qTopKey);
           if (!qTop || !qTopKey) {
-            msg = `Pole provisional global para ${leaderName}. ${projectionTxt}.`;
+            msg = `Proyección de pole para ${leaderName}. ${projectionTxt}.`;
             key = 'quali_global_open_' + leaderKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
           } else if (samePilot) {
-            msg = `La pole global mejora con ${leaderName}. ${projectionTxt}.`;
+            msg = `Mejora la proyección de pole para ${leaderName}. ${projectionTxt}.`;
             key = 'quali_global_improve_' + leaderKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
             prio = 56;
           } else {
-            msg = `Nueva pole provisional global. ${leaderName} se mete arriba con ${projectionTxt}.`;
+            msg = `Cambia la proyección de pole. ${leaderName} se mete arriba con ${projectionTxt}.`;
             key = 'quali_global_change_' + leaderKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
           }
         } else if (tiesLapsOnly && qTopName) {
@@ -10189,41 +10199,41 @@ function msgv2DecimasTxt(ms) {
         function __pickFinalIntroLegacy(mainLetter) {
           const m = String(mainLetter || '').toUpperCase();
           const A = [
-            'Final A. La elite en pista. Vamos a arrancar, pueden calentar.',
-            'Final A. Top de pilotos. Vamos a arrancar, pueden calentar.',
-            'Final A. Aqui se corre fino. Vamos a arrancar, pueden calentar.',
-            'Final A. Puro nivel. Vamos a arrancar, pueden calentar.',
-            'Final A. Los mejores, sin excusas. Vamos a arrancar, pueden calentar.',
-            'Final A. Ojos al apex. Vamos a arrancar, pueden calentar.',
-            'Final A. Se define en detalles. Vamos a arrancar, pueden calentar.',
-            'Final A. La parrilla esta pesada. Vamos a arrancar, pueden calentar.'
+            'Final A. La élite en pista. Se corre fino desde la uno.',
+            'Final A. Top de pilotos. Aquí no hay aire.',
+            'Final A. Aquí se corre fino. Línea limpia desde la salida.',
+            'Final A. Puro nivel. A ejecutar sin regalos.',
+            'Final A. Los mejores, sin excusas. A trabajar la carrera.',
+            'Final A. Ojos al apex. Esto se define fino.',
+            'Final A. Se define en detalles. Nada de contactos gratis.',
+            'Final A. La parrilla está pesada. Primera curva con cabeza.'
           ];
           const B = [
-            'Final B. Se pone bueno. Vamos a arrancar, pueden calentar.',
-            'Final B. Segunda linea de fuego. Vamos a arrancar, pueden calentar.',
-            'Final B. Aqui se pelea de verdad. Vamos a arrancar, pueden calentar.',
-            'Final B. Sin regalos. Vamos a arrancar, pueden calentar.',
-            'Final B. Carrera dura, manos suaves. Vamos a arrancar, pueden calentar.',
-            'Final B. El podio se gana en paciencia. Vamos a arrancar, pueden calentar.',
-            'Final B. Mantengan orden en curva uno. Vamos a arrancar, pueden calentar.',
-            'Final B. A correr inteligente. Vamos a arrancar, pueden calentar.'
+            'Final B. Se pone bueno. Aquí hay cuentas pendientes.',
+            'Final B. Segunda línea de fuego. A correr con cabeza.',
+            'Final B. Aquí se pelea de verdad. Nada regalado.',
+            'Final B. Sin regalos. Hay que cerrar limpio.',
+            'Final B. Carrera dura, manos suaves. Todo cuenta.',
+            'Final B. El podio se gana en paciencia. Ejecuta limpio.',
+            'Final B. Orden en curva uno. Luego a pelear.',
+            'Final B. A correr inteligente. Ritmo y cabeza.'
           ];
           const C = [
-            'Final C. Carrera con hambre. Vamos a arrancar, pueden calentar.',
-            'Final C. Aqui todos quieren subir. Vamos a arrancar, pueden calentar.',
-            'Final C. Cero contactos, mucha cabeza. Vamos a arrancar, pueden calentar.',
-            'Final C. Limpio y constante. Vamos a arrancar, pueden calentar.',
-            'Final C. Si te equivocas, pagas. Vamos a arrancar, pueden calentar.',
-            'Final C. Que se note el progreso. Vamos a arrancar, pueden calentar.',
-            'Final C. Ya se acabo el calentamiento. Vamos a arrancar, pueden calentar.',
-            'Final C. Vamos a divertirnos, pero con control. Vamos a arrancar, pueden calentar.'
+            'Final C. Carrera con hambre. Aquí también se gana respeto.',
+            'Final C. Aquí todos quieren subir. Nada de errores gratis.',
+            'Final C. Cero contactos, mucha cabeza. Hay que cerrar fuerte.',
+            'Final C. Limpio y constante. Que se note el progreso.',
+            'Final C. Si te equivocas, pagas. A correr fino.',
+            'Final C. Que se note el progreso. A ejecutar limpio.',
+            'Final C. Ya se acabó el calentamiento. Ahora sí, carrera.',
+            'Final C. Vamos a divertirnos, pero con control. Línea limpia.'
           ];
           const mm = (m || 'X');
           const O = [
-            'Final ' + mm + '. Vamos a arrancar, pueden calentar.',
-            'Final ' + mm + '. Se prende esto. Vamos a arrancar, pueden calentar.',
-            'Final ' + mm + '. Ojo en la curva uno. Vamos a arrancar, pueden calentar.',
-            'Final ' + mm + '. Ritmo y cabeza. Vamos a arrancar, pueden calentar.'
+            'Final ' + mm + '. A correr limpio desde la uno.',
+            'Final ' + mm + '. Se prende esto. Ritmo y cabeza.',
+            'Final ' + mm + '. Ojo en la curva uno. Sin regalos.',
+            'Final ' + mm + '. Ritmo y cabeza. A ejecutar fino.'
           ];
           const bag = (m==='A') ? A : (m==='B') ? B : (m==='C') ? C : O;
           return autoRandPick(bag, 'introFinalLegacy:' + (m || 'X')) || bag[0];
@@ -10265,7 +10275,7 @@ function msgv2DecimasTxt(ms) {
 
             const front3 = [p1, p2, p3].filter(Boolean);
             const frontRow = [p1, p2].filter(Boolean);
-            const tail = 'Vamos a arrancar, pueden calentar.';
+            const tail = 'Línea limpia desde la uno.';
             const qTag = 'segun la Q tabla';
             const front3Txt = (front3.length >= 3)
               ? (front3[0] + ', ' + front3[1] + ' y ' + front3[2])
@@ -11236,12 +11246,22 @@ try{
 // AI: si el usuario nunca ha tocado VOZ, el spotter puede activar voz en Auto Locutor.
     let userVoiceOverride = false;
 
-    // Modo BASICO (solo vueltas, lap time y posicion)
+    // Modos de voz FOLLOW: BASICO y SUPER BASICO
     let basicModeEnabled = false;
     try {
       const bm = prefGet('basicModeEnabled', null);
       if (bm !== null) basicModeEnabled = (bm === '1');
     } catch(e) {}
+    let superBasicModeEnabled = false;
+    try {
+      const sbm = prefGet('superBasicModeEnabled', null);
+      if (sbm !== null) superBasicModeEnabled = (sbm === '1');
+    } catch(e) {}
+    function getVoiceMode(){
+      if (superBasicModeEnabled) return 'SUPER_BASIC';
+      if (basicModeEnabled) return 'BASIC';
+      return 'AUTO';
+    }
 
     const DEFAULT_VOICE_SETTINGS = {
       laps: true,       // siempre activo (no se apaga)
@@ -13632,38 +13652,33 @@ function __duoGuessRole(txt, key) {
 
     const AI_SMART_PROFILES = {
       FOLLOW: {
-        TRAIN: { rdMode:'engineer', autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:true, estlap:true, bestlap:true, leadergap:false, pos:true, gaps:false, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
+        TRAIN: { rdMode:'engineer', autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:false, estlap:false, bestlap:false, leadergap:false, pos:false, gaps:false, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
         MANGA: { rdMode:'minimal',  autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
         FINAL: { rdMode:'coach',    autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:false, bestlap:true, leadergap:true, pos:true, gaps:true, podium:true,  front06:true,  back06:true,  attack:true,  defense:true,  pelea:true,  total:false, cons10:false, box:false, netgain:false } }
       },
       AUTO: {
-        TRAIN: { rdMode:'minimal',  autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:false, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } },
+        TRAIN: { rdMode:'minimal',  autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:false, estlap:true, bestlap:false, leadergap:false, pos:false, gaps:false, podium:false, front06:false,  back06:false,  attack:false, defense:false, pelea:false,  total:false, cons10:false, box:false, netgain:false } },
         MANGA: { rdMode:'minimal',  autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:false, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } },
         FINAL: { rdMode:'coach',    autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:false, estlap:false, bestlap:true, leadergap:true, pos:true, gaps:true, podium:true,  front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } }
       }
     };
 
     function _applyBasicOverride(sess, mode){
-      // BÁSICO:
-      // - FOLLOW: vuelta a vuelta + posición estable de vez en cuando + azul solo en finales
-      // - AUTO: solo lo esencial, sin narrativa rica
       try{
-        if (!basicModeEnabled) return false;
-        const bmode = mode || __modeBucket();
-
+        const vMode = getVoiceMode();
+        if (vMode === 'AUTO') return false;
         const next = { ...DEFAULT_VOICE_SETTINGS };
-        // Siempre activo
+
         next.laps = true;
-        next.pos = true;
-        next.gaps = false;
-        next.leadergap = false;
-        next.blueflag = !!(bmode === 'FOLLOW');
+        next.saylaps = false;
         next.ritmo = false;
         next.estlap = false;
         next.bestlap = false;
+        next.gaps = false;
+        next.leadergap = false;
+        next.podium = false;
         next.front06 = false;
         next.back06 = false;
-        next.podium = false;
         next.attack = false;
         next.defense = false;
         next.pelea = false;
@@ -13671,12 +13686,17 @@ function __duoGuessRole(txt, key) {
         next.total = false;
         next.cons10 = false;
         next.box = false;
-        next.saylaps = false;
-        voiceSettings = next;
 
-        // Modos mas sobrios
+        if (vMode === 'SUPER_BASIC') {
+          next.pos = false;
+          next.blueflag = (String(sess || '').toUpperCase() === 'FINAL');
+        } else {
+          next.pos = (String(sess || '').toUpperCase() !== 'TRAIN');
+          next.blueflag = (String(sess || '').toUpperCase() === 'FINAL');
+        }
+
+        voiceSettings = next;
         try { applyDecimalPrecision(2); } catch(e) {}
-        // RD/Auto fuera en BASICO (garantiza 0 ruido)
         try { setRaceDirectorMode('minimal'); } catch(e) {}
         try { setAutoCommentatorMode('engineer'); } catch(e) {}
         try { raceDirectorEnabled = false; } catch(e) {}
@@ -13688,11 +13708,13 @@ function __duoGuessRole(txt, key) {
       try{
         if (!basicToggleBtnMini) return;
         const inFollow = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
+        const vMode = getVoiceMode();
 
         if (!inFollow) {
-          // AUTO LOCUTOR: BÁSICO siempre OFF y bloqueado
           basicModeEnabled = false;
+          superBasicModeEnabled = false;
           try { prefSet('basicModeEnabled', '0'); } catch(e) {}
+          try { prefSet('superBasicModeEnabled', '0'); } catch(e) {}
           basicToggleBtnMini.disabled = true;
           basicToggleBtnMini.classList.remove('active');
           basicToggleBtnMini.classList.add('disabled');
@@ -13702,8 +13724,9 @@ function __duoGuessRole(txt, key) {
 
         basicToggleBtnMini.disabled = false;
         basicToggleBtnMini.classList.remove('disabled');
-        basicToggleBtnMini.classList.toggle('active', !!basicModeEnabled);
-        basicToggleBtnMini.textContent = (basicModeEnabled ? 'BÁSICO ON' : 'BÁSICO');
+        basicToggleBtnMini.classList.toggle('active', vMode !== 'AUTO');
+        basicToggleBtnMini.textContent = (vMode === 'SUPER_BASIC') ? 'SÚPER BÁSICO ON' : (vMode === 'BASIC' ? 'BÁSICO ON' : 'BÁSICO');
+        basicToggleBtnMini.title = 'Modo de voz FOLLOW. Cicla: OFF, BÁSICO, SÚPER BÁSICO';
         try { if (typeof updateSayLapsUI === 'function') updateSayLapsUI(); } catch(e) {}
       }catch(e){}
     }
@@ -13715,7 +13738,7 @@ function __duoGuessRole(txt, key) {
         const prof = (AI_SMART_PROFILES[mode] && AI_SMART_PROFILES[mode][sess]) ? AI_SMART_PROFILES[mode][sess] : null;
 
         // 1) BASICO manda - debe funcionar aun si no hay perfil listo.
-        if (basicModeEnabled) {
+        if (getVoiceMode() !== 'AUTO') {
           try { _applyBasicOverride(sess, mode); } catch(e) {}
           try { applyVoiceSettingsToButtons(); } catch(e) {}
           try { if (typeof updateSessionPresetUI === 'function') updateSessionPresetUI(sess); } catch(e) {}
@@ -14297,6 +14320,8 @@ let __ttsStartGuard = 0;
           return ms + (ms === 1 ? ' mil\xe9sima' : ' mil\xe9simas');
         };
         s = s.replace(/\b(\d+)\s*ms\b/gi, (m, n) => __msToSpeech(n));
+        s = s.replace(/\b(\d+)\s*milisegund(?:o|os|a|as)\b/gi, (m, n) => __msToSpeech(n));
+        s = s.replace(/\bms\b/gi, 'más');
 
         // Diccionario r\xe1pido de tildes y pronunciaci\xf3n (TTS)
         // - evita lecturas raras por falta de acento ("basico") o por encoding/recortes (ej. "líder", "línea")
@@ -15353,6 +15378,7 @@ function scheduleSpeechWatchdog(ms = 15000){
       try { __ttsLastEventAt = Date.now(); } catch(e) {}
       try {
         const synth = getSpeechEngine();
+        if (synth && synth.speaking) { try { scheduleSpeechWatchdog(8000); } catch(e) {} return; }
         if (synth && typeof synth.cancel === 'function' && canTtsCancelNow(Date.now())) synth.cancel();
       } catch(e) {}
       try { speechSpeaking = false; } catch(e) {}
@@ -15716,7 +15742,7 @@ lastSpokenKeyAt.set(next.key, Date.now());
               try {
                 if (!pendingAutoVoiceUnlock && window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') {
                   const ss = __sgSynth;
-                  if ((ss.speaking || ss.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) ss.cancel();
+                  if ((ss.speaking || ss.pending)) return;
                 }
               } catch(e) {}
               speechSpeaking = false;
@@ -15782,7 +15808,7 @@ function speakWithLaps(_laps, message, opts) {
       // Prefijo de LAPS (opcional): si "Vueltas" estápagado, no digas "10 vueltas..."
       const msg = String(message || '').trim();
       const inFollow = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
-      const allowPrefix = !!(voiceSettings && voiceSettings.saylaps) || (getSayLapsOverride() && inFollow && !(typeof basicModeEnabled !== 'undefined' && basicModeEnabled));
+      const allowPrefix = !!(voiceSettings && voiceSettings.saylaps) || (getSayLapsOverride() && inFollow && getVoiceMode() === 'AUTO');
 
       if (!allowPrefix) {
         if (msg) speakText(msg, opts || {});
@@ -15945,9 +15971,7 @@ function unlockTTSOnce(reason = '') {
         // NO canceles siempre: en iPhone a veces lo empeora.
         // Solo si estaba hablando o pendiente.
         try {
-          if ((synth.speaking || synth.pending) && (!__ttsCancelShieldUntil || Date.now() > __ttsCancelShieldUntil)) {
-            __ttsCancelShieldUntil = Date.now() + 1200;
-            if (typeof synth.cancel === 'function') synth.cancel();
+          if ((synth.speaking || synth.pending)) {
             if (typeof synth.resume === 'function') synth.resume();
           }
         } catch(e) {}
@@ -16350,7 +16374,8 @@ function setVoiceMaster(on, opts = {}) {
                 }
               } catch(e) {}
 
-              // Desktop/Android: confirmacion inmediata
+              // Desktop/Android: confirmación inmediata con unlock suave adicional
+              try { unlockTTSOnce('voice-btn-any'); } catch(e) {}
               try { __announceVoiceArmed(); } catch(e) {}
               try { forceTtsRecover('voice-btn'); } catch(e) {}
               try { scheduleSpeechPump(80); } catch(e) {}
@@ -16396,23 +16421,37 @@ function setVoiceMaster(on, opts = {}) {
               try { playBeep('down'); } catch(e) {}
               try { showToast('BÁSICO solo en FOLLOW', 900); } catch(e) {}
               basicModeEnabled = false;
+              superBasicModeEnabled = false;
               try { prefSet('basicModeEnabled', '0'); } catch(e) {}
+              try { prefSet('superBasicModeEnabled', '0'); } catch(e) {}
               try { _updateBasicBtnUI(); } catch(e) {}
               return;
             }
 
-            basicModeEnabled = !basicModeEnabled;
+            const vMode = getVoiceMode();
+            if (vMode === 'AUTO') {
+              basicModeEnabled = true;
+              superBasicModeEnabled = false;
+            } else if (vMode === 'BASIC') {
+              basicModeEnabled = false;
+              superBasicModeEnabled = true;
+            } else {
+              basicModeEnabled = false;
+              superBasicModeEnabled = false;
+            }
             try { prefSet('basicModeEnabled', basicModeEnabled ? '1' : '0'); } catch(e) {}
+            try { prefSet('superBasicModeEnabled', superBasicModeEnabled ? '1' : '0'); } catch(e) {}
             try { applySmartProfile(currentSessionInfo || {}, 'basic-toggle'); } catch(e) {}
             try { playBeep('tap'); } catch(e) {}
             try { _updateBasicBtnUI(); } catch(e) {}
 
-            // feedback corto UI + confirmación breve de voz
-            try { showToast(basicModeEnabled ? 'BÁSICO activado' : 'BÁSICO apagado', { tone: 'info' }); } catch(e) {}
+            const modeLabel = getVoiceMode() === 'SUPER_BASIC' ? 'SÚPER BÁSICO activado' : (getVoiceMode() === 'BASIC' ? 'BÁSICO activado' : 'BÁSICO apagado');
+            try { showToast(modeLabel, { tone: 'info' }); } catch(e) {}
             try {
               if (voiceMasterEnabled) {
-                enqueueSpeech(basicModeEnabled ? 'Básico activado.' : 'Básico apagado.', {
-                  key: basicModeEnabled ? 'sys_basic_on' : 'sys_basic_off',
+                const spoken = getVoiceMode() === 'SUPER_BASIC' ? 'Súper básico activado.' : (getVoiceMode() === 'BASIC' ? 'Básico activado.' : 'Básico apagado.');
+                enqueueSpeech(spoken, {
+                  key: getVoiceMode() === 'SUPER_BASIC' ? 'sys_super_basic_on' : (getVoiceMode() === 'BASIC' ? 'sys_basic_on' : 'sys_basic_off'),
                   priority: 97,
                   cooldownMs: 250,
                   dedupe: true,
@@ -18574,24 +18613,21 @@ function resetAutoNarratorState() {
         const lapTxt = __blueFlagLapText(lapDiff, isFinal ? 'lap' : 'rezago');
         if (!isFinal) {
           return __bluePick([
-            `Tráfico de punta. ${name}, ${lapTxt}. Viene ${who}. No te enganches y deja pista limpia.`,
-            `Referencia rápida detrás. ${name}, ${lapTxt}. Viene ${who}. Respeta la línea y suéltalo limpio.`,
-            `Ojo con la punta detrás. ${name}, ${lapTxt}. Viene ${who}. No arruines tu vuelta ni la del rápido.`
+            `Tráfico detrás. ${name}, ${lapTxt}. Viene ${who}. Línea limpia.`,
+            `Referencia rápida detrás. ${name}, ${lapTxt}. Viene ${who}. Suéltalo limpio.`,
+            `Punta detrás. ${name}, ${lapTxt}. No arruines tu vuelta.`
           ], 'blue:auto:manga:' + String(name || '') + ':' + String(lapDiff || 1));
         }
-        if (hitCount >= 3) {
-          return `Dirección de carrera para ${name}. ${lapTxt}. Viene ${who}. Cede el paso de inmediato o se aplicarán 5 segundos de castigo.`;
-        }
-        if (hitCount === 2) {
+        if (hitCount >= 2) {
           return __bluePick([
-            `Bandera azul. Último aviso para ${name}. ${lapTxt}. Viene ${who}. Cede el paso en la recta.`,
-            `Último aviso de azul para ${name}. ${lapTxt}. Viene ${who}. No pelees esa posición y abre pista limpio.`
+            `Último aviso de azul para ${name}. ${lapTxt}. Viene ${who}. Cede el paso en recta.`,
+            `Azul para ${name}. ${lapTxt}. ${who} ya está encima. Deja pasar en recta.`
           ], 'blue:auto:final:last:' + String(name || '') + ':' + String(lapDiff || 1));
         }
         return __bluePick([
-          `Bandera azul. ${name}, ${lapTxt}. Viene ${who}. Cede el paso en la recta.`,
-          `Azul para ${name}. ${lapTxt}. Viene ${who}. No pelees esa posición y abre pista limpio.`,
-          `Bandera azul para ${name}. ${lapTxt}. ${who} ya te llegó. Cede el paso y sigue tu carrera.`
+          `Bandera azul para ${name}. ${lapTxt}. Viene ${who}. Cede el paso en recta.`,
+          `Azul para ${name}. ${lapTxt}. ${who} ya te llegó. Deja pasar y sigue tu carrera.`,
+          `Bandera azul. ${name}, ${lapTxt}. Línea limpia y cede el paso.`
         ], 'blue:auto:final:' + String(name || '') + ':' + String(lapDiff || 1));
       } catch(e) { return ''; }
     }
@@ -19028,13 +19064,13 @@ function selectPilotByKey(key, opts = {}) {
 
           if (k) {
             // FOLLOW: por defecto BÁSICO OFF al elegir piloto (el usuario lo puede encender)
-            try { basicModeEnabled = false; prefSet('basicModeEnabled','0'); _updateBasicBtnUI(); } catch(e) {}
+            try { basicModeEnabled = false; superBasicModeEnabled = false; prefSet('basicModeEnabled','0'); prefSet('superBasicModeEnabled','0'); _updateBasicBtnUI(); } catch(e) {}
 
             // MANGA: NO inicia reloj al seleccionar (solo muestra UI)
             try { onPilotSelectedManga(k); } catch(e) {}
           } else {
             // Modo locutor: sin piloto seleccionado
-            try { basicModeEnabled = false; prefSet('basicModeEnabled','0'); _updateBasicBtnUI(); } catch(e) {}
+            try { basicModeEnabled = false; superBasicModeEnabled = false; prefSet('basicModeEnabled','0'); prefSet('superBasicModeEnabled','0'); _updateBasicBtnUI(); } catch(e) {}
             try { resetAutoCommentatorState();
         if (announce){
           try { showToast('AUTO LOCUTOR activo', { tone: 'info' }); } catch(e) {}
@@ -19524,10 +19560,11 @@ function updateBlueFlagFromPassEvents() {
         // Bandera azul por proximidad real de cruce (0.8s fijo) + considera P1/P2/P3 cuando lapean.
         // Se dispara solo cuando el lapeador (Top3) pasa MUY cerca por meta DESPUES del rezagado
         // y ya trae al menos +1 vuelta (lapDiff>=1). Evita falsos por el salto a "+1" cuando estan lejos.
-        const BLUE_PROX_MS = 800;
         const sessionType = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
         const isFinal = (sessionType === 'FINAL');
-        if (typeof basicModeEnabled !== 'undefined' && basicModeEnabled && !isFinal) return;
+        const BLUE_PROX_MS = isFinal ? 450 : 320;
+        if (getVoiceMode() === 'SUPER_BASIC' && !isFinal) return;
+        if (getVoiceMode() === 'BASIC' && !isFinal) return;
 
         const arr = raceData.classification.slice().filter(r => r && (r.pos != null));
         if (!arr.length) return;
@@ -19878,22 +19915,22 @@ function autoRandPick(list, key) {
       };
 
       if (s < 0.12) {
-        return pick(['a nada', 'a menos de una dcima', 'pegadsimo, a nada']);
+        return pick(['a nada', 'a menos de una décima', 'pegadísimo, a nada']);
       }
       if (s < 0.25) {
-        return pick(['a menos de dos dcimas', 'a poco ms de una dcima', 'a dos dcimas']);
+        return pick(['a menos de dos décimas', 'a poco más de una décima', 'a dos décimas']);
       }
       if (s < 0.35) {
-        return pick(['a menos de tres dcimas', 'a tres dcimas', 'a unas tres dcimas']);
+        return pick(['a menos de tres décimas', 'a tres décimas', 'a unas tres décimas']);
       }
       if (s < 0.45) {
-        return pick(['a menos de cinco dcimas', 'a cuatro dcimas', 'a menos de medio segundo']);
+        return pick(['a menos de cinco décimas', 'a cuatro décimas', 'a menos de medio segundo']);
       }
       if (s < 0.55) {
-        return pick(['a medio segundo', 'a cinco dcimas', 'a medio segundo cerrado']);
+        return pick(['a medio segundo', 'a cinco décimas', 'a medio segundo cerrado']);
       }
       if (s < 0.75) {
-        return pick(['a menos de ocho dcimas', 'a siete dcimas', 'a menos de un segundo']);
+        return pick(['a menos de ocho décimas', 'a siete décimas', 'a menos de un segundo']);
       }
       return pick(['a menos de un segundo', 'a menos de un segundo clavado', 'a un segundo menos']);
     }
@@ -19904,7 +19941,7 @@ function autoRandPick(list, key) {
       // buckets de 5s para no aburrir
       const b = Math.max(10, Math.floor(s / 5) * 5);
       const w = gapNumWord(b);
-      return 'a ms de ' + w + ' segundos';
+      return 'a más de ' + w + ' segundos';
     }
 
     function gapToSpeech(sec, bagKey) {
@@ -19920,7 +19957,7 @@ function autoRandPick(list, key) {
 
       if (Math.abs(s - bucket) <= eps) return 'a ' + label;
       if (s < (bucket - eps)) return 'a menos de ' + label;
-      return 'a ms de ' + label;
+      return 'a más de ' + label;
     }
 
     function gapToSpeechBare(sec, bagKey) {
@@ -21223,10 +21260,10 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
     if (!arr || arr.length < 2) return;
     if (!lastPassEvents || typeof lastPassEvents.get !== 'function') return;
 
-    const BLUE_PROX_MS = 800; // fijo (0.8s)
     const sessionType = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
     const isMangaSess = (sessionType === 'MANGA' || sessionType === 'TRAIN');
     const isFinalSess = (sessionType === 'FINAL');
+    const BLUE_PROX_MS = isFinalSess ? 450 : 320; // más preciso para evitar avisos amplios
 
     // Evita spam al inicio (espera un poco de carrera)
     const leaderLap = Number(leader && leader.lapcount) || 0;
@@ -21313,11 +21350,9 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
 
       const lapDiff = Math.max(1, Number(best && best.lapDiff) || 1);
       let finalMsg = __blueFlagAutoCompose(name, who, { isFinal: !!isFinalSess, lapDiff, hitCount: st.blueHits });
-      let coolMs = isFinalSess ? 12000 : 11000;
-      if (isFinalSess && st.blueHits === 2 && (nowMs - st.blueWindowMs) <= 45000) {
-        coolMs = 15000;
-      } else if (isFinalSess && st.blueHits >= 3 && (nowMs - st.blueWindowMs) <= 45000) {
-        coolMs = 22000;
+      let coolMs = isFinalSess ? 14000 : 11000;
+      if (isFinalSess && st.blueHits >= 2 && (nowMs - st.blueWindowMs) <= 45000) {
+        coolMs = 18000;
       }
 
       enqueueSpeech(finalMsg, {
@@ -24090,7 +24125,7 @@ function ttsGenV2GetFollowMode(opts) {
 
 function ttsGenV2ComposeFollowEvent(eventType, ctx, opts) {
   try {
-    if (typeof basicModeEnabled !== 'undefined' && basicModeEnabled) return '';
+    if (getVoiceMode() !== 'AUTO') return '';
     const options = opts || {};
     const session = options.session || ttsGenV2GetSessionTag();
     if (__ttsGenV2ShouldSuppressEvent(eventType, session)) return '';
@@ -24438,7 +24473,7 @@ function collectAutoQualiCandidates(ctx) {
     const addCand = (ctx && ctx.addCand);
     if (typeof addCand !== 'function') return;
     const wantBest = !!vs.bestlap;
-    const wantPoleFight = !!(vs.bestlap || vs.pelea);
+    const wantPoleFight = false;
 
     if (wantBest) {
       let bestMs = null;
@@ -25309,7 +25344,7 @@ function buildSelectedPilotVoiceContext(p) {
         pendingPosChange = null;
       }
 
-      if (!isManga && !basicModeEnabled && posState.posChangedTick && voiceSettings.pos) {
+      if (!isManga && getVoiceMode() === 'AUTO' && posState.posChangedTick && voiceSettings.pos) {
         handlePositionChangeNoLap(posState.posFrom, posState.posTo, posState.posDelta);
       }
       return { lapCrossed, shouldReturn: true };
@@ -25354,7 +25389,7 @@ function buildSelectedPilotVoiceContext(p) {
         );
       }
 
-      if (voiceSettings.bestlap && pendingBestLap) {
+      if (voiceSettings.bestlap && pendingBestLap && getVoiceMode() === 'AUTO') {
         const recordText = ttsGenV2MaybeFollowText('record', {
           pilot: ctx.pilotName,
           best: tiempoATexto(pendingBestLap.ms || ctx.lapMsNow || 0),
@@ -27412,7 +27447,7 @@ raceData = normalizeRaceData(rawRace);
 
         // Solo AUTO LOCUTOR rico
         try { if (selectedPilotKey) return; } catch(e) {}
-        try { if (basicModeEnabled) return; } catch(e) {}
+        try { if (getVoiceMode() !== 'AUTO') return; } catch(e) {}
 
         // Solo clasificación real, nunca práctica/prestart
         if (!isMangaRaceName(raw.raceName)) return;
@@ -27466,9 +27501,9 @@ raceData = normalizeRaceData(rawRace);
         }
         if ((Number(__qualiLeaderState.candidateCount || 0) < 2)) return;
 
-        const changeCooldown = 28000;
-        const improveCooldown = 30000;
-        const closeCooldown = 32000;
+        const changeCooldown = 35000;
+        const improveCooldown = 40000;
+        const closeCooldown = 45000;
 
         const prevKey = String(__qualiLeaderState.leaderKey || '');
         const prevTime = Number(__qualiLeaderState.leaderTimeMs || 0) || 0;
@@ -27489,7 +27524,7 @@ raceData = normalizeRaceData(rawRace);
         if (!prevKey){
           if (projTxt && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
             enqueueSpeech(
-              `Pole provisional para ${leaderName}. ${projTxt}.`,
+              `Proyección de pole para ${leaderName}. ${projTxt}.`,
               { key: 'quali_pole_open_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 62 }
             );
             __qualiLeaderState.lastAnnounceTs = now;
@@ -27504,7 +27539,7 @@ raceData = normalizeRaceData(rawRace);
 
         if (changed && projTxt && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
           enqueueSpeech(
-            `Atención, nueva pole provisional. ${leaderName} proyecta ${projTxt}.`,
+            `Atención, cambia la proyección de pole. ${leaderName} proyecta ${projTxt}.`,
             { key: 'quali_pole_change_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 62 }
           );
           __qualiLeaderState.lastAnnounceTs = now;
@@ -27526,7 +27561,7 @@ raceData = normalizeRaceData(rawRace);
 
         if (projectionChanged && (lapGain || (dropMs >= 120)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
           enqueueSpeech(
-            `La pole provisional mejora. ${leaderName} proyecta ${projTxt}.`,
+            `Mejora la proyección de pole. ${leaderName} proyecta ${projTxt}.`,
             { key: 'quali_pole_improve_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: improveCooldown, semanticCategory: 'quali', priority: 48 }
           );
           __qualiLeaderState.lastImproveTs = now;
@@ -27541,7 +27576,7 @@ raceData = normalizeRaceData(rawRace);
           const gap = sT.timeMs - lTimeMs;
           if (isFinite(gap) && gap > 0 && gap <= 250){
             enqueueSpeech(
-              `Nada cerrado en la pole. ${secondName} proyecta ${secondProjTxt}.`,
+              `Nada cerrado arriba. ${secondName} proyecta ${secondProjTxt}.`,
               { key: 'quali_pole_close_' + leaderKey + '_' + secondName + '_' + sT.laps + '_' + Math.round(sT.timeMs/10), cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 36 }
             );
             __qualiLeaderState.lastCloseTs = now;
