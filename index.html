@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.37 - contextual generativo con argot motorsport en español y memoria semántica ampliada -
+vics_Smart_Spotter_v0.5.0.40 - contextual generativo con argot motorsport en español y memoria semántica ampliada -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -14,7 +14,7 @@ Changelog:
 - v0.5.0.33: memoria narrativa ampliada por familia de contexto y etapa. El motor evita repetir no solo la ultima frase por llave, sino tambien las ultimas 5 salidas por grupo semantico cercano (leader/pass/battle/top3/record), para que el contextual generativo rote mejor entre apertura, desarrollo y cierre.
 - v0.5.0.34: memoria semantica endurecida para leader/pass/battle/pressure/closing. Ahora el anti-cassette agrupa por familia real, canal, sesion y etapa, y evita repetir tambien entre mensajes hermanos del mismo duelo para que el enfoque cambie mejor entre apertura, desarrollo y cierre.
 - v0.5.0.35: limpieza de lenguaje hacia argot motorsport en español. Leader/pass/battle/top3/train/record/qualyPole ahora usan vocabulario mas de pista, menos frases genéricas, y __ttsSmartClean normaliza remates poco racing.
-- v0.5.0.37: argot motorsport reforzado en español. Se endurece el vocabulario de punta, rebase, duelo, presión, tren y qualy; se limpian giros blandos o genéricos y el contextual generativo habla más paddock y menos plantilla neutra.
+- v0.5.0.40: argot motorsport reforzado en español. Se endurece el vocabulario de punta, rebase, duelo, presión, tren y qualy; se limpian giros blandos o genéricos y el contextual generativo habla más paddock y menos plantilla neutra.
 - v0.5.0.25: mas bloques vivos pasan a contextual generativo real. Cambios de posicion, pelea, intro de finales y proyeccion de qualy quedan menos cassette y con menos repeticiones.
 - v0.5.0.25: proyeccion de qualy mas corta y mas paciente. Espera mas estabilidad, usa frases mas secas y evita remates largos con tiempos de sobra.
 - v0.5.0.15: TTS qualy projection - el estimado de pole/proyeccion ahora se lee como vueltas + tiempo en minutos, segundos y centesimas. Ejemplo: "21 vueltas en tres minutos con ocho segundos punto cincuenta y cuatro".
@@ -99,7 +99,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.37</title>
+<title>vics_Smart_Spotter_v0.5.0.40</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6613,7 +6613,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.37</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.40</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7205,7 +7205,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.37";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.40";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7498,13 +7498,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.37";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.37',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.40',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.37', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.40', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -14108,7 +14108,7 @@ function __duoGuessRole(txt, key) {
         next.pos = isSuperBasic ? false : true;
         next.gaps = false;
         next.leadergap = false;
-        next.blueflag = !!(bmode === 'FOLLOW');
+        next.blueflag = isSuperBasic ? false : !!(bmode === 'FOLLOW');
         next.ritmo = false;
         next.estlap = false;
         next.bestlap = false;
@@ -15014,6 +15014,21 @@ return s;
             if (txt) enqueueSpeech(txt, { key: 'time_mark_' + m + '_' + __sessClockSig, priority: 86, cooldownMs: 15000, dedupe: true });
             break;
           }
+        }
+
+        const sessType = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+        const isQualyClock = (sessType === 'MANGA' || sessType === 'QUALY');
+        const __followPilotSelected = !!selectedPilotKey;
+        const __allowTimeUpMsg = (!__followPilotSelected) || (__voiceModeTag() === 'OFF' || __voiceModeTag() === 'BASIC');
+        if (isQualyClock && __allowTimeUpMsg && prev > 0 && remMs <= 0 && !__sessClockAnnounced.has('timeup')) {
+          __sessClockAnnounced.add('timeup');
+          enqueueSpeech('Tiempo cumplido. Cierren su vuelta.', {
+            key: 'time_mark_zero_' + __sessClockSig,
+            priority: 90,
+            cooldownMs: 25000,
+            dedupe: true,
+            semanticCategory: 'timeup'
+          });
         }
       } catch(e) {}
     }
@@ -25760,6 +25775,12 @@ function buildSelectedPilotVoiceContext(p) {
         } else {
           try { playBeep('lapUp'); } catch (e) {}
         }
+        try {
+          const isBasicLikeNow = (typeof __isBasicLike === 'function') ? __isBasicLike() : !!basicModeEnabled;
+          if (!isManga && !isBasicLikeNow && voiceSettings.pos && posState && posState.posChangedTick && lapsNow === 1) {
+            handlePositionChangeNoLap(posState.posFrom, posState.posTo, posState.posDelta);
+          }
+        } catch (e) {}
         lastAnnouncedLapcount = lapsNow;
         if (isManga && voiceSettings.pos) startMangaPosSettle(lapsNow, p && p.pos != null ? p.pos : null);
         return { lapCrossed, shouldReturn: false };
