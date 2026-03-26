@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.30 - contextual generativo ampliado en cierres, snapshots y resumen de sesión -
+vics_Smart_Spotter_v0.5.0.31 - contextual generativo ampliado en cierres, snapshots y resumen de sesión -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -9,6 +9,7 @@ Origen: Spotter_5.0.1.html
 Changelog:
 - v0.5.0.30: cierres y snapshots con mas ADN contextual generativo. Finish summary, resumen de sesión y comentarios ambientales quedan mas cortos, variados y menos cassette.
 - v0.5.0.30: contextual generativo ampliado en Top 3, tren, record/qualiBest y pelea por pole. Menos plantillas planas, mas contexto por sesion, etapa y cierre.
+- v0.5.0.31: anti-cassette global en el motor contextual. __ttsSmartPick evita repetir la misma frase seguida por llave, y se amplian variantes en Top 3, tren, record, cierre y pelea por pole.
 - v0.5.0.25: mas bloques vivos pasan a contextual generativo real. Cambios de posicion, pelea, intro de finales y proyeccion de quali quedan menos cassette y con menos repeticiones.
 - v0.5.0.25: proyeccion de quali mas corta y mas paciente. Espera mas estabilidad, usa frases mas secas y evita remates largos con tiempos de sobra.
 - v0.5.0.15: TTS quali projection - el estimado de pole/proyeccion ahora se lee como vueltas + tiempo en minutos, segundos y centesimas. Ejemplo: "21 vueltas en tres minutos con ocho segundos punto cincuenta y cuatro".
@@ -93,7 +94,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.30</title>
+<title>vics_Smart_Spotter_v0.5.0.31</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6607,7 +6608,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.30</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.31</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7199,7 +7200,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.30";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.31";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7492,13 +7493,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.30";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.30',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.31',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.30', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.31', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -8031,6 +8032,7 @@ function msgv2DecimasTxt(ms) {
     // - Multiplica frases sin escribirlas a mano una por una
     // =========================
     const __ttsGenBag = new Map();
+    const __ttsSmartLastPickBag = new Map();
 
     function __ttsGenPick(list, key) {
       try {
@@ -8539,7 +8541,19 @@ function msgv2DecimasTxt(ms) {
     function __ttsSmartPick(arr, key) {
       try {
         if (!Array.isArray(arr) || !arr.length) return '';
-        return String(__ttsGenPick(arr, 'smart:' + String(key || 'k')) || arr[0] || '');
+        const baseKey = 'smart:' + String(key || 'k');
+        let pick = String(__ttsGenPick(arr, baseKey) || arr[0] || '');
+        if (arr.length > 1) {
+          const last = String(__ttsSmartLastPickBag.get(baseKey) || '');
+          if (last && pick === last) {
+            for (let i = 1; i <= Math.min(4, arr.length + 1); i++) {
+              const alt = String(__ttsGenPick(arr, baseKey + ':alt:' + i) || '');
+              if (alt && alt !== last) { pick = alt; break; }
+            }
+          }
+        }
+        __ttsSmartLastPickBag.set(baseKey, pick);
+        return pick;
       } catch(e) { return (Array.isArray(arr) && arr[0]) ? String(arr[0]) : ''; }
     }
 
@@ -9102,12 +9116,12 @@ function msgv2DecimasTxt(ms) {
                 ? ['Presión real en la manga.', 'No hay margen en la tabla.', 'El de adelante ya carga espejos.']
                 : ['Presión real.', 'No hay margen adelante.', 'La defensa carga espejos.']);
           const storyLine = {
-            fresh: ['Arranca la persecución.', 'Se enciende la cacería.', 'Primera señal fuerte de recorte.'],
-            continuing: ['Sigue el martillo detrás.', 'La presión no afloja.', 'Viene insistiendo sin pausa.'],
+            fresh: ['Arranca la persecución.', 'Se enciende la cacería.', 'Primera señal fuerte de recorte.', 'Empieza una historia que puede crecer rápido.'],
+            continuing: ['Sigue el martillo detrás.', 'La presión no afloja.', 'Viene insistiendo sin pausa.', 'No le suelta medio metro.'],
             escalating: (prog === 'late')
               ? ['Cada vuelta pesa más en el cierre.', 'La diferencia cae en el momento serio.', 'Esto va subiendo justo cuando más vale.']
               : ['Cada vuelta llega más cerca.', 'La diferencia cae y cae.', 'Esto va en subida clara de tensión.'],
-            boiling: ['Ya está a nada del golpe.', 'Esto huele a maniobra inmediata.', 'La siguiente curva puede ser clave.'],
+            boiling: ['Ya está a nada del golpe.', 'Esto huele a maniobra inmediata.', 'La siguiente curva puede ser clave.', 'La puerta puede abrirse en cualquier frenada.'],
             cooling: ['Se enfrió un poco la carga.', 'El frente ganó medio respiro.', 'Se abre apenas, no se termina.'],
             ongoing: ['Es una presión larga ya.', 'Llevan varias vueltas en esta historia.', 'Esto viene cocinándose desde hace rato.']
           };
@@ -9174,15 +9188,15 @@ function msgv2DecimasTxt(ms) {
           const p3 = __ttsSmartName(ctx && ctx.p3, 'P3');
           const stage = __ttsSmartStageLabel(sess, prog);
           const open = (sess === 'FINAL')
-            ? ['Foto del frente.', 'Así va la punta.', 'Corte del podio.']
+            ? ['Foto del frente.', 'Así va la punta.', 'Corte del podio.', 'Radiografía de la pelea grande.']
             : ((sess === 'MANGA')
-                ? ['Así va la tabla arriba.', 'Frente de la manga.', 'Orden alto de clasificación.']
-                : ['Tres adelante.', 'Corte rápido del frente.', 'Arriba van así.']);
+                ? ['Así va la tabla arriba.', 'Frente de la manga.', 'Orden alto de clasificación.', 'Lectura rápida del frente de la qualy.']
+                : ['Tres adelante.', 'Corte rápido del frente.', 'Arriba van así.', 'Resumen corto de la cabeza.']);
           const close = (prog === 'late')
             ? ((sess === 'FINAL')
-                ? ['Queda poco margen para mover eso.', 'Ese frente ya pesa en el cierre.', 'La punta ya entra en zona seria.']
-                : ['La manga entra a su parte fina.', 'Eso empieza a pesar en la tabla.', 'Cada vuelta ya vale más arriba.'])
-            : ['Todavía puede moverse.', 'El frente sigue vivo.', 'Nada se congela todavía.'];
+                ? ['Queda poco margen para mover eso.', 'Ese frente ya pesa en el cierre.', 'La punta ya entra en zona seria.', 'Cualquier detalle ahí vale un podio.']
+                : ['La manga entra a su parte fina.', 'Eso empieza a pesar en la tabla.', 'Cada vuelta ya vale más arriba.', 'El orden alto ya huele a definición.'])
+            : ['Todavía puede moverse.', 'El frente sigue vivo.', 'Nada se congela todavía.', 'Todavía hay espacio para otro golpe arriba.'];
           out = __ttsSmartJoin([
             __ttsSmartPick(open, 'auto:top3:open:' + sess + ':' + prog),
             __ttsSmartPick([
@@ -9212,8 +9226,8 @@ function msgv2DecimasTxt(ms) {
             cooling: ['El tren respira un poco.', 'Se estira medio paso el paquete.', 'El grupo se afloja apenas.']
           };
           const close = (sess === 'FINAL')
-            ? ['Cualquier error cambia el podio.', 'No hay aire en ese paquete.', 'Ese tren trae premio grande.']
-            : ['Cualquier error mueve la tabla.', 'Nadie puede pestañear ahi.', 'Todo sigue vivo en ese tren.'];
+            ? ['Cualquier error cambia el podio.', 'No hay aire en ese paquete.', 'Ese tren trae premio grande.', 'Ahí está el foco caliente de la final.']
+            : ['Cualquier error mueve la tabla.', 'Nadie puede pestañear ahi.', 'Todo sigue vivo en ese tren.', 'Ese paquete puede sacudir la qualy en una vuelta.'];
           out = __ttsSmartJoin([
             __ttsSmartPick((trainStory[status] || trainStory.fresh), 'auto:train:open:' + tone + ':' + status + ':' + streak + ':' + sess),
             __ttsSmartPick([
@@ -9232,15 +9246,15 @@ function msgv2DecimasTxt(ms) {
           const best = String((ctx && ctx.best) || '').trim();
           const isQualiRef = (type === 'qualiBest');
           const open = isQualiRef
-            ? ['La quali encuentra una vuelta fuerte.', 'Sube la referencia de manga.', 'Cae un tiempo serio en clasificacion.']
-            : ['El reloj vuelve a hablar.', 'Hay referencia nueva.', 'Se mueve el mejor registro.'];
+            ? ['La quali encuentra una vuelta fuerte.', 'Sube la referencia de manga.', 'Cae un tiempo serio en clasificacion.', 'La tabla recibe una vuelta grande.']
+            : ['El reloj vuelve a hablar.', 'Hay referencia nueva.', 'Se mueve el mejor registro.', 'Aparece una vuelta de mucho peso.'];
           const close = (styleKey === 'engineer')
             ? (isQualiRef
-                ? ['Dato premium para la manga.', 'Referencia util para el resto del grupo.', 'Tiempo muy valioso para ordenar la sesion.']
-                : ['Dato premium de ritmo.', 'Referencia util para medir el resto.', 'Tiempo de mucho valor.'])
+                ? ['Dato premium para la manga.', 'Referencia util para el resto del grupo.', 'Tiempo muy valioso para ordenar la sesion.', 'Vuelta que obliga a responder arriba.']
+                : ['Dato premium de ritmo.', 'Referencia util para medir el resto.', 'Tiempo de mucho valor.', 'Marca que sirve de calibre inmediato.'])
             : (isQualiRef
-                ? ['Eso si mete presion en qualy.', 'La manga se aprieta con esa vuelta.', 'Tiempo que cambia el tono de clasificacion.']
-                : ['Vuelta que pesa.', 'Tiempo serio.', 'Eso si mete presion.']);
+                ? ['Eso si mete presion en qualy.', 'La manga se aprieta con esa vuelta.', 'Tiempo que cambia el tono de clasificacion.', 'Golpe directo a la tabla alta.']
+                : ['Vuelta que pesa.', 'Tiempo serio.', 'Eso si mete presion.', 'Marca con dientes para el resto.']);
           const timeStory = {
             fresh: isQualiRef
               ? ['Marca que ordena la clasificacion.', 'Tiempo que pone tono a la manga.', 'Referencia fresca arriba.']
@@ -9266,11 +9280,11 @@ function msgv2DecimasTxt(ms) {
           const p1 = __ttsSmartName(ctx && ctx.p1, 'P1');
           const p2 = __ttsSmartName(ctx && ctx.p2, 'P2');
           const open = (band === 'knife')
-            ? ['Pole a cuchillo.', 'Pole muy apretada.', 'Nada de aire por la pole.']
-            : ['La pole sigue viva.', 'Nada cerrado arriba.', 'La clasificacion sigue abierta.'];
+            ? ['Pole a cuchillo.', 'Pole muy apretada.', 'Nada de aire por la pole.', 'La referencia va por milímetros.']
+            : ['La pole sigue viva.', 'Nada cerrado arriba.', 'La clasificacion sigue abierta.', 'La referencia alta todavía no se amarra.'];
           const close = (prog === 'late')
-            ? ['Esto ya entra en definicion.', 'Cualquier detalle la mueve.', 'Se decide fino en el cierre.']
-            : ['Todavia puede cambiar.', 'Sigue abierta la pelea.', 'Nada esta amarrado todavia.'];
+            ? ['Esto ya entra en definicion.', 'Cualquier detalle la mueve.', 'Se decide fino en el cierre.', 'Una vuelta buena puede voltearlo todo.']
+            : ['Todavia puede cambiar.', 'Sigue abierta la pelea.', 'Nada esta amarrado todavia.', 'Todavía no hay dueño absoluto de esa referencia.'];
           out = __ttsSmartJoin([
             __ttsSmartPick(open, 'auto:pole:open:' + band + ':' + prog),
             __ttsSmartPick([
