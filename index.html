@@ -11240,14 +11240,25 @@ try{
     // Modo BASICO (solo vueltas, lap time y posicion)
     let basicModeEnabled = false;
     let superBasicModeEnabled = false;
+    let __hasBasicPref = false;
+    let __hasSuperBasicPref = false;
     try {
       const bm = prefGet('basicModeEnabled', null);
-      if (bm !== null) basicModeEnabled = (bm === '1');
+      __hasBasicPref = (bm !== null);
+      if (__hasBasicPref) basicModeEnabled = (bm === '1');
     } catch(e) {}
     try {
       const sbm = prefGet('superBasicModeEnabled', null);
-      if (sbm !== null) superBasicModeEnabled = (sbm === '1');
+      __hasSuperBasicPref = (sbm !== null);
+      if (__hasSuperBasicPref) superBasicModeEnabled = (sbm === '1');
     } catch(e) {}
+    // Default: si no existe ninguna preferencia guardada, arrancar en SUPER BÁSICO.
+    if (!__hasBasicPref && !__hasSuperBasicPref) {
+      basicModeEnabled = false;
+      superBasicModeEnabled = true;
+      try { prefSet('basicModeEnabled', '0'); } catch(e) {}
+      try { prefSet('superBasicModeEnabled', '1'); } catch(e) {}
+    }
     function __isBasicLike(){
       try { return !!basicModeEnabled || !!superBasicModeEnabled; } catch(e) { return !!basicModeEnabled; }
     }
@@ -13707,15 +13718,11 @@ function __duoGuessRole(txt, key) {
         const inFollow = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
 
         if (!inFollow) {
-          // AUTO LOCUTOR: modos básicos OFF y bloqueados
-          basicModeEnabled = false;
-          superBasicModeEnabled = false;
-          try { prefSet('basicModeEnabled', '0'); } catch(e) {}
-          try { prefSet('superBasicModeEnabled', '0'); } catch(e) {}
+          // AUTO LOCUTOR: el botón queda bloqueado, pero NO se pisa la preferencia guardada.
           basicToggleBtnMini.disabled = true;
           basicToggleBtnMini.classList.remove('active');
           basicToggleBtnMini.classList.add('disabled');
-          basicToggleBtnMini.textContent = 'BÁSICO';
+          basicToggleBtnMini.textContent = superBasicModeEnabled ? 'SÚPER BÁSICO' : (basicModeEnabled ? 'BÁSICO ON' : 'BÁSICO');
           return;
         }
 
@@ -16414,10 +16421,6 @@ function setVoiceMaster(on, opts = {}) {
             if (!inFollow) {
               try { playBeep('down'); } catch(e) {}
               try { showToast('BÁSICO solo en FOLLOW', 900); } catch(e) {}
-              basicModeEnabled = false;
-              superBasicModeEnabled = false;
-              try { prefSet('basicModeEnabled', '0'); } catch(e) {}
-              try { prefSet('superBasicModeEnabled', '0'); } catch(e) {}
               try { _updateBasicBtnUI(); } catch(e) {}
               return;
             }
@@ -19066,14 +19069,14 @@ function selectPilotByKey(key, opts = {}) {
           resetSelectedPilotTrackingState();
 
           if (k) {
-            // FOLLOW: por defecto BÁSICO OFF al elegir piloto (el usuario lo puede encender)
-            try { basicModeEnabled = false; superBasicModeEnabled = false; prefSet('basicModeEnabled','0'); prefSet('superBasicModeEnabled','0'); _updateBasicBtnUI(); } catch(e) {}
+            // FOLLOW: respeta la preferencia guardada. Si no existía ninguna, ya quedó sembrado SÚPER BÁSICO por default arriba.
+            try { _updateBasicBtnUI(); } catch(e) {}
 
             // MANGA: NO inicia reloj al seleccionar (solo muestra UI)
             try { onPilotSelectedManga(k); } catch(e) {}
           } else {
-            // Modo locutor: sin piloto seleccionado
-            try { basicModeEnabled = false; superBasicModeEnabled = false; prefSet('basicModeEnabled','0'); prefSet('superBasicModeEnabled','0'); _updateBasicBtnUI(); } catch(e) {}
+            // Modo locutor: sin piloto seleccionado. No borrar preferencias guardadas; solo refrescar UI y estado de locutor.
+            try { _updateBasicBtnUI(); } catch(e) {}
             try { resetAutoCommentatorState();
         if (announce){
           try { showToast('AUTO LOCUTOR activo', { tone: 'info' }); } catch(e) {}
