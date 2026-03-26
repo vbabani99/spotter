@@ -1,12 +1,13 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.20 - SessionDirector FSM + cierre quali por QTABLE vueltas/tiempo -
+vics_Smart_Spotter_v0.5.0.23 - TTS contextual generativo corto + proyeccion de quali estabilizada -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
 
 Changelog:
+- v0.5.0.23: arranque hacia TTS mas contextual y menos repetitivo. La proyeccion de quali ahora se dice corta, por ejemplo "24 vueltas en tres minutos con cinco segundos", y solo se anuncia cuando el estimado se estabiliza.
 - v0.5.0.15: TTS quali projection - el estimado de pole/proyeccion ahora se lee como vueltas + tiempo en minutos, segundos y centesimas. Ejemplo: "21 vueltas en tres minutos con ocho segundos punto cincuenta y cuatro".
 - v0.5.0.17: intro generativo de finales segun Q tabla. Final A/B/C ya no entra plano; usa contexto de parrilla y corte de qualy.
 - v0.5.0.18: bandera azul contextual. En qualy/manga deja de sonar como azul de carrera y habla de trafico/rezago; en finales, si ya va lapeado, lo dice y exige ceder el paso.
@@ -7176,7 +7177,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.20";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.23";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -27372,19 +27373,17 @@ raceData = normalizeRaceData(rawRace);
 
     function __speechTimeQualiProjection(ms){
       try{
-        const v = Math.max(0, Math.floor(Number(ms) || 0));
+        const v = Math.max(0, Math.round((Number(ms) || 0) / 1000) * 1000);
         const mm = Math.floor(v / 60000);
         const ss = Math.floor((v % 60000) / 1000);
-        const cc = Math.floor((v % 1000) / 10);
         const secTxt = __speechCountText(ss, { apocope:true });
         const secWord = (ss === 1) ? 'segundo' : 'segundos';
-        const fracTxt = (cc > 0) ? (' punto ' + __speechCentiText(cc)) : '';
         if (mm > 0) {
           const minTxt = __speechCountText(mm, { apocope:true });
           const minWord = (mm === 1) ? 'minuto' : 'minutos';
-          return minTxt + ' ' + minWord + ' con ' + secTxt + ' ' + secWord + fracTxt;
+          return minTxt + ' ' + minWord + ' con ' + secTxt + ' ' + secWord;
         }
-        return secTxt + ' ' + secWord + fracTxt;
+        return secTxt + ' ' + secWord;
       }catch(e){ return __speechTime2(ms); }
     }
 
@@ -27447,6 +27446,53 @@ raceData = normalizeRaceData(rawRace);
       return [];
     }
 
+    function __pickContextVariant(list, seed){
+      try{
+        const arr = Array.isArray(list) ? list.filter(Boolean) : [];
+        if (!arr.length) return '';
+        let h = 0, s = String(seed || '');
+        for (let i = 0; i < s.length; i++) h = ((h * 31) + s.charCodeAt(i)) >>> 0;
+        return arr[h % arr.length] || arr[0] || '';
+      }catch(e){ return (Array.isArray(list) && list[0]) ? list[0] : ''; }
+    }
+
+    function __buildQualiProjectionSpeech(kind, leaderName, projTxt, secondName, gapMs){
+      try{
+        const leader = String(leaderName || '').trim();
+        const proj = String(projTxt || '').trim();
+        const second = String(secondName || '').trim();
+        const close = isFinite(Number(gapMs)) && Number(gapMs) > 0 && Number(gapMs) <= 250;
+        const tail = (close && second)
+          ? __pickContextVariant([
+              second + ' viene pegado.',
+              second + ' queda cerca.',
+              'Nada cerrado arriba.'
+            ], 'tail|' + leader + '|' + second)
+          : '';
+        let base = '';
+        if (kind === 'open') {
+          base = __pickContextVariant([
+            leader + ' marca la referencia. ' + proj + '.',
+            'Arriba manda ' + leader + '. ' + proj + '.',
+            leader + ' pone el estimado a seguir. ' + proj + '.'
+          ], 'open|' + leader + '|' + proj);
+        } else if (kind === 'change') {
+          base = __pickContextVariant([
+            leader + ' se mete arriba. ' + proj + '.',
+            'Cambia la referencia. ' + leader + ' proyecta ' + proj + '.',
+            leader + ' toma la punta de quali. ' + proj + '.'
+          ], 'change|' + leader + '|' + proj);
+        } else {
+          base = __pickContextVariant([
+            leader + ' afina el estimado. ' + proj + '.',
+            leader + ' mejora la referencia. ' + proj + '.',
+            'Sube la vara ' + leader + '. ' + proj + '.'
+          ], 'improve|' + leader + '|' + proj);
+        }
+        return (base + (tail ? ' ' + tail : '')).trim();
+      }catch(e){ return ''; }
+    }
+
     function __maybeAnnounceQualiLeaderFromStore(raw, store){
       try{
         if (!raw || !store) return;
@@ -27479,7 +27525,7 @@ raceData = normalizeRaceData(rawRace);
         const lLaps = lT.laps;
         const lTimeMs = lT.timeMs;
         const sessionElapsed = Number(raw.clockMs || raw.clock || 0) || 0;
-        if (sessionElapsed < 20000 || lLaps < 2 || lTimeMs <= 0) return;
+        if (sessionElapsed < 25000 || lLaps < 2 || lTimeMs <= 0) return;
 
         const now = Date.now();
         const sessionSig = String(raw.raceName || '').trim().toLowerCase();
@@ -27499,18 +27545,18 @@ raceData = normalizeRaceData(rawRace);
           };
         }
 
-        const projectionSig = leaderKey + '|' + lLaps + '|' + Math.round(lTimeMs / 10);
+        const speechTimeBucket = Math.round(lTimeMs / 1000);
+        const projectionSig = leaderKey + '|' + lLaps + '|' + speechTimeBucket;
         if (__qualiLeaderState.candidateSig === projectionSig){
           __qualiLeaderState.candidateCount = Number(__qualiLeaderState.candidateCount || 0) + 1;
         } else {
           __qualiLeaderState.candidateSig = projectionSig;
           __qualiLeaderState.candidateCount = 1;
         }
-        if ((Number(__qualiLeaderState.candidateCount || 0) < 2)) return;
+        if ((Number(__qualiLeaderState.candidateCount || 0) < 3)) return;
 
-        const changeCooldown = 28000;
-        const improveCooldown = 30000;
-        const closeCooldown = 32000;
+        const changeCooldown = 45000;
+        const improveCooldown = 55000;
 
         const prevKey = String(__qualiLeaderState.leaderKey || '');
         const prevTime = Number(__qualiLeaderState.leaderTimeMs || 0) || 0;
@@ -27520,19 +27566,20 @@ raceData = normalizeRaceData(rawRace);
         const secondName = second ? String(second.racerName || '').trim() : '';
         const sT = second ? __qualiRankTuple(second) : { laps: 0, timeMs: Number.MAX_SAFE_INTEGER };
         const projTxt = __speechQualiProjection(lLaps, lTimeMs);
-        const secondProjTxt = second ? __speechQualiProjection(sT.laps, sT.timeMs) : '';
 
         const changed = (prevKey && prevKey !== leaderKey);
         const lapGain = (lLaps > prevLaps);
         const timeDrop = (prevTime > 0 && lTimeMs < prevTime);
         const dropMs = timeDrop ? (prevTime - lTimeMs) : 0;
         const projectionChanged = (__qualiLeaderState.lastProjectionSig !== projectionSig);
+        const closeGapMs = (second && sT.laps === lLaps && isFinite(sT.timeMs) && isFinite(lTimeMs)) ? (sT.timeMs - lTimeMs) : NaN;
 
         if (!prevKey){
           if (projTxt && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
+            const msg = __buildQualiProjectionSpeech('open', leaderName, projTxt, secondName, closeGapMs);
             enqueueSpeech(
-              `Pole provisional para ${leaderName}. ${projTxt}.`,
-              { key: 'quali_pole_open_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 62 }
+              msg,
+              { key: 'quali_pole_open_' + leaderKey + '_' + lLaps + '_' + speechTimeBucket, cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 58 }
             );
             __qualiLeaderState.lastAnnounceTs = now;
             __qualiLeaderState.lastProjectionSig = projectionSig;
@@ -27545,9 +27592,10 @@ raceData = normalizeRaceData(rawRace);
         }
 
         if (changed && projTxt && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
+          const msg = __buildQualiProjectionSpeech('change', leaderName, projTxt, secondName, closeGapMs);
           enqueueSpeech(
-            `Atención, nueva pole provisional. ${leaderName} proyecta ${projTxt}.`,
-            { key: 'quali_pole_change_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 62 }
+            msg,
+            { key: 'quali_pole_change_' + leaderKey + '_' + lLaps + '_' + speechTimeBucket, cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 58 }
           );
           __qualiLeaderState.lastAnnounceTs = now;
           __qualiLeaderState.lastProjectionSig = projectionSig;
@@ -27555,21 +27603,14 @@ raceData = normalizeRaceData(rawRace);
           __qualiLeaderState.leaderName = leaderName;
           __qualiLeaderState.leaderLaps = lLaps;
           __qualiLeaderState.leaderTimeMs = lTimeMs;
-
-          if (second && secondName && sT.laps > 0 && sT.timeMs > 0 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
-            enqueueSpeech(
-              `Esto está apretado. ${secondName} proyecta ${secondProjTxt}.`,
-              { key: 'quali_pole_close_' + leaderKey + '_' + secondName + '_' + sT.laps + '_' + Math.round(sT.timeMs/10), cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 40 }
-            );
-            __qualiLeaderState.lastCloseTs = now;
-          }
           return;
         }
 
-        if (projectionChanged && (lapGain || (dropMs >= 120)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
+        if (projectionChanged && (lapGain || (dropMs >= 1000)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
+          const msg = __buildQualiProjectionSpeech('improve', leaderName, projTxt, secondName, closeGapMs);
           enqueueSpeech(
-            `La pole provisional mejora. ${leaderName} proyecta ${projTxt}.`,
-            { key: 'quali_pole_improve_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: improveCooldown, semanticCategory: 'quali', priority: 48 }
+            msg,
+            { key: 'quali_pole_improve_' + leaderKey + '_' + lLaps + '_' + speechTimeBucket, cooldownMs: improveCooldown, semanticCategory: 'quali', priority: 44 }
           );
           __qualiLeaderState.lastImproveTs = now;
           __qualiLeaderState.lastProjectionSig = projectionSig;
@@ -27577,17 +27618,6 @@ raceData = normalizeRaceData(rawRace);
           __qualiLeaderState.leaderName = leaderName;
           __qualiLeaderState.leaderLaps = lLaps;
           __qualiLeaderState.leaderTimeMs = lTimeMs;
-        }
-
-        if (second && secondName && sT.laps === lLaps && sT.timeMs > 0 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
-          const gap = sT.timeMs - lTimeMs;
-          if (isFinite(gap) && gap > 0 && gap <= 250){
-            enqueueSpeech(
-              `Nada cerrado en la pole. ${secondName} proyecta ${secondProjTxt}.`,
-              { key: 'quali_pole_close_' + leaderKey + '_' + secondName + '_' + sT.laps + '_' + Math.round(sT.timeMs/10), cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 36 }
-            );
-            __qualiLeaderState.lastCloseTs = now;
-          }
         }
       }catch(e){}
     }
