@@ -1,13 +1,14 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.23 - TTS contextual generativo corto + proyeccion de quali estabilizada -
+vics_Smart_Spotter_v0.5.0.25 - TTS contextual generativo ampliado + proyeccion corta y mas estable -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
 
 Changelog:
-- v0.5.0.23: arranque hacia TTS mas contextual y menos repetitivo. La proyeccion de quali ahora se dice corta, por ejemplo "24 vueltas en tres minutos con cinco segundos", y solo se anuncia cuando el estimado se estabiliza.
+- v0.5.0.25: mas bloques vivos pasan a contextual generativo real. Cambios de posicion, pelea, intro de finales y proyeccion de quali quedan menos cassette y con menos repeticiones.
+- v0.5.0.25: proyeccion de quali mas corta y mas paciente. Espera mas estabilidad, usa frases mas secas y evita remates largos con tiempos de sobra.
 - v0.5.0.15: TTS quali projection - el estimado de pole/proyeccion ahora se lee como vueltas + tiempo en minutos, segundos y centesimas. Ejemplo: "21 vueltas en tres minutos con ocho segundos punto cincuenta y cuatro".
 - v0.5.0.17: intro generativo de finales segun Q tabla. Final A/B/C ya no entra plano; usa contexto de parrilla y corte de qualy.
 - v0.5.0.18: bandera azul contextual. En qualy/manga deja de sonar como azul de carrera y habla de trafico/rezago; en finales, si ya va lapeado, lo dice y exige ceder el paso.
@@ -3018,10 +3019,29 @@ body {
       display: block;
     }
 
-    #raceTitleText .flagImg{
+    #raceTitleText .flagWrap{
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       width: 20px;
       height: 20px;
       margin-right: 8px;
+      vertical-align: -3px;
+      flex: 0 0 20px;
+    }
+    #raceTitleText .flagEmoji{
+      display: inline-block;
+      font-size: 18px;
+      line-height: 1;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.65));
+    }
+    #raceTitleText .flagImg{
+      position: absolute;
+      inset: 0;
+      width: 20px;
+      height: 20px;
+      margin-right: 0;
       vertical-align: -3px;
       filter: drop-shadow(0 1px 2px rgba(0,0,0,0.65));
       border-radius: 3px;
@@ -7177,7 +7197,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.23";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.25";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7689,6 +7709,23 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.23";
     // - Reemplaza términos típicos a español
     // - Corrige errores comunes (línea)
     // =========================
+
+    function __speechDeltaShort(ms) {
+      try {
+        const abs = Math.max(0, Math.round(Math.abs(Number(ms) || 0)));
+        if (!abs) return '';
+        if (abs >= 100) {
+          const v = Math.max(1, Math.round(abs / 100));
+          return (v === 1) ? 'una décima' : (String(v) + ' décimas');
+        }
+        if (abs >= 10) {
+          const v = Math.max(1, Math.round(abs / 10));
+          return (v === 1) ? 'una centésima' : (String(v) + ' centésimas');
+        }
+        return (abs === 1) ? 'una milésima' : (String(abs) + ' milésimas');
+      } catch(e) { return ''; }
+    }
+
     function spotterSanitizeText(text) {
       try {
         let s = String(text || '');
@@ -7730,12 +7767,28 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.23";
         s = s.replace(/\s+\./g, '.').replace(/\s+,/g, ',');
         s = s.replace(/,\s*,/g, ',').replace(/\s+,\s+/g, ', ');
 
-        
+        // Conversin natural de milisegundos a dcimas/centesimas/milesimas
+        s = s.replace(/(\d+)\s+milisegund(?:o|os|a|as)\b/ig, function(_, n){
+          return __speechDeltaShort(Number(n) || 0);
+        });
+
+        // Limpieza editorial del argot
+        s = s
+          .replace(/\bbronca\b/ig, 'pelea')
+          .replace(/\bcap[ií]tulos?\b/ig, 'rondas')
+          .replace(/\bheroic[oa]\b/ig, 'de oficio')
+          .replace(/\ba\s*ms\s*de\b/ig, 'a más de')
+          .replace(/\bms\b/ig, '');
+
         // Fixes de espaol natural (anti "acorta el brecha")
         s = s
           .replace(/\bacorta\s+el\s+brecha\b/ig, 'recorta la brecha')
           .replace(/\bacorta\s+la\s+brecha\b/ig, 'recorta la brecha')
-          .replace(/\bel\s+brecha\b/ig, 'la brecha');
+          .replace(/\bel\s+brecha\b/ig, 'la brecha')
+          .replace(/\bpelea buena\b/ig, 'pelea fuerte')
+          .replace(/\bya trae varias rondas\b/ig, 'ya viene repitiéndose')
+          .replace(/\s+/g, ' ')
+          .trim();
 
         return s;
       } catch(e) {
@@ -8063,12 +8116,12 @@ function msgv2DecimasTxt(ms) {
         '[[Batalla directa|Pelea de precisin|Carrera apretada|Se cerr el asunto]]. [[Con calma|Sin errores|Sin panico|Todo limpio]].'
       ],
       ritmo_up: [
-        '[[Buen ritmo|Sube el ritmo|Vas mejorando|Hay ganancia]]. [[Recortas {deltaMs} milisegundas|Recortas {deltaMs} milisegundos|Mejoras {deltaMs} milisegundos]]. [[Sigue asi|Mantelo|Repite eso|Esa linea sirve]].',
-        '[[Ritmo arriba|Mejora clara|Paso adelante|Va mejor]]. [[Ganaste {deltaMs} milisegundos|Hay {deltaMs} milisegundos de mejora|Recorte de {deltaMs} milisegundos]]. [[A sostenerlo|Clavalo otra vez|Misma receta|Buena vuelta]].'
+        '[[Buen ritmo|Sube el ritmo|Vas mejorando|Hay ganancia]]. [[Recortas {deltaSpeech}|Ganas {deltaSpeech}|Mejoras {deltaSpeech}]]. [[Sigue asi|Mantelo|Repite eso|Esa linea sirve]].',
+        '[[Ritmo arriba|Mejora clara|Paso adelante|Va mejor]]. [[Ganaste {deltaSpeech}|Hay mejora de {deltaSpeech}|Recorte de {deltaSpeech}]]. [[A sostenerlo|Clavalo otra vez|Misma receta|Buena vuelta]].'
       ],
       ritmo_down: [
-        '[[Se fue tiempo|Caida de ritmo|Ojo con el ritmo|Vuelta mas lenta]]. [[Perdiste {deltaMs} milisegundos|Cedes {deltaMs} milisegundos|Se fueron {deltaMs} milisegundos]]. [[Respira y corrige|Sin forzar de mas|Vuelve a la linea|Calma]].',
-        '[[Hay perdida|Se abrio la vuelta|Ritmo abajo|No fue esa]]. [[{deltaMs} milisegundos mas|Se fueron {deltaMs} milisegundos|Pierdes {deltaMs} milisegundos]]. [[Recupera la trazada|Sin castigar llanta|Acomoda la entrada|Vuelve al plan]].'
+        '[[Se fue tiempo|Caida de ritmo|Ojo con el ritmo|Vuelta mas lenta]]. [[Perdiste {deltaSpeech}|Cedes {deltaSpeech}|Se fueron {deltaSpeech}]]. [[Respira y corrige|Sin forzar de mas|Vuelve a la linea|Calma]].',
+        '[[Hay perdida|Se abrio la vuelta|Ritmo abajo|No fue esa]]. [[{deltaSpeech} más|Se fueron {deltaSpeech}|Pierdes {deltaSpeech}]]. [[Recupera la trazada|Sin castigar llanta|Acomoda la entrada|Vuelve al plan]].'
       ],
       bestlap: [
         '[[Mejor vuelta|Gran vuelta|Vueltota|Tiempo top]]. [[{best}|Registro {best}|Marca {best}]]. [[Sigue empujando|Ah est el ritmo|Muy bien|Buena referencia]].',
@@ -8086,7 +8139,9 @@ function msgv2DecimasTxt(ms) {
         const bank = TTS_GEN_MSGV2[t];
         if (!Array.isArray(bank) || !bank.length) return '';
         const pk = msgv2PilotKey(ctx);
-        const out = __ttsGenUse(bank, ctx || {}, 'msgv2gen:' + t + ':' + pk, function(txt){ return !!String(txt || '').trim(); });
+        const ctxx = Object.assign({}, ctx || {});
+        if (!ctxx.deltaSpeech && (ctxx.deltaMs != null)) ctxx.deltaSpeech = __speechDeltaShort(ctxx.deltaMs);
+        const out = __ttsGenUse(bank, ctxx, 'msgv2gen:' + t + ':' + pk, function(txt){ return !!String(txt || '').trim(); });
         return out || '';
       } catch(e) { return ''; }
     }
@@ -8673,9 +8728,9 @@ function msgv2DecimasTxt(ms) {
           const st = (type === 'attack') ? storyAttack : storyDefense;
           const rivalLine = (rival && type === 'defense' && rival.heroic)
             ? __ttsSmartPick([
-                'Esto ya pide defensa heroica.',
-                'La plaza se está defendiendo con uñas y dientes.',
-                'Ya es una defensa de oficio serio.'
+                'Esto ya pide una defensa de oficio.',
+                'La plaza se está defendiendo con mucho oficio.',
+                'Ya es una defensa fina de oficio.'
               ], 'follow:rival:hero:' + other + ':' + streak)
             : (rival && type === 'attack' && rival.relentless)
               ? __ttsSmartPick([
@@ -8726,8 +8781,8 @@ function msgv2DecimasTxt(ms) {
             : (rival && rival.recurrent)
               ? __ttsSmartPick([
                   'Otra vez se encuentran los mismos dos.',
-                  'Esta pelea ya trae capítulos previos.',
-                  'Es el mismo duelo de hace rato.'
+                  'Esta pelea ya trae rondas previas.',
+                  'Es el mismo duelo de hace varias vueltas.'
                 ], 'follow:fight:rival:recur:' + streak)
               : '';
           out = __ttsSmartJoin([
@@ -8745,14 +8800,14 @@ function msgv2DecimasTxt(ms) {
             : (big ? ['Se fue tiempo serio.', 'Ahí se escapó la vuelta.', 'Caída clara de ritmo.'] : ['Se perdió un poco.', 'Vuelta más lenta.', 'Ojo con el ritmo.']);
           const core = (type === 'ritmo_up')
             ? [
-                'Recortaste ' + delta + ' milisegundos.',
-                'Ganaste ' + delta + ' milisegundos.',
-                'Hay mejora de ' + delta + ' milisegundos.'
+                'Recortaste ' + __speechDeltaShort(delta) + '.',
+                'Ganaste ' + __speechDeltaShort(delta) + '.',
+                'Hay mejora de ' + __speechDeltaShort(delta) + '.'
               ]
             : [
-                'Perdiste ' + delta + ' milisegundos.',
-                'Se fueron ' + delta + ' milisegundos.',
-                'Cedes ' + delta + ' milisegundos.'
+                'Perdiste ' + __speechDeltaShort(delta) + '.',
+                'Se fueron ' + __speechDeltaShort(delta) + '.',
+                'Cedes ' + __speechDeltaShort(delta) + '.'
               ];
           const close = (type === 'ritmo_up')
             ? ['Repite esa vuelta.', 'Misma receta.', 'Esa línea sí sirve.']
@@ -8854,7 +8909,7 @@ function msgv2DecimasTxt(ms) {
           const rivalLine = (rival && rival.recurrent)
             ? __ttsSmartPick([
                 'Otra vez estos dos se mueven arriba.',
-                'La pelea por P1 ya trae varios capítulos.',
+                'La pelea por P1 ya trae varias rondas.',
                 'No es la primera sacudida entre estos dos.'
               ], 'auto:leader:rival:' + winner + ':' + loser + ':' + streak)
             : '';
@@ -8931,7 +8986,7 @@ function msgv2DecimasTxt(ms) {
             : (rival && rival.recurrent)
               ? __ttsSmartPick([
                   'Otra vez aparecen los mismos protagonistas.',
-                  'Este duelo ya suma varios capítulos.',
+                  'Este duelo ya suma varias rondas.',
                   'No se han soltado en buen rato.'
                 ], 'auto:battle:rival:recur:' + attacker + ':' + defender + ':' + streak)
               : '';
@@ -8961,7 +9016,7 @@ function msgv2DecimasTxt(ms) {
             : ['Todavía toca sostenerlo.', 'La defensa sigue trabajando.', 'Esto no está resuelto.'];
           const rivalryLine = (rival && rival.heroic)
             ? __ttsSmartPick([
-                'Defensa heroica de ' + defender + '.',
+                'Defensa de oficio de ' + defender + '.',
                 defender + ' lo está aguantando con oficio.',
                 defender + ' sigue resistiendo con mucha cabeza.'
               ], 'auto:closing:rival:hero:' + defender + ':' + streak)
@@ -9960,7 +10015,7 @@ function msgv2DecimasTxt(ms) {
           __qualiLeaderState.candidateSig = projectionSig;
           __qualiLeaderState.candidateCount = 1;
         }
-        if (Number(__qualiLeaderState.candidateCount || 0) < 2) return;
+        if (Number(__qualiLeaderState.candidateCount || 0) < 3) return;
 
         const store = loadQualiStoreFor(rn);
         const qList = computeQualiList(store);
@@ -9982,7 +10037,7 @@ function msgv2DecimasTxt(ms) {
         let msg = '';
         let key = '';
         let prio = 62;
-        let cd = 6000;
+        let cd = 18000;
 
         if (beatsGlobal) {
           const samePilot = (qTopKey && leaderKey === qTopKey);
@@ -10001,7 +10056,7 @@ function msgv2DecimasTxt(ms) {
           msg = `${leaderName} gana la manga en vueltas, pero la pole global sigue en ${qTopName}.`;
           key = 'quali_global_hold_' + leaderKey + '_' + qTopKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
           prio = 46;
-          cd = 7000;
+          cd = 22000;
         } else {
           return;
         }
@@ -10015,9 +10070,9 @@ function msgv2DecimasTxt(ms) {
         __qualiLeaderState.leaderLaps = leaderTuple.laps;
         __qualiLeaderState.leaderTimeMs = leaderTuple.timeMs;
 
-        if (second && secondName && closeGapMs > 0 && closeGapMs <= 250 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > 8000)) {
+        if (second && secondName && closeGapMs > 0 && closeGapMs <= 150 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > 20000)) {
           const secondProjTxt = __speechQualiProjection(secondTuple.laps, secondTuple.timeMs);
-          enqueueSpeech(`Nada cerrado. ${secondName} sigue a tiro con ${secondProjTxt}.`, {
+          enqueueSpeech(`Nada cerrado. ${secondName} sigue cerca con ${secondProjTxt}.`, {
             key: 'quali_global_close_' + leaderKey + '_' + normalizeNameKey(secondName) + '_' + secondTuple.laps + '_' + Math.round(secondTuple.timeMs/10),
             cooldownMs: 8000,
             semanticCategory: 'qualiPole',
@@ -10038,7 +10093,7 @@ function msgv2DecimasTxt(ms) {
         const now = Date.now();
         const rn = String(r.raceName || '');
         const ambientSig = rn + '|' + sess;
-        const gapNeed = (sess === 'TRAIN') ? 7000 : ((sess === 'QUALI' || sess === 'MANGA') ? 8500 : 9000);
+        const gapNeed = (sess === 'TRAIN') ? 14000 : ((sess === 'QUALI' || sess === 'MANGA') ? 16000 : 18000);
         if (__ambientSessionSig === ambientSig && (now - (__ambientSessionLastAt || 0)) < gapNeed) return;
         const rows = __topRowsByPos(r, 4);
         if (!rows.length) return;
@@ -10056,14 +10111,14 @@ function msgv2DecimasTxt(ms) {
           const est1Txt = __speechQualiProjection(est1Lap, est1);
           const est2Txt = __speechQualiProjection(est2Lap, est2);
           const closeGap = (best1 > 0 && best2 > 0) ? Math.abs(best2 - best1) : ((est1 > 0 && est2 > 0) ? Math.abs(est2 - est1) : 0);
+          const bucket = Math.floor(now / gapNeed);
           const variants = [];
-          if (best1 > 0) variants.push('Entrenamiento vivo. ' + p1Name + ' trae la referencia con ' + __speechTime2(best1) + '.');
-          if (est1 > 0 && est1Txt) variants.push('Práctica con ritmo. ' + p1Name + ' proyecta ' + est1Txt + '.');
-          if (p2Name && closeGap > 0 && closeGap <= 300) variants.push('Se aprieta la práctica. ' + p1Name + ' y ' + p2Name + ' están a ' + __speechTime2(closeGap) + '.');
-          if (p2Name && est1Txt && est2Txt) variants.push('Referencia doble en práctica. ' + p1Name + ' proyecta ' + est1Txt + ' y ' + p2Name + ' proyecta ' + est2Txt + '.');
-          if (p2Name) variants.push('Práctica en marcha. ' + p1Name + ' y ' + p2Name + ' ya marcan referencias.');
-          variants.push('Entrenamiento en marcha. Hay que afinar trazada y ritmo.');
-          msg = variants[Math.floor((now / gapNeed)) % variants.length];
+          if (best1 > 0) variants.push('Práctica. ' + p1Name + ' trae la referencia con ' + __speechTime2(best1) + '.');
+          if (est1 > 0 && est1Txt) variants.push('Práctica. ' + p1Name + ' proyecta ' + est1Txt + '.');
+          if (p2Name && closeGap > 0 && closeGap <= 220) variants.push('Práctica apretada. ' + p1Name + ' y ' + p2Name + ' están muy cerca.');
+          if (p2Name && est1Txt && est2Txt) variants.push('Dos referencias en práctica. ' + p1Name + ' va con ' + est1Txt + ' y ' + p2Name + ' con ' + est2Txt + '.');
+          variants.push('Práctica en marcha. Hay que afinar ritmo y línea.');
+          msg = __pickContextVariant(variants, 'ambient:train:' + ambientSig + ':' + bucket);
         } else {
           const p1 = rows[0], p2 = rows[1] || null;
           const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
@@ -10077,13 +10132,14 @@ function msgv2DecimasTxt(ms) {
           const b1 = __getRowBestMsSafe(p1);
           const b2 = __getRowBestMsSafe(p2);
           const dg = p2Name ? Math.abs((e2 || b2 || 0) - (e1 || b1 || 0)) : 0;
+          const bucket = Math.floor(now / gapNeed);
           const variants = [];
-          if (e1 > 0 && e1Txt) variants.push('Clasificación viva. ' + p1Name + ' proyecta ' + e1Txt + '.');
-          if (b1 > 0) variants.push('La referencia de la manga la trae ' + p1Name + ' con ' + __speechTime2(b1) + '.');
-          if (p2Name && dg > 0 && dg <= 250) variants.push('La quali está fina. ' + p2Name + ' está a ' + __speechTime2(dg) + ' de la referencia.');
-          if (p2Name && e1Txt && e2Txt) variants.push('Pelea de estimado en la manga. ' + p1Name + ' proyecta ' + e1Txt + ' y ' + p2Name + ' proyecta ' + e2Txt + '.');
-          variants.push('Clasificación en marcha. Cada vuelta cuenta.');
-          msg = variants[Math.floor((now / gapNeed)) % variants.length];
+          if (e1 > 0 && e1Txt) variants.push('Clasificación. ' + p1Name + ' trae ' + e1Txt + '.');
+          if (b1 > 0) variants.push('Clasificación. La referencia la tiene ' + p1Name + ' con ' + __speechTime2(b1) + '.');
+          if (p2Name && dg > 0 && dg <= 180) variants.push('Qualy cerrada. ' + p2Name + ' está muy cerca de la referencia.');
+          if (p2Name && e1Txt && e2Txt) variants.push('Pelea de estimado. ' + p1Name + ' va con ' + e1Txt + ' y ' + p2Name + ' con ' + e2Txt + '.');
+          variants.push('Clasificación en marcha. Cada vuelta pesa.');
+          msg = __pickContextVariant(variants, 'ambient:quali:' + ambientSig + ':' + bucket);
         }
         enqueueSpeech(msg, {
           key: 'ambient_' + ambientSig + '_' + Math.floor(now / gapNeed),
@@ -10191,44 +10247,32 @@ function msgv2DecimasTxt(ms) {
         function __pickFinalIntroLegacy(mainLetter) {
           const m = String(mainLetter || '').toUpperCase();
           const A = [
-            'Final A. La elite en pista. Vamos a arrancar, pueden calentar.',
-            'Final A. Top de pilotos. Vamos a arrancar, pueden calentar.',
-            'Final A. Aqui se corre fino. Vamos a arrancar, pueden calentar.',
-            'Final A. Puro nivel. Vamos a arrancar, pueden calentar.',
-            'Final A. Los mejores, sin excusas. Vamos a arrancar, pueden calentar.',
-            'Final A. Ojos al apex. Vamos a arrancar, pueden calentar.',
-            'Final A. Se define en detalles. Vamos a arrancar, pueden calentar.',
-            'Final A. La parrilla esta pesada. Vamos a arrancar, pueden calentar.'
+            'Final A. Parrilla de punta. Aquí se corre fino.',
+            'Final A. Los de arriba, cara a cara.',
+            'Final A. Esto ya es ritmo y precisión.',
+            'Final A. No hay margen arriba.'
           ];
           const B = [
-            'Final B. Se pone bueno. Vamos a arrancar, pueden calentar.',
-            'Final B. Segunda linea de fuego. Vamos a arrancar, pueden calentar.',
-            'Final B. Aqui se pelea de verdad. Vamos a arrancar, pueden calentar.',
-            'Final B. Sin regalos. Vamos a arrancar, pueden calentar.',
-            'Final B. Carrera dura, manos suaves. Vamos a arrancar, pueden calentar.',
-            'Final B. El podio se gana en paciencia. Vamos a arrancar, pueden calentar.',
-            'Final B. Mantengan orden en curva uno. Vamos a arrancar, pueden calentar.',
-            'Final B. A correr inteligente. Vamos a arrancar, pueden calentar.'
+            'Final B. Grupo bravo y corte corto.',
+            'Final B. Aquí también se gana con cabeza.',
+            'Final B. Parrilla pareja, carrera seria.',
+            'Final B. Nada regalado en este bloque.'
           ];
           const C = [
-            'Final C. Carrera con hambre. Vamos a arrancar, pueden calentar.',
-            'Final C. Aqui todos quieren subir. Vamos a arrancar, pueden calentar.',
-            'Final C. Cero contactos, mucha cabeza. Vamos a arrancar, pueden calentar.',
-            'Final C. Limpio y constante. Vamos a arrancar, pueden calentar.',
-            'Final C. Si te equivocas, pagas. Vamos a arrancar, pueden calentar.',
-            'Final C. Que se note el progreso. Vamos a arrancar, pueden calentar.',
-            'Final C. Ya se acabo el calentamiento. Vamos a arrancar, pueden calentar.',
-            'Final C. Vamos a divertirnos, pero con control. Vamos a arrancar, pueden calentar.'
+            'Final C. Grupo compacto y buen ritmo.',
+            'Final C. Aquí cuenta el progreso y la constancia.',
+            'Final C. Carrera cerrada desde la salida.',
+            'Final C. Hay que correr limpio y subir lugares.'
           ];
           const mm = (m || 'X');
           const O = [
-            'Final ' + mm + '. Vamos a arrancar, pueden calentar.',
-            'Final ' + mm + '. Se prende esto. Vamos a arrancar, pueden calentar.',
-            'Final ' + mm + '. Ojo en la curva uno. Vamos a arrancar, pueden calentar.',
-            'Final ' + mm + '. Ritmo y cabeza. Vamos a arrancar, pueden calentar.'
+            'Final ' + mm + '. Parrilla lista.',
+            'Final ' + mm + '. Esto se corre con cabeza.',
+            'Final ' + mm + '. Ojo en la primera curva.',
+            'Final ' + mm + '. Hay que ejecutar fino.'
           ];
           const bag = (m==='A') ? A : (m==='B') ? B : (m==='C') ? C : O;
-          return autoRandPick(bag, 'introFinalLegacy:' + (m || 'X')) || bag[0];
+          return autoRandPick(bag, 'introFinalLegacy:' + (m || 'X') + ':' + Math.floor(Date.now()/30000)) || bag[0];
         }
 
         function __buildFinalIntroFromQTable(rawRace, mainLetter) {
@@ -10264,44 +10308,40 @@ function msgv2DecimasTxt(ms) {
             const p1Rank = Number(lineup[0] && lineup[0].qRank || 0) || 0;
             const cut = Math.max(1, gridCount || 0);
             const missABy = Math.max(0, p1Rank - cut);
-
             const front3 = [p1, p2, p3].filter(Boolean);
-            const frontRow = [p1, p2].filter(Boolean);
-            const tail = 'Vamos a arrancar, pueden calentar.';
-            const qTag = 'segun la Q tabla';
-            const front3Txt = (front3.length >= 3)
-              ? (front3[0] + ', ' + front3[1] + ' y ' + front3[2])
-              : (front3.length === 2 ? (front3[0] + ' y ' + front3[1]) : (front3[0] || ''));
-            const front2Txt = (frontRow.length >= 2) ? (frontRow[0] + ' y ' + frontRow[1]) : (frontRow[0] || '');
+            const front2Txt = [p1, p2].filter(Boolean).join(' y ');
+            const front3Txt = front3.join(', ');
+            const qTag = 'según la Q tabla';
             const justMissedA = (missABy === 1);
             const nearA = (missABy > 0 && missABy <= 2);
+            const bucket = Math.floor(Date.now() / 30000);
 
             const A = [
-              label + '. Pole para ' + p1 + '. Detras salen ' + (p2 || 'el resto de la primera fila') + (p3 ? (' y ' + p3) : '') + '. Aqui esta la crema del ' + qTag + '. ' + tail,
-              label + '. ' + p1 + ' abre desde la uno; ' + (front2Txt || p1) + (p3 ? (', con ' + p3 + ' respirando atras') : '') + '. Esta parrilla viene cargada de nivel ' + qTag + '. ' + tail,
-              label + '. Primera referencia para ' + p1 + '. Detras vienen ' + (front3Txt || p1) + '. Esto ya es la mesa grande del ' + qTag + '. ' + tail,
-              label + '. ' + p1 + ' manda la salida y ' + (p2 || 'la primera fila') + (p3 ? (' junto con ' + p3) : '') + ' van encima. Aqui se corre con bisturi, ' + qTag + '. ' + tail
+              label + '. Pole para ' + p1 + '. ' + (p2 ? (p2 + ' sale pegado') : 'La primera fila viene cerrada') + (p3 ? (', con ' + p3 + ' detrás.') : '.') + ' Aquí está la élite de la Q tabla.',
+              label + '. ' + p1 + ' manda la salida; ' + (front2Txt || p1) + (p3 ? (', y ' + p3 + ' viene encima.') : '.') + ' Esto se decide fino.',
+              label + '. Abre ' + p1 + '. Detrás vienen ' + (front3Txt || p1) + '. No hay margen arriba.',
+              label + '. ' + p1 + ' sale desde la uno. ' + (p2 ? (p2 + ' y ' + (p3 || 'la fila siguiente') + ' van listos.') : 'Parrilla pesada.') + ' Carrera de precisión.'
             ];
             const B = [
-              label + '. ' + p1 + ' encabeza a los que tocaron la puerta de la A ' + qTag + '. Detras salen ' + (p2 || 'todos bien pegados') + (p3 ? (' y ' + p3) : '') + '. ' + tail,
-              label + '. ' + p1 + (justMissedA ? ' se quedo a una casilla de la A' : (nearA ? ' se quedo rozando la A' : ' abre el siguiente bloque fuerte del ' + qTag)) + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'compania') + ' van atras') : 'Esta parrilla viene cerrada') + '. ' + tail,
-              label + '. Punta para ' + p1 + ', con ' + (front3Txt || p1) + ' al frente del grupo. Aqui nadie viene de paseo; todos llegaron con cuentas pendientes del ' + qTag + '. ' + tail,
-              label + '. ' + p1 + ' sale desde la uno de esta final. ' + (p2 ? (p2 + ' y ' + (p3 || 'el resto') + ' vienen oliendo la A') : 'Hay hambre de subir') + '. ' + tail
+              label + '. ' + p1 + ' encabeza a los que rozaron la A, ' + qTag + '. ' + (p2 ? (p2 + (p3 ? (' y ' + p3) : '') + ' salen detrás.') : 'Grupo corto detrás.'),
+              label + '. ' + p1 + (justMissedA ? ' se quedó a un paso de la A.' : (nearA ? ' quedó muy cerca de la A.' : ' abre este bloque fuerte.')) + ' ' + (p2 ? (p2 + ' viene listo para responder.') : 'Nada regalado aquí.'),
+              label + '. Punta para ' + p1 + '. ' + (front3Txt ? ('Delante vienen ' + front3Txt + '.') : 'Grupo parejo.') + ' Esta final también vale.',
+              label + '. ' + p1 + ' sale desde la uno. ' + (p2 ? (p2 + ' trae presión desde la fila de atrás.') : 'Parrilla compacta.')
             ];
             const C = [
-              label + '. ' + p1 + ' abre este bloque ' + qTag + ', con ' + (p2 || 'el grupo') + (p3 ? (' y ' + p3) : '') + ' detras. Aqui toca correr fino y subir escalones. ' + tail,
-              label + '. Punta para ' + p1 + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'compania') + ' van pegados') : 'La parrilla viene apretada') + '. Esto tambien tiene lectura en la Q tabla y nada esta regalado. ' + tail,
-              label + '. ' + p1 + ' lidera la salida de esta final ' + qTag + '. Detras vienen ' + (front3Txt || p1) + '. Aqui se corre por orgullo, ritmo y progreso. ' + tail,
-              label + '. ' + p1 + ' abre la puerta. ' + (p2 ? (p2 + ' y ' + (p3 || 'el resto') + ' van a morder desde temprano') : 'No hay margen para regalar nada') + '. ' + tail
+              label + '. ' + p1 + ' abre este grupo ' + qTag + ', con ' + (p2 || 'el paquete') + (p3 ? (' y ' + p3) : '') + ' detrás.',
+              label + '. Punta para ' + p1 + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'compañía') + ' salen pegados.') : 'Parrilla apretada.') + ' Aquí cuenta el progreso.',
+              label + '. ' + p1 + ' lidera la salida de esta final. Detrás vienen ' + (front3Txt || p1) + '. Hay que correr limpio.',
+              label + '. ' + p1 + ' abre la puerta. ' + (p2 ? (p2 + ' va a morder desde temprano.') : 'No hay margen para regalar nada.')
             ];
             const O = [
-              label + '. ' + p1 + ' sale al frente ' + qTag + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'el resto') + ' vienen detras') : 'Parrilla apretada desde el arranque') + '. ' + tail,
-              label + '. Punta para ' + p1 + ', con ' + (front3Txt || p1) + ' como referencia del grupo. ' + tail,
-              label + '. ' + p1 + ' abre la formacion y esto viene acomodado por ' + qTag + '. ' + tail
+              label + '. ' + p1 + ' sale al frente, ' + qTag + '. ' + (p2 ? (p2 + (p3 ? (' y ' + p3) : '') + ' vienen detrás.') : 'Parrilla pareja.'),
+              label + '. Punta para ' + p1 + ', con ' + (front3Txt || p1) + ' como referencia del grupo.',
+              label + '. ' + p1 + ' abre la formación. Esto viene acomodado por ' + qTag + '.'
             ];
 
             const bag = (m === 'A') ? A : (m === 'B') ? B : (m === 'C') ? C : O;
-            return autoRandPick(bag, 'introFinalQ:' + (m || 'X') + ':' + (p1 || 'NA')) || bag[0] || '';
+            return autoRandPick(bag, 'introFinalQ:' + (m || 'X') + ':' + (p1 || 'NA') + ':' + bucket) || bag[0] || '';
           } catch (e) {
             return '';
           }
@@ -10932,18 +10972,56 @@ function msgv2DecimasTxt(ms) {
       container.appendChild(frag);
     }
 
-    function setTitleWithOptionalFlag(target, text, flagSvg){
+    function __flagEmojiFromIso2(iso2){
+      const cc = String(iso2 || '').trim().toUpperCase();
+      if (!/^[A-Z]{2}$/.test(cc)) return '';
+      return String.fromCodePoint(...cc.split('').map(ch => 0x1F1E6 + (ch.charCodeAt(0) - 65)));
+    }
+
+    function __twemojiSvgFromIso2(iso2){
+      const cc = String(iso2 || '').trim().toUpperCase();
+      if (!/^[A-Z]{2}$/.test(cc)) return '';
+      return cc.split('').map(ch => (0x1F1E6 + (ch.charCodeAt(0) - 65)).toString(16)).join('-');
+    }
+
+    function setTitleWithOptionalFlag(target, text, flagInfo){
       if (!target) return;
       const safeText = String(text || '');
-      const sig = `${flagSvg || ''}|${safeText}`;
+      const iso2 = (flagInfo && flagInfo.iso2) ? String(flagInfo.iso2).toUpperCase() : '';
+      const flagSvg = (flagInfo && flagInfo.svg) ? String(flagInfo.svg) : (iso2 ? __twemojiSvgFromIso2(iso2) : '');
+      const flagEmoji = (flagInfo && flagInfo.emoji) ? String(flagInfo.emoji) : (iso2 ? __flagEmojiFromIso2(iso2) : '');
+      const sig = `${iso2}|${flagSvg || ''}|${flagEmoji || ''}|${safeText}`;
       if (!setRenderSignature(target, sig)) return;
       clearNodeChildren(target);
-      if (flagSvg){
-        const img = document.createElement('img');
-        img.className = 'flagImg';
-        img.alt = '';
-        img.src = `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${flagSvg}.svg`;
-        target.appendChild(img);
+      if (iso2 || flagSvg || flagEmoji){
+        const wrap = document.createElement('span');
+        wrap.className = 'flagWrap';
+        wrap.setAttribute('aria-hidden', 'true');
+
+        const emojiSpan = document.createElement('span');
+        emojiSpan.className = 'flagEmoji';
+        emojiSpan.textContent = flagEmoji || '';
+        wrap.appendChild(emojiSpan);
+
+        if (flagSvg){
+          const img = document.createElement('img');
+          img.className = 'flagImg';
+          img.alt = '';
+          img.loading = 'eager';
+          img.decoding = 'sync';
+          img.referrerPolicy = 'no-referrer';
+          img.crossOrigin = 'anonymous';
+          img.src = `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${flagSvg}.svg`;
+          img.onerror = () => {
+            img.remove();
+            emojiSpan.style.display = '';
+          };
+          img.onload = () => {
+            emojiSpan.style.display = 'none';
+          };
+          wrap.appendChild(img);
+        }
+        target.appendChild(wrap);
       }
       target.appendChild(document.createTextNode(safeText));
     }
@@ -20228,7 +20306,7 @@ function autoFocusMsg(stage, c, style) {
     if (encounters >= 3) extra.push(autoRandPick([
       'Otra vez aparecen los mismos dos.',
       'Este duelo ya trae varias rondas.',
-      'La rivalidad sigue escribiendo capítulos.'
+      'La rivalidad sigue sumando vueltas.'
     ], 'auto:focus:rival:' + encounters));
     if (activeMs >= 22000) extra.push(autoRandPick([
       'Llevan rato en esta pelea.',
@@ -21518,7 +21596,7 @@ const TTS_GEN_V2_STYLE_PRESETS = {
     battle: {
       open: [
         { id:'pic.battle.open.1', text:'Se prendió.', weight:4 },
-        { id:'pic.battle.open.2', text:'Ahora sí hay bronca.', weight:3 },
+        { id:'pic.battle.open.2', text:'Ahora sí hay pelea.', weight:3 },
         { id:'pic.battle.open.3', text:'Esto ya se puso sabroso.', weight:2 },
         { id:'pic.battle.open.4', text:'Aguas con esta pelea.', weight:2 }
       ],
@@ -21548,7 +21626,7 @@ const TTS_GEN_V2_STYLE_PRESETS = {
       open: [
         { id:'pic.podium.open.1', text:'Podio al rojo vivo.', weight:4 },
         { id:'pic.podium.open.2', text:'Se encendió la parte alta.', weight:3 },
-        { id:'pic.podium.open.3', text:'La bronca buena está arriba.', weight:2 }
+        { id:'pic.podium.open.3', text:'La pelea fuerte está arriba.', weight:2 }
       ],
       focus: [
         { id:'pic.podium.focus.1', text:'{attacker} ya tiene encima a {defender} por la P{pos}.', weight:4 },
@@ -21891,7 +21969,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
       ],
       advice: [
         { id:'pic.pressure.advice.1', text:'No se puede pestañear.', weight:3 },
-        { id:'pic.pressure.advice.2', text:'Un error y se arma la bronca.', weight:2 },
+        { id:'pic.pressure.advice.2', text:'Un error y se arma la pelea.', weight:2 },
         { id:'pic.pressure.advice.3', text:'Aquí nadie regala nada.', weight:2 }
       ]
     },
@@ -22268,7 +22346,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       ],
       memory: [
         { id:'pro.story.memory.1', text:'{storyBeatText}.', weight:2 },
-        { id:'pro.story.memory.2', text:'Ya trae varios capitulos.', weight:1 },
+        { id:'pro.story.memory.2', text:'Ya trae varias rondas.', weight:1 },
         { id:'pro.story.memory.3', text:'No se han soltado.', weight:1 }
       ],
       end: [
@@ -22308,7 +22386,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       front: [
         { id:'pro.qualiPole.front.1', text:'{p1} manda con {p2} pegado.', weight:4 },
         { id:'pro.qualiPole.front.2', text:'{p1} contra {p2} por la mejor manga.', weight:3 },
-        { id:'pro.qualiPole.front.3', text:'La pole est entre {p1} y {p2}.', weight:2 }
+        { id:'pro.qualiPole.front.3', text:'La pole anda entre {p1} y {p2}.', weight:2 }
       ],
       gap: [
         { id:'pro.qualiPole.gap.1', text:'Todo a {sec}.', weight:4 },
@@ -22318,7 +22396,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       impact: [
         { id:'pro.qualiPole.impact.1', text:'Nada est definido.', weight:2 },
         { id:'pro.qualiPole.impact.2', text:'Una vuelta buena la cambia.', weight:2 },
-        { id:'pro.qualiPole.impact.3', text:'Esto se decide al milimetro.', weight:1 }
+        { id:'pro.qualiPole.impact.3', text:'Esto se decide fino.', weight:1 }
       ]
     },
     mini: {
@@ -22364,7 +22442,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       gap: [
         { id:'pic.train.gap.1', text:'No cabe una servilleta.', weight:3 },
         { id:'pic.train.gap.2', text:'Van amarrados.', weight:2 },
-        { id:'pic.train.gap.3', text:'Eso ya est para bronca fina.', weight:2 }
+        { id:'pic.train.gap.3', text:'Eso ya está para pelea fina.', weight:2 }
       ],
       impact: [
         { id:'pic.train.impact.1', text:'Uno pestañea y se arma.', weight:3 },
@@ -22430,12 +22508,12 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       front: [
         { id:'pic.qualiPole.front.1', text:'{p1} trae a {p2} soplandole la nuca.', weight:4 },
         { id:'pic.qualiPole.front.2', text:'{p1} contra {p2} por la mejor vuelta.', weight:3 },
-        { id:'pic.qualiPole.front.3', text:'La bronca por la pole es {p1} con {p2}.', weight:2 }
+        { id:'pic.qualiPole.front.3', text:'La pelea por la pole es {p1} con {p2}.', weight:2 }
       ],
       gap: [
         { id:'pic.qualiPole.gap.1', text:'Todo a {sec}.', weight:4 },
         { id:'pic.qualiPole.gap.2', text:'Eso esta en {sec}.', weight:3 },
-        { id:'pic.qualiPole.gap.3', text:'Milimetros: {sec}.', weight:2 }
+        { id:'pic.qualiPole.gap.3', text:'Todo a {sec}.', weight:2 }
       ],
       impact: [
         { id:'pic.qualiPole.impact.1', text:'Una vuelta la revienta.', weight:2 },
@@ -22455,7 +22533,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
         { id:'pic.mini.top.3', text:'Los que mandan ahorita son {p1}, {p2}, {p3}, {p4} y {p5}.', weight:2 }
       ],
       battle: [
-        { id:'pic.mini.battle.1', text:'La bronca buena esta en P{battlePos}: {battleAttacker} a {battleGap} de {battleDefender}.', weight:3 },
+        { id:'pic.mini.battle.1', text:'La pelea fuerte está en P{battlePos}: {battleAttacker} a {battleGap} de {battleDefender}.', weight:3 },
         { id:'pic.mini.battle.2', text:'Ojo P{battlePos}, {battleAttacker} ya le cae encima a {battleDefender}.', weight:2 },
         { id:'pic.mini.battle.3', text:'La pelea fina va por la P{battlePos}.', weight:1 }
       ],
@@ -22552,7 +22630,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       front: [
         { id:'eng.qualiPole.front.1', text:'{p1} mantiene a {p2} en rango minimo.', weight:4 },
         { id:'eng.qualiPole.front.2', text:'{p1} y {p2} disputan la referencia.', weight:3 },
-        { id:'eng.qualiPole.front.3', text:'La punta temporal esta entre {p1} y {p2}.', weight:2 }
+        { id:'eng.qualiPole.front.3', text:'La referencia anda entre {p1} y {p2}.', weight:2 }
       ],
       gap: [
         { id:'eng.qualiPole.gap.1', text:'Gap {sec}.', weight:4 },
@@ -22618,7 +22696,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
     },
     story: {
       open: [
-        { id:'nar.story.open.1', text:'La pelea sigue escribiendo capitulos.', weight:4 },
+        { id:'nar.story.open.1', text:'La pelea sigue sumando rondas.', weight:4 },
         { id:'nar.story.open.2', text:'Ese duelo sigue contando su historia.', weight:3 },
         { id:'nar.story.open.3', text:'Todavia no baja el pulso de esa batalla.', weight:2 }
       ],
@@ -22674,7 +22752,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       front: [
         { id:'nar.qualiPole.front.1', text:'{p1} manda, pero {p2} no le da tregua.', weight:4 },
         { id:'nar.qualiPole.front.2', text:'{p1} y {p2} escriben la pelea por la pole.', weight:3 },
-        { id:'nar.qualiPole.front.3', text:'La referencia vive entre {p1} y {p2}.', weight:2 }
+        { id:'nar.qualiPole.front.3', text:'La referencia se mueve entre {p1} y {p2}.', weight:2 }
       ],
       gap: [
         { id:'nar.qualiPole.gap.1', text:'Todo a {sec}.', weight:4 },
@@ -22908,7 +22986,7 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
       ],
       end: [
         { id:'pic.gap.end.1', text:'Esto se cocina.', weight:2 },
-        { id:'pic.gap.end.2', text:'La bronca sigue abierta.', weight:1 }
+        { id:'pic.gap.end.2', text:'La pelea sigue abierta.', weight:1 }
       ]
     },
     top3: {
@@ -23071,7 +23149,7 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
     top3: {
       open: [
         { id:'nar.top3.open.4', text:'Asi posa la parte alta.', weight:2 },
-        { id:'nar.top3.open.5', text:'Arriba se escribe el capitulo fuerte.', weight:1 }
+        { id:'nar.top3.open.5', text:'Arriba se corre la ronda fuerte.', weight:1 }
       ],
       end: [
         { id:'nar.top3.end.1', text:'Todavia no es la foto final.', weight:2 },
@@ -24481,7 +24559,7 @@ function collectAutoQualiCandidates(ctx) {
     const addCand = (ctx && ctx.addCand);
     if (typeof addCand !== 'function') return;
     const wantBest = !!vs.bestlap;
-    const wantPoleFight = !!(vs.bestlap || vs.pelea);
+    const wantPoleFight = false;
 
     if (wantBest) {
       let bestMs = null;
@@ -26442,44 +26520,81 @@ function checkSessionFinishOnLap() {
       }
       function __normForCountry(str){
         let s = (str==null) ? '' : String(str);
-        try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-]/g,''); } catch(e) {}
+        try { s = s.normalize('NFD').replace(/[̀-ͯ]/g,''); } catch(e) {}
         s = s.toUpperCase();
-        // homogeniza guiones y separadores
-        s = s.replace(/[-]/g,'-');
+        s = s.replace(/[._,;:()\[\]{}]/g, ' ');
+        s = s.replace(/[\/+|]+/g, ' ');
+        s = s.replace(/[-]+/g, ' ');
+        s = s.replace(/\s{2,}/g,' ').trim();
         return s;
       }
-      function __detectFlagSvgCode(title){
-        const n = __normForCountry(title);
-        // Twemoji SVG codes (regional indicators)
-        const pairs = [
-          ['REINO UNIDO','1f1ec-1f1e7'], ['UK','1f1ec-1f1e7'], ['UNITED KINGDOM','1f1ec-1f1e7'],
-          ['MEXICO','1f1f2-1f1fd'], ['CKA','1f1f2-1f1fd'],
-          ['COSTA RICA','1f1e8-1f1f7'],
-          ['ITALIA','1f1ee-1f1f9'],
-          ['EUA','1f1fa-1f1f8'], ['USA','1f1fa-1f1f8'], ['ESTADOS UNIDOS','1f1fa-1f1f8'], ['UNITED STATES','1f1fa-1f1f8'],
-          ['BRASIL','1f1e7-1f1f7'], ['BRAZIL','1f1e7-1f1f7'],
-          ['PERU','1f1f5-1f1ea'],
-          ['POLONIA','1f1f5-1f1f1'], ['POLAND','1f1f5-1f1f1'],
-          ['SUIZA','1f1e8-1f1ed'], ['SWITZERLAND','1f1e8-1f1ed'],
-          ['ESPANA','1f1ea-1f1f8'], ['SPAIN','1f1ea-1f1f8'],
-          ['FRANCIA','1f1eb-1f1f7'], ['FRANCE','1f1eb-1f1f7'],
-          ['ALEMANIA','1f1e9-1f1ea'], ['GERMANY','1f1e9-1f1ea'],
-          ['ARGENTINA','1f1e6-1f1f7'],
-          ['COLOMBIA','1f1e8-1f1f4'],
-          ['CHILE','1f1e8-1f1f1']
-        ];
-        for (const [k,code] of pairs){
-          if (n.includes(k)) return code;
-        }
-        return '';
+      const __ALL_ISO2_COUNTRY_CODES = [
+        'AF','AL','DZ','AD','AO','AG','AR','AM','AU','AT','AZ','BS','BH','BD','BB','BY','BE','BZ','BJ','BT','BO','BA','BW','BR','BN','BG','BF','BI','CV','KH','CM','CA','CF','TD','CL','CN','CO','KM','CG','CD','CR','CI','HR','CU','CY','CZ','DK','DJ','DM','DO','EC','EG','SV','GQ','ER','EE','SZ','ET','FJ','FI','FR','GA','GM','GE','DE','GH','GR','GD','GT','GN','GW','GY','HT','HN','HU','IS','IN','ID','IR','IQ','IE','IL','IT','JM','JP','JO','KZ','KE','KI','KP','KR','KW','KG','LA','LV','LB','LS','LR','LY','LI','LT','LU','MG','MW','MY','MV','ML','MT','MH','MR','MU','MX','FM','MD','MC','MN','ME','MA','MZ','MM','NA','NR','NP','NL','NZ','NI','NE','NG','MK','NO','OM','PK','PW','PS','PA','PG','PY','PE','PH','PL','PT','QA','RO','RU','RW','KN','LC','VC','WS','SM','ST','SA','SN','RS','SC','SL','SG','SK','SI','SB','SO','ZA','SS','ES','LK','SD','SR','SE','CH','SY','TW','TJ','TZ','TH','TL','TG','TO','TT','TN','TR','TM','TV','UG','UA','AE','GB','US','UY','UZ','VU','VA','VE','VN','YE','ZM','ZW'
+      ];
+      let __countryAliasIndex = null;
+      function __buildCountryAliasIndex(){
+        if (__countryAliasIndex) return __countryAliasIndex;
+        const out = [];
+        let esNames = null;
+        let enNames = null;
+        try { esNames = new Intl.DisplayNames(['es-MX','es','en'], { type:'region' }); } catch(e) {}
+        try { enNames = new Intl.DisplayNames(['en','es-MX','es'], { type:'region' }); } catch(e) {}
+        const pushAlias = (alias, iso2) => {
+          const key = __normForCountry(alias);
+          if (!key || !iso2 || !/^[A-Z]{2}$/.test(iso2)) return;
+          out.push({ key, iso2 });
+        };
+        __ALL_ISO2_COUNTRY_CODES.forEach(iso2 => {
+          pushAlias(iso2, iso2);
+          if (esNames) {
+            try { pushAlias(esNames.of(iso2), iso2); } catch(e) {}
+          }
+          if (enNames) {
+            try { pushAlias(enNames.of(iso2), iso2); } catch(e) {}
+          }
+        });
+        [
+          ['REINO UNIDO','GB'], ['UK','GB'], ['UNITED KINGDOM','GB'], ['GREAT BRITAIN','GB'], ['GRAN BRETANA','GB'],
+          ['ESTADOS UNIDOS','US'], ['UNITED STATES','US'], ['USA','US'], ['EUA','US'],
+          ['EMIRATOS ARABES UNIDOS','AE'], ['UAE','AE'],
+          ['COREA DEL SUR','KR'], ['SOUTH KOREA','KR'], ['REPUBLIC OF KOREA','KR'],
+          ['COREA DEL NORTE','KP'], ['NORTH KOREA','KP'],
+          ['RUSIA','RU'], ['RUSSIA','RU'],
+          ['ESPANA','ES'], ['SPAIN','ES'],
+          ['MEXICO','MX'], ['CKA','MX'],
+          ['BRASIL','BR'], ['BRAZIL','BR'],
+          ['POLONIA','PL'], ['POLAND','PL'],
+          ['SUIZA','CH'], ['SWITZERLAND','CH'],
+          ['ALEMANIA','DE'], ['GERMANY','DE'],
+          ['ITALIA','IT'], ['COSTA RICA','CR'], ['PERU','PE'], ['FRANCIA','FR'], ['FRANCE','FR'],
+          ['ARGENTINA','AR'], ['COLOMBIA','CO'], ['CHILE','CL'], ['JAPON','JP'], ['JAPAN','JP']
+        ].forEach(([alias, iso2]) => pushAlias(alias, iso2));
+        out.sort((a,b) => b.key.length - a.key.length);
+        __countryAliasIndex = out;
+        return out;
       }
-
+      function __detectFlagInfo(title){
+        const n = __normForCountry(title);
+        if (!n) return { iso2:'', svg:'', emoji:'' };
+        const hay = ` ${n} `;
+        const pairs = __buildCountryAliasIndex();
+        for (const item of pairs){
+          const key = item.key;
+          if (!key) continue;
+          const needle = ` ${key} `;
+          if (hay.includes(needle) || hay.includes(` ${key}-`) || hay.includes(`-${key} `) || n.includes(key)) {
+            const iso2 = item.iso2;
+            return { iso2, svg: __twemojiSvgFromIso2(iso2), emoji: __flagEmojiFromIso2(iso2) };
+          }
+        }
+        return { iso2:'', svg:'', emoji:'' };
+      }
       const rawTitle = r.raceName || 'Spotter_5.0.1';
       const fmtTitle = __formatRaceTitleForHeader(rawTitle) || rawTitle;
-      const flagSvg = __detectFlagSvgCode(rawTitle);
+      const flagInfo = __detectFlagInfo(rawTitle);
 
       if (raceTitleText) {
-        setTitleWithOptionalFlag(raceTitleText, fmtTitle, flagSvg);
+        setTitleWithOptionalFlag(raceTitleText, fmtTitle, flagInfo);
       } else if (raceTitleMain) {
         // fallback: si no existe el span interno, usa el contenedor
         raceTitleMain.textContent = fmtTitle;
@@ -27461,34 +27576,40 @@ raceData = normalizeRaceData(rawRace);
         const leader = String(leaderName || '').trim();
         const proj = String(projTxt || '').trim();
         const second = String(secondName || '').trim();
-        const close = isFinite(Number(gapMs)) && Number(gapMs) > 0 && Number(gapMs) <= 250;
-        const tail = (close && second)
-          ? __pickContextVariant([
-              second + ' viene pegado.',
-              second + ' queda cerca.',
-              'Nada cerrado arriba.'
-            ], 'tail|' + leader + '|' + second)
-          : '';
+        const close = isFinite(Number(gapMs)) && Number(gapMs) > 0 && Number(gapMs) <= 180;
+        const bucket = Math.floor(Date.now() / 30000);
+        const tailsClose = [
+          second ? (second + ' sigue cerca.') : 'Todo sigue abierto.',
+          second ? ('Todavia ' + second + ' responde.') : 'Nada esta cerrado.',
+          second ? ('' + second + ' no se despega.') : 'Arriba sigue apretado.'
+        ];
+        const tailsOpen = [
+          'Referencia viva.',
+          'Arriba sigue abierto.',
+          'Cada vuelta puede moverlo.'
+        ];
         let base = '';
         if (kind === 'open') {
           base = __pickContextVariant([
-            leader + ' marca la referencia. ' + proj + '.',
-            'Arriba manda ' + leader + '. ' + proj + '.',
-            leader + ' pone el estimado a seguir. ' + proj + '.'
-          ], 'open|' + leader + '|' + proj);
+            'Referencia para ' + leader + ', ' + proj + '.',
+            leader + ' marca la referencia con ' + proj + '.',
+            leader + ' abre arriba con ' + proj + '.'
+          ], 'open|' + leader + '|' + proj + '|' + bucket);
         } else if (kind === 'change') {
           base = __pickContextVariant([
-            leader + ' se mete arriba. ' + proj + '.',
-            'Cambia la referencia. ' + leader + ' proyecta ' + proj + '.',
-            leader + ' toma la punta de quali. ' + proj + '.'
-          ], 'change|' + leader + '|' + proj);
+            'Cambia arriba. ' + leader + ', ' + proj + '.',
+            leader + ' se mete primero con ' + proj + '.',
+            'Nueva referencia para ' + leader + ', ' + proj + '.'
+          ], 'change|' + leader + '|' + proj + '|' + bucket);
         } else {
           base = __pickContextVariant([
-            leader + ' afina el estimado. ' + proj + '.',
-            leader + ' mejora la referencia. ' + proj + '.',
-            'Sube la vara ' + leader + '. ' + proj + '.'
-          ], 'improve|' + leader + '|' + proj);
+            leader + ' afina el estimado, ' + proj + '.',
+            leader + ' mejora arriba, ' + proj + '.',
+            leader + ' sube la referencia con ' + proj + '.'
+          ], 'improve|' + leader + '|' + proj + '|' + bucket);
         }
+        const tail = close ? __pickContextVariant(tailsClose, 'tailClose|' + leader + '|' + second + '|' + kind + '|' + bucket)
+                           : __pickContextVariant(tailsOpen, 'tailOpen|' + leader + '|' + kind + '|' + bucket);
         return (base + (tail ? ' ' + tail : '')).trim();
       }catch(e){ return ''; }
     }
@@ -27553,10 +27674,10 @@ raceData = normalizeRaceData(rawRace);
           __qualiLeaderState.candidateSig = projectionSig;
           __qualiLeaderState.candidateCount = 1;
         }
-        if ((Number(__qualiLeaderState.candidateCount || 0) < 3)) return;
+        if ((Number(__qualiLeaderState.candidateCount || 0) < 4)) return;
 
-        const changeCooldown = 45000;
-        const improveCooldown = 55000;
+        const changeCooldown = 60000;
+        const improveCooldown = 75000;
 
         const prevKey = String(__qualiLeaderState.leaderKey || '');
         const prevTime = Number(__qualiLeaderState.leaderTimeMs || 0) || 0;
@@ -27606,7 +27727,7 @@ raceData = normalizeRaceData(rawRace);
           return;
         }
 
-        if (projectionChanged && (lapGain || (dropMs >= 1000)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
+        if (projectionChanged && (lapGain || (dropMs >= 1500)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
           const msg = __buildQualiProjectionSpeech('improve', leaderName, projTxt, secondName, closeGapMs);
           enqueueSpeech(
             msg,
