@@ -7660,6 +7660,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.41";
     let __silenceUntilClockRuns = false;
     let __raceStartVoiceKickAt = 0;
     let __raceStartVoiceKickSig = '';
+    let __sessionLiveIntroFallbackSig = '';
 
     function __scheduleRaceStartVoiceFailsafe(sessionSig, src) {
       try {
@@ -7699,6 +7700,37 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.41";
       } catch(e) {}
     }
 
+
+
+    function __maybeSpeakSessionLiveIntroFallback(src, elapsedNow, sessionSig) {
+      try {
+        if (!voiceMasterEnabled) return;
+        if (typeof selectedPilotKey !== 'undefined' && selectedPilotKey) return;
+        const info = resolveSessionInfo(src || currentSessionInfo || {}) || {};
+        const type = String(info.type || '').toUpperCase();
+        if (!(type === 'MANGA' || type === 'FINAL')) return;
+        const elapsed = Math.max(0, Number(elapsedNow || 0) || 0);
+        if (elapsed < 350) return;
+        const sig = String(sessionSig || getDirectorSessionSignature(src) || '').trim();
+        if (!sig) return;
+        const key = sig + '|' + type + '|fallback_live_intro';
+        if (String(__sessionLiveIntroFallbackSig || '') === key) return;
+        const base = (type === 'MANGA') ? 'Clasificación en marcha.' : 'Carrera en marcha.';
+        __sessionLiveIntroFallbackSig = key;
+        enqueueSpeech(base, {
+          key: 'fallback_live_intro_' + key.replace(/[^a-z0-9_|-]+/ig, '_'),
+          priority: (type === 'FINAL') ? 98 : 96,
+          cooldownMs: 0,
+          dedupe: true,
+          maxAgeMs: 6000,
+          semanticCategory: 'lifecycle',
+          semanticThreshold: 0.96,
+          semanticWindowMs: 12000,
+          interrupt: false
+        });
+        try { pumpSpeechQueue(); } catch(e) {}
+      } catch(e) {}
+    }
 
     // =========================
     // MENSAJES v2 (bloques) - menos repetitivo
@@ -24973,7 +25005,7 @@ function collectAutoQualiCandidates(ctx) {
       if (bestMs != null && isFinite(bestMs) && bestMs > 0) {
         const improved = (autoQualiState.bestOverallMs == null) ? true : (bestMs < (autoQualiState.bestOverallMs - 20));
         const since = now - (autoQualiState.lastBestSpeakMs || 0);
-        if (improved && since > 10000) {
+        if (improved && since > 10000 && (Number((commentatorAutoState && commentatorAutoState.lastSpeakMs) || 0) === 0 || true)) {
           addCand({
             type: 'qualyBest',
             score: 6.8,
@@ -26755,7 +26787,7 @@ let label = 'MODO -';
 
 // =========================
 // FIN DE SESIN (por duracin)
-// - MANGA: 3:00 -> "Termin la clasificacin"
+// - MANGA: 3:00 -> "Terminó la clasificación"
 // - FINAL: segn modo (A=6:00, otras=4:00) -> "Carrera terminada" + posición + resumen
 // Dispara SOLO cuando tu tiempo total cruza el lmite EN UNA NUEVA VUELTA.
 // =========================
@@ -26799,7 +26831,7 @@ function buildSessionFinishMessage(row) {
   const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
   const totalMs = getRowTotalMs(row) || 0;
 
-  let msg = isManga ? 'Termin la clasificacin.' : 'Carrera terminada.';
+  let msg = isManga ? 'Terminó la clasificación.' : 'Carrera terminada.';
 
   // Resultado (si sabemos posición)
   if (posNum > 0) msg += ' P' + posNum + '.';
@@ -26816,9 +26848,9 @@ function buildSessionFinishMessage(row) {
     else if (posNum <= 10) msg += ' Top 10. Buen cierre.';
   }
 
-  // Best lap si existe
+  // Mejor vuelta solo en finales para evitar lecturas cruzadas al cierre de clasificación
   const bestMs = getBestMsForRow(row);
-  if (bestMs) msg += ' Mejor vuelta ' + tiempoATexto(bestMs) + '.';
+  if (isFinal && bestMs) msg += ' Mejor vuelta ' + tiempoATexto(bestMs) + '.';
 
   return msg;
 }
@@ -27302,6 +27334,16 @@ raceData = normalizeRaceData(rawRace);
           }
 
           if (!__silenceUntilClockRuns){
+            try {
+              const sessNow2 = resolveSessionInfo(rawRace) || {};
+              const elapsedNow2 = __pickElapsedClockMs(rawRace);
+              const explicitRaceSession2 = ['MANGA','FINAL'].includes(String(sessNow2.type || '').toUpperCase());
+              if (explicitRaceSession2) {
+                const liveEvt2 = String((rawRace && (rawRace.lifecycleEventName || rawRace.sessionEventName) || '')).toUpperCase();
+                const missingLiveStart2 = !(liveEvt2 === 'QUALI_ACTIVITY_START' || liveEvt2 === 'RACE_ACTIVITY_START');
+                if (missingLiveStart2) __maybeSpeakSessionLiveIntroFallback(rawRace, elapsedNow2, getDirectorSessionSignature(rawRace));
+              }
+            } catch(e) {}
             handleVoiceAndBeeps();
             handleAutoCommentator();
           }
@@ -27609,6 +27651,7 @@ raceData = normalizeRaceData(rawRace);
           __sessionDirector.practiceStopped = false;
           __sessionDirector.raceStarted = false;
           __sessionDirector.raceFinished = false;
+          __sessionLiveIntroFallbackSig = '';
           __sessionDirector.lastEvent = 'NEW_RACE_NAME';
           __sessionDirectorStateSwitch('SESSION_ANNOUNCED', src, 'new_race');
           if (titleText && !__sessionDirector.titleAnnounced) {
@@ -27662,6 +27705,7 @@ raceData = normalizeRaceData(rawRace);
             if (!__sessionDirector.raceStarted) {
               __sessionDirector.raceStarted = true;
               __sessionDirector.practiceStopped = true;
+              __sessionLiveIntroFallbackSig = '';
               __armSessionIntroGuard(1600, 'QUALI_ACTIVITY_START');
               __forceCancelSpotterSpeech('Lifecycle: qualy', true);
               speakLifecycle('QUALI_ACTIVITY_START', 'Clasificación en marcha.', { priority: 96, interrupt: false, deferMs: 180 });
@@ -27676,6 +27720,7 @@ raceData = normalizeRaceData(rawRace);
             if (!__sessionDirector.raceStarted) {
               __sessionDirector.raceStarted = true;
               __sessionDirector.practiceStopped = true;
+              __sessionLiveIntroFallbackSig = '';
               __armSessionIntroGuard(1400, 'RACE_ACTIVITY_START');
               try { __flushSpeechQueueStale(2500); } catch(e) {}
               speakLifecycle('RACE_ACTIVITY_START', 'Carrera en marcha.', { priority: 98, interrupt: false, deferMs: 120, cooldownMs: 0, dedupe: true, maxAgeMs: 8000 });
