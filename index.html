@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R1 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R2 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -9,7 +9,7 @@ Origen: Spotter_5.0.1.html
 Changelog:
 - v0.5.0.15: TTS quali projection - el estimado de pole/proyeccion ahora se lee como vueltas + tiempo en minutos, segundos y centesimas. Ejemplo: "21 vueltas en tres minutos con ocho segundos punto cincuenta y cuatro".
 - v0.5.0.17: intro generativo de finales segun Q tabla. Final A/B/C ya no entra plano; usa contexto de parrilla y corte de qualy.
-- v0.5.0.18R1: reconstrucción sobre base 0.5.0.18. FOLLOW ahora conserva SUPER BÁSICO, BÁSICO y NORMAL sin secar el Auto Locutor; SUPER BÁSICO = solo última vuelta, BÁSICO = sobrio y NORMAL = completo.
+- v0.5.0.18R2: limpieza fuerte de argot motorsport en español para Auto Locutor y Seguimiento Normal; se normalizan leader/pass/battle/top3/train/record y se eliminan giros genéricos o poco racing.
 - v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
 - v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
 - v0.4.10.2: anti-repeat del raceName - el intro de titulo ya no se reencola varias veces, se cancela al arrancar PRACTICA/QUALI/CARRERA y se blinda con latch por sesion.
@@ -89,7 +89,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R1</title>
+<title>vics_Smart_Spotter_v0.5.0.18R2</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -2375,7 +2375,7 @@ body {
     .tgrid-badge.atk{ border-color: rgba(255,122,24,0.55); background: rgba(255,122,24,0.12); }
     .tgrid-badge.def{ border-color: rgba(255,43,43,0.55); background: rgba(255,43,43,0.12); }
 
-    /* Mini barra de gap */
+    /* Mini barra de margen */
     .tgrid-bar{
       width: 42px;
       height: 6px;
@@ -6236,7 +6236,7 @@ html, body {
   overflow: visible !important;
 }
 
-/* En pantallas chicas: reduce gap y permite 2 renglones sin cortar */
+/* En pantallas chicas: reduce margen y permite 2 renglones sin cortar */
 @media (max-width: 420px){
   .app-header .header-mode-row{ gap: 5px 6px !important; }
   .app-header .header-mode-row .btn-pill,
@@ -6584,7 +6584,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R1</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R2</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -6915,7 +6915,7 @@ html, body{
 <div class="spotter-btn active" data-flag="blueflag" title="Azul: avisa lapeos/trafico (bandera azul)"><span></span>Azul</div>
 <div class="spotter-btn active" data-flag="ritmo" title="Ritmo: avisa si vienes mejorando o si te caes (comparado con tu promedio reciente)"><span></span>Ritmo +/-</div>
 <div class="spotter-btn" data-flag="estlap" title="Est: tiempo estimado al final (si el feed lo trae)"><span></span>Est</div>
-<div class="spotter-btn" data-flag="leadergap" title="Lider: gap al líder, cambios de líder y contexto de punta"><span></span>Lider</div>
+<div class="spotter-btn" data-flag="leadergap" title="Lider: margen al líder, cambios de líder y contexto de punta"><span></span>Lider</div>
 <div class="spotter-btn" data-flag="podium" title="Podio: llamadas enfocadas al Top 3 (en Finales, suele ser lo mas caliente)"><span></span>Podio</div>
 </div>
 </div>
@@ -6923,10 +6923,10 @@ html, body{
 <div class="spotter-cat-head"><span class="cat-dot"></span>Batalla</div>
 <div class="spotter-grid">
 <div class="spotter-btn" data-flag="pos" title="Pos: cambios de posicion (ganas/pierdes), y pases importantes en Auto"><span></span>Pos</div>
-<div class="spotter-btn" data-flag="gaps" title="Diferencia: gap con el de adelante y con el de atras (segundos o vueltas)"><span></span>Gap</div>
+<div class="spotter-btn" data-flag="gaps" title="Diferencia: margen con el de adelante y con el de atras (segundos o vueltas)"><span></span>Gap</div>
 <div class="spotter-btn" data-flag="front06" title="Adel &lt;0.6: tienes a alguien adelante a menos de 0.6s (huele a pase)"><span></span>Adel &lt;0.6</div>
 <div class="spotter-btn" data-flag="back06" title="Atras &lt;0.6: te vienen atacando a menos de 0.6s (defiende)"><span></span>Atras &lt;0.6</div>
-<div class="spotter-btn" data-flag="attack" title="Ataque: narrativa cuando tu gap al de adelante cae y estas para intentarlo"><span></span>Ataque</div>
+<div class="spotter-btn" data-flag="attack" title="Ataque: narrativa cuando tu margen al de adelante cae y estas para intentarlo"><span></span>Ataque</div>
 <div class="spotter-btn" data-flag="defense" title="Defensa: narrativa cuando te vienen recortando y toca aguantar"><span></span>Defensa</div>
 </div>
 </div>
@@ -7176,7 +7176,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R1";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R2";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7469,13 +7469,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R1";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R1',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R2',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R1', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R2', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -7700,7 +7700,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R1";
           { re: /\bbest\s*lap\b/ig, to: 'mejor vuelta' },
           { re: /\bbestlap\b/ig,     to: 'mejor vuelta' },
           { re: /\bpace\b/ig,        to: 'ritmo' },
-          { re: /\bgap\b/ig,         to: 'brecha' },
+          { re: /\bgap\b/ig,         to: 'margen' },
           { re: /\bdelta\b/ig,       to: 'diferencia' },
           { re: /\bpush\b/ig,        to: 'aprieta' },
           { re: /\bclean\b/ig,       to: 'limpio' },
@@ -7708,10 +7708,10 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R1";
           { re: /\btrack\b/ig,       to: 'pista' },
           { re: /\bline\b/ig,        to: 'línea' },
 
-          { re: /\bovertake\b/ig,    to: 'pase' },
-          { re: /\bswap\b/ig,        to: 'cambio' },
-          { re: /\bupdate\b/ig,      to: 'actualización' },
-          { re: /\bcluster\b/ig,     to: 'grupo' },
+          { re: /\bovertake\b/ig,    to: 'rebase' },
+          { re: /\bswap\b/ig,        to: 'rebase' },
+          { re: /\bupdate\b/ig,      to: 'cambio' },
+          { re: /\bcluster\b/ig,     to: 'tren' },
           { re: /\battack\b/ig,      to: 'ataque' },
           { re: /\bdefend\b/ig,      to: 'defiende' },
           { re: /\bdefense\b/ig,     to: 'defensa' },
@@ -7730,11 +7730,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R1";
         s = s.replace(/,\s*,/g, ',').replace(/\s+,\s+/g, ', ');
 
         
-        // Fixes de espaol natural (anti "acorta el brecha")
+        // Fixes de espaol natural (anti "acorta el margen")
         s = s
-          .replace(/\bacorta\s+el\s+brecha\b/ig, 'recorta la brecha')
-          .replace(/\bacorta\s+la\s+brecha\b/ig, 'recorta la brecha')
-          .replace(/\bel\s+brecha\b/ig, 'la brecha');
+          .replace(/\bacorta\s+el\s+margen\b/ig, 'recorta el margen')
+          .replace(/\bacorta\s+la\s+margen\b/ig, 'recorta el margen')
+          .replace(/\bacorta\s+el\s+margen\b/ig, 'recorta el margen')
+          .replace(/\bel\s+margen\b/ig, 'el margen')
+          .replace(/\bla\s+margen\b/ig, 'el margen');
 
         return s;
       } catch(e) {
@@ -8047,17 +8049,17 @@ function msgv2DecimasTxt(ms) {
 
     const TTS_GEN_MSGV2 = {
       attack: [
-        '[[Ataca|Presiona|Va encima|Lo trae en la mira]]. [[Atrs viene|Encima est|Al acecho viene]] {otherName}. [[Gap {gapStr}|Estn {gapStr}|A {gapStr}]]. [[Traza limpia|Sin regalar apex|Con calma|Sin tocar]].',
-        '[[Presion real|Ojo atras|Hay amenaza]]. {otherName} [[pegado|muy cerca|metido en la pelea]]. [[{gapStr}|Gap {gapStr}|A {gapStr}]]. [[No abras la puerta|Cuida la salida|Fino en el volante|Todo limpio]].',
-        '[[Radar prendido|Espejos alertas|No te relajes]]. {otherName} [[ya est ah|se vino encima|est en rango]]. [[Separacin {gapStr}|A {gapStr}|Gap {gapStr}]]. [[Sin errores|Con cabeza|Respira y traza|No regales]].'
+        '[[Ataca|Presiona|Va encima|Lo trae en la mira]]. [[Atrs viene|Encima est|Al acecho viene]] {otherName}. [[Margen {gapStr}|Estn {gapStr}|A {gapStr}]]. [[Traza limpia|Sin regalar apex|Con calma|Sin tocar]].',
+        '[[Presion real|Ojo atras|Hay amenaza]]. {otherName} [[pegado|muy cerca|metido en la pelea]]. [[{gapStr}|Margen {gapStr}|A {gapStr}]]. [[No abras la puerta|Cuida la salida|Fino en el volante|Todo limpio]].',
+        '[[Radar prendido|Espejos alertas|No te relajes]]. {otherName} [[ya est ah|se vino encima|est en rango]]. [[Separacin {gapStr}|A {gapStr}|Margen {gapStr}]]. [[Sin errores|Con cabeza|Respira y traza|No regales]].'
       ],
       defense: [
-        '[[Defiende|Aguanta|Sostiene la plaza|Cubre la posicin]]. [[Detrs viene|Pegado atras]] {otherName}. [[Gap {gapStr}|A {gapStr}|Estn {gapStr}]]. [[No dejes hueco|Salida limpia|Todo fino|Sin tocar]].',
-        '[[Toca defender|Hay que cuidar el sitio|No regales la puerta]]. {otherName} [[presiona|viene apretando|est pegado]]. [[{gapStr}|Gap {gapStr}|A {gapStr}]]. [[Con cabeza|Traza limpia|Freno fino|Nada de drama]].',
-        '[[Posicin bajo presin|Momento de sangre fria|Hay que cerrar bien]]. {otherName} [[encima|al ataque|sin soltarte]]. [[A {gapStr}|Gap {gapStr}|Estn {gapStr}]]. [[Sin volantazos|Limpio|Calma|Sin abrir la puerta]].'
+        '[[Defiende|Aguanta|Sostiene la plaza|Cubre la posicin]]. [[Detrs viene|Pegado atras]] {otherName}. [[Margen {gapStr}|A {gapStr}|Estn {gapStr}]]. [[No dejes hueco|Salida limpia|Todo fino|Sin tocar]].',
+        '[[Toca defender|Hay que cuidar el sitio|No regales la puerta]]. {otherName} [[presiona|viene apretando|est pegado]]. [[{gapStr}|Margen {gapStr}|A {gapStr}]]. [[Con cabeza|Traza limpia|Freno fino|Nada de drama]].',
+        '[[Posicin bajo presin|Momento de sangre fria|Hay que cerrar bien]]. {otherName} [[encima|al ataque|sin soltarte]]. [[A {gapStr}|Margen {gapStr}|Estn {gapStr}]]. [[Sin volantazos|Limpio|Calma|Sin abrir la puerta]].'
       ],
       fight: [
-        '[[Pelea cerrada|Duelo apretado|Batalla viva|Estn a cuchillo]]. [[Todo limpio|Sin tocar|Con cabeza|Ojos al apex]].',
+        '[[Pelea cerrada|Duelo apretado|Batalla viva|Muy apretados]]. [[Todo limpio|Sin tocar|Con cabeza|Ojos al apex]].',
         '[[Dos por decimas|Mano a mano|Esto est vivo|Hay duelo serio]]. [[Traza fina|Nada de regalos|Todo controlado|Salida limpia]].',
         '[[Batalla directa|Pelea de precisin|Carrera apretada|Se cerr el asunto]]. [[Con calma|Sin errores|Sin panico|Todo limpio]].'
       ],
@@ -8102,27 +8104,27 @@ function msgv2DecimasTxt(ms) {
         '[[Se concreta el pase|Ya est el cambio|Se mueve la tabla|Puesto que cambia]]. {winner} [[adelante|por delante|hace el trabajo]] y [[queda P{newPos}|se instala en P{newPos}|amarra P{newPos}]].'
       ],
       battle: [
-        '[[Duelo en P{pos}|P{pos} en pelea|Atencin P{pos}|P{pos} caliente]]. {attacker} [[presiona|se viene encima|no suelta|aprieta]] a {defender}. [[Gap {sec}|{sec}|Separacion {sec}]].',
-        '[[P{pos} sin aire|P{pos} al limite|P{pos} apretado|Cmara a P{pos}]]. {attacker} [[pegado|muy cerca|en el espejo|en rango de pase]]. [[{sec}|Gap {sec}|A {sec}]].',
+        '[[Duelo en P{pos}|P{pos} en pelea|Atencin P{pos}|P{pos} caliente]]. {attacker} [[presiona|se viene encima|no suelta|aprieta]] a {defender}. [[Margen {sec}|{sec}|Separacion {sec}]].',
+        '[[P{pos} sin aire|P{pos} al limite|P{pos} apretado|Cmara a P{pos}]]. {attacker} [[pegado|muy cerca|en el espejo|en rango de pase]]. [[{sec}|Margen {sec}|A {sec}]].',
         '[[Batalla directa por P{pos}|Mano a mano en P{pos}|Hay historia en P{pos}|P{pos} en foco]]. {defender} [[aguanta|defiende|resiste]] y {attacker} [[insiste|vuelve a cargar|sigue encima|busca hueco]].'
       ],
       battlePodium: [
-        '[[Podio en juego|Puesto grande en riesgo|Se pelea el podio|Podio bajo presin]]. {attacker} [[caza|persigue|acecha|aprieta]] a {defender} por P{pos}. [[{sec}|Gap {sec}|A {sec}]].',
+        '[[Podio en juego|Puesto grande en riesgo|Se pelea el podio|Podio bajo presin]]. {attacker} [[caza|persigue|acecha|aprieta]] a {defender} por P{pos}. [[{sec}|Margen {sec}|A {sec}]].',
         '[[La pelea buena est en el podio|Hay humo en zona de trofeo|P{pos} vale trofeo|Zona podio encendida]]. {attacker} [[encima|en rango|muy cerca|metido]] de {defender}.',
         '[[Podio en el radar|Podio que no est seguro|Trofeo todava en disputa|Nadie puede pestañear]]. {defender} [[aguanta|resiste|cubre]] y {attacker} [[presiona|no perdona|viene fuerte|no afloja]].'
       ],
       closing: [
-        '[[Se cierra la pelea|Cada vez mas cerca|Se aprieta el duelo|El gap viene abajo]]. {attacker} [[recorta|descuenta|se acerca|viene encima]] sobre {defender}. [[De {fromSec} a {toSec}|Ahora {toSec}|Gap {toSec}]].',
-        '[[Ojo con esta tendencia|Lectura clara|Se est cocinando|Esto cambia]]. {attacker} [[ya lo trae|ya lo tiene cerca|viene a la carga|va acortando]]. [[{toSec}|A {toSec}|Gap {toSec}]].',
+        '[[Se cierra la pelea|Cada vez mas cerca|Se aprieta el duelo|El margen viene abajo]]. {attacker} [[recorta|descuenta|se acerca|viene encima]] sobre {defender}. [[De {fromSec} a {toSec}|Ahora {toSec}|Margen {toSec}]].',
+        '[[Ojo con esta tendencia|Lectura clara|Se est cocinando|Esto cambia]]. {attacker} [[ya lo trae|ya lo tiene cerca|viene a la carga|va acortando]]. [[{toSec}|A {toSec}|Margen {toSec}]].',
         '[[La presion sube|La historia aprieta|Se prende el foco|Esto se mueve]]. {defender} [[ya lo siente|lo trae en espejos|no respira]] y {attacker} [[recorta|se mete|llega|amenaza]].'
       ],
       pressure: [
-        '[[Presion real|No hay margen|Se juega fino|Momento delicado]]. {attacker} [[encima|a tiro|metido|apretando]] de {defender}. [[{sec}|A {sec}|Gap {sec}]].',
+        '[[Presion real|No hay margen|Se juega fino|Momento delicado]]. {attacker} [[encima|a tiro|metido|apretando]] de {defender}. [[{sec}|A {sec}|Margen {sec}]].',
         '[[Sin aire adelante|Defensa en marcha|Todo bajo estres|Alta presion]]. {defender} [[tiene que cerrar|no puede fallar|debe trazar limpio|carga los espejos]].',
-        '[[Se siente el ataque|Esto pide precisin|No hay respiro|Viene la carga]]. {attacker} [[ya toca la puerta|esta muy cerca|huele sangre|no perdona]].'
+        '[[Se siente el ataque|Esto pide precisin|No hay respiro|Viene la carga]]. {attacker} [[ya toca la puerta|esta muy cerca|ya viene con ritmo|no perdona]].'
       ],
       gap: [
-        '[[Gap de referencia|Lectura del gap|Dato de separacin|Delta actual]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
+        '[[Margen de referencia|Lectura del gap|Dato de separacin|Delta actual]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
         '[[Numero en pista|La diferencia ahora|La pelcula del cronmetro|Dato fro]]. {front} [[mantiene|lleva|conserva]] [[{sec}|a {sec}|gap {sec}]] sobre {back}.',
         '[[Separacion registrada|Ventana actual|Distancia de carrera|Margen ahora]]. [[{front} adelante|{front} controla|{front} sostiene]] y {back} [[sigue|persigue|responde]].'
       ],
@@ -8132,7 +8134,7 @@ function msgv2DecimasTxt(ms) {
         '[[Podio provisional|Corte rapido|Estado del frente|Marcador al frente]]. [[Lider {p1}|P1 {p1}]]. [[Luego {p2} y {p3}|Detras {p2} y {p3}|P2 {p2}, P3 {p3}]].'
       ],
       train: [
-        '[[Paquete compacto|Tren formado|Grupo cerrado|Fila apretada]]. P2 {p2}, P3 {p3}, P4 {p4}. [[Cualquier error cambia todo|Nadie sobra ah|Todo est vivo|Ventana de pase abierta]].',
+        '[[Paquete compacto|Tren formado|Grupo cerrado|Fila apretada]]. P2 {p2}, P3 {p3}, P4 {p4}. [[Cualquier error cambia todo|Nadie sobra ah|Todo est vivo|Rango de rebase abierta]].',
         '[[P2 a P4 en rango|Tres autos en paquete|Grupo por el podio|Cluster caliente]]. {p2}, {p3} y {p4}. [[Sin espacio de sobra|Alta tension|Todo al filo|Precision total]].',
         '[[Hay tren por el podio|Se agrupan fuerte|No se despegan|Todo muy corto]]. [[{p2} delante|Manda {p2} en el grupo|Encabeza {p2}]]. [[{p3} y {p4} pegados|{p3} y {p4} sin aire|{p3} con {p4} encima]].'
       ],
@@ -8147,8 +8149,8 @@ function msgv2DecimasTxt(ms) {
         '[[Clasificacion se mueve|La quali cambia|Sube el liston|Hay vuelta buena]]. {pilot} [[firma|clava|registra]] {best}.',
       ],
       qualiPole: [
-        '[[Pole en juego|Batalla por la pole|Se aprieta la pole|Clasificacion caliente]]. {p1} y {p2} [[separados por {sec}|a {sec}|con gap {sec}]].',
-        '[[Nada decidido en la pole|La punta de quali sigue viva|La pole no est cerrada|Ojo con la pole]]. {p1} contra {p2}. [[{sec}|A {sec}|Gap {sec}]].',
+        '[[Pole en juego|Batalla por la pole|Se aprieta la pole|Clasificacion caliente]]. {p1} y {p2} [[separados por {sec}|a {sec}|con margen {sec}]].',
+        '[[Nada decidido en la pole|La punta de quali sigue viva|La pole no est cerrada|Ojo con la pole]]. {p1} contra {p2}. [[{sec}|A {sec}|Margen {sec}]].',
         '[[Quien se queda la pole|Se decide por nada|Esto va por milmetros|Clasificacin fina]]. {p1} [[aguanta|manda|sostiene]] y {p2} [[aprieta|recorta|viene cerca]].'
       ]
     };
@@ -8157,30 +8159,30 @@ function msgv2DecimasTxt(ms) {
       pro: TTS_GEN_AUTO_BASE,
       picante: Object.assign({}, TTS_GEN_AUTO_BASE, {
         leaderChange: [
-          '[[Se volteo la tortilla|Golpe en la punta|Se mueve el jefe|Cambio bravo arriba]]. {winner} [[se roba|toma|se queda con|agarra]] P1. [[{loser} a perseguir|{loser} baja a segundo|{loser} pierde la punta|{loser} a remar]].',
+          '[[Cambio de mando arriba|Golpe en la punta|Se mueve la punta|Cambio bravo arriba]]. {winner} [[toma|se queda con|asegura|agarra]] P1. [[{loser} a perseguir|{loser} baja a segundo|{loser} pierde la punta|{loser} a responder]].',
           '[[Nuevo patron en pista|Punta que cambia de dueño|Hay mano dura adelante|Se prende arriba]]. [[P1 para {winner}|Manda {winner}|{winner} al frente]]. [[{loser} ahora P2|{loser} en caceria|{loser} tiene que responder]].'
         ],
         pass: [
           '[[Rebase con colmillo|Pase con hambre|Movimiento filoso|Le mete el coche]]. {winner} [[sube a|amarra|se queda con]] P{newPos}. [[{loser} cae a P{oldPos}|{loser} se queda viendo|{loser} pierde el sitio]].',
-          '[[Se la cobra|No perdona|Puesto robado|Golpe de carrera]]. {winner} [[adelante|por delante|hace la chamba]] y [[ya es P{newPos}|queda P{newPos}|se instala en P{newPos}]].'
+          '[[Se la cobra|No perdona|Rebase trabajado|Golpe de carrera]]. {winner} [[adelante|por delante|hace la chamba]] y [[ya es P{newPos}|queda P{newPos}|se instala en P{newPos}]].'
         ],
         battle: [
-          '[[P{pos} en modo cuchillo|Duelazo en P{pos}|P{pos} al rojo vivo|Se pico P{pos}]]. {attacker} [[respira en la nuca|va encima|ya toca la puerta|huele sangre]] de {defender}. [[{sec}|Gap {sec}|A {sec}]].',
+          '[[P{pos} al rojo vivo|Duelo en P{pos}|P{pos} al rojo vivo|Se pico P{pos}]]. {attacker} [[ya está encima|va encima|ya toca la puerta|ya viene con ritmo]] de {defender}. [[{sec}|Margen {sec}|A {sec}]].',
           '[[Esto va a tronar|No hay paz en P{pos}|Se cocina un pase|Huele a cambio]]. {defender} [[aguanta|se defiende|no puede fallar]] y {attacker} [[no perdona|vuelve a cargar|sigue ah|est pegado]].'
         ],
         closing: [
-          '[[Se viene la bronca|Esto se apreto sabroso|Ya lo tiene en la mira|La tijera viene cerrando]]. {attacker} [[recorta|se acerca|descuenta|ya est ah]] sobre {defender}. [[{toSec}|A {toSec}|Gap {toSec}]].',
+          '[[Se viene la bronca|Esto se apreto sabroso|Ya lo tiene en la mira|La tijera viene cerrando]]. {attacker} [[recorta|se acerca|descuenta|ya est ah]] sobre {defender}. [[{toSec}|A {toSec}|Margen {toSec}]].',
           '[[Ahora si|Ya huele a pase|Esto est calientito|Se puso bueno]]. {defender} [[ya lo siente|lo trae encima|mira espejos|no respira]].'
         ],
         battlePodium: [
-          '[[Podio a cuchillo|Trofeo en la lumbre|Zona de podio que arde|Nadie afloja por el trofeo]]. {attacker} [[encima|pegado|ya encima|a la carga]] de {defender}.',
-          '[[Ese podio no esta asegurado|Todava se vende caro el trofeo|El podio sigue en juego|Hay humo por el trofeo]]. [[Gap {sec}|A {sec}|{sec}]].'
+          '[[Podio al rojo vivo|Trofeo en juego|Zona de podio muy apretada|Nadie afloja por el trofeo]]. {attacker} [[encima|pegado|ya encima|a la carga]] de {defender}.',
+          '[[Ese podio no esta asegurado|Todava se vende caro el trofeo|El podio sigue en juego|Hay humo por el trofeo]]. [[Margen {sec}|A {sec}|{sec}]].'
         ]
       }),
       engineer: Object.assign({}, TTS_GEN_AUTO_BASE, {
         gap: [
-          '[[Lectura tcnica|Dato de referencia|Nmero puro|Telemetra rpida]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
-          '[[Delta registrado|Margen operativo|Separacion medida|Gap trazable]]. {front} [[controla|mantiene|sostiene]] [[{sec}|a {sec}|gap {sec}]] sobre {back}.',
+          '[[Dato de pista|Referencia de pista|Dato directo|Dato rápido de pista]]. {front} sobre {back}, [[{sec}|a {sec}|gap {sec}]].',
+          '[[Delta registrado|Margen operativo|Separacion medida|Margen trazable]]. {front} [[controla|mantiene|sostiene]] [[{sec}|a {sec}|gap {sec}]] sobre {back}.',
           '[[Ritmo contra posicion|Numero mata chisme|Corte tcnico|Lectura limpia]]. {front} [[sigue delante|est delante|conserva el frente]] y {back} [[persigue|sigue el delta|responde]].'
         ],
         train: [
@@ -8204,7 +8206,7 @@ function msgv2DecimasTxt(ms) {
         ],
         closing: [
           '[[La trama se aprieta|La historia se pone seria|Cada curva pesa mas|El aire se corta]]. {attacker} [[recorta|viene recortando|se pega|crece]] sobre {defender}.',
-          '[[Esto no est escrito|Todava falta tinta|Nadie puede respirar tranquilo|La vuelta trae drama]]. [[Gap {toSec}|A {toSec}|{toSec}]].'
+          '[[Esto no est escrito|Todava falta tinta|Nadie puede respirar tranquilo|La vuelta trae drama]]. [[Margen {toSec}|A {toSec}|{toSec}]].'
         ]
       })
     };
@@ -8422,9 +8424,9 @@ function msgv2DecimasTxt(ms) {
         const gapNum = __ttsSmartNum(gapRaw);
         let trend = 'flat';
         if (basePrev && isFinite(gapNum) && isFinite(Number(basePrev.gapNum))) {
-          const prevGap = Number(basePrev.gapNum);
-          if (gapNum < (prevGap - 0.05)) trend = 'closing';
-          else if (gapNum > (prevGap + 0.08)) trend = 'opening';
+          const prevMargen = Number(basePrev.gapNum);
+          if (gapNum < (prevMargen - 0.05)) trend = 'closing';
+          else if (gapNum > (prevMargen + 0.08)) trend = 'opening';
           else trend = 'steady';
         }
         const ageMs = basePrev ? (now - Number(basePrev.at || 0)) : 999999;
@@ -8646,7 +8648,7 @@ function msgv2DecimasTxt(ms) {
           };
           const gapLine = gapTxt ? __ttsSmartPick([
             other + ' a ' + gapTxt + '.',
-            'Gap ' + gapTxt + ' con ' + other + '.',
+            'Margen ' + gapTxt + ' con ' + other + '.',
             other + ' viene a ' + gapTxt + '.'
           ], 'follow:gap:' + type + ':' + band) : '';
           const commandAttack = {
@@ -8698,7 +8700,7 @@ function msgv2DecimasTxt(ms) {
           ]);
         } else if (type === 'fight') {
           const open = {
-            urgent: ['Duelo a cuchillo.', 'Esto viene por nada.', 'Batalla de décimas.'],
+            urgent: ['Duelo muy apretado.', 'Esto viene por nada.', 'Batalla de décimas.'],
             command: ['Pelea directa.', 'Dos autos en guerra limpia.', 'Hay duelo serio.'],
             precise: ['Separación mínima.', 'Pelea medida.', 'Todo en décimas.']
           };
@@ -8731,7 +8733,7 @@ function msgv2DecimasTxt(ms) {
               : '';
           out = __ttsSmartJoin([
             __ttsSmartPick((open[tone] || open.command), 'follow:fight:open:' + tone + ':' + band),
-            gapTxt ? __ttsSmartPick(['Gap ' + gapTxt + '.', 'A ' + gapTxt + '.', 'Separación ' + gapTxt + '.'], 'follow:fight:gap:' + band) : '',
+            gapTxt ? __ttsSmartPick(['Margen ' + gapTxt + '.', 'A ' + gapTxt + '.', 'Separación ' + gapTxt + '.'], 'follow:fight:gap:' + band) : '',
             __ttsSmartPick((storyFight[status] || storyFight.continuing), 'follow:fight:story:' + status + ':' + streak),
             rivalFight,
             __ttsSmartPick(core, 'follow:fight:core:' + prog)
@@ -8844,7 +8846,7 @@ function msgv2DecimasTxt(ms) {
           const hotResolve = !!(story && (story.status === 'resolved_hot' || story.status === 'resolved'));
           const open = {
             dramatic: hotResolve ? ['Se concreta la presión por la punta.', 'Después de insistir, cae el liderato.', 'La historia arriba por fin revienta.'] : ['Cambio grande en la punta.', 'Se mueve el mando de la carrera.', 'Golpe fuerte arriba.'],
-            spicy: hotResolve ? ['Tanto picar y cayó P1.', 'La presión cobró factura arriba.', 'Le cocinaron la punta y se la quitaron.'] : ['Se volteó la tortilla arriba.', 'Hay mano dura en la punta.', 'La carrera cambia de dueño.'],
+            spicy: hotResolve ? ['Tanto apretar y cayó P1.', 'La presión cobró factura arriba.', 'Le quitaron la punta con maniobra limpia.'] : ['Cambio de mando arriba.', 'Hay mano dura en la punta.', 'La carrera cambia de dueño.'],
             neutral: hotResolve ? ['Se concreta el cambio de líder.', 'La presión termina en relevo de punta.', 'Se resuelve la pelea por P1.'] : ['Cambio de líder.', 'Nueva punta.', 'Líder nuevo.']
           };
           const close = late
@@ -8880,7 +8882,7 @@ function msgv2DecimasTxt(ms) {
           const close = (weight === 'podio')
             ? ['Eso mete presión por trofeo.', 'Zona grande de la carrera.', 'Puesto que vale podio.']
             : (weight === 'grande')
-              ? ['Eso cambia la película completa.', 'Movimiento que reordena todo.', 'Cambio clave arriba.']
+              ? ['Eso cambia la punta.', 'Movimiento que reordena todo.', 'Cambio clave arriba.']
               : ['La pelea sigue viva.', 'No termina ahí.', 'Todavía hay respuesta.'];
           const rivalLine = (rival && rival.recurrent)
             ? __ttsSmartPick([
@@ -8920,7 +8922,7 @@ function msgv2DecimasTxt(ms) {
           ];
           const close = (band === 'knife' || band === 'close')
             ? ['Esto se decide por milímetros.', 'La siguiente salida puede cambiarlo.', 'No hay aire entre ellos.']
-            : ['Gap ' + (secTxt || 'corto') + '.', 'Separación ' + (secTxt || 'corta') + '.', 'Todo sigue vivo ahí.'];
+            : ['Margen ' + (secTxt || 'corto') + '.', 'Separación ' + (secTxt || 'corta') + '.', 'Todo sigue vivo ahí.'];
           const rivalryLine = (rival && rival.hot)
             ? __ttsSmartPick([
                 'Ya es el duelo caliente del momento.',
@@ -8943,7 +8945,7 @@ function msgv2DecimasTxt(ms) {
             __ttsSmartPick(close, 'auto:battle:close:' + band + ':' + secTxt)
           ]);
         } else if (type === 'closing' || type === 'pressure') {
-          const deltaNarr = (fromSec && toSec) ? ['De ' + fromSec + ' a ' + toSec + '.', 'Ahora el gap es ' + toSec + '.', 'Recorte hasta ' + toSec + '.'] : (secTxt ? ['Gap ' + secTxt + '.', 'A ' + secTxt + '.', 'Separación ' + secTxt + '.'] : ['La diferencia cae.', 'La presión sube.', 'Se aprieta la historia.']);
+          const deltaNarr = (fromSec && toSec) ? ['De ' + fromSec + ' a ' + toSec + '.', 'Ahora el margen es ' + toSec + '.', 'Recorte hasta ' + toSec + '.'] : (secTxt ? ['Margen ' + secTxt + '.', 'A ' + secTxt + '.', 'Separación ' + secTxt + '.'] : ['La diferencia cae.', 'La presión sube.', 'Se aprieta la historia.']);
           const open = (type === 'closing')
             ? ['Se viene cerrando.', 'El perseguidor recorta.', 'Esto se aprieta.']
             : ['Presión real.', 'No hay margen adelante.', 'La defensa carga espejos.'];
@@ -8992,7 +8994,7 @@ function msgv2DecimasTxt(ms) {
         } else if (type === 'gap') {
           const front = __ttsSmartName(ctx && ctx.front, 'adelante');
           const back = __ttsSmartName(ctx && ctx.back, 'atrás');
-          const open = (tone === 'technical') ? ['Lectura técnica.', 'Dato de referencia.', 'Número en pista.'] : ['Gap actual.', 'Diferencia registrada.', 'Separación medida.'];
+          const open = (tone === 'technical') ? ['Lectura técnica.', 'Referencia de pista.', 'Número en pista.'] : ['Margen actual.', 'Diferencia registrada.', 'Separación medida.'];
           out = __ttsSmartJoin([
             __ttsSmartPick(open, 'auto:gap:open:' + tone),
             __ttsSmartPick([
@@ -9098,7 +9100,7 @@ function msgv2DecimasTxt(ms) {
 
         const urgent = (t === 'blueflag');
 
-        // Motor contextual inteligente: decide que decir segun evento, gap y continuidad
+        // Motor contextual inteligente: decide que decir segun evento, margen y continuidad
         try {
           const smartMsg = ttsSmartComposeFollow(t, ctx || {});
           if (smartMsg) return smartMsg;
@@ -10053,11 +10055,11 @@ function msgv2DecimasTxt(ms) {
           const est2Lap = __getRowEstLapSafe(p2);
           const est1Txt = __speechQualiProjection(est1Lap, est1);
           const est2Txt = __speechQualiProjection(est2Lap, est2);
-          const closeGap = (best1 > 0 && best2 > 0) ? Math.abs(best2 - best1) : ((est1 > 0 && est2 > 0) ? Math.abs(est2 - est1) : 0);
+          const closeMargen = (best1 > 0 && best2 > 0) ? Math.abs(best2 - best1) : ((est1 > 0 && est2 > 0) ? Math.abs(est2 - est1) : 0);
           const variants = [];
           if (best1 > 0) variants.push('Entrenamiento vivo. ' + p1Name + ' trae la referencia con ' + __speechTime2(best1) + '.');
           if (est1 > 0 && est1Txt) variants.push('Práctica con ritmo. ' + p1Name + ' proyecta ' + est1Txt + '.');
-          if (p2Name && closeGap > 0 && closeGap <= 300) variants.push('Se aprieta la práctica. ' + p1Name + ' y ' + p2Name + ' están a ' + __speechTime2(closeGap) + '.');
+          if (p2Name && closeMargen > 0 && closeMargen <= 300) variants.push('Se aprieta la práctica. ' + p1Name + ' y ' + p2Name + ' están a ' + __speechTime2(closeGap) + '.');
           if (p2Name && est1Txt && est2Txt) variants.push('Referencia doble en práctica. ' + p1Name + ' proyecta ' + est1Txt + ' y ' + p2Name + ' proyecta ' + est2Txt + '.');
           if (p2Name) variants.push('Práctica en marcha. ' + p1Name + ' y ' + p2Name + ' ya marcan referencias.');
           variants.push('Entrenamiento en marcha. Hay que afinar trazada y ritmo.');
@@ -11896,7 +11898,7 @@ function rdPick(variants, key) {
         ],
         front06: [
           '{frontNameSafe} a {frontSecStr}. Es alcanzable.',
-          '{frontNameSafe} a {frontSecStr}. Ventana de pase.',
+          '{frontNameSafe} a {frontSecStr}. Rango de rebase.',
           '{frontNameSafe} a {frontSecStr}. Mantén la presión.',
           '{frontNameSafe} a {frontSecStr}. Busca salida fuerte.',
           '{frontNameSafe} a {frontSecStr}. Sin desesperarte.',
@@ -11904,17 +11906,17 @@ function rdPick(variants, key) {
           '{frontNameSafe} a {frontSecStr}. Una curva bien hecha y ests.',
           '{frontNameSafe} a {frontSecStr}. No te abras.',
           '{frontNameSafe} a {frontSecStr}. Pase posible en la siguiente.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Es alcanzable.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Ventana de pase.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Mantén la presión.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Busca salida fuerte.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Sin desesperarte.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Cuida la entrada.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Una curva bien hecha y ests.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. No te abras.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Pase posible en la siguiente.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Es alcanzable.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Rango de rebase.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Mantén la presión.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Busca salida fuerte.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Sin desesperarte.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Cuida la entrada.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Una curva bien hecha y ests.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. No te abras.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Pase posible en la siguiente.',
           'A {frontSecStr} de {frontNameSafe}. Es alcanzable.',
-          'A {frontSecStr} de {frontNameSafe}. Ventana de pase.',
+          'A {frontSecStr} de {frontNameSafe}. Rango de rebase.',
           'A {frontSecStr} de {frontNameSafe}. Mantén la presión.',
           'A {frontSecStr} de {frontNameSafe}. Busca salida fuerte.',
           'A {frontSecStr} de {frontNameSafe}. Sin desesperarte.',
@@ -12407,15 +12409,15 @@ function rdPick(variants, key) {
           '{frontNameSafe} a {frontSecStr}. Ataque en zona segura.',
           '{frontNameSafe} a {frontSecStr}. Presiona sin regalar.',
           '{frontNameSafe} a {frontSecStr}. Una vuelta más y lo ejecutas.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Ventana de ataque abierta.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Prepara maniobra.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Entra fuerte, sal más fuerte.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. No dudes en la recta.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Corta la curva y acelera.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Busca el error y capitaliza.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Ataque en zona segura.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Presiona sin regalar.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Una vuelta más y lo ejecutas.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Ventana de ataque abierta.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Prepara maniobra.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Entra fuerte, sal más fuerte.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. No dudes en la recta.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Corta la curva y acelera.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Busca el error y capitaliza.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Ataque en zona segura.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Presiona sin regalar.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Una vuelta más y lo ejecutas.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. Ventana de ataque abierta.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. Prepara maniobra.',
           'Ventana abierta: {frontNameSafe} a {frontSecStr}. Entra fuerte, sal más fuerte.',
@@ -12434,15 +12436,15 @@ function rdPick(variants, key) {
           '{backNameSafe} a {backSecStr}. Defiende con cabeza.',
           '{backNameSafe} a {backSecStr}. No regales la curva.',
           '{backNameSafe} a {backSecStr}. Calma y control.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Defensa inteligente, sin errores.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Cubre interior y acelera.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. No abras la puerta.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Trazada firme, sin volantazo.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Defiende con cabeza.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. No regales la curva.',
-          'Gap chico atr s: {backNameSafe} {backSecStr}. Calma y control.',
+          'Margen chico atr s: {backNameSafe} {backSecStr}. Defensa inteligente, sin errores.',
+          'Margen chico atr s: {backNameSafe} {backSecStr}. Cubre interior y acelera.',
+          'Margen chico atr s: {backNameSafe} {backSecStr}. No abras la puerta.',
+          'Margen chico atr s: {backNameSafe} {backSecStr}. Salida fuerte, sin error.',
+          'Margen chico atr s: {backNameSafe} {backSecStr}. No dejes hueco en la entrada.',
+          'Margen chico atr s: {backNameSafe} {backSecStr}. Trazada firme, sin volantazo.',
+          'Margen chico atr s: {backNameSafe} {backSecStr}. Defiende con cabeza.',
+          'Margen chico atr s: {backNameSafe} {backSecStr}. No regales la curva.',
+          'Margen chico atr s: {backNameSafe} {backSecStr}. Calma y control.',
           'presión atr s: {backNameSafe} a {backSecStr}. Defensa inteligente, sin errores.',
           'presión atr s: {backNameSafe} a {backSecStr}. Cubre interior y acelera.',
           'presión atr s: {backNameSafe} a {backSecStr}. No abras la puerta.',
@@ -12802,15 +12804,15 @@ function rdPick(variants, key) {
           'Buen cierre con {frontNameSafe}. Todo limpio.',
           'Buen cierre con {frontNameSafe}. Salida fuerte.',
           'Buen cierre con {frontNameSafe}. Aprovecha el error.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Si te abre, vas.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Mantén presión.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Una vuelta más y lo tienes.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Cuida la salida.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. No fuerces la entrada.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Con calma, el pase llega.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Todo limpio.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Salida fuerte.',
-          'Gap corto con {frontNameSafe}: {frontSecStr}. Aprovecha el error.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Si te abre, vas.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Mantén presión.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Una vuelta más y lo tienes.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Cuida la salida.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. No fuerces la entrada.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Con calma, el pase llega.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Todo limpio.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Salida fuerte.',
+          'Margen corto con {frontNameSafe}: {frontSecStr}. Aprovecha el error.',
           'A {frontSecStr} de {frontNameSafe}. Si te abre, vas.',
           'A {frontSecStr} de {frontNameSafe}. Mantén presión.',
           'A {frontSecStr} de {frontNameSafe}. Una vuelta más y lo tienes.',
@@ -13111,7 +13113,7 @@ function rdMakeMangaBattleText(kind, c, mode) {
     'Manga. {frontNameSafe} a {frontSecStr}. Línea fina, sin drama.',
     'Manga. {frontNameSafe} a {frontSecStr}. Cero errores, aprieta.',
     'Manga. {frontNameSafe} a {frontSecStr}. Dos vueltas as y lo tienes.',
-    'Manga. Vas por {frontNameSafe}. Gap {frontSecStr}.',
+    'Manga. Vas por {frontNameSafe}. Margen {frontSecStr}.',
     'Manga. {frontNameSafe} está tiro. {frontSecStr}.',
     'Manga. Se ve el rebufo. {frontNameSafe} {frontSecStr}.',
     'Manga. Ojo con {frontNameSafe}. {frontSecStr}.',
@@ -13119,7 +13121,7 @@ function rdMakeMangaBattleText(kind, c, mode) {
     'Manga. Si la salida es limpia, {frontNameSafe} cae. {frontSecStr}.',
     'Manga. Ataque inteligente. {frontNameSafe} {frontSecStr}.',
     'Manga. No lo forces, provcalo. {frontNameSafe} {frontSecStr}.',
-    'Manga. Gap rico para cazar. {frontNameSafe} {frontSecStr}.',
+    'Manga. Margen rico para cazar. {frontNameSafe} {frontSecStr}.',
     'Manga. Est en ventana. {frontNameSafe} {frontSecStr}.'
   ];
 
@@ -18455,7 +18457,7 @@ let meanMs = parseTimeToMs(meanTimeRaw);
 
     // =========================
     // DUEL / ATK / DEF (EMA + histeresis)
-    // - Entra: gap suavizado <= 0.45s
+    // - Entra: margen suavizado <= 0.45s
     // - Sale: >= 0.65s (ATAQUE) o >= 0.60s (DEFENSA)
     // - EMA reduce jitter, sobre todo en MANGA
     // =========================
@@ -19261,9 +19263,9 @@ pilotSelect.addEventListener('change', () => {
 
             const palabra = (v === 1) ? 'una vuelta' : (v + ' vueltas');
 
-            if (direction === 'ahead') return 'Gap con ' + (other.racerName || 'adelante') + ' ms ' + palabra;
+            if (direction === 'ahead') return 'Margen con ' + (other.racerName || 'adelante') + ' ms ' + palabra;
 
-            return 'Gap con ' + (other.racerName || 'atrs') + ' ms ' + palabra;
+            return 'Margen con ' + (other.racerName || 'atrs') + ' ms ' + palabra;
 
           }
         }
@@ -19274,8 +19276,8 @@ pilotSelect.addEventListener('change', () => {
         }
 
         const secStr = gapToSpeech((diffMs / 1000), 'pilotgaps');
-        if (direction === 'ahead') return 'Gap con ' + (other.racerName || 'adelante') + ' ' + secStr;
-        return 'Gap con ' + (other.racerName || 'atrs') + ' ' + secStr;
+        if (direction === 'ahead') return 'Margen con ' + (other.racerName || 'adelante') + ' ' + secStr;
+        return 'Margen con ' + (other.racerName || 'atrs') + ' ' + secStr;
       }
 
       const parts = [];
@@ -20188,7 +20190,7 @@ function autoFocusMsg(stage, c, style) {
       'Esto va a tronar.'
     ],
     engineer: [
-      'Telemetra rpida.',
+      'Dato rápido de pista.',
       'Lectura de ritmo.',
       'Nmero mata chisme.',
       'Datos en corto.',
@@ -20214,7 +20216,7 @@ function autoFocusMsg(stage, c, style) {
     keep: [
       (x) => `${c0} ${x.defender} aguanta en P${x.pos}. ${x.attacker} sigue pegado a ${x.sec}.`,
       (x) => `${c0} La pelea por P${x.pos} no se suelta: ${x.attacker} a ${x.sec} de ${x.defender}.`,
-      (x) => `${c0} P${x.pos}: ${x.defender} adelante, ${x.attacker} atras. Gap ${x.sec}.`,
+      (x) => `${c0} P${x.pos}: ${x.defender} adelante, ${x.attacker} atras. Margen ${x.sec}.`,
       (x) => `${c0} P${x.pos} est en modo espejo: ${x.attacker} no lo suelta a ${x.defender}.`
     ],
     closing: [
@@ -20226,7 +20228,7 @@ function autoFocusMsg(stage, c, style) {
     opening: [
       (x) => `${c0} Se abre un poco la pelea en P${x.pos}. ${x.defender} estira a ${x.sec}.`,
       (x) => `${c0} Respiro para ${x.defender}: P${x.pos} se va a ${x.sec}.`,
-      (x) => `${c0} P${x.pos} afloja tantito. ${x.attacker} pierde el contacto, gap ${x.sec}.`
+      (x) => `${c0} P${x.pos} afloja tantito. ${x.attacker} pierde el contacto, margen ${x.sec}.`
     ],
     pass: [
       (x) => `${c0} Cambio de mando en P${x.pos}. ${x.attacker} le quita la posicin a ${x.defender}.`,
@@ -20424,10 +20426,10 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Se mueve la cabeza: ' + c.winner + ' manda. ' + c.loser + ' responde en P2.',
         (c) => 'Liderato para ' + c.winner + '. ' + c.loser + ' pierde P1.',
         (c) => 'Punta nueva: ' + c.winner + '. ' + c.loser + ' se queda a rueda.',
-        (c) => 'Swap en la punta. ' + c.winner + ' P1, ' + c.loser + ' P2.',
+        (c) => 'Cambio en la punta. ' + c.winner + ' P1, ' + c.loser + ' P2.',
         (c) => 'Cambio arriba. ' + c.winner + ' primero. ' + c.loser + ' segundo.',
         (c) => 'Golpe de autoridad: ' + c.winner + ' toma P1. ' + c.loser + ' a reorganizar.',
-        (c) => 'Actualizacion punta: ' + c.winner + ' lidera. ' + c.loser + ' queda P2.'
+        (c) => 'Cambio en la punta: ' + c.winner + ' lidera. ' + c.loser + ' queda P2.'
       ],
 
       pass: [
@@ -20446,17 +20448,17 @@ function autoBuildStoryCandidate(args) {
       ],
 
       battle: [
-        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' a rueda de ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' a rueda de ' + c.defender + '. Margen ' + c.sec + '.',
         (c) => 'P' + c.pos + ' en pelea. ' + c.attacker + ' presiona a ' + c.defender + '. ' + c.sec + '.',
         (c) => 'Ojo P' + c.pos + '. ' + c.attacker + ' trae el ataque. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' caliente. ' + c.defender + ' defiende, ' + c.attacker + ' insiste. ' + c.sec + '.',
         (c) => 'Rango de pase en P' + c.pos + '. ' + c.attacker + ' pegado. ' + c.sec + '.',
         (c) => 'Cmara a P' + c.pos + '. ' + c.attacker + ' en el espejo de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Separacin mnima en P' + c.pos + ': ' + c.sec + '. ' + c.attacker + ' encima.',
+        (c) => 'Margen corto en P' + c.pos + ': ' + c.sec + '. ' + c.attacker + ' encima.',
         (c) => 'P' + c.pos + ' sin aire. ' + c.attacker + ' no se despega. ' + c.sec + '.',
         (c) => 'Atencin P' + c.pos + '. ' + c.attacker + ' busca hueco con ' + c.defender + '. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' en mano a mano. ' + c.attacker + ' contra ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Duelo directo. P' + c.pos + ' con gap ' + c.sec + '.',
+        (c) => 'Duelo directo. P' + c.pos + ' con margen ' + c.sec + '.',
         (c) => 'P' + c.pos + ' bajo fuego. ' + c.attacker + ' viene encima. ' + c.sec + '.'
       ],
 
@@ -20464,42 +20466,42 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Podio en juego en P' + c.pos + '. ' + c.attacker + ' presiona. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' por trofeo. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
         (c) => 'Zona de podio. ' + c.defender + ' defiende. ' + c.attacker + ' insiste. ' + c.sec + '.',
-        (c) => 'Podio apretado. Gap ' + c.sec + '. ' + c.attacker + ' con opcion.',
+        (c) => 'Podio apretado. Margen ' + c.sec + '. ' + c.attacker + ' con opcion.',
         (c) => 'Pelea de podio: ' + c.attacker + ' a tiro de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' por podio con gap ' + c.sec + '. Esto puede cambiar.',
+        (c) => 'P' + c.pos + ' por podio con margen ' + c.sec + '. Esto puede cambiar.',
         (c) => 'Ojo al podio. ' + c.attacker + ' trae ritmo sobre ' + c.defender + '. ' + c.sec + '.',
         (c) => 'Trofeo en la mira. ' + c.attacker + ' ya lo trae. ' + c.sec + '.',
         (c) => 'Podio sin margen. ' + c.sec + '. ' + c.defender + ' aguantando.',
         (c) => 'P' + c.pos + ' de podio: ' + c.attacker + ' en espejo. ' + c.sec + '.',
         (c) => 'Batalla por el podio. ' + c.attacker + ' quiere P' + c.pos + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' por podio. Ventana de pase abierta. ' + c.sec + '.'
+        (c) => 'P' + c.pos + ' por podio. Ya está en rango de rebase. ' + c.sec + '.'
       ],
 
-      // closing = cierre de gap (trend)
+      // closing = cierre de margen (trend)
       closing: [
         (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + ' sobre ' + c.defender + '.',
         (c) => 'Recorte en P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + '.',
-        (c) => 'Gap en P' + c.pos + ' cae: ' + c.fromSec + ' a ' + c.toSec + '.',
+        (c) => 'Margen en P' + c.pos + ' cae: ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Se acerca en P' + c.pos + '. ' + c.attacker + ' ya est a ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Tendencia positiva P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + '.',
         (c) => 'Ojo P' + c.pos + '. ' + c.attacker + ' recorta ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Cierre confirmado. P' + c.pos + ' ahora ' + c.toSec + '.',
-        (c) => 'Se aprieta P' + c.pos + '. ' + c.attacker + ' trae el gap en ' + c.toSec + '.',
+        (c) => 'Se aprieta P' + c.pos + '. ' + c.attacker + ' trae el margen en ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' se est cerrando. ' + c.toSec + ' entre ellos.',
         (c) => 'Recorte constante. P' + c.pos + ' de ' + c.fromSec + ' a ' + c.toSec + '.'
       ],
 
       gap: [
-        (c) => 'Gap P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
+        (c) => 'Margen P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
         (c) => 'Separacin P' + c.pos + ': ' + c.sec + 's. ' + c.defender + ' adelante.',
         (c) => 'P' + c.pos + ' entre ' + c.defender + ' y ' + c.attacker + ': ' + c.sec + 's.',
         (c) => 'Distancia P' + c.pos + '. ' + c.attacker + ' marca ' + c.sec + 's.',
-        (c) => 'Gap estable en P' + c.pos + ': ' + c.sec + 's.',
+        (c) => 'Margen estable en P' + c.pos + ': ' + c.sec + 's.',
         (c) => 'P' + c.pos + ' con ' + c.sec + 's de diferencia.',
         (c) => 'Referencia P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's.',
         (c) => 'Tiempo entre autos P' + c.pos + ': ' + c.sec + 's.',
-        (c) => 'Brecha P' + c.pos + ': ' + c.sec + 's.',
-        (c) => 'Gap P' + c.pos + ' = ' + c.sec + 's.'
+        (c) => 'Margen P' + c.pos + ': ' + c.sec + 's.',
+        (c) => 'Margen P' + c.pos + ' = ' + c.sec + 's.'
       ],
 
       pressure: [
@@ -20534,13 +20536,13 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Paquete P2 a P4. ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. Nadie regala.',
         (c) => 'Tren por el podio. ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. Error y se voltean.',
         (c) => 'Grupo compacto. ' + c.p2 + ' adelante, ' + c.p3 + ' y ' + c.p4 + ' pegados.',
-        (c) => 'P2 a P4 en fila: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. Ventana de pase.',
+        (c) => 'P2 a P4 en fila: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. Rango de rebase.',
         (c) => 'Tres autos en paquete. P2 a P4 muy cerrados.',
         (c) => 'P2 a P4 sin aire. ' + c.p2 + ' con ' + c.p3 + ' encima y ' + c.p4 + ' esperando.',
-        (c) => 'Cluster por el podio. Nadie parpadee.',
+        (c) => 'Tren por el podio. Nadie parpadee.',
         (c) => 'Paquete apretado P2 a P4. Cualquier curva cambia todo.',
         (c) => 'Tren formado. P2 a P4 en rango. Precision.',
-        (c) => 'P2 a P4 en modo acordeon. Se viene el swap.',
+        (c) => 'P2 a P4 sin aire. Se puede mover el grupo.',
         (c) => 'Grupo P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. Alto riesgo.',
         (c) => 'Paquete por P2-P4. No hay espacio para fallar.'
       ],
@@ -20573,7 +20575,7 @@ function autoBuildStoryCandidate(args) {
 
       qualiPole: [
         (c) => 'Pelea por la pole. ' + c.p1 + ' y ' + c.p2 + ' separados por ' + c.sec + '.',
-        (c) => 'Pole en juego. ' + c.p1 + ' contra ' + c.p2 + ', gap ' + c.sec + '.',
+        (c) => 'Pole en juego. ' + c.p1 + ' contra ' + c.p2 + ', margen ' + c.sec + '.',
         (c) => 'Se aprieta la pole. ' + c.p1 + ' y ' + c.p2 + ' a ' + c.sec + '.',
         (c) => 'Clasificación caliente. ' + c.p1 + ' vs ' + c.p2 + ', ' + c.sec + '.'
       ],
@@ -20582,28 +20584,28 @@ function autoBuildStoryCandidate(args) {
 
     const AUTO_PHRASES_PICANTE = {
       leaderChange: [
-        (c) => 'Cambio de líder. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
+        (c) => 'Cambio de líder. ' + c.winner + ' se queda con P1. ' + c.loser + ' a perseguir.',
         (c) => 'Cambio de líder. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
         (c) => 'Cambio de líder. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
         (c) => 'Cambio de líder. P1 ' + c.winner + '. P2 ' + c.loser + '.',
         (c) => 'Cambio de líder. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
         (c) => 'Cambio de líder. ' + c.winner + ' al frente. ' + c.loser + ' con presin encima.',
         (c) => 'Cambio de líder. ' + c.loser + ' pierde la punta. ' + c.winner + ' líder.',
-        (c) => 'Nuevo jefe en pista. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
-        (c) => 'Nuevo jefe en pista. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
-        (c) => 'Nuevo jefe en pista. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
-        (c) => 'Nuevo jefe en pista. P1 ' + c.winner + '. P2 ' + c.loser + '.',
-        (c) => 'Nuevo jefe en pista. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
-        (c) => 'Nuevo jefe en pista. ' + c.winner + ' al frente. ' + c.loser + ' con presin encima.',
-        (c) => 'Nuevo jefe en pista. ' + c.loser + ' pierde la punta. ' + c.winner + ' líder.',
-        (c) => 'Se volte la tortilla. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
-        (c) => 'Se volte la tortilla. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
-        (c) => 'Se volte la tortilla. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
-        (c) => 'Se volte la tortilla. P1 ' + c.winner + '. P2 ' + c.loser + '.',
-        (c) => 'Se volte la tortilla. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
-        (c) => 'Se volte la tortilla. ' + c.winner + ' al frente. ' + c.loser + ' con presin encima.',
-        (c) => 'Se volte la tortilla. ' + c.loser + ' pierde la punta. ' + c.winner + ' líder.',
-        (c) => 'Golpe en la punta. ' + c.winner + ' se roba P1. ' + c.loser + ' a perseguir.',
+        (c) => 'Nuevo líder en pista. ' + c.winner + ' se queda con P1. ' + c.loser + ' a perseguir.',
+        (c) => 'Nuevo líder en pista. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
+        (c) => 'Nuevo líder en pista. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
+        (c) => 'Nuevo líder en pista. P1 ' + c.winner + '. P2 ' + c.loser + '.',
+        (c) => 'Nuevo líder en pista. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
+        (c) => 'Nuevo líder en pista. ' + c.winner + ' al frente. ' + c.loser + ' con presin encima.',
+        (c) => 'Nuevo líder en pista. ' + c.loser + ' pierde la punta. ' + c.winner + ' líder.',
+        (c) => 'Cambio de mando arriba. ' + c.winner + ' se queda con P1. ' + c.loser + ' a perseguir.',
+        (c) => 'Cambio de mando arriba. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
+        (c) => 'Cambio de mando arriba. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
+        (c) => 'Cambio de mando arriba. P1 ' + c.winner + '. P2 ' + c.loser + '.',
+        (c) => 'Cambio de mando arriba. ' + c.winner + ' se pone primero, ' + c.loser + ' baja a segundo.',
+        (c) => 'Cambio de mando arriba. ' + c.winner + ' al frente. ' + c.loser + ' con presin encima.',
+        (c) => 'Cambio de mando arriba. ' + c.loser + ' pierde la punta. ' + c.winner + ' líder.',
+        (c) => 'Golpe en la punta. ' + c.winner + ' se queda con P1. ' + c.loser + ' a perseguir.',
         (c) => 'Golpe en la punta. ' + c.winner + ' toma la punta. ' + c.loser + ' no lo suelta.',
         (c) => 'Golpe en la punta. ' + c.winner + ' manda. ' + c.loser + ' queda segundo.',
         (c) => 'Golpe en la punta. P1 ' + c.winner + '. P2 ' + c.loser + '.'
@@ -20612,106 +20614,106 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Rebase con colmillo. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
         (c) => 'Rebase con colmillo. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' a P' + c.oldPos + '.',
         (c) => 'Rebase con colmillo. ' + c.winner + ' le mete el coche y gana P' + c.newPos + '.',
-        (c) => 'Rebase con colmillo. ' + c.winner + ' dice con permiso y toma P' + c.newPos + '.',
+        (c) => 'Rebase con colmillo. ' + c.winner + ' dice mete el auto y toma P' + c.newPos + '.',
         (c) => 'Rebase con colmillo. ' + c.loser + ' pierde el lugar. ' + c.winner + ' se queda P' + c.newPos + '.',
         (c) => 'Rebase con colmillo. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
         (c) => 'Rebase con colmillo. ' + c.winner + ' se queda con el puesto. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Se la cobra. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
-        (c) => 'Se la cobra. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Se la cobra. ' + c.winner + ' le mete el coche y gana P' + c.newPos + '.',
-        (c) => 'Se la cobra. ' + c.winner + ' dice con permiso y toma P' + c.newPos + '.',
-        (c) => 'Se la cobra. ' + c.loser + ' pierde el lugar. ' + c.winner + ' se queda P' + c.newPos + '.',
-        (c) => 'Se la cobra. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
-        (c) => 'Se la cobra. ' + c.winner + ' se queda con el puesto. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Cambio de puesto. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
-        (c) => 'Cambio de puesto. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Cambio de puesto. ' + c.winner + ' le mete el coche y gana P' + c.newPos + '.',
-        (c) => 'Cambio de puesto. ' + c.winner + ' dice con permiso y toma P' + c.newPos + '.',
-        (c) => 'Cambio de puesto. ' + c.loser + ' pierde el lugar. ' + c.winner + ' se queda P' + c.newPos + '.',
-        (c) => 'Cambio de puesto. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
-        (c) => 'Cambio de puesto. ' + c.winner + ' se queda con el puesto. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Puesto robado. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
-        (c) => 'Puesto robado. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Puesto robado. ' + c.winner + ' le mete el coche y gana P' + c.newPos + '.',
-        (c) => 'Puesto robado. ' + c.winner + ' dice con permiso y toma P' + c.newPos + '.'
+        (c) => 'Rebase trabajado. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
+        (c) => 'Rebase trabajado. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' a P' + c.oldPos + '.',
+        (c) => 'Rebase trabajado. ' + c.winner + ' le mete el coche y gana P' + c.newPos + '.',
+        (c) => 'Rebase trabajado. ' + c.winner + ' dice mete el auto y toma P' + c.newPos + '.',
+        (c) => 'Rebase trabajado. ' + c.loser + ' pierde el lugar. ' + c.winner + ' se queda P' + c.newPos + '.',
+        (c) => 'Rebase trabajado. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
+        (c) => 'Rebase trabajado. ' + c.winner + ' se queda con el puesto. ' + c.loser + ' a P' + c.oldPos + '.',
+        (c) => 'Cambio de posición. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
+        (c) => 'Cambio de posición. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' a P' + c.oldPos + '.',
+        (c) => 'Cambio de posición. ' + c.winner + ' le mete el coche y gana P' + c.newPos + '.',
+        (c) => 'Cambio de posición. ' + c.winner + ' dice mete el auto y toma P' + c.newPos + '.',
+        (c) => 'Cambio de posición. ' + c.loser + ' pierde el lugar. ' + c.winner + ' se queda P' + c.newPos + '.',
+        (c) => 'Cambio de posición. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
+        (c) => 'Cambio de posición. ' + c.winner + ' se queda con el puesto. ' + c.loser + ' a P' + c.oldPos + '.',
+        (c) => 'Rebase trabajado. ' + c.winner + ' sube a P' + c.newPos + '. ' + c.loser + ' cae a P' + c.oldPos + '.',
+        (c) => 'Rebase trabajado. P' + c.newPos + ' para ' + c.winner + '. ' + c.loser + ' a P' + c.oldPos + '.',
+        (c) => 'Rebase trabajado. ' + c.winner + ' le mete el coche y gana P' + c.newPos + '.',
+        (c) => 'Rebase trabajado. ' + c.winner + ' dice mete el auto y toma P' + c.newPos + '.'
       ],
       battle: [
-        (c) => 'P' + c.pos + ' en modo cuchillo. ' + c.attacker + ' respirando en la nuca de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' en modo cuchillo. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' en modo cuchillo. ' + c.defender + ' defendiendo, ' + c.attacker + ' insistiendo. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' en modo cuchillo. ' + c.attacker + ' ya trae el pase en la mira. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' en modo cuchillo. ' + c.attacker + ' presiona fuerte. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' en modo cuchillo. ' + c.defender + ' no se puede equivocar. ' + c.sec + '.',
-        (c) => 'Duelazo en P' + c.pos + '. ' + c.attacker + ' respirando en la nuca de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Duelazo en P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
-        (c) => 'Duelazo en P' + c.pos + '. ' + c.defender + ' defendiendo, ' + c.attacker + ' insistiendo. ' + c.sec + '.',
-        (c) => 'Duelazo en P' + c.pos + '. ' + c.attacker + ' ya trae el pase en la mira. ' + c.sec + '.',
-        (c) => 'Duelazo en P' + c.pos + '. ' + c.attacker + ' presiona fuerte. ' + c.sec + '.',
-        (c) => 'Duelazo en P' + c.pos + '. ' + c.defender + ' no se puede equivocar. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' respirando en la nuca de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'P' + c.attacker + ' ya está encima de ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'P' + c.attacker + ' pegado a ' + c.defender + '. Margen ' + c.sec + '.',
+        (c) => 'P' + c.defender + ' defendiendo, ' + c.attacker + ' insistiendo. ' + c.sec + '.',
+        (c) => 'P' + c.attacker + ' ya trae el pase en la mira. ' + c.sec + '.',
+        (c) => 'P' + c.attacker + ' presiona fuerte. ' + c.sec + '.',
+        (c) => 'P' + c.defender + ' no se puede equivocar. ' + c.sec + '.',
+        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' ya está encima de ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' pegado a ' + c.defender + '. Margen ' + c.sec + '.',
+        (c) => 'Duelo en P' + c.pos + '. ' + c.defender + ' defendiendo, ' + c.attacker + ' insistiendo. ' + c.sec + '.',
+        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' ya trae el pase en la mira. ' + c.sec + '.',
+        (c) => 'Duelo en P' + c.pos + '. ' + c.attacker + ' presiona fuerte. ' + c.sec + '.',
+        (c) => 'Duelo en P' + c.pos + '. ' + c.defender + ' no se puede equivocar. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' ya está encima de ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' pegado a ' + c.defender + '. Margen ' + c.sec + '.',
         (c) => 'P' + c.pos + ' est que arde. ' + c.defender + ' defendiendo, ' + c.attacker + ' insistiendo. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' ya trae el pase en la mira. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' est que arde. ' + c.attacker + ' presiona fuerte. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' est que arde. ' + c.defender + ' no se puede equivocar. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' con presin brava. ' + c.attacker + ' respirando en la nuca de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' con presin brava. ' + c.attacker + ' pegado a ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' con presin brava. ' + c.attacker + ' ya está encima de ' + c.defender + '. ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' con presin brava. ' + c.attacker + ' pegado a ' + c.defender + '. Margen ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con presin brava. ' + c.defender + ' defendiendo, ' + c.attacker + ' insistiendo. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con presin brava. ' + c.attacker + ' ya trae el pase en la mira. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con presin brava. ' + c.attacker + ' presiona fuerte. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con presin brava. ' + c.defender + ' no se puede equivocar. ' + c.sec + '.',
-        (c) => 'Ojo con P' + c.pos + '. ' + c.attacker + ' respirando en la nuca de ' + c.defender + '. ' + c.sec + '.'
+        (c) => 'Ojo con P' + c.pos + '. ' + c.attacker + ' ya está encima de ' + c.defender + '. ' + c.sec + '.'
       ],
       battlePodium: [
         (c) => 'Podio al rojo vivo, P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Podio al rojo vivo, P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'Podio al rojo vivo, P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Margen ' + c.sec + '.',
         (c) => 'Podio al rojo vivo, P' + c.pos + '. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'Podio al rojo vivo, P' + c.pos + '. Gap ' + c.sec + '. Aquí se gana con cabeza fra.',
+        (c) => 'Podio al rojo vivo, P' + c.pos + '. Margen ' + c.sec + '. Aquí se gana con cabeza fra.',
         (c) => 'Podio al rojo vivo, P' + c.pos + '. ' + c.attacker + ' ya se asom. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' vale trofeo. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' vale trofeo. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' vale trofeo. ' + c.attacker + ' presionando a ' + c.defender + '. Margen ' + c.sec + '.',
         (c) => 'P' + c.pos + ' vale trofeo. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' vale trofeo. Gap ' + c.sec + '. Aquí se gana con cabeza fra.',
+        (c) => 'P' + c.pos + ' vale trofeo. Margen ' + c.sec + '. Aquí se gana con cabeza fra.',
         (c) => 'P' + c.pos + ' vale trofeo. ' + c.attacker + ' ya se asom. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' de podio. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' de podio. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' de podio. ' + c.attacker + ' presionando a ' + c.defender + '. Margen ' + c.sec + '.',
         (c) => 'P' + c.pos + ' de podio. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' de podio. Gap ' + c.sec + '. Aquí se gana con cabeza fra.',
+        (c) => 'P' + c.pos + ' de podio. Margen ' + c.sec + '. Aquí se gana con cabeza fra.',
         (c) => 'P' + c.pos + ' de podio. ' + c.attacker + ' ya se asom. ' + c.sec + '.',
         (c) => 'Pelea de podio en P' + c.pos + '. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'Pelea de podio en P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'Pelea de podio en P' + c.pos + '. ' + c.attacker + ' presionando a ' + c.defender + '. Margen ' + c.sec + '.',
         (c) => 'Pelea de podio en P' + c.pos + '. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'Pelea de podio en P' + c.pos + '. Gap ' + c.sec + '. Aquí se gana con cabeza fra.',
+        (c) => 'Pelea de podio en P' + c.pos + '. Margen ' + c.sec + '. Aquí se gana con cabeza fra.',
         (c) => 'Pelea de podio en P' + c.pos + '. ' + c.attacker + ' ya se asom. ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con olor a podio. ' + c.attacker + ' encima de ' + c.defender + '. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' con olor a podio. ' + c.attacker + ' presionando a ' + c.defender + '. Gap ' + c.sec + '.',
+        (c) => 'P' + c.pos + ' con olor a podio. ' + c.attacker + ' presionando a ' + c.defender + '. Margen ' + c.sec + '.',
         (c) => 'P' + c.pos + ' con olor a podio. ' + c.defender + ' aguanta, ' + c.attacker + ' empuja. ' + c.sec + '.',
-        (c) => 'P' + c.pos + ' con olor a podio. Gap ' + c.sec + '. Aquí se gana con cabeza fra.',
+        (c) => 'P' + c.pos + ' con olor a podio. Margen ' + c.sec + '. Aquí se gana con cabeza fra.',
         (c) => 'P' + c.pos + ' con olor a podio. ' + c.attacker + ' ya se asom. ' + c.sec + '.'
       ],
       closing: [
         (c) => 'Se est cerrando P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Se est cerrando P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
         (c) => 'Se est cerrando P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'Se est cerrando P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
+        (c) => 'Se est cerrando P' + c.pos + '. Margen cae de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Se est cerrando P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Se est cerrando P' + c.pos + '. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' se cocina. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'P' + c.pos + ' se cocina. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
+        (c) => 'P' + c.pos + ' se cocina. Margen cae de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.attacker + ' ya está ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' se cocina. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Atencin en P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'Atencin en P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
+        (c) => 'Atencin en P' + c.pos + '. Margen cae de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Atencin en P' + c.pos + '. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. De ' + c.fromSec + ' a ' + c.toSec + '. Ya est encima.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' recorta a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'Cierre fuerte en P' + c.pos + '. Gap cae de ' + c.fromSec + ' a ' + c.toSec + '.',
+        (c) => 'Cierre fuerte en P' + c.pos + '. Margen cae de ' + c.fromSec + ' a ' + c.toSec + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + ' de ' + c.defender + '.',
         (c) => 'Cierre fuerte en P' + c.pos + '. ' + c.defender + ' ya lo trae en el espejo. ' + c.toSec + '.',
         (c) => 'P' + c.pos + ' en recorte serio. ' + c.attacker + ' baja de ' + c.fromSec + ' a ' + c.toSec + '.'
@@ -20778,13 +20780,13 @@ function autoBuildStoryCandidate(args) {
     AUTO_PHRASES_PICANTE.leaderChange = (AUTO_PHRASES_PICANTE.leaderChange||[]).concat([
       (c) => 'Se prende la punta. ' + c.winner + ' toma P1 y ' + c.loser + ' se queda masticando polvo.',
       (c) => 'Punta nueva. ' + c.winner + ' al frente. ' + c.loser + ' no se despega.',
-      (c) => 'La cima cambia de dueo. ' + c.winner + ' manda. ' + c.loser + ' a remar.'
+      (c) => 'La cima cambia de dueo. ' + c.winner + ' manda. ' + c.loser + ' a responder.'
     ]);
 
     AUTO_PHRASES_PICANTE.pass = (AUTO_PHRASES_PICANTE.pass||[]).concat([
       (c) => 'Pase quirurgico. ' + c.winner + ' se mete a P' + c.newPos + '. ' + c.loser + ' se reacomoda.',
       (c) => 'Le cerro la puerta tarde. ' + c.winner + ' gana P' + c.newPos + '.',
-      (c) => 'Con permiso y gracias. ' + c.winner + ' toma P' + c.newPos + '.'
+      (c) => 'Maniobra limpia. ' + c.winner + ' toma P' + c.newPos + '.'
     ]);
 
     AUTO_PHRASES_PICANTE.battle = (AUTO_PHRASES_PICANTE.battle||[]).concat([
@@ -20809,27 +20811,27 @@ function autoBuildStoryCandidate(args) {
 
     const AUTO_PHRASES_ENGINEER = {
       leaderChange: [
-        (c) => 'Update punta. P1 ' + c.winner + '. P2 ' + c.loser + '.',
-        (c) => 'Update punta. ' + c.winner + ' pasa a P1, ' + c.loser + ' cae a P2.',
-        (c) => 'Update punta. ' + c.winner + ' lidera, ' + c.loser + ' queda segundo.',
-        (c) => 'Update punta. ' + c.winner + ' toma el mando. ' + c.loser + ' en persecucin.',
-        (c) => 'Update punta. Swap de liderato: ' + c.winner + ' adelante.',
-        (c) => 'Update punta. P1 para ' + c.winner + '. ' + c.loser + ' queda detrs.',
-        (c) => 'Update punta. ' + c.winner + ' al frente, ' + c.loser + ' a cazar.',
+        (c) => 'Cambio en la punta. P1 ' + c.winner + '. P2 ' + c.loser + '.',
+        (c) => 'Cambio en la punta. ' + c.winner + ' pasa a P1, ' + c.loser + ' cae a P2.',
+        (c) => 'Cambio en la punta. ' + c.winner + ' lidera, ' + c.loser + ' queda segundo.',
+        (c) => 'Cambio en la punta. ' + c.winner + ' toma el mando. ' + c.loser + ' en persecucin.',
+        (c) => 'Cambio en la punta. Cambio de liderato: ' + c.winner + ' adelante.',
+        (c) => 'Cambio en la punta. P1 para ' + c.winner + '. ' + c.loser + ' queda detrs.',
+        (c) => 'Cambio en la punta. ' + c.winner + ' al frente, ' + c.loser + ' a cazar.',
         (c) => 'Cambio en P1. P1 ' + c.winner + '. P2 ' + c.loser + '.',
         (c) => 'Cambio en P1. ' + c.winner + ' pasa a P1, ' + c.loser + ' cae a P2.',
         (c) => 'Cambio en P1. ' + c.winner + ' lidera, ' + c.loser + ' queda segundo.',
         (c) => 'Cambio en P1. ' + c.winner + ' toma el mando. ' + c.loser + ' en persecucin.',
-        (c) => 'Cambio en P1. Swap de liderato: ' + c.winner + ' adelante.',
+        (c) => 'Cambio en P1. Cambio de liderato: ' + c.winner + ' adelante.',
         (c) => 'Cambio en P1. P1 para ' + c.winner + '. ' + c.loser + ' queda detrs.',
         (c) => 'Cambio en P1. ' + c.winner + ' al frente, ' + c.loser + ' a cazar.',
-        (c) => 'Telemetra: nuevo líder. P1 ' + c.winner + '. P2 ' + c.loser + '.',
-        (c) => 'Telemetra: nuevo líder. ' + c.winner + ' pasa a P1, ' + c.loser + ' cae a P2.',
-        (c) => 'Telemetra: nuevo líder. ' + c.winner + ' lidera, ' + c.loser + ' queda segundo.',
-        (c) => 'Telemetra: nuevo líder. ' + c.winner + ' toma el mando. ' + c.loser + ' en persecucin.',
-        (c) => 'Telemetra: nuevo líder. Swap de liderato: ' + c.winner + ' adelante.',
-        (c) => 'Telemetra: nuevo líder. P1 para ' + c.winner + '. ' + c.loser + ' queda detrs.',
-        (c) => 'Telemetra: nuevo líder. ' + c.winner + ' al frente, ' + c.loser + ' a cazar.',
+        (c) => 'Cambio de líder. P1 ' + c.winner + '. P2 ' + c.loser + '.',
+        (c) => 'Cambio de líder. ' + c.winner + ' pasa a P1, ' + c.loser + ' cae a P2.',
+        (c) => 'Cambio de líder. ' + c.winner + ' lidera, ' + c.loser + ' queda segundo.',
+        (c) => 'Cambio de líder. ' + c.winner + ' toma el mando. ' + c.loser + ' en persecucin.',
+        (c) => 'Cambio de líder. Cambio de liderato: ' + c.winner + ' adelante.',
+        (c) => 'Cambio de líder. P1 para ' + c.winner + '. ' + c.loser + ' queda detrs.',
+        (c) => 'Cambio de líder. ' + c.winner + ' al frente, ' + c.loser + ' a cazar.',
         (c) => 'Estado de carrera. P1 ' + c.winner + '. P2 ' + c.loser + '.',
         (c) => 'Estado de carrera. ' + c.winner + ' pasa a P1, ' + c.loser + ' cae a P2.',
         (c) => 'Estado de carrera. ' + c.winner + ' lidera, ' + c.loser + ' queda segundo.',
@@ -20841,113 +20843,113 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Overtake confirmado. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
         (c) => 'Overtake confirmado. Cambio en P' + c.newPos + '. ' + c.winner + ' sube.',
         (c) => 'Overtake confirmado. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
-        (c) => 'Overtake confirmado. Swap completado: ' + c.winner + ' por delante.',
+        (c) => 'Overtake confirmado. Cambio completado: ' + c.winner + ' por delante.',
         (c) => 'Overtake confirmado. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
         (c) => 'Cambio de posición. ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
         (c) => 'Cambio de posición. P' + c.newPos + ' para ' + c.winner + '.',
         (c) => 'Cambio de posición. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
         (c) => 'Cambio de posición. Cambio en P' + c.newPos + '. ' + c.winner + ' sube.',
         (c) => 'Cambio de posición. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
-        (c) => 'Cambio de posición. Swap completado: ' + c.winner + ' por delante.',
+        (c) => 'Cambio de posición. Cambio completado: ' + c.winner + ' por delante.',
         (c) => 'Cambio de posición. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
-        (c) => 'Swap de posición. ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
-        (c) => 'Swap de posición. P' + c.newPos + ' para ' + c.winner + '.',
-        (c) => 'Swap de posición. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
-        (c) => 'Swap de posición. Cambio en P' + c.newPos + '. ' + c.winner + ' sube.',
-        (c) => 'Swap de posición. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
-        (c) => 'Swap de posición. Swap completado: ' + c.winner + ' por delante.',
-        (c) => 'Swap de posición. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
+        (c) => 'Cambio de posición. ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
+        (c) => 'Cambio de posición. P' + c.newPos + ' para ' + c.winner + '.',
+        (c) => 'Cambio de posición. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
+        (c) => 'Cambio de posición. Cambio en P' + c.newPos + '. ' + c.winner + ' sube.',
+        (c) => 'Cambio de posición. ' + c.loser + ' pierde el lugar. ' + c.winner + ' toma P' + c.newPos + '.',
+        (c) => 'Cambio de posición. Cambio completado: ' + c.winner + ' por delante.',
+        (c) => 'Cambio de posición. ' + c.winner + ' completa el pase. P' + c.newPos + '.',
         (c) => 'Movimiento de ranking. ' + c.winner + ' a P' + c.newPos + '. ' + c.loser + ' a P' + c.oldPos + '.',
         (c) => 'Movimiento de ranking. P' + c.newPos + ' para ' + c.winner + '.',
         (c) => 'Movimiento de ranking. ' + c.winner + ' gana P' + c.newPos + ' y estabiliza.',
         (c) => 'Movimiento de ranking. Cambio en P' + c.newPos + '. ' + c.winner + ' sube.'
       ],
       battle: [
-        (c) => 'Duelo P' + c.pos + '. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
+        (c) => 'Duelo P' + c.pos + '. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
         (c) => 'Duelo P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
         (c) => 'Duelo P' + c.pos + '. Delta ' + c.sec + 's entre ' + c.attacker + ' y ' + c.defender + '.',
         (c) => 'Duelo P' + c.pos + '. ' + c.defender + ' tiene a ' + c.attacker + ' a ' + c.sec + 's.',
-        (c) => 'Duelo P' + c.pos + '. ' + c.attacker + ' en rango de ataque. Gap ' + c.sec + 's.',
+        (c) => 'Duelo P' + c.pos + '. ' + c.attacker + ' en rango de ataque. Margen ' + c.sec + 's.',
         (c) => 'Duelo P' + c.pos + '. Rango crtico: ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' en rango. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' en rango. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
         (c) => 'P' + c.pos + ' en rango. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' en rango. Delta ' + c.sec + 's entre ' + c.attacker + ' y ' + c.defender + '.',
         (c) => 'P' + c.pos + ' en rango. ' + c.defender + ' tiene a ' + c.attacker + ' a ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' en rango. ' + c.attacker + ' en rango de ataque. Gap ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' en rango. ' + c.attacker + ' en rango de ataque. Margen ' + c.sec + 's.',
         (c) => 'P' + c.pos + ' en rango. Rango crtico: ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' cerrado. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' cerrado. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
         (c) => 'P' + c.pos + ' cerrado. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' cerrado. Delta ' + c.sec + 's entre ' + c.attacker + ' y ' + c.defender + '.',
         (c) => 'P' + c.pos + ' cerrado. ' + c.defender + ' tiene a ' + c.attacker + ' a ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' cerrado. ' + c.attacker + ' en rango de ataque. Gap ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' cerrado. ' + c.attacker + ' en rango de ataque. Margen ' + c.sec + 's.',
         (c) => 'P' + c.pos + ' cerrado. Rango crtico: ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' con gap corto. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
-        (c) => 'P' + c.pos + ' con gap corto. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
-        (c) => 'P' + c.pos + ' con gap corto. Delta ' + c.sec + 's entre ' + c.attacker + ' y ' + c.defender + '.',
-        (c) => 'P' + c.pos + ' con gap corto. ' + c.defender + ' tiene a ' + c.attacker + ' a ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' con gap corto. ' + c.attacker + ' en rango de ataque. Gap ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' con gap corto. Rango crtico: ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' bajo presin. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.'
+        (c) => 'P' + c.pos + ' con margen corto. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' con margen corto. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' con margen corto. Delta ' + c.sec + 's entre ' + c.attacker + ' y ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' con margen corto. ' + c.defender + ' tiene a ' + c.attacker + ' a ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' con margen corto. ' + c.attacker + ' en rango de ataque. Margen ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' con margen corto. Rango crtico: ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' bajo presin. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.'
       ],
       battlePodium: [
-        (c) => 'Podio P' + c.pos + '. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
+        (c) => 'Podio P' + c.pos + '. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
         (c) => 'Podio P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
         (c) => 'Podio P' + c.pos + '. Delta ' + c.sec + 's por el podio.',
-        (c) => 'Podio P' + c.pos + '. ' + c.defender + ' defiende con gap ' + c.sec + 's.',
+        (c) => 'Podio P' + c.pos + '. ' + c.defender + ' defiende con margen ' + c.sec + 's.',
         (c) => 'Podio P' + c.pos + '. Rango de pase: ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' por trofeo. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' por trofeo. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
         (c) => 'P' + c.pos + ' por trofeo. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' por trofeo. Delta ' + c.sec + 's por el podio.',
-        (c) => 'P' + c.pos + ' por trofeo. ' + c.defender + ' defiende con gap ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' por trofeo. ' + c.defender + ' defiende con margen ' + c.sec + 's.',
         (c) => 'P' + c.pos + ' por trofeo. Rango de pase: ' + c.sec + 's.',
-        (c) => 'Zona de podio P' + c.pos + '. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
+        (c) => 'Zona de podio P' + c.pos + '. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
         (c) => 'Zona de podio P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
         (c) => 'Zona de podio P' + c.pos + '. Delta ' + c.sec + 's por el podio.',
-        (c) => 'Zona de podio P' + c.pos + '. ' + c.defender + ' defiende con gap ' + c.sec + 's.',
+        (c) => 'Zona de podio P' + c.pos + '. ' + c.defender + ' defiende con margen ' + c.sec + 's.',
         (c) => 'Zona de podio P' + c.pos + '. Rango de pase: ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' crtico para podio. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' crtico para podio. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
         (c) => 'P' + c.pos + ' crtico para podio. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' crtico para podio. Delta ' + c.sec + 's por el podio.',
-        (c) => 'P' + c.pos + ' crtico para podio. ' + c.defender + ' defiende con gap ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' crtico para podio. ' + c.defender + ' defiende con margen ' + c.sec + 's.',
         (c) => 'P' + c.pos + ' crtico para podio. Rango de pase: ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' de podio en disputa. Gap ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
+        (c) => 'P' + c.pos + ' de podio en disputa. Margen ' + c.sec + 's. ' + c.attacker + ' presiona a ' + c.defender + '.',
         (c) => 'P' + c.pos + ' de podio en disputa. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
         (c) => 'P' + c.pos + ' de podio en disputa. Delta ' + c.sec + 's por el podio.',
-        (c) => 'P' + c.pos + ' de podio en disputa. ' + c.defender + ' defiende con gap ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' de podio en disputa. ' + c.defender + ' defiende con margen ' + c.sec + 's.',
         (c) => 'P' + c.pos + ' de podio en disputa. Rango de pase: ' + c.sec + 's.'
       ],
       closing: [
         (c) => 'Cierre en P' + c.pos + '. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.',
         (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + 's sobre ' + c.defender + '.',
-        (c) => 'Cierre en P' + c.pos + '. Gap cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
+        (c) => 'Cierre en P' + c.pos + '. Margen cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
         (c) => 'Cierre en P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + 's.',
         (c) => 'Cierre en P' + c.pos + '. Cierre confirmado: ' + c.fromSec + 's -> ' + c.toSec + 's.',
         (c) => 'Cierre en P' + c.pos + '. Tendencia positiva: ' + c.toSec + 's.',
         (c) => 'Tendencia P' + c.pos + '. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.',
         (c) => 'Tendencia P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + 's sobre ' + c.defender + '.',
-        (c) => 'Tendencia P' + c.pos + '. Gap cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
+        (c) => 'Tendencia P' + c.pos + '. Margen cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
         (c) => 'Tendencia P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + 's.',
         (c) => 'Tendencia P' + c.pos + '. Cierre confirmado: ' + c.fromSec + 's -> ' + c.toSec + 's.',
         (c) => 'Tendencia P' + c.pos + '. Tendencia positiva: ' + c.toSec + 's.',
         (c) => 'Delta en P' + c.pos + '. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.',
         (c) => 'Delta en P' + c.pos + '. ' + c.attacker + ' reduce a ' + c.toSec + 's sobre ' + c.defender + '.',
-        (c) => 'Delta en P' + c.pos + '. Gap cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
+        (c) => 'Delta en P' + c.pos + '. Margen cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
         (c) => 'Delta en P' + c.pos + '. ' + c.attacker + ' ya está ' + c.toSec + 's.',
         (c) => 'Delta en P' + c.pos + '. Cierre confirmado: ' + c.fromSec + 's -> ' + c.toSec + 's.',
         (c) => 'Delta en P' + c.pos + '. Tendencia positiva: ' + c.toSec + 's.',
         (c) => 'P' + c.pos + ' con recorte. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.',
         (c) => 'P' + c.pos + ' con recorte. ' + c.attacker + ' reduce a ' + c.toSec + 's sobre ' + c.defender + '.',
-        (c) => 'P' + c.pos + ' con recorte. Gap cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
+        (c) => 'P' + c.pos + ' con recorte. Margen cae de ' + c.fromSec + 's a ' + c.toSec + 's.',
         (c) => 'P' + c.pos + ' con recorte. ' + c.attacker + ' ya está ' + c.toSec + 's.',
         (c) => 'P' + c.pos + ' con recorte. Cierre confirmado: ' + c.fromSec + 's -> ' + c.toSec + 's.',
         (c) => 'P' + c.pos + ' con recorte. Tendencia positiva: ' + c.toSec + 's.',
-        (c) => 'Gap bajando en P' + c.pos + '. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.'
+        (c) => 'Margen bajando en P' + c.pos + '. De ' + c.fromSec + 's a ' + c.toSec + 's. ' + c.attacker + ' recorta.'
       ],
       
       gap: [
-        (c) => 'Gap P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
-        (c) => 'Gap P' + c.pos + '. ' + c.defender + ' adelante, ' + c.attacker + ' a ' + c.sec + 's.',
-        (c) => 'P' + c.pos + ' gap ' + c.sec + 's. ' + c.attacker + ' viene detrs.',
+        (c) => 'Margen P' + c.pos + '. ' + c.attacker + ' a ' + c.sec + 's de ' + c.defender + '.',
+        (c) => 'Margen P' + c.pos + '. ' + c.defender + ' adelante, ' + c.attacker + ' a ' + c.sec + 's.',
+        (c) => 'P' + c.pos + ' margen ' + c.sec + 's. ' + c.attacker + ' viene detrs.',
         (c) => 'P' + c.pos + '. Separacin ' + c.sec + 's entre ' + c.defender + ' y ' + c.attacker + '.',
         (c) => 'P' + c.pos + '. ' + c.attacker + ' marca ' + c.sec + 's al de adelante.'
       ],
@@ -20985,28 +20987,28 @@ function autoBuildStoryCandidate(args) {
         (c) => 'Lectura de top 3: ' + c.p1 + ' al frente, ' + c.p2 + ' y ' + c.p3 + ' detrs.'
       ],
       train: [
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Alto riesgo de swap.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Ventana de pase abierta.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Cualquier error altera la tabla.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Delta mnimo, decisin rápida.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'La siguiente curva es clave.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Alto riesgo de swap.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Ventana de pase abierta.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Cualquier error altera la tabla.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Delta mnimo, decisin rápida.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'La siguiente curva es clave.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'Alto riesgo de swap.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'Ventana de pase abierta.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'Cualquier error altera la tabla.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'Delta mnimo, decisin rápida.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Cluster: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Cluster por podio. ') + 'La siguiente curva es clave.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Alto riesgo de swap.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Ventana de pase abierta.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Cualquier error altera la tabla.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Delta mnimo, decisin rápida.',
-        (c) => 'Grupo compacto detectado. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'La siguiente curva es clave.',
-        (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Alto riesgo de swap.',
-        (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Ventana de pase abierta.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Se puede mover el grupo.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Ya está en rango de rebase.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Cualquier error altera la tabla.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Delta mnimo, decisin rápida.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'La siguiente curva es clave.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Se puede mover el grupo.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Ya está en rango de rebase.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Cualquier error altera la tabla.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'Delta mnimo, decisin rápida.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Paquete P2-P4: ' + c.p2 + ' - ' + c.p3 + ' - ' + c.p4 + '. ') : 'Paquete compacto P2 a P4. ') + 'La siguiente curva es clave.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren por podio. ') + 'Se puede mover el grupo.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren por podio. ') + 'Ya está en rango de rebase.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren por podio. ') + 'Cualquier error altera la tabla.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren por podio. ') + 'Delta mnimo, decisin rápida.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Tren: ' + c.p2 + ', ' + c.p3 + ' y ' + c.p4 + '. ') : 'Tren por podio. ') + 'La siguiente curva es clave.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Se puede mover el grupo.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Ya está en rango de rebase.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Cualquier error altera la tabla.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'Delta mnimo, decisin rápida.',
+        (c) => 'Tren compacto. ' + (c.p2 ? ('Grupo: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Tres autos con delta mnimo. ') + 'La siguiente curva es clave.',
+        (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Se puede mover el grupo.',
+        (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Ya está en rango de rebase.',
         (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Cualquier error altera la tabla.',
         (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'Delta mnimo, decisin rápida.',
         (c) => 'Paquete P2-P4. ' + (c.p2 ? ('P2-P4: ' + c.p2 + ', ' + c.p3 + ', ' + c.p4 + '. ') : 'Grupo P2-P4 en rango. ') + 'La siguiente curva es clave.'
@@ -21017,8 +21019,8 @@ function autoBuildStoryCandidate(args) {
       // Finales: mas hilo, mas variedad, menos repeticion.
       leaderChange: [
         (c) => 'Cambio de líder. ' + (c.winner||c.attacker) + ' roba P1. ' + (c.loser||c.defender) + ' cae a P2.',
-        (c) => 'Se volteo la pelicula. ' + (c.winner||c.attacker) + ' toma la punta. ' + (c.loser||c.defender) + ' a remar.',
-        (c) => 'Swap arriba. ' + (c.winner||c.attacker) + ' manda. ' + (c.loser||c.defender) + ' queda segundo.',
+        (c) => 'Cambio de mando arriba. ' + (c.winner||c.attacker) + ' toma la punta. ' + (c.loser||c.defender) + ' a responder.',
+        (c) => 'Cambio arriba. ' + (c.winner||c.attacker) + ' manda. ' + (c.loser||c.defender) + ' queda segundo.',
         (c) => 'P1 cambia de manos. ' + (c.winner||c.attacker) + ' al frente. ' + (c.loser||c.defender) + ' no lo suelta.',
         (c) => 'Que golpe. ' + (c.winner||c.attacker) + ' se queda con P1. ' + (c.loser||c.defender) + ' se acomoda P2.',
         (c) => 'La punta tiene nuevo dueno: ' + (c.winner||c.attacker) + '.',
@@ -21046,39 +21048,39 @@ function autoBuildStoryCandidate(args) {
       ],
 
       battle: [
-        (c) => 'Camara a P' + c.pos + '. ' + c.attacker + ' en el espejo de ' + c.defender + '. Gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Camara a P' + c.pos + '. ' + c.attacker + ' en el espejo de ' + c.defender + '. Margen ' + (c.sec||c.deltaStr) + '.',
         (c) => 'P' + c.pos + ' al rojo. ' + c.attacker + ' lo trae pegado. ' + (c.sec||c.deltaStr) + '.',
         (c) => 'P' + c.pos + ' en mano a mano. ' + c.attacker + ' buscando el hueco. ' + (c.sec||c.deltaStr) + '.',
         (c) => 'Duelo real. ' + c.defender + ' defendiendo, ' + c.attacker + ' atacando. ' + (c.sec||c.deltaStr) + '.',
-        (c) => 'Esto puede cambiar en P' + c.pos + '. Gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Esto puede cambiar en P' + c.pos + '. Margen ' + (c.sec||c.deltaStr) + '.',
         (c) => 'P' + c.pos + ' sin respiro. ' + c.attacker + ' no suelta. ' + (c.sec||c.deltaStr) + '.',
         (c) => 'Rango de ataque en P' + c.pos + '. ' + c.attacker + ' con opcion.',
         (c) => 'Ojo esa pelea. ' + c.attacker + ' trae mejor linea sobre ' + c.defender + '.',
         (c) => 'P' + c.pos + ' en la mira. ' + c.attacker + ' est listo.',
-        (c) => 'Se ven espejos. P' + c.pos + ' con gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Se ven espejos. P' + c.pos + ' con margen ' + (c.sec||c.deltaStr) + '.',
         (c) => 'P' + c.pos + ' apretado. Todo se decide por milmetros.',
         (c) => 'Duelo continuo en P' + c.pos + '. ' + (c.sec||c.deltaStr) + '.'
       ],
 
       battlePodium: [
-        (c) => 'Podio en juego. P' + c.pos + ' con gap ' + (c.sec||c.deltaStr) + '. ' + c.attacker + ' presiona.',
+        (c) => 'Podio en juego. P' + c.pos + ' con margen ' + (c.sec||c.deltaStr) + '. ' + c.attacker + ' presiona.',
         (c) => 'Trofeo en la mira. ' + c.attacker + ' encima de ' + c.defender + '. ' + (c.sec||c.deltaStr) + '.',
         (c) => 'P' + c.pos + ' por podio. ' + c.defender + ' se defiende con el retrovisor lleno.',
         (c) => 'Zona de podio al limite. ' + c.attacker + ' con opcion clara.',
-        (c) => 'Esto huele a swap por el podio. Gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Esto huele a rebase por el podio. Margen ' + (c.sec||c.deltaStr) + '.',
         (c) => 'Pelea de podio. ' + c.attacker + ' no perdona. ' + (c.sec||c.deltaStr) + '.',
         (c) => 'P' + c.pos + ' por trofeo, sin margen. ' + (c.sec||c.deltaStr) + '.',
         (c) => 'Podio provisional temblando. ' + c.attacker + ' lo quiere.',
         (c) => 'P' + c.pos + ' en disputa. Cualquier error y cambia el podio.',
         (c) => 'Podio en fuego. ' + c.attacker + ' a tiro. ' + (c.sec||c.deltaStr) + '.',
-        (c) => 'Se aprieta el podio. Gap ' + (c.sec||c.deltaStr) + '.',
+        (c) => 'Se aprieta el podio. Margen ' + (c.sec||c.deltaStr) + '.',
         (c) => 'P' + c.pos + ' por podio. Esto est bravo.'
       ],
 
       closing: [
         (c) => 'Recorte. P' + c.pos + ' de ' + c.fromSec + ' a ' + c.toSec + '. ' + c.attacker + ' se acerca.',
         (c) => 'Se viene. ' + c.attacker + ' baja a ' + c.toSec + ' sobre ' + c.defender + '.',
-        (c) => 'Gap cayendo en P' + c.pos + '. ' + c.toSec + ' ahora.',
+        (c) => 'Margen cayendo en P' + c.pos + '. ' + c.toSec + ' ahora.',
         (c) => 'Cierre confirmado. P' + c.pos + ' ya est en ' + c.toSec + '.',
         (c) => 'Tendencia clara. ' + c.attacker + ' recorta y pone presion.',
         (c) => 'Atencin. P' + c.pos + ' se aprieta rpido.',
@@ -21091,9 +21093,9 @@ function autoBuildStoryCandidate(args) {
       train: [
         (c) => 'Tren por el podio. ' + (c.p2 ? (c.p2 + ', ' + c.p3 + ', ' + c.p4 + '.') : 'P2 a P4 en paquete.') + ' Nadie respira.',
         (c) => 'Paquete compacto. Una curva y cambia todo.',
-        (c) => 'P2 a P4 en fila india. Ventana de pase abierta.',
+        (c) => 'P2 a P4 en fila india. Ya está en rango de rebase.',
         (c) => 'Tres autos pegados por el podio. Precision pura.',
-        (c) => 'Cluster por el podio. Se viene el swap.',
+        (c) => 'Tren por el podio. Se viene el rebase.',
         (c) => 'P2 a P4 sin aire. Error y se voltean.',
         (c) => 'Paquete por P2-P4. Nadie regala.',
         (c) => 'Tren formado. Ojo con el toque.',
@@ -21214,7 +21216,7 @@ function autoBuildMessage(type, ctx) {
         ? autoPickStyleForType(type)
         : ((autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo') ? autoCommentatorMode : 'pro');
 
-      // Motor contextual inteligente: decide al vuelo que decir segun carrera, gap y continuidad
+      // Motor contextual inteligente: decide al vuelo que decir segun carrera, margen y continuidad
       try {
         const smartOut = ttsSmartComposeAuto(type, ctx || {}, style);
         if (smartOut && autoIsUsableText(smartOut, type)) {
@@ -21248,7 +21250,7 @@ function autoBuildMessage(type, ctx) {
     // =========================
 // BLUE FLAG (Auto Locutor)
 // - Se anuncia solo en Auto Locutor (sin piloto seleccionado)
-// - Lgica: si el líder ya te sac 1 vuelta (lapDiff>=1 o gap "+1 V"), pide cortesa
+// - Lgica: si el líder ya te sac 1 vuelta (lapDiff>=1 o margen "+1 V"), pide cortesa
 // - Anti-spam: 1 por tick, cooldown global y por piloto, y repetir mximo cada 2 vueltas del líder
 // =========================
 const __autoBlueLatch = new Map(); // pilotKey -> { lastLeaderLap, lastSpeakMs }
@@ -21453,7 +21455,7 @@ const TTS_GEN_V2_STYLE_PRESETS = {
         { id:'pro.battle.focus.5', text:'{defender} trae a {attacker} pegado detrás.', weight:2 }
       ],
       gap: [
-        { id:'pro.battle.gap.1', text:'Gap {sec}.', weight:3 },
+        { id:'pro.battle.gap.1', text:'Margen {sec}.', weight:3 },
         { id:'pro.battle.gap.2', text:'Van {sec}.', weight:3 },
         { id:'pro.battle.gap.3', text:'Los separa {sec}.', weight:2 },
         { id:'pro.battle.gap.4', text:'Todo sigue a {sec}.', weight:1 }
@@ -21485,7 +21487,7 @@ const TTS_GEN_V2_STYLE_PRESETS = {
       ],
       gap: [
         { id:'pro.podium.gap.1', text:'Están {sec}.', weight:3 },
-        { id:'pro.podium.gap.2', text:'Gap {sec}.', weight:2 },
+        { id:'pro.podium.gap.2', text:'Margen {sec}.', weight:2 },
         { id:'pro.podium.gap.3', text:'Todo a {sec}.', weight:1 }
       ],
       action: [
@@ -21504,12 +21506,12 @@ const TTS_GEN_V2_STYLE_PRESETS = {
         { id:'pro.closing.open.1', text:'Se viene el cierre.', weight:4 },
         { id:'pro.closing.open.2', text:'Esto se aprieta.', weight:3 },
         { id:'pro.closing.open.3', text:'Atención, se está cerrando.', weight:2 },
-        { id:'pro.closing.open.4', text:'La brecha se viene abajo.', weight:2 }
+        { id:'pro.closing.open.4', text:'La margen se viene abajo.', weight:2 }
       ],
       delta: [
         { id:'pro.closing.delta.1', text:'De {fromSec} a {toSec}.', weight:4 },
         { id:'pro.closing.delta.2', text:'Recorta {delta}. Ya van {toSec}.', weight:3 },
-        { id:'pro.closing.delta.3', text:'El gap cae hasta {toSec}.', weight:2 },
+        { id:'pro.closing.delta.3', text:'El margen cae hasta {toSec}.', weight:2 },
         { id:'pro.closing.delta.4', text:'Se achica a {toSec}.', weight:2 }
       ],
       focus: [
@@ -21597,7 +21599,7 @@ const TTS_GEN_V2_STYLE_PRESETS = {
       delta: [
         { id:'pic.closing.delta.1', text:'De {fromSec} a {toSec}.', weight:4 },
         { id:'pic.closing.delta.2', text:'Le recorta {delta}. Ya van {toSec}.', weight:3 },
-        { id:'pic.closing.delta.3', text:'Le bajó el gap hasta {toSec}.', weight:2 }
+        { id:'pic.closing.delta.3', text:'Le bajó el margen hasta {toSec}.', weight:2 }
       ],
       focus: [
         { id:'pic.closing.focus.1', text:'{attacker} ya trae a {defender} para comérselo.', weight:3 },
@@ -21630,7 +21632,7 @@ const TTS_GEN_V2_STYLE_PRESETS = {
         { id:'eng.battle.focus.3', text:'P{pos}, {defender} contra {attacker}.', weight:2 }
       ],
       gap: [
-        { id:'eng.battle.gap.1', text:'Gap {sec}.', weight:4 },
+        { id:'eng.battle.gap.1', text:'Margen {sec}.', weight:4 },
         { id:'eng.battle.gap.2', text:'Delta {sec}.', weight:2 },
         { id:'eng.battle.gap.3', text:'Todo en {sec}.', weight:1 }
       ],
@@ -21654,7 +21656,7 @@ const TTS_GEN_V2_STYLE_PRESETS = {
         { id:'eng.podium.focus.2', text:'P{pos}, {defender} contra {attacker}.', weight:3 }
       ],
       gap: [
-        { id:'eng.podium.gap.1', text:'Gap {sec}.', weight:4 },
+        { id:'eng.podium.gap.1', text:'Margen {sec}.', weight:4 },
         { id:'eng.podium.gap.2', text:'Delta {sec}.', weight:2 }
       ],
       action: [
@@ -21669,7 +21671,7 @@ const TTS_GEN_V2_STYLE_PRESETS = {
     closing: {
       open: [
         { id:'eng.closing.open.1', text:'Lectura de cierre.', weight:4 },
-        { id:'eng.closing.open.2', text:'Gap a la baja.', weight:3 },
+        { id:'eng.closing.open.2', text:'Margen a la baja.', weight:3 },
         { id:'eng.closing.open.3', text:'Compresión detectada.', weight:2 }
       ],
       delta: [
@@ -21788,7 +21790,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
         { id:'pro.pressure.focus.3', text:'{attacker} ya está tocando la puerta de {defender}.', weight:2 }
       ],
       gap: [
-        { id:'pro.pressure.gap.1', text:'Gap {sec}.', weight:4 },
+        { id:'pro.pressure.gap.1', text:'Margen {sec}.', weight:4 },
         { id:'pro.pressure.gap.2', text:'Todo a {sec}.', weight:3 },
         { id:'pro.pressure.gap.3', text:'Los separa {sec}.', weight:2 }
       ],
@@ -21810,7 +21812,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
         { id:'pro.gap.focus.3', text:'{back} sigue a {front}.', weight:2 }
       ],
       gap: [
-        { id:'pro.gap.gap.1', text:'Gap {sec}.', weight:4 },
+        { id:'pro.gap.gap.1', text:'Margen {sec}.', weight:4 },
         { id:'pro.gap.gap.2', text:'A {sec}.', weight:3 },
         { id:'pro.gap.gap.3', text:'Todo a {sec}.', weight:2 }
       ]
@@ -21838,7 +21840,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
         { id:'pro.lead.open.2', text:'Tenemos líder nuevo.', weight:3 },
         { id:'pro.lead.open.3', text:'Se mueve la punta.', weight:2 }
       ],
-      swap: [
+      rebase: [
         { id:'pro.lead.swap.1', text:'{winner} pasa al frente sobre {loser}.', weight:4 },
         { id:'pro.lead.swap.2', text:'{winner} le quita la punta a {loser}.', weight:3 },
         { id:'pro.lead.swap.3', text:'Ahora manda {winner}; cae {loser}.', weight:2 }
@@ -21899,11 +21901,11 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
       focus: [
         { id:'pic.pressure.focus.1', text:'{attacker} ya trae a {defender} en la mira.', weight:4 },
         { id:'pic.pressure.focus.2', text:'{defender} va con el espejo lleno de {attacker}.', weight:3 },
-        { id:'pic.pressure.focus.3', text:'{attacker} ya le respira en la nuca a {defender}.', weight:2 }
+        { id:'pic.pressure.focus.3', text:'{attacker} ya le ya está encima a {defender}.', weight:2 }
       ],
       gap: [
         { id:'pic.pressure.gap.1', text:'A {sec}.', weight:4 },
-        { id:'pic.pressure.gap.2', text:'Gap {sec}.', weight:3 },
+        { id:'pic.pressure.gap.2', text:'Margen {sec}.', weight:3 },
         { id:'pic.pressure.gap.3', text:'Nada de aire, {sec}.', weight:2 }
       ],
       advice: [
@@ -21926,7 +21928,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
       gap: [
         { id:'pic.gap.gap.1', text:'Todo a {sec}.', weight:4 },
         { id:'pic.gap.gap.2', text:'A {sec}.', weight:3 },
-        { id:'pic.gap.gap.3', text:'Gap {sec}.', weight:2 }
+        { id:'pic.gap.gap.3', text:'Margen {sec}.', weight:2 }
       ]
     },
     top3: {
@@ -21952,13 +21954,13 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
         { id:'pic.lead.open.2', text:'Golpe en la mesa.', weight:3 },
         { id:'pic.lead.open.3', text:'Cambio pesado adelante.', weight:2 }
       ],
-      swap: [
+      rebase: [
         { id:'pic.lead.swap.1', text:'{winner} baja a {loser} y se queda con P1.', weight:4 },
         { id:'pic.lead.swap.2', text:'{winner} le arrancó la punta a {loser}.', weight:3 },
-        { id:'pic.lead.swap.3', text:'Ahora manda {winner}; {loser} se tuvo que abrir.', weight:2 }
+        { id:'pic.lead.swap.3', text:'Ahora manda {winner}; {loser} queda a la persecución.', weight:2 }
       ],
       impact: [
-        { id:'pic.lead.impact.1', text:'Eso sí mueve la película.', weight:2 },
+        { id:'pic.lead.impact.1', text:'Eso sí mueve la punta.', weight:2 },
         { id:'pic.lead.impact.2', text:'La carrera cambia de tono.', weight:2 },
         { id:'pic.lead.impact.3', text:'Vaya sacudida.', weight:1 }
       ]
@@ -22016,7 +22018,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
         { id:'eng.pressure.focus.3', text:'{attacker} ya está en zona de maniobra sobre {defender}.', weight:2 }
       ],
       gap: [
-        { id:'eng.pressure.gap.1', text:'Gap {sec}.', weight:4 },
+        { id:'eng.pressure.gap.1', text:'Margen {sec}.', weight:4 },
         { id:'eng.pressure.gap.2', text:'Delta {sec}.', weight:3 },
         { id:'eng.pressure.gap.3', text:'Separación {sec}.', weight:2 }
       ],
@@ -22040,7 +22042,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
       gap: [
         { id:'eng.gap.gap.1', text:'Delta {sec}.', weight:4 },
         { id:'eng.gap.gap.2', text:'A {sec}.', weight:3 },
-        { id:'eng.gap.gap.3', text:'Gap {sec}.', weight:2 }
+        { id:'eng.gap.gap.3', text:'Margen {sec}.', weight:2 }
       ]
     },
     top3: {
@@ -22066,7 +22068,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
         { id:'eng.lead.open.2', text:'Cambio de referencia al frente.', weight:3 },
         { id:'eng.lead.open.3', text:'Punta reordenada.', weight:2 }
       ],
-      swap: [
+      rebase: [
         { id:'eng.lead.swap.1', text:'{winner} supera a {loser} y toma P1.', weight:4 },
         { id:'eng.lead.swap.2', text:'{winner} desplaza a {loser} del liderato.', weight:3 },
         { id:'eng.lead.swap.3', text:'{winner} queda primero; {loser} pasa a persecución.', weight:2 }
@@ -22154,7 +22156,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
       gap: [
         { id:'nar.gap.gap.1', text:'Todo a {sec}.', weight:4 },
         { id:'nar.gap.gap.2', text:'A {sec}.', weight:3 },
-        { id:'nar.gap.gap.3', text:'Con gap de {sec}.', weight:2 }
+        { id:'nar.gap.gap.3', text:'Con margen de {sec}.', weight:2 }
       ]
     },
     top3: {
@@ -22180,7 +22182,7 @@ const TTS_GEN_V2_STYLE_EVENT_EXPANSIONS = {
         { id:'nar.lead.open.2', text:'Hay líder nuevo en escena.', weight:3 },
         { id:'nar.lead.open.3', text:'Se escribe un capítulo nuevo al frente.', weight:2 }
       ],
-      swap: [
+      rebase: [
         { id:'nar.lead.swap.1', text:'{winner} desplaza a {loser} y se queda con P1.', weight:4 },
         { id:'nar.lead.swap.2', text:'{winner} le arrebata el liderato a {loser}.', weight:3 },
         { id:'nar.lead.swap.3', text:'Ahora manda {winner}; resiste desde atrás {loser}.', weight:2 }
@@ -22329,7 +22331,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       ],
       gap: [
         { id:'pro.qualiPole.gap.1', text:'Todo a {sec}.', weight:4 },
-        { id:'pro.qualiPole.gap.2', text:'Gap {sec}.', weight:3 },
+        { id:'pro.qualiPole.gap.2', text:'Margen {sec}.', weight:3 },
         { id:'pro.qualiPole.gap.3', text:'Los separa {sec}.', weight:2 }
       ],
       impact: [
@@ -22375,7 +22377,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       ],
       pack: [
         { id:'pic.train.pack.1', text:'{p2}, {p3} y {p4} vienen pegados como estampita.', weight:4 },
-        { id:'pic.train.pack.2', text:'P2 a P4 traen cuchillo entre los dientes: {p2}, {p3}, {p4}.', weight:3 },
+        { id:'pic.train.pack.2', text:'P2 a P4 van al límite: {p2}, {p3}, {p4}.', weight:3 },
         { id:'pic.train.pack.3', text:'Tres autos, un problema: {p2}, {p3}, {p4}.', weight:2 }
       ],
       gap: [
@@ -22525,7 +22527,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
       delta: [
         { id:'eng.story.delta.1', text:'De {fromSec} a {toSec}.', weight:3 },
         { id:'eng.story.delta.2', text:'Delta actual {toSec}.', weight:3 },
-        { id:'eng.story.delta.3', text:'Gap de trabajo {toSec}.', weight:2 }
+        { id:'eng.story.delta.3', text:'Margen de trabajo {toSec}.', weight:2 }
       ],
       memory: [
         { id:'eng.story.memory.1', text:'{storyBeatText}.', weight:2 },
@@ -22572,7 +22574,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
         { id:'eng.qualiPole.front.3', text:'La punta temporal esta entre {p1} y {p2}.', weight:2 }
       ],
       gap: [
-        { id:'eng.qualiPole.gap.1', text:'Gap {sec}.', weight:4 },
+        { id:'eng.qualiPole.gap.1', text:'Margen {sec}.', weight:4 },
         { id:'eng.qualiPole.gap.2', text:'Delta {sec}.', weight:3 },
         { id:'eng.qualiPole.gap.3', text:'Separacion {sec}.', weight:2 }
       ],
@@ -22594,7 +22596,7 @@ const TTS_GEN_V2_STYLE_PHASE2 = {
         { id:'eng.mini.top.3', text:'Frente compuesto por {p1}, {p2}, {p3}, {p4} y {p5}.', weight:2 }
       ],
       battle: [
-        { id:'eng.mini.battle.1', text:'Minimo gap en P{battlePos}: {battleAttacker} a {battleGap} de {battleDefender}.', weight:3 },
+        { id:'eng.mini.battle.1', text:'Minimo margen en P{battlePos}: {battleAttacker} a {battleGap} de {battleDefender}.', weight:3 },
         { id:'eng.mini.battle.2', text:'Referencia critica en P{battlePos}.', weight:2 },
         { id:'eng.mini.battle.3', text:'Cierre principal ubicado en P{battlePos}.', weight:1 }
       ],
@@ -22836,7 +22838,7 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
         { id:'pro.leader.open.4', text:'Cambio serio al frente.', weight:2 },
         { id:'pro.leader.open.5', text:'Se mueve la cabeza.', weight:1 }
       ],
-      swap: [
+      rebase: [
         { id:'pro.leader.swap.4', text:'{winner} ya manda. {loser} cae detras.', weight:3 },
         { id:'pro.leader.swap.5', text:'Nuevo lider: {winner}.', weight:2 }
       ],
@@ -22897,7 +22899,7 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
         { id:'pic.pressure.open.5', text:'Trae al lobo encima.', weight:2 }
       ],
       focus: [
-        { id:'pic.pressure.focus.4', text:'{attacker} ya huele sangre detras de {defender}.', weight:2 },
+        { id:'pic.pressure.focus.4', text:'{attacker} ya ya viene con ritmo detras de {defender}.', weight:2 },
         { id:'pic.pressure.focus.5', text:'{defender} va con la respiracion de {attacker} en la nuca.', weight:2 }
       ],
       advice: [
@@ -22931,7 +22933,7 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
     top3: {
       open: [
         { id:'pic.top3.open.4', text:'Arriba esta sabroso.', weight:2 },
-        { id:'pic.top3.open.5', text:'Top 3 con cuchillos fuera.', weight:1 }
+        { id:'pic.top3.open.5', text:'Top 3 al rojo vivo.', weight:1 }
       ],
       order: [
         { id:'pic.top3.order.4', text:'Primero {p1}, luego {p2}, despues {p3}.', weight:2 },
@@ -22947,8 +22949,8 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
         { id:'pic.leader.open.4', text:'Volo la punta.', weight:2 },
         { id:'pic.leader.open.5', text:'Le dieron vuelta al tablero.', weight:1 }
       ],
-      swap: [
-        { id:'pic.leader.swap.4', text:'{winner} le quita la corona a {loser}.', weight:2 },
+      rebase: [
+        { id:'pic.leader.swap.4', text:'{winner} le quita la punta a {loser}.', weight:2 },
         { id:'pic.leader.swap.5', text:'{winner} le da la vuelta a {loser} y manda.', weight:2 }
       ],
       end: [
@@ -23003,7 +23005,7 @@ const TTS_GEN_V2_STYLE_PHASE3 = {
     },
     gap: {
       open: [
-        { id:'eng.gap.open.3', text:'Lectura tcnica del gap.', weight:2 },
+        { id:'eng.gap.open.3', text:'Dato de pista del gap.', weight:2 },
         { id:'eng.gap.open.4', text:'Actualizacion de referencia.', weight:1 }
       ],
       state: [
@@ -23778,9 +23780,9 @@ function ttsGenV2TrackFollowEvent(eventType, ctx, opts) {
     const prev = map.get(key) || null;
     let count = 1;
     if (prev) {
-      const tsGap = now - (Number(prev.lastTs) || 0);
-      const lapGap = (lap > 0 && Number(prev.lastLap) > 0) ? (lap - Number(prev.lastLap)) : 0;
-      const stillWarm = tsGap <= 90000 && (lap <= 0 || lapGap <= 2);
+      const tsMargen = now - (Number(prev.lastTs) || 0);
+      const lapMargen = (lap > 0 && Number(prev.lastLap) > 0) ? (lap - Number(prev.lastLap)) : 0;
+      const stillWarm = tsMargen <= 90000 && (lap <= 0 || lapMargen <= 2);
       if (stillWarm) {
         count = Number(prev.count) || 1;
         if (!(lap > 0 && lap === Number(prev.lastLap))) count += 1;
@@ -24543,7 +24545,7 @@ function collectAutoQualiCandidates(ctx) {
     const b1 = Number(r1 && r1.best) || 0;
     const b2 = Number(r2 && r2.best) || 0;
     if (!(b1 > 0 && b2 > 0 && isFinite(b1) && isFinite(b2))) return;
-    const gap = Math.abs(b2 - b1) / 1000;
+    const margen = Math.abs(b2 - b1) / 1000;
     const sincePF = now - (autoQualiState.lastPoleFightSpeakMs || 0);
     if (gap > 0.10 || sincePF <= 14000) return;
     addCand({
@@ -24643,7 +24645,7 @@ function collectAutoMiniSummaryCandidate(ctx) {
         (b) => `P${b.pos} sin respiro. ${b.defender} con espejo lleno. ${b.g}.`
       ],
       engineer: [
-        (b) => `Gap minimo en P${b.pos}. ${b.attacker} a ${b.g} de ${b.defender}.`,
+        (b) => `Margen minimo en P${b.pos}. ${b.attacker} a ${b.g} de ${b.defender}.`,
         (b) => `Cierre en P${b.pos}. Delta ${b.g}.`,
         (b) => `P${b.pos}. ${b.defender} vs ${b.attacker}. ${b.g}.`
       ],
@@ -24747,7 +24749,7 @@ function handleAutoCommentator() {
         // Auto Locutor: al cumplirse el tiempo de la final, anunciar quienes van finalizando
         try { __autoAnnounceFinishers(); } catch(e) {}
 
-        // En cierre: solo 'finalizo' y silencio (no narrar peleas ni swaps)
+        // En cierre: solo 'finalizo' y silencio (no narrar peleas ni rebases)
         if (__autoPhase === 'CLOSING') return;
 
         const leader = arr.find(r => Number(r.pos) === 1) || arr[0];
@@ -24898,9 +24900,9 @@ function handleAutoCommentator() {
         // guardar nombre del líder para el siguiente tick
         commentatorAutoState.lastLeaderKeyName = safeRacerName(leader && leader.racerName);
 
-        // Overtakes por swap de posiciones
+        // Overtakes por rebase de posiciones
         if (commentatorAutoState.prevKeyByPos && commentatorAutoState.prevKeyByPos.length) {
-          // detecta swaps simples: key actual en pos i y key previa diferente
+          // detecta rebases simples: key actual en pos i y key previa diferente
           for (let i = 0; i < Math.min(arr.length, 10); i++) {
             const curr = arr[i];
             const currPos = Number(curr.pos) || (i+1);
@@ -24916,11 +24918,11 @@ function handleAutoCommentator() {
 
                 // Snapshot de posiciones previas (tick anterior) para un pase consistente:
                 // - winnerPrevPos: de dnde vena el ganador
-                // - loserPrevPos: dnde iba el perdedor (debe coincidir con currPos para un swap simple)
+                // - loserPrevPos: dnde iba el perdedor (debe coincidir con currPos para un rebase simple)
                 const winnerPrevPos = prevPos;
                 const loserPrevPos = commentatorAutoState.prevPosByKey.get(loserKey);
 
-                // Solo narramos swaps simples (evita anunciar cosas raras y evita "P1...P1"):
+                // Solo narramos rebases simples (evita anunciar cosas raras y evita "P1...P1"):
                 if (loserPrevPos && loserPrevPos !== currPos) continue;
 
                 // Nueva posición del perdedor: cae al lugar de donde vena el ganador
@@ -24965,7 +24967,7 @@ function handleAutoCommentator() {
         collectAutoTop3Candidates({ arr, vs, progress, leaderLap, now, addCand });
         // ====== batallas cerradas (<=0.5s) y trenecito
         collectAutoBattleCandidates({ arr, vs, progress, leaderLap, now, addCand, battles });
-        // ====== se cierra (0.5 a 1.6, baja gap fuerte)
+        // ====== se cierra (0.5 a 1.6, baja margen fuerte)
         // Nota: POS ya no dispara cierres (para evitar duplicados). Cierres=ATAQUE/DEFENSA, gaps=números.
         collectAutoClosingCandidates({ arr, vs, progress, leaderLap, now, addCand, battles });
 // ====== modo de sesión
@@ -24993,7 +24995,7 @@ if (sessionType === 'MANGA') {
           commentatorAutoState.lastLeaderLap = leaderLap || commentatorAutoState.lastLeaderLap;
         } else {
           
-// MANGA: reduce ruido (menos swaps, ms info til)
+// MANGA: reduce ruido (menos rebases, ms info til)
 if (isMangaSess && candidates && candidates.length) {
   // Top3 + cierres + trenes. Lo dems en manga suele ser "ruido" por salida escalonada.
   const allow = new Set(['top3','closing','story','qualiBest','qualiPole','mini']);
@@ -25007,7 +25009,7 @@ if (isMangaSess && candidates && candidates.length) {
   }
 }
 
-// Conflict rule: pass vs battle. Prefer battle only if gap <= 0.30s, else pass.
+// Conflict rule: pass vs battle. Prefer battle only if margen <= 0.30s, else pass.
 try {
   let hasPass = false;
   let hasBattle = false;
@@ -25805,7 +25807,7 @@ function buildSelectedPilotVoiceContext(p) {
 
     function buildSelectedPilotBoxSummaryText(p) {
       const posTxt = (p.pos && p.pos > 0) ? ('P ' + Math.floor(p.pos)) : '';
-      const gapTxt = formatoGapVueltas(p.gap) ? ('Gap ' + formatoGapVueltas(p.gap)) : '';
+      const gapTxt = formatoGapVueltas(p.gap) ? ('Margen ' + formatoGapVueltas(p.gap)) : '';
       const bestTxt = p.best ? msToMinSec(p.best) : '';
       let msg = '';
       if (posTxt) msg += posTxt + '. ';
@@ -26706,7 +26708,7 @@ raceData = normalizeRaceData(rawRace);
             const pk = getPilotKey(p);
             const pos = Number(p.pos||0)||0;
             const laps = Number(p.lapcount ?? p.laps ?? 0) || 0;
-            const gap = String(p.gap ?? p.diff ?? p.interval ?? '').trim();
+            const margen = String(p.gap ?? p.diff ?? p.interval ?? '').trim();
             const totalMs = Number(p.totalMs ?? p.timeMs ?? p.elapsedMs ?? 0) || 0;
             const bestMs = Number(p.bestMs ?? p.bestLapMs ?? 0) || 0;
             const lastMs = Number(p.lastLapMs ?? p.lapMs ?? 0) || 0;
@@ -26720,7 +26722,7 @@ raceData = normalizeRaceData(rawRace);
           const leaderTimeMs = leader ? (Number(leader.totalMs ?? leader.timeMs ?? leader.elapsedMs ?? 0) || 0) : 0;
           const leaderBestMs = leader ? (Number(leader.bestMs ?? leader.bestLapMs ?? 0) || 0) : 0;
           const leaderLastMs = leader ? (Number(leader.lastLapMs ?? leader.lapMs ?? 0) || 0) : 0;
-          const leaderGap = leader ? String(leader.gap ?? leader.diff ?? leader.interval ?? '').trim() : '';
+          const leaderMargen = leader ? String(leader.gap ?? leader.diff ?? leader.interval ?? '').trim() : '';
           const sessionTypeSig = String((((currentSessionInfo && currentSessionInfo.type) || ((resolveSessionInfo(rawRace) || {}).type) || ''))).toUpperCase();
           const maxTotalMs = cls.reduce((mx, p) => Math.max(mx, Number(p.totalMs ?? p.timeMs ?? p.elapsedMs ?? 0) || 0), 0);
           let selPos = null, selLaps = null, selBestMs = 0, selLastMs = 0;
@@ -27598,8 +27600,8 @@ raceData = normalizeRaceData(rawRace);
         }
 
         if (second && secondName && sT.laps === lLaps && sT.timeMs > 0 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
-          const gap = sT.timeMs - lTimeMs;
-          if (isFinite(gap) && gap > 0 && gap <= 250){
+          const margen = sT.timeMs - lTimeMs;
+          if (isFinite(gap) && margen > 0 && margen <= 250){
             enqueueSpeech(
               `Nada cerrado en la pole. ${secondName} proyecta ${secondProjTxt}.`,
               { key: 'quali_pole_close_' + leaderKey + '_' + secondName + '_' + sT.laps + '_' + Math.round(sT.timeMs/10), cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 36 }
