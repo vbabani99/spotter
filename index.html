@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R2 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R4 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -9,7 +9,7 @@ Origen: Spotter_5.0.1.html
 Changelog:
 - v0.5.0.15: TTS quali projection - el estimado de pole/proyeccion ahora se lee como vueltas + tiempo en minutos, segundos y centesimas. Ejemplo: "21 vueltas en tres minutos con ocho segundos punto cincuenta y cuatro".
 - v0.5.0.17: intro generativo de finales segun Q tabla. Final A/B/C ya no entra plano; usa contexto de parrilla y corte de qualy.
-- v0.5.0.18R2: limpieza fuerte de argot motorsport en español para Auto Locutor y Seguimiento Normal; se normalizan leader/pass/battle/top3/train/record y se eliminan giros genéricos o poco racing.
+- v0.5.0.18R4: Auto Locutor más informativo y más de pista. Se endurece el tono de locutor motorsport en español, se prioriza información útil sobre remates vacíos, se ajustan leader/pass/battle/top3/train/qualiPole/record y se reduce la mezcla de estilos para que la salida suene más a cabina que a plantilla.
 - v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
 - v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
 - v0.4.10.2: anti-repeat del raceName - el intro de titulo ya no se reencola varias veces, se cancela al arrancar PRACTICA/QUALI/CARRERA y se blinda con latch por sesion.
@@ -89,7 +89,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R2</title>
+<title>vics_Smart_Spotter_v0.5.0.18R4</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6584,7 +6584,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R2</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R4</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7176,7 +7176,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R2";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R4";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7469,13 +7469,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R2";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R2',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R4',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R2', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R4', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -8490,9 +8490,11 @@ function msgv2DecimasTxt(ms) {
     function __ttsSmartClean(s) {
       try {
         let out = String(s || '').replace(/\s+/g, ' ').trim();
-        out = out.replace(/\s+,/g, ',').replace(/\s+\./g, '.');
-        out = out.replace(/,\s*,/g, ',').replace(/\.\s*\./g, '.');
-        out = out.replace(/\s+:/g, ':').replace(/\s+;/g, ';');
+        out = out.replace(/telemetria/gi, 'datos de pista');
+        out = out.replace(/update/gi, 'cambio');
+        out = out.replace(/pelicula/gi, 'carrera');
+        out = out.replace(/cluster/gi, 'grupo');
+        out = out.replace(/swap/gi, 'cambio de posicion');
         return spotterSanitizeText(out);
       } catch(e) { return String(s || '').trim(); }
     }
@@ -8850,8 +8852,8 @@ function msgv2DecimasTxt(ms) {
             neutral: hotResolve ? ['Se concreta el cambio de líder.', 'La presión termina en relevo de punta.', 'Se resuelve la pelea por P1.'] : ['Cambio de líder.', 'Nueva punta.', 'Líder nuevo.']
           };
           const close = late
-            ? ['Esto ya pesa en el cierre.', 'Movimiento serio para la recta final.', 'Golpe con olor a cierre.']
-            : ['Todavía hay respuesta en carrera.', 'Esto sigue abierto.', 'Aún falta tela por cortar.'];
+            ? ['Movimiento que pesa en el cierre.', 'Cambio serio para la recta final.', 'Ahora toca defender la punta.']
+            : ['La carrera sigue abierta.', 'Todavía hay respuesta por la punta.', 'Queda margen para contestar.'];
           const rivalLine = (rival && rival.recurrent)
             ? __ttsSmartPick([
                 'Otra vez estos dos se mueven arriba.',
@@ -8862,9 +8864,9 @@ function msgv2DecimasTxt(ms) {
           out = __ttsSmartJoin([
             __ttsSmartPick((open[tone] || open.neutral), 'auto:leader:open:' + tone + ':' + status),
             __ttsSmartPick([
-              winner + ' toma P1 y ' + loser + ' cae a segundo.',
-              winner + ' pasa al frente. ' + loser + ' queda P2.',
-              'Punta para ' + winner + '. ' + loser + ' a perseguir.'
+              winner + ' toma la punta y ' + loser + ' cae a P2.',
+              winner + ' pasa al frente. ' + loser + ' queda segundo.',
+              'Cambio en P1. ' + winner + ' manda y ' + loser + ' persigue.'
             ], 'auto:leader:core:' + winner + ':' + loser),
             rivalLine,
             __ttsSmartPick(close, 'auto:leader:close:' + late + ':' + sess)
@@ -8875,15 +8877,15 @@ function msgv2DecimasTxt(ms) {
           const weight = (newPos === '1') ? 'grande' : ((newPos === '2' || newPos === '3') ? 'podio' : 'normal');
           const hotResolve = !!(story && (story.status === 'resolved_hot' || story.status === 'resolved'));
           const open = {
-            spicy: hotResolve ? ['Tanto insistir y cayó la plaza.', 'La presión terminó en rebase.', 'Se cocinó y se sirvió el pase.'] : (weight === 'grande' ? ['Rebase con premio mayor.', 'Golpe grande de posición.', 'Pase de peso.'] : ['Movimiento con colmillo.', 'Puesto ganado.', 'Adelantamiento bueno.']),
-            technical: hotResolve ? ['Se concreta el cambio tras varias vueltas de presión.', 'La secuencia termina en rebase.', 'La presión sostenida da resultado.'] : ['Cambio de posición.', 'Ajuste en la tabla.', 'Puesto modificado.'],
-            neutral: hotResolve ? ['Se concreta la maniobra.', 'Después de varias vueltas, cae el cambio.', 'La presión por fin se traduce en rebase.'] : ['Rebase confirmado.', 'Cambio de posición.', 'Puesto ganado.']
+            spicy: hotResolve ? ['La presión termina en rebase.', 'Cae la posición tras varias vueltas de carga.', 'Se concreta la maniobra.'] : (weight === 'grande' ? ['Rebase por la punta.', 'Movimiento grande de posición.', 'Cambio fuerte arriba.'] : ['Rebase confirmado.', 'Cambio de posición.', 'Maniobra limpia.']),
+            technical: hotResolve ? ['Se concreta el rebase tras varias vueltas de presión.', 'La secuencia termina en cambio de posición.', 'La presión sostenida da resultado.'] : ['Cambio de posición.', 'Ajuste en la tabla.', 'Rebase registrado.'],
+            neutral: hotResolve ? ['Se concreta la maniobra.', 'Después de varias vueltas, cae el cambio.', 'La presión se traduce en rebase.'] : ['Rebase confirmado.', 'Cambio de posición.', 'Puesto ganado.']
           };
           const close = (weight === 'podio')
-            ? ['Eso mete presión por trofeo.', 'Zona grande de la carrera.', 'Puesto que vale podio.']
+            ? ['Movimiento que cambia el podio.', 'Puesto de podio en juego.', 'Eso pesa directo en el trofeo.']
             : (weight === 'grande')
-              ? ['Eso cambia la punta.', 'Movimiento que reordena todo.', 'Cambio clave arriba.']
-              : ['La pelea sigue viva.', 'No termina ahí.', 'Todavía hay respuesta.'];
+              ? ['Eso cambia la punta.', 'Movimiento que reordena el frente.', 'Cambio clave arriba.']
+              : ['La pelea sigue abierta.', 'Todavía puede haber respuesta.', 'La posición no queda cerrada.'];
           const rivalLine = (rival && rival.recurrent)
             ? __ttsSmartPick([
                 'Esto ya venía cocinándose entre los mismos dos.',
@@ -8894,9 +8896,9 @@ function msgv2DecimasTxt(ms) {
           out = __ttsSmartJoin([
             __ttsSmartPick((open[tone] || open.neutral), 'auto:pass:open:' + tone + ':' + weight + ':' + status),
             __ttsSmartPick([
-              winner + ' sube a P' + newPos + ' y ' + loser + ' baja a P' + oldPos + '.',
-              'P' + newPos + ' para ' + winner + '. ' + loser + ' cae a P' + oldPos + '.',
-              winner + ' gana la plaza. ' + loser + ' ahora es P' + oldPos + '.'
+              winner + ' sube a P' + newPos + ' y ' + loser + ' cae a P' + oldPos + '.',
+              'Rebase por P' + newPos + '. ' + winner + ' deja a ' + loser + ' en P' + oldPos + '.',
+              winner + ' gana la plaza y se acomoda en P' + newPos + '.'
             ], 'auto:pass:core:' + winner + ':' + loser + ':' + newPos),
             rivalLine,
             __ttsSmartPick(close, 'auto:pass:close:' + weight + ':' + prog)
@@ -8905,8 +8907,8 @@ function msgv2DecimasTxt(ms) {
           const pos = String((ctx && ctx.pos) || '');
           const isPod = (type === 'battlePodium');
           const openFresh = isPod
-            ? ['Podio en juego.', 'Zona de trofeo bajo presión.', 'Hay guerra por el podio.']
-            : ['Batalla directa.', 'Duelo en posición.', 'Pelea abierta en pista.'];
+            ? ['Pelea por el podio.', 'Podio en juego.', 'Duelo directo por trofeo.']
+            : ['Duelo directo.', 'Pelea de posición.', 'Batalla abierta en pista.'];
           const storyLine = {
             fresh: ['Apenas prende la historia.', 'Esto recién se forma.', 'Empieza la presión.'],
             continuing: ['Siguen pegados vuelta a vuelta.', 'Nadie rompe el duelo.', 'La pelea sigue viva.'],
@@ -8917,12 +8919,12 @@ function msgv2DecimasTxt(ms) {
           };
           const mid = [
             attacker + ' presiona a ' + defender + '.',
-            defender + ' aguanta y ' + attacker + ' sigue encima.',
-            attacker + ' ya está en rango de ' + defender + '.'
+            defender + ' sostiene la posición y ' + attacker + ' sigue encima.',
+            attacker + ' ya está en rango de maniobra sobre ' + defender + '.'
           ];
           const close = (band === 'knife' || band === 'close')
-            ? ['Esto se decide por milímetros.', 'La siguiente salida puede cambiarlo.', 'No hay aire entre ellos.']
-            : ['Margen ' + (secTxt || 'corto') + '.', 'Separación ' + (secTxt || 'corta') + '.', 'Todo sigue vivo ahí.'];
+            ? ['Esto se decide por milésimas.', 'La siguiente recta puede cambiarlo.', 'No hay aire entre ellos.']
+            : ['Margen ' + (secTxt || 'corto') + '.', 'Separación ' + (secTxt || 'controlada') + '.', 'La pelea sigue abierta ahí.'];
           const rivalryLine = (rival && rival.hot)
             ? __ttsSmartPick([
                 'Ya es el duelo caliente del momento.',
@@ -8947,8 +8949,8 @@ function msgv2DecimasTxt(ms) {
         } else if (type === 'closing' || type === 'pressure') {
           const deltaNarr = (fromSec && toSec) ? ['De ' + fromSec + ' a ' + toSec + '.', 'Ahora el margen es ' + toSec + '.', 'Recorte hasta ' + toSec + '.'] : (secTxt ? ['Margen ' + secTxt + '.', 'A ' + secTxt + '.', 'Separación ' + secTxt + '.'] : ['La diferencia cae.', 'La presión sube.', 'Se aprieta la historia.']);
           const open = (type === 'closing')
-            ? ['Se viene cerrando.', 'El perseguidor recorta.', 'Esto se aprieta.']
-            : ['Presión real.', 'No hay margen adelante.', 'La defensa carga espejos.'];
+            ? ['Recorte claro.', 'El perseguidor viene bajando la diferencia.', 'Se aprieta el margen.']
+            : ['Presión real.', 'No hay margen adelante.', 'El de adelante ya defiende la posición.'];
           const storyLine = {
             fresh: ['Arranca la persecución.', 'Se enciende la cacería.', 'Primera señal fuerte de recorte.'],
             continuing: ['Sigue el martillo detrás.', 'La presión no afloja.', 'Viene insistiendo sin pausa.'],
@@ -8958,8 +8960,8 @@ function msgv2DecimasTxt(ms) {
             ongoing: ['Es una presión larga ya.', 'Llevan varias vueltas en esta historia.', 'Esto viene cocinándose desde hace rato.']
           };
           const close = (band === 'knife' || band === 'close')
-            ? ['Ya huele a pase.', 'La siguiente curva importa mucho.', 'Esto puede cambiar muy pronto.']
-            : ['Todavía toca sostenerlo.', 'La defensa sigue trabajando.', 'Esto no está resuelto.'];
+            ? ['Ya huele a rebase.', 'La siguiente curva puede decidirlo.', 'Esto puede cambiar muy pronto.']
+            : ['Todavía toca defender.', 'La defensa sigue trabajando.', 'Esto no está resuelto.'];
           const rivalryLine = (rival && rival.heroic)
             ? __ttsSmartPick([
                 'Defensa heroica de ' + defender + '.',
@@ -8983,8 +8985,8 @@ function msgv2DecimasTxt(ms) {
             __ttsSmartPick(open, 'auto:closing:open:' + type + ':' + tone),
             __ttsSmartPick([
               attacker + ' recorta sobre ' + defender + '.',
-              defender + ' ya siente a ' + attacker + '.',
-              attacker + ' se mete en la pelea con ' + defender + '.'
+              defender + ' ya trae a ' + attacker + ' encima.',
+              attacker + ' se mete de lleno en la pelea con ' + defender + '.'
             ], 'auto:closing:mid:' + attacker + ':' + defender),
             __ttsSmartPick(deltaNarr, 'auto:closing:delta:' + fromSec + ':' + toSec + ':' + secTxt),
             __ttsSmartPick((storyLine[status] || storyLine.continuing), 'auto:closing:story:' + status + ':' + streak),
@@ -8994,13 +8996,13 @@ function msgv2DecimasTxt(ms) {
         } else if (type === 'gap') {
           const front = __ttsSmartName(ctx && ctx.front, 'adelante');
           const back = __ttsSmartName(ctx && ctx.back, 'atrás');
-          const open = (tone === 'technical') ? ['Lectura técnica.', 'Referencia de pista.', 'Número en pista.'] : ['Margen actual.', 'Diferencia registrada.', 'Separación medida.'];
+          const open = (tone === 'technical') ? ['Dato de referencia.', 'Lectura de margen.', 'Número en pista.'] : ['Margen actual.', 'Diferencia en pista.', 'Separación medida.'];
           out = __ttsSmartJoin([
             __ttsSmartPick(open, 'auto:gap:open:' + tone),
             __ttsSmartPick([
-              front + ' sobre ' + back + ', a ' + (secTxt || 'gap no disponible') + '.',
+              front + ' sobre ' + back + ', a ' + (secTxt || 'margen no disponible') + '.',
               front + ' mantiene ' + (secTxt || 'el margen') + ' sobre ' + back + '.',
-              'La diferencia entre ' + front + ' y ' + back + ' es ' + (secTxt || 'corta') + '.'
+              'La diferencia entre ' + front + ' y ' + back + ' queda en ' + (secTxt || 'margen corto') + '.'
             ], 'auto:gap:mid:' + front + ':' + back + ':' + secTxt)
           ]);
         } else if (type === 'top3') {
@@ -9008,11 +9010,11 @@ function msgv2DecimasTxt(ms) {
           const p2 = __ttsSmartName(ctx && ctx.p2, 'P2');
           const p3 = __ttsSmartName(ctx && ctx.p3, 'P3');
           out = __ttsSmartJoin([
-            __ttsSmartPick(['Top tres actual.', 'Así va el podio.', 'Corte del frente.'], 'auto:top3:open:' + prog),
+            __ttsSmartPick(['Top 3 actual.', 'Así va el podio.', 'Corte informativo del frente.'], 'auto:top3:open:' + prog),
             __ttsSmartPick([
               'P1 ' + p1 + ', P2 ' + p2 + ', P3 ' + p3 + '.',
-              p1 + ' manda, ' + p2 + ' persigue y ' + p3 + ' cierra el top tres.',
-              'El frente dice ' + p1 + ', luego ' + p2 + ' y después ' + p3 + '.'
+              p1 + ' manda, ' + p2 + ' va segundo y ' + p3 + ' completa el podio.',
+              'Orden del frente: ' + p1 + ' primero, ' + p2 + ' segundo y ' + p3 + ' tercero.'
             ], 'auto:top3:mid:' + p1 + ':' + p2 + ':' + p3)
           ]);
         } else if (type === 'train') {
@@ -9029,29 +9031,31 @@ function msgv2DecimasTxt(ms) {
           out = __ttsSmartJoin([
             __ttsSmartPick((trainStory[status] || trainStory.fresh), 'auto:train:open:' + tone + ':' + status + ':' + streak),
             __ttsSmartPick([
-              p2 + ', ' + p3 + ' y ' + p4 + ' van en una sola historia.',
-              'P2 a P4 vienen comprimidos con ' + p2 + ' al frente del grupo.',
-              p2 + ' encabeza el paquete y ' + p3 + ' con ' + p4 + ' no se despegan.'
+              p2 + ', ' + p3 + ' y ' + p4 + ' ruedan en el mismo tren.',
+              'De P2 a P4 vienen comprimidos con ' + p2 + ' al frente del grupo.',
+              p2 + ' encabeza el paquete y ' + p3 + ' con ' + p4 + ' siguen pegados.'
             ], 'auto:train:mid:' + p2 + ':' + p3 + ':' + p4),
-            __ttsSmartPick(['Cualquier error cambia todo.', 'Nadie puede pestañear ahí.', 'Todo está vivo en ese tren.'], 'auto:train:close:' + prog + ':' + status)
+            __ttsSmartPick(['Cualquier error reordena el grupo.', 'Nadie puede perder la línea ahí.', 'Todo sigue vivo en ese tren.'], 'auto:train:close:' + prog + ':' + status)
           ]);
         } else if (type === 'record' || type === 'qualiBest') {
           const best = String((ctx && ctx.best) || '').trim();
-          const open = (type === 'qualiBest') ? ['En clasificación hay tiempo fuerte.', 'La quali se mueve.', 'Sube la referencia de manga.'] : ['El reloj habla.', 'Nueva referencia.', 'Tiempo de peso.'];
+          const open = (type === 'qualiBest')
+            ? ['Nueva referencia de la ronda.', 'Se mueve la tabla de qualy.', 'Cambia la referencia provisional.']
+            : ['Nueva referencia general.', 'Se mueve la tabla global.', 'Tiempo de peso en la sesión.'];
           const close = (styleKey === 'engineer')
-            ? ['Dato premium de ritmo.', 'Referencia útil para el resto.', 'Tiempo de mucho valor.']
-            : ['Vuelta que pesa.', 'Tiempo serio.', 'Eso sí mete presión.'];
+            ? ['Dato útil para la ronda.', 'Referencia seria para el resto.', 'Tiempo de mucho valor en qualy.']
+            : ['Tiempo que obliga a responder.', 'Referencia que mete presión.', 'Vuelta que pesa en la tabla.'];
           const timeStory = {
-            fresh: ['Marca que ordena la sesión.', 'Tiempo que pone tono.', 'Referencia fresca en pantalla.'],
-            continuing: ['Sigue encontrando décimas.', 'No deja de afinar el reloj.', 'Mantiene la mano sobre la referencia.'],
-            ongoing: ['Trae una racha muy fina.', 'Ya son varias vueltas con filo.', 'Viene construyendo una sesión fuerte.']
+            fresh: ['Ordena la manga en este momento.', 'Se mete arriba en la ronda.', 'Pone la vara donde sí cuenta.'],
+            continuing: ['Sigue afinando la referencia.', 'No afloja el ritmo de qualy.', 'Sostiene una manga muy fuerte.'],
+            ongoing: ['Ya son varias vueltas con nivel.', 'Viene construyendo una tanda muy seria.', 'Trae continuidad de ritmo arriba.']
           };
           out = __ttsSmartJoin([
             __ttsSmartPick(open, 'auto:record:open:' + type + ':' + styleKey),
             __ttsSmartPick([
-              pilot + ' marca ' + best + '.',
-              best ? (pilot + ' deja ' + best + '.') : (pilot + ' pone la referencia.'),
-              best ? ('La vuelta de ' + pilot + ' queda en ' + best + '.') : ('La referencia es de ' + pilot + '.')
+              best ? (pilot + ' deja el mejor giro en ' + best + '.') : (pilot + ' pone la referencia del momento.'),
+              best ? ('Referencia provisional para ' + pilot + ' con ' + best + '.') : ('La referencia queda de ' + pilot + '.'),
+              best ? (pilot + ' se mete arriba con ' + best + '.') : (pilot + ' sube a la referencia.')
             ], 'auto:record:mid:' + type + ':' + pilot + ':' + best),
             __ttsSmartPick((timeStory[status] || timeStory.continuing), 'auto:record:story:' + status + ':' + pilot),
             __ttsSmartPick(close, 'auto:record:close:' + styleKey + ':' + prog)
@@ -9060,13 +9064,13 @@ function msgv2DecimasTxt(ms) {
           const p1 = __ttsSmartName(ctx && ctx.p1, 'P1');
           const p2 = __ttsSmartName(ctx && ctx.p2, 'P2');
           out = __ttsSmartJoin([
-            __ttsSmartPick(['Pole en juego.', 'Nada cerrado en la pole.', 'Clasificación caliente.'], 'auto:pole:open:' + band),
+            __ttsSmartPick(['Pole provisional en juego.', 'La referencia global sigue abierta.', 'La punta de qualy sigue viva.'], 'auto:pole:open:' + band),
             __ttsSmartPick([
-              p1 + ' contra ' + p2 + ' a ' + (secTxt || 'muy poco') + '.',
-              'La pole provisional es de ' + p1 + ' con ' + p2 + ' a ' + (secTxt || 'nada') + '.',
-              p1 + ' manda la quali y ' + p2 + ' aprieta a ' + (secTxt || 'muy poco') + '.'
+              p1 + ' sostiene la referencia y ' + p2 + ' queda a ' + (secTxt || 'muy poco') + '.',
+              'La pole provisional es de ' + p1 + ' con ' + p2 + ' a ' + (secTxt || 'margen mínimo') + '.',
+              p1 + ' manda la tabla y ' + p2 + ' sigue en rango a ' + (secTxt || 'muy poco') + '.'
             ], 'auto:pole:mid:' + p1 + ':' + p2 + ':' + secTxt),
-            __ttsSmartPick(['Esto se decide fino.', 'Nada de margen en la pole.', 'Todavía puede cambiar.'], 'auto:pole:close:' + prog)
+            __ttsSmartPick(['Todo depende del ritmo proyectado.', 'Una vuelta limpia puede darle vuelta.', 'Nada está cerrado en la tabla general.'], 'auto:pole:close:' + prog)
           ]);
         }
 
@@ -9672,21 +9676,20 @@ function msgv2DecimasTxt(ms) {
           const qTopName = qctx && qctx.qTopName ? qctx.qTopName : '';
           const qTopTuple = qctx && qctx.qTopTuple ? qctx.qTopTuple : { laps:0, timeMs:0 };
           const currentIsQTop = !!(qctx && qctx.currentIsQTop);
-          msg = 'Terminó la clasificación.';
+          msg = 'Se acabó la clasificación.';
           if (currentIsQTop) {
-            msg += ' Nueva pole para ' + p1Name + '.';
+            msg += ' Pole provisional para ' + p1Name + '.';
             if (p1Laps > 0 && p1TotalMs > 0) msg += ' ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs) + '.';
             else if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
           } else if (qTopName && qTopTuple.laps > 0 && qTopTuple.timeMs > 0) {
-            msg += ' ' + p1Name + ' gana esta manga';
+            msg += ' ' + p1Name + ' gana esta ronda';
             if (p1Laps > 0 && p1TotalMs > 0) msg += ' con ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs);
             else if (p1Laps > 0) msg += ' con ' + p1Laps + ' vueltas';
-            msg += '. La pole sigue siendo de ' + qTopName + ' con ' + qTopTuple.laps + ' vueltas en ' + __speechTime2(qTopTuple.timeMs) + '.';
+            msg += '. La pole provisional sigue en ' + qTopName + ' con ' + qTopTuple.laps + ' vueltas en ' + __speechTime2(qTopTuple.timeMs) + '.';
           } else {
-            msg += ' ' + p1Name + ' cierra al frente.';
+            msg += ' ' + p1Name + ' cierra primero la ronda.';
             if (p1Laps > 0 && p1TotalMs > 0) msg += ' ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs) + '.';
           }
-          if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
           if (p2Name) msg += ' Segundo ' + p2Name + '.';
           if (p3Name) msg += ' Tercero ' + p3Name + '.';
         } else {
@@ -9695,7 +9698,6 @@ function msgv2DecimasTxt(ms) {
           if (p3Name) msg += ' Tercero ' + p3Name + '.';
           if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
           if (p1TotalMs > 0) msg += ' Tiempo total ' + __speechTime2(p1TotalMs) + '.';
-          if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
           if (isFinalA) msg += ' Evento terminado. Campeón de la noche, ' + p1Name + '.';
         }
 
@@ -9887,21 +9889,20 @@ function msgv2DecimasTxt(ms) {
           const qTopName = qctx && qctx.qTopName ? qctx.qTopName : '';
           const qTopTuple = qctx && qctx.qTopTuple ? qctx.qTopTuple : { laps:0, timeMs:0 };
           const currentIsQTop = !!(qctx && qctx.currentIsQTop);
-          msg = 'Terminó la clasificación.';
+          msg = 'Se acabó la clasificación.';
           if (currentIsQTop) {
-            msg += ' Nueva pole para ' + p1Name + '.';
+            msg += ' Pole provisional para ' + p1Name + '.';
             if (p1Laps > 0 && p1TotalMs > 0) msg += ' ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs) + '.';
             else if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
           } else if (qTopName && qTopTuple.laps > 0 && qTopTuple.timeMs > 0) {
-            msg += ' ' + p1Name + ' gana esta manga';
+            msg += ' ' + p1Name + ' gana esta ronda';
             if (p1Laps > 0 && p1TotalMs > 0) msg += ' con ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs);
             else if (p1Laps > 0) msg += ' con ' + p1Laps + ' vueltas';
-            msg += '. La pole sigue siendo de ' + qTopName + ' con ' + qTopTuple.laps + ' vueltas en ' + __speechTime2(qTopTuple.timeMs) + '.';
+            msg += '. La pole provisional sigue en ' + qTopName + ' con ' + qTopTuple.laps + ' vueltas en ' + __speechTime2(qTopTuple.timeMs) + '.';
           } else {
-            msg += ' ' + p1Name + ' cierra al frente.';
+            msg += ' ' + p1Name + ' cierra primero la ronda.';
             if (p1Laps > 0 && p1TotalMs > 0) msg += ' ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs) + '.';
           }
-          if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
           if (p2Name) msg += ' Segundo ' + p2Name + '.';
           if (p3Name) msg += ' Tercero ' + p3Name + '.';
         } else {
@@ -9910,7 +9911,6 @@ function msgv2DecimasTxt(ms) {
           if (p3Name) msg += ' Tercero ' + p3Name + '.';
           if (p1Laps > 0) msg += ' ' + p1Laps + ' vueltas.';
           if (p1TotalMs > 0) msg += ' Tiempo total ' + __speechTime2(p1TotalMs) + '.';
-          if (p1BestMs > 0) msg += ' Mejor vuelta ' + __speechTime2(p1BestMs) + '.';
           if (isFinalA) msg += ' Evento terminado. Campeón de la noche, ' + p1Name + '.';
         }
         enqueueSpeech(msg, {
@@ -9987,14 +9987,14 @@ function msgv2DecimasTxt(ms) {
         if (beatsGlobal) {
           const samePilot = (qTopKey && leaderKey === qTopKey);
           if (!qTop || !qTopKey) {
-            msg = `Pole provisional global para ${leaderName}. ${projectionTxt}.`;
+            msg = `Referencia global provisional para ${leaderName}. ${projectionTxt}.`;
             key = 'quali_global_open_' + leaderKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
           } else if (samePilot) {
-            msg = `La pole global mejora con ${leaderName}. ${projectionTxt}.`;
+            msg = `Mejora la referencia global con ${leaderName}. ${projectionTxt}.`;
             key = 'quali_global_improve_' + leaderKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
             prio = 56;
           } else {
-            msg = `Nueva pole provisional global. ${leaderName} se mete arriba con ${projectionTxt}.`;
+            msg = `Cambio en la pole provisional global. ${leaderName} se mete arriba con ${projectionTxt}.`;
             key = 'quali_global_change_' + leaderKey + '_' + leaderTuple.laps + '_' + Math.round(leaderTuple.timeMs/10);
           }
         } else if (tiesLapsOnly && qTopName) {
@@ -10017,7 +10017,7 @@ function msgv2DecimasTxt(ms) {
 
         if (second && secondName && closeGapMs > 0 && closeGapMs <= 250 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > 8000)) {
           const secondProjTxt = __speechQualiProjection(secondTuple.laps, secondTuple.timeMs);
-          enqueueSpeech(`Nada cerrado. ${secondName} sigue a tiro con ${secondProjTxt}.`, {
+          enqueueSpeech(`Nada cerrado arriba. ${secondName} sigue a tiro con ${secondProjTxt}.`, {
             key: 'quali_global_close_' + leaderKey + '_' + normalizeNameKey(secondName) + '_' + secondTuple.laps + '_' + Math.round(secondTuple.timeMs/10),
             cooldownMs: 8000,
             semanticCategory: 'qualiPole',
@@ -21180,28 +21180,28 @@ function autoPickStyleForType(type) {
   const map = {
     leaderChange: 'pro',
     top3: 'pro',
-    pass: 'picante',
-    battle: 'picante',
-    battlePodium: 'picante',
-    closing: 'picante',
-    pressure: 'picante',
+    pass: 'pro',
+    battle: 'pro',
+    battlePodium: 'pro',
+    closing: 'engineer',
+    pressure: 'engineer',
     gap: 'engineer',
     train: 'engineer',
-    record: 'narrativo',
+    record: 'pro',
     qualiBest: 'pro',
-    qualiPole: 'pro'
+    qualiPole: 'engineer'
   };
 
   const preferred = map[type] || lock;
 
-  // Mezcla: 65% preferido por evento, 35% modo fijo (si el usuario lo cambió)
+  // Mezcla más conservadora: 80% preferido por evento, 20% modo fijo.
   const r = Math.random();
-  if (lock !== preferred && r < 0.35) return lock;
+  if (lock !== preferred && r < 0.20) return lock;
 
-  // Rotación suave: cada 5 anuncios cambia a un estilo vecino si existe
+  // Rotación más lenta para no romper el tono de cabina.
   try {
     autoStyleMixCounter = (Number(autoStyleMixCounter) || 0) + 1;
-    if ((autoStyleMixCounter % 5) === 0) {
+    if ((autoStyleMixCounter % 9) === 0) {
       const ring = ['pro','engineer','picante','narrativo'];
       const i = ring.indexOf(preferred);
       if (i >= 0) return ring[(i + 1) % ring.length];
@@ -24622,13 +24622,13 @@ function collectAutoMiniSummaryCandidate(ctx) {
     const styleMini = (autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo') ? autoCommentatorMode : 'pro';
     const MINI_HDR = {
       pro: { manga: ['Clasificacion.', 'Clasificacion en vivo.', 'Como va la clasificación.'], final: ['Carrera.', 'Carrera en vivo.', 'Como va la carrera.'], other: ['Seguimos.', 'Actualizacion.', 'Estado.'] },
-      picante: { manga: ['Clasificacin.', 'Clasificacin, sin llorar.', 'Clasificacin, a ver quin trae manos.'], final: ['Carrera.', 'Carrera, sin piedad.', 'Carrera, esto ya se prendio.'], other: ['Seguimos.', 'Ojo.', 'Atencin.'] },
+      picante: { manga: ['Clasificación.', 'Clasificación en vivo.', 'Cómo va la qualy.'], final: ['Carrera.', 'Carrera en vivo.', 'Cómo va la final.'], other: ['Seguimos.', 'Ojo.', 'Atención.'] },
       engineer: { manga: ['Clasificacin.', 'Control. Clasificacin.', 'Dato. Clasificacin.'], final: ['Carrera.', 'Control. Carrera.', 'Dato. Carrera.'], other: ['Control.', 'Dato.', 'Info.'] },
       narrativo: { manga: ['Clasificacion.', 'Cambiamos camara. Clasificacion.', 'Vamos con la clasificación.'], final: ['Carrera.', 'Cambiamos camara. Carrera.', 'Vamos con la carrera.'], other: ['Seguimos.', 'Cambiamos cmara.', 'Atencin.'] }
     };
     const MINI_TOP = {
       pro: ['Top cinco', 'Top 5', 'Los primeros cinco'],
-      picante: ['Top cinco', 'Top cinco, sin regalos', 'Top cinco, a puro control'],
+      picante: ['Top cinco', 'Top 5 en pista', 'Los cinco del frente'],
       engineer: ['Top cinco', 'Top cinco. Control', 'Top cinco. Dato'],
       narrativo: ['Top cinco', 'Los cinco del frente', 'Los cinco que mandan']
     };
@@ -24641,8 +24641,8 @@ function collectAutoMiniSummaryCandidate(ctx) {
       picante: [
         (b) => `Pelea ms cerrada. ${b.attacker} viene ${b.g} de ${b.defender} por la P${b.pos}.`,
         (b) => `P${b.pos} al rojo vivo. ${b.attacker} trae a tiro a ${b.defender}. ${b.g}.`,
-        (b) => `Cierre con colmillo en P${b.pos}. ${b.attacker} ya lo huele. ${b.g}.`,
-        (b) => `P${b.pos} sin respiro. ${b.defender} con espejo lleno. ${b.g}.`
+        (b) => `P${b.pos} muy cerrada. ${b.attacker} ya está encima. ${b.g}.`,
+        (b) => `P${b.pos} sin respiro. ${b.defender} ya defiende con ${b.g}.`
       ],
       engineer: [
         (b) => `Margen minimo en P${b.pos}. ${b.attacker} a ${b.g} de ${b.defender}.`,
@@ -27551,7 +27551,7 @@ raceData = normalizeRaceData(rawRace);
         if (!prevKey){
           if (projTxt && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
             enqueueSpeech(
-              `Pole provisional para ${leaderName}. ${projTxt}.`,
+              `Referencia provisional de la ronda para ${leaderName}. Proyecta ${projTxt}.`,
               { key: 'quali_pole_open_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 62 }
             );
             __qualiLeaderState.lastAnnounceTs = now;
@@ -27566,7 +27566,7 @@ raceData = normalizeRaceData(rawRace);
 
         if (changed && projTxt && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
           enqueueSpeech(
-            `Atención, nueva pole provisional. ${leaderName} proyecta ${projTxt}.`,
+            `Cambio en la pole provisional. ${leaderName} sube a la referencia con ${projTxt}.`,
             { key: 'quali_pole_change_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 62 }
           );
           __qualiLeaderState.lastAnnounceTs = now;
@@ -27578,7 +27578,7 @@ raceData = normalizeRaceData(rawRace);
 
           if (second && secondName && sT.laps > 0 && sT.timeMs > 0 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
             enqueueSpeech(
-              `Esto está apretado. ${secondName} proyecta ${secondProjTxt}.`,
+              `Pole abierta. ${secondName} sigue a tiro con ${secondProjTxt}.`,
               { key: 'quali_pole_close_' + leaderKey + '_' + secondName + '_' + sT.laps + '_' + Math.round(sT.timeMs/10), cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 40 }
             );
             __qualiLeaderState.lastCloseTs = now;
@@ -27588,7 +27588,7 @@ raceData = normalizeRaceData(rawRace);
 
         if (projectionChanged && (lapGain || (dropMs >= 120)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
           enqueueSpeech(
-            `La pole provisional mejora. ${leaderName} proyecta ${projTxt}.`,
+            `Mejora la referencia provisional. ${leaderName} ahora proyecta ${projTxt}.`,
             { key: 'quali_pole_improve_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: improveCooldown, semanticCategory: 'quali', priority: 48 }
           );
           __qualiLeaderState.lastImproveTs = now;
@@ -27603,7 +27603,7 @@ raceData = normalizeRaceData(rawRace);
           const margen = sT.timeMs - lTimeMs;
           if (isFinite(gap) && margen > 0 && margen <= 250){
             enqueueSpeech(
-              `Nada cerrado en la pole. ${secondName} proyecta ${secondProjTxt}.`,
+              `Nada cerrado arriba. ${secondName} sigue en rango con ${secondProjTxt}.`,
               { key: 'quali_pole_close_' + leaderKey + '_' + secondName + '_' + sT.laps + '_' + Math.round(sT.timeMs/10), cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 36 }
             );
             __qualiLeaderState.lastCloseTs = now;
