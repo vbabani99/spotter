@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R9 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R10 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -13,6 +13,7 @@ Changelog:
 - v0.5.0.18R5: FIX voz práctica/qualy/final. Se corrigen fallas que dejaban muda la práctica y la pelea por pole, se abre el heartbeat de sesión para práctica, clasificación y finales, se afloja el Speech Arbiter para mensajes útiles, se corrige el resumen de qualy para tomar P2/P3 de la tabla general real y se sube la cadencia del Auto Locutor.
 - v0.5.0.18R8: SYNC de versión + FIX seguimiento y proyección. La V1 del piloto seguido ya no se pierde si el feed tarda en poblar lastLapMs, y la proyección de qualy queda estrictamente solo en P1 en todas las ramas de locución.
 - v0.5.0.18R9: Auto Locutor más útil por sesión. Se refuerza la práctica con referencias, ritmo y estimado; la qualy canta mejor la tabla general real sin meter proyección al P2; y la final trae más contexto de parrilla, líder y pelea por podio.
+- v0.5.0.18R10: SÚPER BÁSICO queda en modo quirúrgico: solo Last Lap del piloto seguido. Se corta cualquier otra ruta de locución posterior a la vuelta.
 - v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
 - v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
 - v0.4.10.2: anti-repeat del raceName - el intro de titulo ya no se reencola varias veces, se cancela al arrancar PRACTICA/QUALI/CARRERA y se blinda con latch por sesion.
@@ -92,7 +93,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R9</title>
+<title>vics_Smart_Spotter_v0.5.0.18R10</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6587,7 +6588,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R9</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R10</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7179,7 +7180,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R9";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R10";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7472,13 +7473,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R9";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R9',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R10',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R9', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R10', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -19815,7 +19816,7 @@ function updateBlueFlagFromPassEvents() {
     // =========================
 
 const commentatorAutoCfg = {
-  // R9: práctica, qualy y final con ambient más útil por sesión, manteniendo proyección solo para P1.
+  // R10: SÚPER BÁSICO blindado para decir solo Last Lap del piloto seguido.
   minIntervalMs: 9000,
   windowMs: 45000,
   maxMsgsInWindow: 4,
@@ -26023,6 +26024,8 @@ function handleVoiceAndBeeps() {
       const lapFlow = handleSelectedPilotLapFlow(ctx, posState);
       ctx.lapCrossed = lapFlow.lapCrossed;
       if (lapFlow.shouldReturn) return;
+
+      if (__isSuperBasicFollowMode()) return;
 
       const candidates = [];
       collectSelectedPilotCandidates(candidates, ctx);
