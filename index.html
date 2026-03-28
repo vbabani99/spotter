@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R4 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R5 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -10,6 +10,7 @@ Changelog:
 - v0.5.0.15: TTS quali projection - el estimado de pole/proyeccion ahora se lee como vueltas + tiempo en minutos, segundos y centesimas. Ejemplo: "21 vueltas en tres minutos con ocho segundos punto cincuenta y cuatro".
 - v0.5.0.17: intro generativo de finales segun Q tabla. Final A/B/C ya no entra plano; usa contexto de parrilla y corte de qualy.
 - v0.5.0.18R4: Auto Locutor más informativo y más de pista. Se endurece el tono de locutor motorsport en español, se prioriza información útil sobre remates vacíos, se ajustan leader/pass/battle/top3/train/qualiPole/record y se reduce la mezcla de estilos para que la salida suene más a cabina que a plantilla.
+- v0.5.0.18R5: FIX voz práctica/qualy/final. Se corrigen fallas que dejaban muda la práctica y la pelea por pole, se abre el heartbeat de sesión para práctica, clasificación y finales, se afloja el Speech Arbiter para mensajes útiles, se corrige el resumen de qualy para tomar P2/P3 de la tabla general real y se sube la cadencia del Auto Locutor.
 - v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
 - v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
 - v0.4.10.2: anti-repeat del raceName - el intro de titulo ya no se reencola varias veces, se cancela al arrancar PRACTICA/QUALI/CARRERA y se blinda con latch por sesion.
@@ -89,7 +90,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R4</title>
+<title>vics_Smart_Spotter_v0.5.0.18R5</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6584,7 +6585,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R4</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R5</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7176,7 +7177,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R4";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R5";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7469,13 +7470,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R4";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R4',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R5',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R4', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R5', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -9889,6 +9890,14 @@ function msgv2DecimasTxt(ms) {
           const qTopName = qctx && qctx.qTopName ? qctx.qTopName : '';
           const qTopTuple = qctx && qctx.qTopTuple ? qctx.qTopTuple : { laps:0, timeMs:0 };
           const currentIsQTop = !!(qctx && qctx.currentIsQTop);
+          let q2Name = '';
+          let q3Name = '';
+          try {
+            const store = loadQualiStoreFor(rn);
+            const qList = computeQualiList(store);
+            q2Name = safeRacerName(qList[1] && qList[1].racerName) || '';
+            q3Name = safeRacerName(qList[2] && qList[2].racerName) || '';
+          } catch(e) {}
           msg = 'Se acabó la clasificación.';
           if (currentIsQTop) {
             msg += ' Pole provisional para ' + p1Name + '.';
@@ -9903,8 +9912,10 @@ function msgv2DecimasTxt(ms) {
             msg += ' ' + p1Name + ' cierra primero la ronda.';
             if (p1Laps > 0 && p1TotalMs > 0) msg += ' ' + p1Laps + ' vueltas en ' + __speechTime2(p1TotalMs) + '.';
           }
-          if (p2Name) msg += ' Segundo ' + p2Name + '.';
-          if (p3Name) msg += ' Tercero ' + p3Name + '.';
+          if (q2Name) msg += ' Segundo general ' + q2Name + '.';
+          else if (p2Name) msg += ' Segundo ' + p2Name + '.';
+          if (q3Name) msg += ' Tercero general ' + q3Name + '.';
+          else if (p3Name) msg += ' Tercero ' + p3Name + '.';
         } else {
           msg = 'Carrera terminada. Ganador ' + p1Name + '.';
           if (p2Name) msg += ' Segundo ' + p2Name + '.';
@@ -10033,64 +10044,100 @@ function msgv2DecimasTxt(ms) {
         if (!r || selectedPilotKey || !voiceMasterEnabled) return;
         const sess = String((currentSessionInfo && currentSessionInfo.type) || (__sessionDirector && __sessionDirector.sessionType) || '').toUpperCase();
         const dirState = String((__sessionDirector && __sessionDirector.state) || '').toUpperCase();
-        if (!(sess === 'TRAIN' || sess === 'MANGA' || sess === 'QUALI')) return;
+        if (!(sess === 'TRAIN' || sess === 'MANGA' || sess === 'QUALI' || sess === 'FINAL')) return;
         if (!(dirState === 'PRACTICE_RUNNING' || dirState === 'RACE_RUNNING')) return;
         const now = Date.now();
         const rn = String(r.raceName || '');
         const ambientSig = rn + '|' + sess;
-        const gapNeed = (sess === 'TRAIN') ? 7000 : ((sess === 'QUALI' || sess === 'MANGA') ? 8500 : 9000);
+        const gapNeed = (sess === 'TRAIN') ? 6500 : ((sess === 'FINAL') ? 8000 : 7000);
         if (__ambientSessionSig === ambientSig && (now - (__ambientSessionLastAt || 0)) < gapNeed) return;
         const rows = __topRowsByPos(r, 4);
         if (!rows.length) return;
+
+        const p1 = rows[0], p2 = rows[1] || null, p3 = rows[2] || null;
+        const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
+        const p2Name = safeRacerName(p2 && p2.racerName) || '';
+        const p3Name = safeRacerName(p3 && p3.racerName) || '';
+        const b1 = __getRowBestMsSafe(p1);
+        const b2 = __getRowBestMsSafe(p2);
+        const e1 = __getRowEstTimeMsSafe(p1);
+        const e2 = __getRowEstTimeMsSafe(p2);
+        const e1Lap = __getRowEstLapSafe(p1);
+        const e2Lap = __getRowEstLapSafe(p2);
+        const e1Txt = __speechQualiProjection(e1Lap, e1);
+        const e2Txt = __speechQualiProjection(e2Lap, e2);
+        const lap1 = Number(p1 && (p1.lapcount ?? p1.laps ?? 0)) || 0;
+        const lap2 = Number(p2 && (p2.lapcount ?? p2.laps ?? 0)) || 0;
+        const lap3 = Number(p3 && (p3.lapcount ?? p3.laps ?? 0)) || 0;
+        const t1 = Number(p1 && p1.time) || 0;
+        const t2 = Number(p2 && p2.time) || 0;
+        const t3 = Number(p3 && p3.time) || 0;
+        const gap12Ms = (p2 && lap1 > 0 && lap1 === lap2 && t2 > t1) ? (t2 - t1) : 0;
+        const gap23Ms = (p3 && lap2 > 0 && lap2 === lap3 && t3 > t2) ? (t3 - t2) : 0;
+        const total1 = getRowTotalMs(p1) || 0;
         let msg = '';
+        let category = 'top3';
+        let priority = 60;
+
         if (sess === 'TRAIN') {
-          const p1 = rows[0], p2 = rows[1] || null;
-          const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
-          const p2Name = safeRacerName(p2 && p2.racerName) || '';
-          const best1 = __getRowBestMsSafe(p1);
-          const best2 = __getRowBestMsSafe(p2);
-          const est1 = __getRowEstTimeMsSafe(p1);
-          const est2 = __getRowEstTimeMsSafe(p2);
-          const est1Lap = __getRowEstLapSafe(p1);
-          const est2Lap = __getRowEstLapSafe(p2);
-          const est1Txt = __speechQualiProjection(est1Lap, est1);
-          const est2Txt = __speechQualiProjection(est2Lap, est2);
-          const closeMargen = (best1 > 0 && best2 > 0) ? Math.abs(best2 - best1) : ((est1 > 0 && est2 > 0) ? Math.abs(est2 - est1) : 0);
           const variants = [];
-          if (best1 > 0) variants.push('Entrenamiento vivo. ' + p1Name + ' trae la referencia con ' + __speechTime2(best1) + '.');
-          if (est1 > 0 && est1Txt) variants.push('Práctica con ritmo. ' + p1Name + ' proyecta ' + est1Txt + '.');
-          if (p2Name && closeMargen > 0 && closeMargen <= 300) variants.push('Se aprieta la práctica. ' + p1Name + ' y ' + p2Name + ' están a ' + __speechTime2(closeGap) + '.');
-          if (p2Name && est1Txt && est2Txt) variants.push('Referencia doble en práctica. ' + p1Name + ' proyecta ' + est1Txt + ' y ' + p2Name + ' proyecta ' + est2Txt + '.');
-          if (p2Name) variants.push('Práctica en marcha. ' + p1Name + ' y ' + p2Name + ' ya marcan referencias.');
-          variants.push('Entrenamiento en marcha. Hay que afinar trazada y ritmo.');
+          category = 'train';
+          priority = 60;
+          if (b1 > 0) variants.push('Práctica viva. ' + p1Name + ' marca ' + __speechTime2(b1) + ' como referencia.');
+          if (e1 > 0 && e1Txt) variants.push('Práctica con ritmo. ' + p1Name + ' proyecta ' + e1Txt + '.');
+          if (p2Name && gap12Ms > 0 && gap12Ms <= 350) variants.push('Se aprieta la práctica. ' + p1Name + ' y ' + p2Name + ' están a ' + __speechTime2(gap12Ms) + '.');
+          if (p2Name && e1Txt && e2Txt) variants.push('Referencia doble en práctica. ' + p1Name + ' proyecta ' + e1Txt + ' y ' + p2Name + ' proyecta ' + e2Txt + '.');
+          if (p2Name && b1 > 0 && b2 > 0) variants.push('Práctica con dos referencias. ' + p1Name + ' trae ' + __speechTime2(b1) + ' y ' + p2Name + ' responde con ' + __speechTime2(b2) + '.');
+          variants.push('Entrenamiento en marcha. Hay que afinar trazada, ritmo y estimado.');
           msg = variants[Math.floor((now / gapNeed)) % variants.length];
-        } else {
-          const p1 = rows[0], p2 = rows[1] || null;
-          const p1Name = safeRacerName(p1 && p1.racerName) || 'P1';
-          const p2Name = safeRacerName(p2 && p2.racerName) || '';
-          const e1 = __getRowEstTimeMsSafe(p1);
-          const e2 = __getRowEstTimeMsSafe(p2);
-          const e1Lap = __getRowEstLapSafe(p1);
-          const e2Lap = __getRowEstLapSafe(p2);
-          const e1Txt = __speechQualiProjection(e1Lap, e1);
-          const e2Txt = __speechQualiProjection(e2Lap, e2);
-          const b1 = __getRowBestMsSafe(p1);
-          const b2 = __getRowBestMsSafe(p2);
-          const dg = p2Name ? Math.abs((e2 || b2 || 0) - (e1 || b1 || 0)) : 0;
+        } else if (sess === 'MANGA' || sess === 'QUALI') {
           const variants = [];
+          category = 'quali';
+          priority = 62;
+          let qTop1 = '', qTop2 = '', qTop3 = '';
+          try {
+            const store = loadQualiStoreFor(rn);
+            const qList = computeQualiList(store);
+            qTop1 = safeRacerName(qList[0] && qList[0].racerName) || '';
+            qTop2 = safeRacerName(qList[1] && qList[1].racerName) || '';
+            qTop3 = safeRacerName(qList[2] && qList[2].racerName) || '';
+          } catch(e) {}
           if (e1 > 0 && e1Txt) variants.push('Clasificación viva. ' + p1Name + ' proyecta ' + e1Txt + '.');
           if (b1 > 0) variants.push('La referencia de la manga la trae ' + p1Name + ' con ' + __speechTime2(b1) + '.');
-          if (p2Name && dg > 0 && dg <= 250) variants.push('La quali está fina. ' + p2Name + ' está a ' + __speechTime2(dg) + ' de la referencia.');
-          if (p2Name && e1Txt && e2Txt) variants.push('Pelea de estimado en la manga. ' + p1Name + ' proyecta ' + e1Txt + ' y ' + p2Name + ' proyecta ' + e2Txt + '.');
-          variants.push('Clasificación en marcha. Cada vuelta cuenta.');
+          if (p2Name && gap12Ms > 0 && gap12Ms <= 250) variants.push('Qualy muy cerrada. ' + p2Name + ' está a ' + __speechTime2(gap12Ms) + ' de la referencia.');
+          if (p2Name && e1Txt && e2Txt) variants.push('Pelea de estimado. ' + p1Name + ' proyecta ' + e1Txt + ' y ' + p2Name + ' proyecta ' + e2Txt + '.');
+          if (qTop1) {
+            let globalMsg = 'Tabla general provisional: ' + qTop1 + ' al frente';
+            if (qTop2) globalMsg += ', ' + qTop2 + ' segundo';
+            if (qTop3) globalMsg += ' y ' + qTop3 + ' tercero';
+            globalMsg += '.';
+            variants.push(globalMsg);
+          }
+          variants.push('Clasificación en marcha. Todo va sobre vueltas y tiempo estimado.');
+          msg = variants[Math.floor((now / gapNeed)) % variants.length];
+        } else {
+          const info = resolveSessionInfo(r) || {};
+          const finalLabel = String(info.main || '').trim() ? ('Final ' + String(info.main || '').trim().toUpperCase()) : 'Final';
+          category = 'top3';
+          priority = 64;
+          const variants = [];
+          if (p2Name && gap12Ms > 0 && gap12Ms <= 1200) variants.push(finalLabel + ' viva. ' + p1Name + ' lidera, pero ' + p2Name + ' lo trae a ' + __speechTime2(gap12Ms) + '.');
+          if (p2Name && p3Name && gap23Ms > 0 && gap23Ms <= 900) variants.push(finalLabel + '. Batalla por el podio. ' + p2Name + ' y ' + p3Name + ' van separados por ' + __speechTime2(gap23Ms) + '.');
+          if (p2Name && p3Name) variants.push(finalLabel + ' en marcha. ' + p1Name + ' primero, ' + p2Name + ' segundo y ' + p3Name + ' tercero.');
+          if (total1 > 0 && lap1 > 0) variants.push(finalLabel + '. ' + p1Name + ' marca el paso con ' + lap1 + ' vueltas y ' + __speechTime2(total1) + ' acumulados.');
+          try {
+            const qIntro = __buildFinalIntroFromQTable(r, String(info.main || '').trim().toUpperCase());
+            if (qIntro) variants.push(qIntro.replace(/\s+Vamos a arrancar, pueden calentar\.$/i, ''));
+          } catch(e) {}
+          variants.push(finalLabel + ' en curso. Aquí manda el ritmo, la presión y no regalar nada.');
           msg = variants[Math.floor((now / gapNeed)) % variants.length];
         }
         enqueueSpeech(msg, {
           key: 'ambient_' + ambientSig + '_' + Math.floor(now / gapNeed),
-          priority: 58,
+          priority,
           cooldownMs: 0,
           dedupe: true,
-          semanticCategory: (sess === 'TRAIN' ? 'train' : 'qualiBest'),
+          semanticCategory: category,
           semanticThreshold: 0.90,
           semanticWindowMs: 12000
         });
@@ -13620,20 +13667,20 @@ function __duoGuessRole(txt, key) {
         precision: 2,
         voice: {
           laps:true, blueflag:true, ritmo:true, estlap:true, bestlap:true,
-          pos:false, gaps:false, leadergap:false, podium:false,
-          front06:false, back06:false, attack:false, defense:false, pelea:false,
+          pos:true, gaps:true, leadergap:true, podium:false,
+          front06:true, back06:true, attack:false, defense:false, pelea:true,
           total:false, cons10:false, box:false, netgain:false, saylaps:false
         }
       },
       MANGA: {
         label: 'Manga',
-        rdMode: 'minimal',
+        rdMode: 'engineer',
         autoMode: 'pro',
         precision: 2,
         voice: {
           laps:true, blueflag:true, ritmo:true, estlap:true, bestlap:true, leadergap:true,
-          pos:false, gaps:false, podium:false,
-          front06:false, back06:false, attack:false, defense:false, pelea:false,
+          pos:true, gaps:true, podium:false,
+          front06:true, back06:true, attack:false, defense:false, pelea:true,
           total:false, cons10:false, box:false, netgain:false, saylaps:false
         }
       },
@@ -13646,7 +13693,7 @@ function __duoGuessRole(txt, key) {
           laps:true, blueflag:true, ritmo:true, pos:true, gaps:true, leadergap:true, podium:true,
           front06:true, back06:true, attack:true, defense:true,
           bestlap:true, estlap:false,
-          pelea:false, total:false, cons10:false, box:false, netgain:false, saylaps:false
+          pelea:true, total:false, cons10:false, box:false, netgain:false, saylaps:false
         }
       }
     };
@@ -13669,14 +13716,14 @@ function __duoGuessRole(txt, key) {
 
     const AI_SMART_PROFILES = {
       FOLLOW: {
-        TRAIN: { rdMode:'engineer', autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:true, estlap:true, bestlap:true, leadergap:false, pos:true, gaps:false, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
-        MANGA: { rdMode:'minimal',  autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:false, back06:false, attack:false, defense:false, pelea:false, total:false, cons10:false, box:false, netgain:false } },
+        TRAIN: { rdMode:'engineer', autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:true, back06:true, attack:false, defense:false, pelea:true, total:false, cons10:false, box:false, netgain:false } },
+        MANGA: { rdMode:'engineer', autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:false, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:true, back06:true, attack:false, defense:false, pelea:true, total:false, cons10:false, box:false, netgain:false } },
         FINAL: { rdMode:'coach',    autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:false, bestlap:true, leadergap:true, pos:true, gaps:true, podium:true,  front06:true,  back06:true,  attack:true,  defense:true,  pelea:true,  total:false, cons10:false, box:false, netgain:false } }
       },
       AUTO: {
-        TRAIN: { rdMode:'minimal',  autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:false, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } },
-        MANGA: { rdMode:'minimal',  autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:false, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } },
-        FINAL: { rdMode:'coach',    autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:false, estlap:false, bestlap:true, leadergap:true, pos:true, gaps:true, podium:true,  front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } }
+        TRAIN: { rdMode:'engineer', autoMode:'engineer', precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } },
+        MANGA: { rdMode:'engineer', autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:true, bestlap:true, leadergap:true, pos:true, gaps:true, podium:false, front06:true,  back06:true,  attack:false, defense:false, pelea:true,  total:false, cons10:false, box:false, netgain:false } },
+        FINAL: { rdMode:'coach',    autoMode:'pro',      precision:2, voice:{ laps:true, saylaps:false, blueflag:true, ritmo:true, estlap:false, bestlap:true, leadergap:true, pos:true, gaps:true, podium:true,  front06:true,  back06:true,  attack:true, defense:true, pelea:true,  total:false, cons10:false, box:false, netgain:false } }
       }
     };
 
@@ -15051,11 +15098,15 @@ function __isEssentialSpeech(opts, key, priority){
     const k = String(key||'').toLowerCase();
     const cat = String((opts && (opts.semanticCategory || opts.category)) || '').toLowerCase();
     if (cat === 'ess' || cat === 'system' || cat === 'critical') return true;
+    if (/^(quali|qualibest|qualipole)$/.test(cat)) return true;
+    if (['train','leader','bestlap','top3','record','finish'].includes(cat)) return true;
     try {
       const sess = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
-      if (sess === 'MANGA' && (cat === 'leader' || cat === 'bestlap' || cat === 'quali')) return true;
+      if (sess === 'TRAIN' && (cat === 'train' || cat === 'bestlap' || cat === 'ritmo' || cat === 'estlap' || cat === 'leader' || cat === 'top3')) return true;
+      if ((sess === 'MANGA' || sess === 'QUALI') && (/^quali/.test(cat) || cat === 'leader' || cat === 'bestlap' || cat === 'top3' || cat === 'record')) return true;
+      if (sess === 'FINAL' && (cat === 'battle' || cat === 'story' || cat === 'top3' || cat === 'leader' || cat === 'podium' || cat === 'pressure' || cat === 'closing' || cat === 'pass' || cat === 'record' || cat === 'finish')) return true;
     } catch(e) {}
-    if (k.includes('blue') || k.includes('bandera') || k.includes('leader') || k.includes('líder') || k.includes('finish') || k.includes('cuadros') || k.includes('podium') || k.includes('quali')) return true;
+    if (k.includes('blue') || k.includes('bandera') || k.includes('leader') || k.includes('líder') || k.includes('finish') || k.includes('cuadros') || k.includes('podium') || k.includes('quali') || k.includes('final') || k.includes('train')) return true;
     if (k.includes('tts_test') || k.includes('unlock') || k.includes('audio listo')) return true;
     return false;
   }catch(e){ return false; }
@@ -15075,14 +15126,14 @@ let __ttsBlockedSince = 0;
 // - Mensajes ruidosos (gaps/front/back/mini/ritmo) se caen primero.
 // =========================
 const __speechQueueCfg = {
-  maxQueue: 8,
-  maxQueueBlocked: 6,
-  staleLowMs: 2200,
-  staleNormalMs: 4200,
-  staleHighMs: 9000,
-  sameCatSuppressMs: 1800,
-  recentSpokenSuppressMs: 2600,
-  noisyPendingMax: 3
+  maxQueue: 10,
+  maxQueueBlocked: 8,
+  staleLowMs: 3200,
+  staleNormalMs: 6200,
+  staleHighMs: 12000,
+  sameCatSuppressMs: 1200,
+  recentSpokenSuppressMs: 1600,
+  noisyPendingMax: 4
 };
 const __speechLastCategoryAt = new Map();
 const __speechLastCategoryText = new Map();
@@ -19756,41 +19807,52 @@ function updateBlueFlagFromPassEvents() {
     // =========================
 
 const commentatorAutoCfg = {
-  // Calma por defecto: el Auto Locutor solo debe hablar cuando hay "acción real".
-  // Subimos el filtro para que NO se amontonen mensajes viejos ni comentarios de relleno.
-  minIntervalMs: 14500,
-  windowMs: 70000,
-  maxMsgsInWindow: 2,
-  sigDefaultCooldownMs: 32000,
-  top3CooldownMs: 42000,
-  allowUrgentOverLimitScore: 9.4,
-  baseThresholdScore: 5.2,
-  quietMinMs: 38000,// mini resumen 38-52s,
-  quietMaxMs: 52000
+  // R5: menos candados, más información útil.
+  minIntervalMs: 9000,
+  windowMs: 45000,
+  maxMsgsInWindow: 4,
+  sigDefaultCooldownMs: 22000,
+  top3CooldownMs: 26000,
+  allowUrgentOverLimitScore: 8.8,
+  baseThresholdScore: 4.6,
+  quietMinMs: 18000,
+  quietMaxMs: 26000
 };
 
 function getAutoCommentatorCfg() {
   try {
     const bucket = __sessionBucket(currentSessionInfo);
+    if (bucket === 'TRAIN') {
+      return Object.assign({}, commentatorAutoCfg, {
+        minIntervalMs: 6500,
+        maxMsgsInWindow: 6,
+        allowUrgentOverLimitScore: 8.0,
+        baseThresholdScore: 3.8,
+        quietMinMs: 12000,
+        quietMaxMs: 18000,
+        top3CooldownMs: 18000
+      });
+    }
     if (bucket === 'MANGA') {
       return Object.assign({}, commentatorAutoCfg, {
-        minIntervalMs: 8500,
-        maxMsgsInWindow: 4,
-        allowUrgentOverLimitScore: 8.8,
-        baseThresholdScore: 4.25,
-        quietMinMs: 22000,
-        quietMaxMs: 32000,
-        top3CooldownMs: 28000
+        minIntervalMs: 7000,
+        maxMsgsInWindow: 5,
+        allowUrgentOverLimitScore: 8.2,
+        baseThresholdScore: 3.9,
+        quietMinMs: 16000,
+        quietMaxMs: 23000,
+        top3CooldownMs: 22000
       });
     }
     if (bucket === 'FINAL') {
       return Object.assign({}, commentatorAutoCfg, {
-        minIntervalMs: 12000,
-        maxMsgsInWindow: 3,
-        allowUrgentOverLimitScore: 9.0,
-        baseThresholdScore: 4.85,
-        quietMinMs: 28000,
-        quietMaxMs: 40000
+        minIntervalMs: 7500,
+        maxMsgsInWindow: 5,
+        allowUrgentOverLimitScore: 8.6,
+        baseThresholdScore: 4.2,
+        quietMinMs: 18000,
+        quietMaxMs: 26000,
+        top3CooldownMs: 24000
       });
     }
     return commentatorAutoCfg;
@@ -23318,11 +23380,11 @@ function ttsGenV2ExtendBanksPhase2(banks) {
       }
     };
     const rules = {
-      train: { cooldownMs:8000, requires:['p2','p3','p4'], sessions:['manga','final','other'] },
+      train: { cooldownMs:6500, requires:['p2','p3','p4'], sessions:['train','manga','final','other'] },
       story: { cooldownMs:11000, requires:['attacker','defender','toSec'], sessions:['manga','final','other'] },
       qualiBest: { cooldownMs:7000, requires:['pilot','best'], sessions:['quali','manga','other'] },
       qualiPole: { cooldownMs:6000, requires:['p1','p2','sec'], sessions:['quali','manga','other'] },
-      mini: { cooldownMs:10000, requires:['p1','p2','p3'], sessions:['quali','manga','final','other'] }
+      mini: { cooldownMs:9000, requires:['p1','p2','p3'], sessions:['train','quali','manga','final','other'] }
     };
     for (const style of ['pro','picante','engineer','narrativo']) {
       const preset = TTS_GEN_V2_STYLE_PRESETS[style] || TTS_GEN_V2_STYLE_PRESETS.pro || {};
@@ -24258,7 +24320,7 @@ function collectAutoBattleCandidates(ctx) {
     const battles = (ctx && ctx.battles);
     if (!vs.pelea || typeof addCand !== 'function' || !Array.isArray(battles)) return;
 
-    const allowTrainNarrative = false;
+    const allowTrainNarrative = true;
     if (allowTrainNarrative && arr.length >= 4) {
       const a2 = arr[1], a3 = arr[2], a4 = arr[3];
       const sameLap = (Number(a2.lapcount)||0)===(Number(a3.lapcount)||0) && (Number(a3.lapcount)||0)===(Number(a4.lapcount)||0);
@@ -24547,18 +24609,18 @@ function collectAutoQualiCandidates(ctx) {
     if (!(b1 > 0 && b2 > 0 && isFinite(b1) && isFinite(b2))) return;
     const margen = Math.abs(b2 - b1) / 1000;
     const sincePF = now - (autoQualiState.lastPoleFightSpeakMs || 0);
-    if (gap > 0.10 || sincePF <= 14000) return;
+    if (margen > 0.10 || sincePF <= 14000) return;
     addCand({
       type: 'qualiPole',
       score: 6.1,
       text: ttsGenV2ComposeAutoEvent('qualiPole', {
         p1: safeRacerName(r1 && r1.racerName) || 'P1',
         p2: safeRacerName(r2 && r2.racerName) || 'P2',
-        sec: gapToSpeech(gap, 'pole')
+        sec: gapToSpeech(margen, 'pole')
       }, { priority: 54, session: 'manga' }) || autoBuildMessage('qualiPole', {
         p1: safeRacerName(r1 && r1.racerName) || 'P1',
         p2: safeRacerName(r2 && r2.racerName) || 'P2',
-        sec: gapToSpeech(gap, 'pole')
+        sec: gapToSpeech(margen, 'pole')
       }),
       key: 'auto_quali_pole',
       sig: 'auto:qualiPole',
