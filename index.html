@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R6 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R7 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -11,7 +11,7 @@ Changelog:
 - v0.5.0.17: intro generativo de finales segun Q tabla. Final A/B/C ya no entra plano; usa contexto de parrilla y corte de qualy.
 - v0.5.0.18R4: Auto Locutor más informativo y más de pista. Se endurece el tono de locutor motorsport en español, se prioriza información útil sobre remates vacíos, se ajustan leader/pass/battle/top3/train/qualiPole/record y se reduce la mezcla de estilos para que la salida suene más a cabina que a plantilla.
 - v0.5.0.18R5: FIX voz práctica/qualy/final. Se corrigen fallas que dejaban muda la práctica y la pelea por pole, se abre el heartbeat de sesión para práctica, clasificación y finales, se afloja el Speech Arbiter para mensajes útiles, se corrige el resumen de qualy para tomar P2/P3 de la tabla general real y se sube la cadencia del Auto Locutor.
-- v0.5.0.18R6: FIX seguimiento de piloto. La primera vuelta ahora se canta en SÚPER BÁSICO, BÁSICO y NORMAL usando fallback robusto de lastLapMs/lastLapTime/lastTime. La proyección de qualy queda solo en P1.
+- v0.5.0.18R7: FIX seguimiento y proyección. La V1 del piloto seguido ya no se pierde si el feed tarda en poblar lastLapMs, y la proyección de qualy queda estrictamente solo en P1 en todas las ramas de locución.
 - v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
 - v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
 - v0.4.10.2: anti-repeat del raceName - el intro de titulo ya no se reencola varias veces, se cancela al arrancar PRACTICA/QUALI/CARRERA y se blinda con latch por sesion.
@@ -10087,7 +10087,6 @@ function msgv2DecimasTxt(ms) {
           if (b1 > 0) variants.push('Práctica viva. ' + p1Name + ' marca ' + __speechTime2(b1) + ' como referencia.');
           if (e1 > 0 && e1Txt) variants.push('Práctica con ritmo. ' + p1Name + ' proyecta ' + e1Txt + '.');
           if (p2Name && gap12Ms > 0 && gap12Ms <= 350) variants.push('Se aprieta la práctica. ' + p1Name + ' y ' + p2Name + ' están a ' + __speechTime2(gap12Ms) + '.');
-          if (p2Name && e1Txt && e2Txt) variants.push('Referencia doble en práctica. ' + p1Name + ' proyecta ' + e1Txt + ' y ' + p2Name + ' proyecta ' + e2Txt + '.');
           if (p2Name && b1 > 0 && b2 > 0) variants.push('Práctica con dos referencias. ' + p1Name + ' trae ' + __speechTime2(b1) + ' y ' + p2Name + ' responde con ' + __speechTime2(b2) + '.');
           variants.push('Entrenamiento en marcha. Hay que afinar trazada, ritmo y estimado.');
           msg = variants[Math.floor((now / gapNeed)) % variants.length];
@@ -10106,13 +10105,8 @@ function msgv2DecimasTxt(ms) {
           if (e1 > 0 && e1Txt) variants.push('Clasificación viva. ' + p1Name + ' proyecta ' + e1Txt + '.');
           if (b1 > 0) variants.push('La referencia de la manga la trae ' + p1Name + ' con ' + __speechTime2(b1) + '.');
           if (p2Name && gap12Ms > 0 && gap12Ms <= 250) variants.push('Qualy muy cerrada. ' + p2Name + ' está a ' + __speechTime2(gap12Ms) + ' de la referencia.');
-          if (p2Name && e1Txt && e2Txt) variants.push('Pelea de estimado. ' + p1Name + ' proyecta ' + e1Txt + ' y ' + p2Name + ' proyecta ' + e2Txt + '.');
           if (qTop1) {
-            let globalMsg = 'Tabla general provisional: ' + qTop1 + ' al frente';
-            if (qTop2) globalMsg += ', ' + qTop2 + ' segundo';
-            if (qTop3) globalMsg += ' y ' + qTop3 + ' tercero';
-            globalMsg += '.';
-            variants.push(globalMsg);
+            variants.push('Tabla general provisional: ' + qTop1 + ' al frente.');
           }
           variants.push('Clasificación en marcha. Todo va sobre vueltas y tiempo estimado.');
           msg = variants[Math.floor((now / gapNeed)) % variants.length];
@@ -18488,6 +18482,8 @@ let meanMs = parseTimeToMs(meanTimeRaw);
 
     let lastSpokenLastTime = null;
     let lastAnnouncedLapcount = 0;
+    let pendingFirstLapTimeForSelected = false;
+    let firstLapTimeSpokenForSelected = false;
     let lastKnownPos = null;
     let lastTotalTimeAnnouncedSeconds = 0;
     let lastGapInfoLap = 0;
@@ -19044,6 +19040,8 @@ function computeSessionBestMs() {
       // NO detener el reloj de MANGA aqu: el cronmetro es por piloto y debe persistir al cambiar seleccin.
       lastSpokenLastTime = null;
           lastAnnouncedLapcount = 0;
+          pendingFirstLapTimeForSelected = false;
+          firstLapTimeSpokenForSelected = false;
           lastKnownPos = null;
           lastTotalTimeAnnouncedSeconds = 0;
           lastBestAnnouncedMs = null;
@@ -19808,7 +19806,7 @@ function updateBlueFlagFromPassEvents() {
     // =========================
 
 const commentatorAutoCfg = {
-  // R6: primera vuelta del piloto seguido garantizada y proyección de quali solo para P1.
+  // R7: primera vuelta del piloto seguido espera tiempo real si el feed retrasa lastLapMs, y la proyección de quali queda solo en P1.
   minIntervalMs: 9000,
   windowMs: 45000,
   maxMsgsInWindow: 4,
@@ -25407,6 +25405,17 @@ function buildSelectedPilotVoiceContext(p) {
     function handleSelectedPilotLapFlow(ctx, posState) {
       const { p, lapsNow, lapMsNow, isManga, say } = ctx;
       const lapCrossed = (voiceSettings.laps && lapsNow > 0 && lapsNow !== lastAnnouncedLapcount);
+      const shouldForcePendingFirstLapTime = !!(voiceSettings.laps && pendingFirstLapTimeForSelected && !firstLapTimeSpokenForSelected && lapsNow === 1 && lapMsNow);
+
+      if (shouldForcePendingFirstLapTime) {
+        try { playBeep('lapUp'); } catch (e) {}
+        say(tiempoATexto(lapMsNow), { key: 'lap_1_first_delayed', priority: 96, cooldownMs: 0, dedupe: false, semanticCategory: 'ess', interrupt: false });
+        flashLastLap();
+        lastSpokenLastTime = lapMsNow;
+        firstLapTimeSpokenForSelected = true;
+        pendingFirstLapTimeForSelected = false;
+        return { lapCrossed: false, shouldReturn: false };
+      }
 
       if (lapCrossed) {
         const isFirstFollowLap = (lapsNow === 1 && Number(lastAnnouncedLapcount || 0) === 0);
@@ -25423,10 +25432,15 @@ function buildSelectedPilotVoiceContext(p) {
           say(tiempoATexto(lapMsNow), lapSpeakOpts);
           flashLastLap();
           lastSpokenLastTime = lapMsNow;
+          if (isFirstFollowLap) {
+            firstLapTimeSpokenForSelected = true;
+            pendingFirstLapTimeForSelected = false;
+          }
         } else {
           try { playBeep('lapUp'); } catch (e) {}
           if (isFirstFollowLap) {
-            say('primera vuelta', { key: 'lap_' + lapsNow + '_first_fallback', priority: 96, cooldownMs: 0, dedupe: false, semanticCategory: 'ess' });
+            pendingFirstLapTimeForSelected = true;
+            firstLapTimeSpokenForSelected = false;
           }
         }
         lastAnnouncedLapcount = lapsNow;
@@ -26692,6 +26706,8 @@ function checkSessionFinishOnLap() {
           previousClassification = null;
           lastSpokenLastTime = null; 
       lastAnnouncedLapcount = 0;
+      pendingFirstLapTimeForSelected = false;
+      firstLapTimeSpokenForSelected = false;
           lastKnownPos = null;
           lastTotalTimeAnnouncedSeconds = 0;
           lastBestAnnouncedMs = null;
@@ -27612,7 +27628,6 @@ raceData = normalizeRaceData(rawRace);
         const secondName = second ? String(second.racerName || '').trim() : '';
         const sT = second ? __qualiRankTuple(second) : { laps: 0, timeMs: Number.MAX_SAFE_INTEGER };
         const projTxt = __speechQualiProjection(lLaps, lTimeMs);
-        const secondProjTxt = second ? __speechQualiProjection(sT.laps, sT.timeMs) : '';
 
         const changed = (prevKey && prevKey !== leaderKey);
         const lapGain = (lLaps > prevLaps);
@@ -27648,13 +27663,6 @@ raceData = normalizeRaceData(rawRace);
           __qualiLeaderState.leaderLaps = lLaps;
           __qualiLeaderState.leaderTimeMs = lTimeMs;
 
-          if (second && secondName && sT.laps > 0 && sT.timeMs > 0 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
-            enqueueSpeech(
-              `Pole abierta. ${secondName} sigue a tiro con ${secondProjTxt}.`,
-              { key: 'quali_pole_close_' + leaderKey + '_' + secondName + '_' + sT.laps + '_' + Math.round(sT.timeMs/10), cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 40 }
-            );
-            __qualiLeaderState.lastCloseTs = now;
-          }
           return;
         }
 
@@ -27673,12 +27681,8 @@ raceData = normalizeRaceData(rawRace);
 
         if (second && secondName && sT.laps === lLaps && sT.timeMs > 0 && (now - (Number(__qualiLeaderState.lastCloseTs || 0)) > closeCooldown)){
           const margen = sT.timeMs - lTimeMs;
-          if (isFinite(gap) && margen > 0 && margen <= 250){
-            enqueueSpeech(
-              `Nada cerrado arriba. ${secondName} sigue en rango con ${secondProjTxt}.`,
-              { key: 'quali_pole_close_' + leaderKey + '_' + secondName + '_' + sT.laps + '_' + Math.round(sT.timeMs/10), cooldownMs: closeCooldown, semanticCategory: 'quali', priority: 36 }
-            );
-            __qualiLeaderState.lastCloseTs = now;
+          if (isFinite(margen) && margen > 0 && margen <= 250){
+            // R7: la proyección queda solo en P1. No se anuncia P2 aquí.
           }
         }
       }catch(e){}
