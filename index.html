@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R7 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R8 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -11,7 +11,7 @@ Changelog:
 - v0.5.0.17: intro generativo de finales segun Q tabla. Final A/B/C ya no entra plano; usa contexto de parrilla y corte de qualy.
 - v0.5.0.18R4: Auto Locutor más informativo y más de pista. Se endurece el tono de locutor motorsport en español, se prioriza información útil sobre remates vacíos, se ajustan leader/pass/battle/top3/train/qualiPole/record y se reduce la mezcla de estilos para que la salida suene más a cabina que a plantilla.
 - v0.5.0.18R5: FIX voz práctica/qualy/final. Se corrigen fallas que dejaban muda la práctica y la pelea por pole, se abre el heartbeat de sesión para práctica, clasificación y finales, se afloja el Speech Arbiter para mensajes útiles, se corrige el resumen de qualy para tomar P2/P3 de la tabla general real y se sube la cadencia del Auto Locutor.
-- v0.5.0.18R7: FIX seguimiento y proyección. La V1 del piloto seguido ya no se pierde si el feed tarda en poblar lastLapMs, y la proyección de qualy queda estrictamente solo en P1 en todas las ramas de locución.
+- v0.5.0.18R8: SYNC de versión + FIX seguimiento y proyección. La V1 del piloto seguido ya no se pierde si el feed tarda en poblar lastLapMs, y la proyección de qualy queda estrictamente solo en P1 en todas las ramas de locución.
 - v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
 - v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
 - v0.4.10.2: anti-repeat del raceName - el intro de titulo ya no se reencola varias veces, se cancela al arrancar PRACTICA/QUALI/CARRERA y se blinda con latch por sesion.
@@ -91,7 +91,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R6</title>
+<title>vics_Smart_Spotter_v0.5.0.18R8</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6586,7 +6586,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R6</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R8</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7178,7 +7178,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R6";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R8";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7471,13 +7471,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R6";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R6',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R8',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R6', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R8', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
