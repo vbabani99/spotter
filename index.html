@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R10 - base 0.5.0.18 reconstruida con modos SUPER BÁSICO/BÁSICO/NORMAL + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R12 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -13,7 +13,10 @@ Changelog:
 - v0.5.0.18R5: FIX voz práctica/qualy/final. Se corrigen fallas que dejaban muda la práctica y la pelea por pole, se abre el heartbeat de sesión para práctica, clasificación y finales, se afloja el Speech Arbiter para mensajes útiles, se corrige el resumen de qualy para tomar P2/P3 de la tabla general real y se sube la cadencia del Auto Locutor.
 - v0.5.0.18R8: SYNC de versión + FIX seguimiento y proyección. La V1 del piloto seguido ya no se pierde si el feed tarda en poblar lastLapMs, y la proyección de qualy queda estrictamente solo en P1 en todas las ramas de locución.
 - v0.5.0.18R9: Auto Locutor más útil por sesión. Se refuerza la práctica con referencias, ritmo y estimado; la qualy canta mejor la tabla general real sin meter proyección al P2; y la final trae más contexto de parrilla, líder y pelea por podio.
-- v0.5.0.18R10: SÚPER BÁSICO queda en modo quirúrgico: solo Last Lap del piloto seguido. Se corta cualquier otra ruta de locución posterior a la vuelta.
+- v0.5.0.18R12: Limpieza de cola TTS. Se adelanta la supersedencia antes del filtro final para que mensajes de más prioridad sí puedan sacar ruido pendiente.
+- v0.5.0.18R12: Dedupe reforzado por firma categoría+key+texto, mute de sistema por defecto salvo allowlist explícita, y límite de reintentos start-guard para no reciclar frases viejas.
+- v0.5.0.18R11: SÚPER BÁSICO queda en modo quirúrgico: solo Last Lap del piloto seguido. Se corta cualquier otra ruta de locución posterior a la vuelta.
+- v0.5.0.18R11: Limpieza TTS/FOLLOW. FOLLOW ya usa followVoiceMode como estado único persistente, el override manual de VOZ ya sí manda, carrera nueva ya no vuelve a prender VOZ sola en desktop y el indicador de VOZ usa runtime más coherente. Se elimina la locución de sistema al cambiar modo FOLLOW.
 - v0.4.10.7: prioridad dura al arranque de quali/final, mute de mensajes de sistema en TTS y dedupe quirúrgico de cola.
 - v0.4.10.3: Audit Pack v1 - bitácora interna del spotter con acciones, supresiones, cola TTS, lifecycle del watcher, panel de auditoría en debug, export JSON, copiar y limpiar log.
 - v0.4.10.2: anti-repeat del raceName - el intro de titulo ya no se reencola varias veces, se cancela al arrancar PRACTICA/QUALI/CARRERA y se blinda con latch por sesion.
@@ -93,7 +96,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R10</title>
+<title>vics_Smart_Spotter_v0.5.0.18R12</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6588,7 +6591,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R10</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R12</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7180,7 +7183,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R10";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R12";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7473,13 +7476,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R10";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R10',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R12',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R10', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R12', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -11294,42 +11297,47 @@ try{
     // - SUPER BÁSICO: solo última vuelta
     // - BÁSICO: modo sobrio
     // - NORMAL: seguimiento completo
-    let basicModeEnabled = false;
-    let superBasicModeEnabled = false;
+    // Limpieza R12: FOLLOW se modela con un solo estado, no con dos booleanos.
+    let followVoiceMode = 'SUPER_BASIC';
+
+    function __normalizeFollowVoiceMode(mode){
+      const m = String(mode || 'SUPER_BASIC').toUpperCase();
+      return (m === 'SUPER_BASIC' || m === 'BASIC' || m === 'NORMAL') ? m : 'SUPER_BASIC';
+    }
+    function __persistFollowVoiceMode(){
+      try { prefSet('followVoiceMode', followVoiceMode); } catch(e) {}
+      // Compat legacy: mantenemos llaves viejas solo para no romper migraciones previas.
+      try { prefSet('superBasicModeEnabled', followVoiceMode === 'SUPER_BASIC' ? '1' : '0'); } catch(e) {}
+      try { prefSet('basicModeEnabled', followVoiceMode === 'BASIC' ? '1' : '0'); } catch(e) {}
+    }
     try {
-      const bm = prefGet('basicModeEnabled', null);
-      const sbm = prefGet('superBasicModeEnabled', null);
-      if (bm === null && sbm === null) {
-        basicModeEnabled = false;
-        superBasicModeEnabled = true;
-        try { prefSet('basicModeEnabled', '0'); } catch(e) {}
-        try { prefSet('superBasicModeEnabled', '1'); } catch(e) {}
+      const savedMode = prefGet('followVoiceMode', null);
+      if (savedMode !== null) {
+        followVoiceMode = __normalizeFollowVoiceMode(savedMode);
       } else {
-        if (bm !== null) basicModeEnabled = (bm === '1');
-        if (sbm !== null) superBasicModeEnabled = (sbm === '1');
+        const bm = prefGet('basicModeEnabled', null);
+        const sbm = prefGet('superBasicModeEnabled', null);
+        if (sbm === '1') followVoiceMode = 'SUPER_BASIC';
+        else if (bm === '1') followVoiceMode = 'BASIC';
+        else if (bm === null && sbm === null) followVoiceMode = 'SUPER_BASIC';
+        else followVoiceMode = 'NORMAL';
       }
-      if (superBasicModeEnabled) basicModeEnabled = false;
+      __persistFollowVoiceMode();
     } catch(e) {}
 
     function __getFollowVoiceMode(){
-      try {
-        if (superBasicModeEnabled) return 'SUPER_BASIC';
-        if (basicModeEnabled) return 'BASIC';
-        return 'NORMAL';
-      } catch(e) { return 'NORMAL'; }
+      try { return __normalizeFollowVoiceMode(followVoiceMode); } catch(e) { return 'SUPER_BASIC'; }
     }
     function __isFollowQuietMode(){
-      try { return !!selectedPilotKey && (basicModeEnabled || superBasicModeEnabled); } catch(e) { return false; }
+      try { return !!selectedPilotKey && __getFollowVoiceMode() !== 'NORMAL'; } catch(e) { return false; }
     }
     function __isSuperBasicFollowMode(){
-      try { return !!selectedPilotKey && !!superBasicModeEnabled; } catch(e) { return false; }
+      try { return !!selectedPilotKey && __getFollowVoiceMode() === 'SUPER_BASIC'; } catch(e) { return false; }
     }
     function __setFollowVoiceMode(mode){
-      const m = String(mode || 'NORMAL').toUpperCase();
-      superBasicModeEnabled = (m === 'SUPER_BASIC');
-      basicModeEnabled = (m === 'BASIC');
-      try { prefSet('superBasicModeEnabled', superBasicModeEnabled ? '1' : '0'); } catch(e) {}
-      try { prefSet('basicModeEnabled', basicModeEnabled ? '1' : '0'); } catch(e) {}
+      followVoiceMode = __normalizeFollowVoiceMode(mode);
+      __persistFollowVoiceMode();
+      return followVoiceMode;
     }
 
     const DEFAULT_VOICE_SETTINGS = {
@@ -11360,7 +11368,7 @@ try{
 
     // One-time: aplicar defaults de esta versin (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_AI_Spotter_TRM_v0.0.0.90';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R12';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -11375,7 +11383,7 @@ try{
     // Defaults y migracin NO destructiva (por dispositivo)
     // - Antes reseteaba por "versin de esquema" y eso era gasolina en el fuego.
     // - Ahora: solo si no existe, se siembran defaults. Si existe, solo se rellenan faltantes.
-    const SETTINGS_SCHEMA_VERSION = 'TRM_SPOTTER_SCHEMA_V1';
+    const SETTINGS_SCHEMA_VERSION = 'TRM_SPOTTER_SCHEMA_V2';
     try {
       const prevSchema = lsGet('spotterSettingsSchema');
 
@@ -13738,14 +13746,15 @@ function __duoGuessRole(txt, key) {
       // - BÁSICO: laps + posición estable + azul solo en finales
       try{
         const inFollow = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
-        if (!inFollow || !(basicModeEnabled || superBasicModeEnabled)) return false;
+        const followModeNow = __getFollowVoiceMode();
+        if (!inFollow || followModeNow === 'NORMAL') return false;
         const bmode = mode || __modeBucket();
 
         const next = { ...DEFAULT_VOICE_SETTINGS };
         next.laps = true;
         next.saylaps = false;
 
-        if (superBasicModeEnabled) {
+        if (followModeNow === 'SUPER_BASIC') {
           next.pos = false;
           next.gaps = false;
           next.leadergap = false;
@@ -15142,6 +15151,8 @@ const __speechQueueCfg = {
 };
 const __speechLastCategoryAt = new Map();
 const __speechLastCategoryText = new Map();
+const __speechRecentSigAt = new Map();
+const __speechRecentKeyAt = new Map();
 
 function __speechCatFromOpts(opts, key, text){
   try{
@@ -15236,6 +15247,25 @@ function __speechPruneQueue(now){
   }catch(e){}
 }
 
+function __speechRecentWindowFor(cat, priority, opts){
+  try{
+    if (opts && typeof opts.sigWindowMs === 'number') return Math.max(0, Number(opts.sigWindowMs) || 0);
+    const c = String(cat || '').toLowerCase();
+    const pr = Number(priority || 0) || 0;
+    if (__speechIsCriticalCat(c, pr, opts || {}, (opts && opts.key) || '')) return 0;
+    if (__speechIsNoisyCat(c)) return 2200;
+    if (c === 'lap' || c === 'pos') return 900;
+    if (c === 'battle' || c === 'pressure' || c === 'podium') return 1600;
+    return 1400;
+  }catch(e){ return 1200; }
+}
+
+function __speechRecentSignature(clean, key, cat){
+  try{
+    return [String(cat || '').trim().toLowerCase(), String(key || '').trim().toLowerCase(), String(clean || '').trim().toLowerCase()].join('|');
+  }catch(e){ return String(clean || '').trim().toLowerCase(); }
+}
+
 function __speechShouldSkipIncoming(clean, key, cat, priority, opts, now){
   try{
     const t = Number(now || Date.now()) || Date.now();
@@ -15245,7 +15275,16 @@ function __speechShouldSkipIncoming(clean, key, cat, priority, opts, now){
     __speechPruneQueue(t);
 
     const maxQ = pendingAutoVoiceUnlock ? __speechQueueCfg.maxQueueBlocked : __speechQueueCfg.maxQueue;
-    if ((speechQueue || []).length >= maxQ) return true;
+    if ((speechQueue || []).length >= maxQ) {
+      let lowest = null;
+      for (const it of (speechQueue || [])){
+        if (!it) continue;
+        if (__speechIsCriticalCat(it.category, it.priority, it.opts || {}, it.key)) continue;
+        if (!lowest || (Number(it.priority || 0) || 0) < (Number(lowest.priority || 0) || 0)) lowest = it;
+      }
+      if (!lowest) return true;
+      if ((Number(priority || 0) || 0) <= (Number(lowest.priority || 0) || 0)) return true;
+    }
 
     const lastCatAt = __speechLastCategoryAt.get(cat) || 0;
     if (lastCatAt && (t - lastCatAt) < __speechQueueCfg.recentSpokenSuppressMs) {
@@ -15296,12 +15335,16 @@ function __speechSupersedePending(cat, priority, opts, key, now){
 function __speechSystemTtsMuted(clean, key, cat, opts){
   try{
     const c = String(cat || (opts && opts.category) || '').trim().toLowerCase();
-    const k = String(key || (opts && opts.key) || '').trim().toLowerCase();
+    const k = String(key || (opts && (opts.key || opts.dedupeKey)) || '').trim().toLowerCase();
     const txt = String(clean || '').trim().toLowerCase();
-    const mutedKeys = new Set(['sys_voice_ready']);
-    const mutedTexts = new Set(['voz lista']);
+    const allowKeys = new Set(['sys_keepalive','tts_test','user_voice_on']);
+    const mutedKeys = new Set(['sys_voice_ready','sys_auto_on']);
+    const mutedTexts = new Set(['voz lista','auto locutor activado.']);
+    if (opts && opts.allowSystemTts === true) return false;
     if (c !== 'system' && !k.startsWith('sys_')) return false;
-    return mutedKeys.has(k) || mutedTexts.has(txt);
+    if (mutedKeys.has(k) || mutedTexts.has(txt)) return true;
+    if (allowKeys.has(k)) return false;
+    return true;
   }catch(e){ return false; }
 }
 
@@ -15485,6 +15528,7 @@ function forceTtsRecover(reason = ''){
   try{
     const synth = getSpeechEngine();
     if (!synth || !window.SpeechSynthesisUtterance) return;
+    try { if (voiceMasterEnabled) __setTtsRuntimeState('RECOVERING'); } catch(e) {}
 
     // Si estamos tratando de destrabar el motor (unlock), NO mates el utterance
     try { if (typeof __ttsUnlockInFlight !== 'undefined' && __ttsUnlockInFlight) return; } catch(e) {}
@@ -15503,7 +15547,10 @@ function forceTtsRecover(reason = ''){
     try { speechSpeaking = false; } catch(e){}
     try { __flushSpeechQueueStale(8000); } catch(e){}
     try { scheduleSpeechPump(0); } catch(e){}
-  }catch(e){}
+    try { if (voiceMasterEnabled) __setTtsRuntimeState(pendingAutoVoiceUnlock ? 'LOCKED' : 'READY'); } catch(e) {}
+  }catch(e){
+    try { if (voiceMasterEnabled) __setTtsRuntimeState('ERROR'); } catch(_e) {}
+  }
 }
 
 
@@ -15545,6 +15592,22 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         const interrupt = !!opts.interrupt;
         const dedupe = (opts.dedupe !== false);
         const queueCategory = __speechCatFromOpts(opts, key, clean);
+        const recentSig = __speechRecentSignature(clean, key, queueCategory);
+        const recentSigWindow = __speechRecentWindowFor(queueCategory, priority, opts);
+
+        if (recentSigWindow > 0) {
+          const lastSigAt = __speechRecentSigAt.get(recentSig) || 0;
+          if (lastSigAt && (now - lastSigAt) < recentSigWindow) {
+            try { pushSpotterAudit('suppress_recent_sig', clean, { key, category: queueCategory, throttleMs: 600, dedupeKey:'sup_sig|' + recentSig }); } catch(e) {}
+            return;
+          }
+          const recentKey = String(key || '').trim().toLowerCase();
+          const lastKeyAt = __speechRecentKeyAt.get(recentKey) || 0;
+          if (recentKey && lastKeyAt && (now - lastKeyAt) < Math.max(700, Math.floor(recentSigWindow * 0.7)) && !__speechIsCriticalCat(queueCategory, priority, opts, key)) {
+            try { pushSpotterAudit('suppress_recent_key', clean, { key, category: queueCategory, throttleMs: 600, dedupeKey:'sup_rkey|' + recentKey + '|' + queueCategory }); } catch(e) {}
+            return;
+          }
+        }
 
         if (__speechSystemTtsMuted(clean, key, queueCategory, opts)) {
           try { pushSpotterAudit('suppress_system_tts', clean, { key, category: queueCategory, throttleMs: 600, dedupeKey:'sup_sys|' + key + '|' + clean }); } catch(e) {}
@@ -15595,8 +15658,8 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           if (speechQueue.some(it => it.text === clean)) { try { pushSpotterAudit('suppress_queue_dup', clean, { key, category: queueCategory, throttleMs: 600, dedupeKey:'sup_qdup|' + clean }); } catch(e) {} return; }
         }
 
-        if (__speechShouldSkipIncoming(clean, key, queueCategory, priority, opts, now)) { try { pushSpotterAudit('suppress_policy', clean, { key, category: queueCategory, throttleMs: 700, dedupeKey:'sup_policy|' + key + '|' + clean }); } catch(e) {} return; }
         try { __speechSupersedePending(queueCategory, priority, opts, key, now); } catch(e) {}
+        if (__speechShouldSkipIncoming(clean, key, queueCategory, priority, opts, now)) { try { pushSpotterAudit('suppress_policy', clean, { key, category: queueCategory, throttleMs: 700, dedupeKey:'sup_policy|' + key + '|' + clean }); } catch(e) {} return; }
 
         if (interrupt) {
           try { pushSpotterAudit('queue_flush', 'Interrupt TTS', { key, category: queueCategory, throttleMs: 0 }); } catch(e) {}
@@ -15634,8 +15697,10 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           }
         }
         const ttlMs = __speechExpiryFor(queueCategory, priority, opts);
-        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: __voiceURI, category: queueCategory, expireAt: ttlMs > 0 ? (now + ttlMs) : 0, opts });
+        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: __voiceURI, category: queueCategory, expireAt: ttlMs > 0 ? (now + ttlMs) : 0, retryCount: Number(opts.retryCount || 0) || 0, opts });
         try { __recentEnqueueAt.set(recentEnqKey, now); } catch(e) {}
+        try { __speechRecentSigAt.set(recentSig, now); } catch(e) {}
+        try { __speechRecentKeyAt.set(String(key || '').trim().toLowerCase(), now); } catch(e) {}
         try {
           if (__recentEnqueueAt.size > 1200) {
             const cut = now - 10000;
@@ -15663,7 +15728,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         if (!__ss || !window.SpeechSynthesisUtterance) return;
 
         // Guard + recovery: Chrome a veces se queda en speaking/pending fantasma y deja de sacar cola.
-        if (speechSpeaking) return;
+        if (speechSpeaking) { try { __setTtsRuntimeState('SPEAKING'); } catch(e) {} return; }
 
         if (__ss && (__ss.speaking || __ss.pending)){
           const now = Date.now();
@@ -15671,6 +15736,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           const thr = __ss.speaking ? 6500 : 2800;
           // Si no hay actividad reciente, es speaking/pending fantasma: cancela y reintenta
           if (lastEv && (now - lastEv) > thr) {
+            try { __setTtsRuntimeState('RECOVERING'); } catch(e) {}
             try { if (canTtsCancelNow(now)) __ss.cancel(); } catch(e){}
             try { pushTtsEvent('recover', 'Cancel por ghost speaking/pending', 'tts'); } catch(e) {}
             try { pushSpotterAudit('tts_recover', 'Ghost speaking/pending', { throttleMs: 0 }); } catch(e) {}
@@ -15705,6 +15771,11 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
             try { pushSpotterAudit('queue_drop_ttl', cand.text || '', { key: cand.key || '', category: cand.category || '', throttleMs: 0 }); } catch(e) {}
             continue;
           }
+          const retryCount = Number(cand.retryCount || 0) || 0;
+          if (retryCount > 2 && !__speechIsCriticalCat(cand.category, cand.priority, cand.opts || {}, cand.key)) {
+            try { pushSpotterAudit('queue_drop_retry_cap', cand.text || '', { key: cand.key || '', category: cand.category || '', throttleMs: 0 }); } catch(e) {}
+            continue;
+          }
           next = cand;
           break;
         }
@@ -15721,6 +15792,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         try { pushTtsEvent('start', next.text || '', next.key || 'tts'); } catch(e) {}
         try { pushSpotterAudit('tts_start', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
                         try { __ttsStartGuardFails = 0; } catch(e) {}
+            try { __setTtsRuntimeState('SPEAKING'); } catch(e) {}
 try { clearTtsStartGuard(); } catch(e) {}
           };
         } catch(e) {}
@@ -15775,6 +15847,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
           try { pushSpotterAudit('tts_end', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
           clearSpeechWatchdog();
           speechSpeaking = false;
+          try { __setTtsRuntimeState(voiceMasterEnabled ? (pendingAutoVoiceUnlock ? 'LOCKED' : 'READY') : 'OFF'); } catch(e) {}
                     try { __ttsStartGuardFails = 0; } catch(e) {}
 try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_title_') === 0) { __autoIntroDoneKeys.add(next.key); __autoIntroQueuedKeys.add(next.key); } } catch(e) {}
           lastSpokenKeyAt.set(next.key, Date.now());
@@ -15790,6 +15863,7 @@ try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_t
           try { pushSpotterAudit('tts_error', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
           clearSpeechWatchdog();
           speechSpeaking = false;
+          try { __setTtsRuntimeState('RECOVERING'); } catch(e) {}
                     try { __ttsStartGuardFails = 0; } catch(e) {}
           try { __ttsCurrentKey = ''; __ttsCurrentText = ''; } catch(e) {}
           try {
@@ -15840,10 +15914,16 @@ lastSpokenKeyAt.set(next.key, Date.now());
               } catch(e) {}
               speechSpeaking = false;
 
-              // Reinsertar el mismo mensaje al frente (no se pierde)
+              // Reinsertar el mismo mensaje al frente, pero con tope de reintentos para no reciclar basura vieja.
               try {
-                speechQueue.unshift(next);
-                speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
+                const retryCount = (Number(next.retryCount || 0) || 0) + 1;
+                const retryItem = Object.assign({}, next, { retryCount, ts: Date.now(), expireAt: 0 });
+                if (retryCount <= 2 || __speechIsCriticalCat(next.category, next.priority, next.opts || {}, next.key)) {
+                  speechQueue.unshift(retryItem);
+                  speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
+                } else {
+                  try { pushSpotterAudit('tts_drop_retry_cap', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
+                }
               } catch(e) {}
 
               // Si el utterance no arranco, reintenta antes de pedir tap (primer plano debe auto-recuperar).
@@ -15998,6 +16078,13 @@ let __ttsCancelShieldUntil = 0; // evita cancelar mientras se esta desbloqueando
 
 let __ttsUnlockInFlight = false;
 let __ttsUnlockStartedAt = 0;
+function __setTtsRuntimeState(next){
+  try {
+    const allowed = new Set(['OFF','LOCKED','READY','SPEAKING','RECOVERING','ERROR']);
+    __ttsRuntimeState = allowed.has(String(next || '').toUpperCase()) ? String(next).toUpperCase() : 'OFF';
+  } catch(e) { __ttsRuntimeState = 'OFF'; }
+}
+let __ttsRuntimeState = (!voiceMasterEnabled ? 'OFF' : ((__ttsUnlockedOnce && !pendingAutoVoiceUnlock) ? 'READY' : 'LOCKED'));
 
 function updateVoiceStatusDot(){
   try{
@@ -16010,33 +16097,43 @@ function updateVoiceStatusDot(){
     const needsUnlock = (typeof pendingAutoVoiceUnlock !== 'undefined' && pendingAutoVoiceUnlock) ||
                         (typeof voiceToggleBtns !== 'undefined' && voiceToggleBtns && voiceToggleBtns.some(b => b.classList.contains('needs-unlock')));
 
-    // "Armed" = la voz esta habilitada para hablar aunque en este instante no este speaking/pending.
-    // Evita que el puntito se quede rojo mientras el sistema SI funciona (caso comun: idle entre mensajes).
-    const armed = !!voiceMasterEnabled || (!!__ttsUnlockedOnce);
+    let runtime = String(__ttsRuntimeState || 'OFF').toUpperCase();
+    if (!voiceMasterEnabled) runtime = 'OFF';
+    else if (speaking) runtime = 'SPEAKING';
+    else if (needsUnlock) runtime = 'LOCKED';
+    else if (runtime === 'OFF' || runtime === 'LOCKED') runtime = 'READY';
 
-    const ok = armed && !needsUnlock;
-    const warn = armed && needsUnlock;
+    const ok = (runtime === 'READY' || runtime === 'SPEAKING');
+    const warn = (runtime === 'LOCKED' || runtime === 'RECOVERING' || runtime === 'ERROR');
+    const off = (runtime === 'OFF');
 
     dot.classList.toggle('voice-on', ok);
-    dot.classList.toggle('voice-off', !armed);
+    dot.classList.toggle('voice-off', off);
     dot.classList.toggle('voice-warn', warn);
     dot.classList.toggle('voice-speaking', speaking);
 
-    dot.title = ok ? 'Voz OK' : (warn ? 'Voz ON - requiere toque' : 'Voz OFF');
-    dot.setAttribute('aria-label', ok ? 'Voz OK' : (warn ? 'Voz ON (requiere toque)' : 'Voz OFF'));
+    const title = off ? 'Voz OFF'
+      : (runtime === 'LOCKED' ? 'Voz ON - requiere toque'
+      : (runtime === 'RECOVERING' ? 'Voz recuperando'
+      : (runtime === 'ERROR' ? 'Voz con error'
+      : (speaking ? 'Voz hablando' : 'Voz OK'))));
+
+    dot.title = title;
+    dot.setAttribute('aria-label', title);
   }catch(e){}
 }
 
 
 function unlockTTSOnce(reason = '') {
       try {
-        if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
-        if (!voiceMasterEnabled) return false;
+        if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) { try { __setTtsRuntimeState('ERROR'); } catch(e) {} return false; }
+        if (!voiceMasterEnabled) { try { __setTtsRuntimeState('OFF'); } catch(e) {} return false; }
 
         // Si ya se desbloqueo en esta sesion, solo reanuda y sigue.
         if (__ttsUnlockedOnce) {
           try { const __s = getSpeechEngine(); if (__s && typeof __s.resume === 'function') __s.resume(); } catch(e) {}
           try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+          try { __setTtsRuntimeState('READY'); } catch(e) {}
           try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
           try { updateVoiceStatusDot(); } catch(e) {}
           return true;
@@ -16086,6 +16183,7 @@ function unlockTTSOnce(reason = '') {
             try { __ttsStartGuardFails = 0; } catch(e) {}
             try { __ttsUnlockedOnce = true; } catch(e) {}
             try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
+            try { __setTtsRuntimeState('READY'); } catch(e) {}
 
             // Ahora SI: ya arranco el motor, limpiamos estado de bloqueo.
             try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
@@ -16099,6 +16197,7 @@ function unlockTTSOnce(reason = '') {
 
         const finishFail = () => {
           try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
+          try { __setTtsRuntimeState('LOCKED'); } catch(e) {}
           // Seguimos marcando bloqueo: requiere otro tap
           try { pendingAutoVoiceUnlock = true; } catch(e) {}
           try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
@@ -16127,6 +16226,7 @@ function unlockTTSOnce(reason = '') {
           synth.speak(u);
         } catch(e) {
           try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(ex) {}
+          try { __setTtsRuntimeState('ERROR'); } catch(ex) {}
           return false;
         }
 
@@ -16144,6 +16244,7 @@ function unlockTTSOnce(reason = '') {
         return true;
       } catch (e) {
         try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(ex) {}
+        try { __setTtsRuntimeState('ERROR'); } catch(ex) {}
         return false;
       }
     }
@@ -16152,6 +16253,10 @@ function unlockTTSOnce(reason = '') {
 function setVoiceMaster(on, opts = {}) {
       
       const turningOn = !!on;
+      const isUserAction = !!(opts && opts.user);
+      if (isUserAction) {
+        try { userVoiceOverride = true; } catch(e) {}
+      }
 
       // Si apagamos VOZ: limpiamos todo.
       // Si prendemos VOZ: NO borres 'needs-unlock' hasta que el motor realmente arranque (onstart).
@@ -16159,6 +16264,7 @@ function setVoiceMaster(on, opts = {}) {
         try { pushTtsEvent('voice', 'VOZ OFF', 'master'); } catch(e) {}
         try { __lastVoiceRecoverAttemptAt = 0; } catch(e) {}
         try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+        try { __setTtsRuntimeState('OFF'); } catch(e) {}
         try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
       }
 
@@ -16178,19 +16284,24 @@ function setVoiceMaster(on, opts = {}) {
           if (__isIOS) {
             if (!__ttsUnlockedOnce) {
               pendingAutoVoiceUnlock = true;
+              try { __setTtsRuntimeState('LOCKED'); } catch(e) {}
               try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(_e) {}
               try { scheduleOneTapUnlock(); } catch(_e) {}
+            } else {
+              try { __setTtsRuntimeState('READY'); } catch(e) {}
             }
           } else if (__isMob) {
             // Android: suele funcionar con gesto del boton, lo marcamos como listo.
             __ttsUnlockedOnce = true;
             pendingAutoVoiceUnlock = false;
+            try { __setTtsRuntimeState('READY'); } catch(e) {}
             try { pushTtsEvent('unlock-clear', 'Android listo sin tap pendiente', 'tts'); } catch(e) {}
             try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(_e) {}
           } else {
             // Desktop: listo sin gestos extra.
             __ttsUnlockedOnce = true;
             pendingAutoVoiceUnlock = false;
+            try { __setTtsRuntimeState('READY'); } catch(e) {}
             try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(_e) {}
           }
         } catch(e) {}
@@ -16204,6 +16315,10 @@ function setVoiceMaster(on, opts = {}) {
         try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
       } else {
         // Encendido: NO canceles en este punto (iPhone se queda mudo). Solo intenta unlock + drena cola.
+        try {
+          if ((typeof isIOSWebKit === 'function' ? isIOSWebKit() : false) && !__ttsUnlockedOnce) __setTtsRuntimeState('LOCKED');
+          else __setTtsRuntimeState('READY');
+        } catch(e) {}
         try { scheduleSpeechPump(80); } catch(e) {}
 }
     
@@ -16320,6 +16435,7 @@ function setVoiceMaster(on, opts = {}) {
 
         // Mantener estado "unlocked" en desktop aunque visibilityState no sea visible (OBS a veces reporta hidden)
         try { __ttsUnlockedOnce = true; pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+        try { __setTtsRuntimeState('READY'); } catch(e) {}
         try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
 
         // Reanudar motor
@@ -16339,7 +16455,7 @@ function setVoiceMaster(on, opts = {}) {
           __ttsKeepAliveLastAt = now;
           try {
             // '.' es suficiente para que el motor no se duerma. Volume 0 = silencioso.
-            enqueueSpeech('.', { key:'sys_keepalive', volume:0, priority:-999, textTtlMs:0, force:true });
+            enqueueSpeech('.', { key:'sys_keepalive', volume:0, priority:-999, textTtlMs:0, force:true, allowSystemTts:true, queueDedupeMs:0, sigWindowMs:0 });
           } catch(e) {}
         }
       } catch(e) {}
@@ -16361,11 +16477,8 @@ function setVoiceMaster(on, opts = {}) {
     function __autoEnsureVoiceReadyOnNewRace(raceSig = '') {
       try {
         if (!__isDesktopChromeContext()) return false;
-
-        // Si VOZ esta apagada, prendela en silencio.
-        if (!voiceMasterEnabled) {
-          try { setVoiceMaster(true, { silent:true, auto:true, reason:'new_race' }); } catch(e) {}
-        }
+        // Limpieza R12: carrera nueva ya no puede prender VOZ sola.
+        if (!voiceMasterEnabled) return false;
 
         // Desktop Chrome no deberia pedir tap. Si quedo atascado, limpiamos estado.
         try {
@@ -16373,15 +16486,18 @@ function setVoiceMaster(on, opts = {}) {
             pendingAutoVoiceUnlock = false;
             __ttsBlockedSince = 0;
             __ttsUnlockedOnce = true;
+            try { __setTtsRuntimeState('READY'); } catch(e) {}
             try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
           }
         } catch(e) {}
 
         // Reanuda y recupera motor TTS
         try { const __s = getSpeechEngine(); if (__s && typeof __s.resume === 'function') __s.resume(); } catch(e) {}
+        try { __setTtsRuntimeState('RECOVERING'); } catch(e) {}
         try { pushTtsEvent('recover', 'Carrera nueva, reenganche TTS', 'auto'); } catch(e) {}
-        try { if (voiceMasterEnabled) forceTtsRecover('new_race_auto'); } catch(e) {}
-        try { if (voiceMasterEnabled) scheduleSpeechPump(0); } catch(e) {}
+        try { forceTtsRecover('new_race_auto'); } catch(e) {}
+        try { scheduleSpeechPump(0); } catch(e) {}
+        try { __setTtsRuntimeState('READY'); } catch(e) {}
         try { updateVoiceStatusDot(); } catch(e) {}
 
         return true;
@@ -16415,6 +16531,7 @@ function setVoiceMaster(on, opts = {}) {
             semanticDedupe:false,
             force:true,
             user:true,
+            allowSystemTts:true,
             interrupt:false
           });
           try { scheduleSpeechPump(40); } catch(e) {}
@@ -16526,25 +16643,7 @@ function setVoiceMaster(on, opts = {}) {
             try { _updateBasicBtnUI(); } catch(e) {}
 
             const toastTxt = (nextMode === 'SUPER_BASIC') ? 'SÚPER BÁSICO activado' : (nextMode === 'BASIC' ? 'BÁSICO activado' : 'NORMAL activado');
-            const sayTxt = (nextMode === 'SUPER_BASIC') ? 'Súper básico activado.' : (nextMode === 'BASIC' ? 'Básico activado.' : 'Seguimiento normal.');
             try { showToast(toastTxt, { tone: 'info' }); } catch(e) {}
-            try {
-              if (voiceMasterEnabled) {
-                enqueueSpeech(sayTxt, {
-                  key: 'sys_follow_mode_' + String(nextMode || '').toLowerCase(),
-                  priority: 97,
-                  cooldownMs: 250,
-                  dedupe: true,
-                  semanticDedupe: false,
-                  textTtlMs: 1200,
-                  category:'system',
-                  force:true,
-                  user:true,
-                  interrupt:false
-                });
-                try { scheduleSpeechPump(40); } catch(e) {}
-              }
-            } catch(e) {}
           } catch(e) {}
         });
       } catch(e) {}
@@ -19178,8 +19277,8 @@ function selectPilotByKey(key, opts = {}) {
                         semanticDedupe: false,
                         textTtlMs: 1200,
                         category:'system',
-                        force:true,
-                        user:true,
+                        force:false,
+                        user:false,
                         interrupt:false
                       });
                       try { scheduleSpeechPump(40); } catch(e) {}
