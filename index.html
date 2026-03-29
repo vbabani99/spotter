@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R17 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R18 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -101,7 +101,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R17</title>
+<title>vics_Smart_Spotter_v0.5.0.18R18</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6596,7 +6596,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R17</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R18</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7188,7 +7188,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R17";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R18";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7481,13 +7481,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R17";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R17',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R18',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R17', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R18', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -11431,7 +11431,7 @@ try{
 
     // One-time: aplicar defaults de esta versin (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R17';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R18';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -25477,7 +25477,7 @@ function buildSelectedPilotVoiceContext(p) {
         state.posDelta = (Math.floor(state.posTo) - Math.floor(state.posFrom));
       }
 
-      if (!isManga && __isFollowQuietMode() && !__isSuperBasicFollowMode() && voiceSettings.pos) {
+      if (__isFollowQuietMode() && !__isSuperBasicFollowMode() && voiceSettings.pos) {
         try {
           const curPosInt = Math.max(1, Math.floor(Number(p.pos) || 0));
           if (basicPosStability.candidatePos == null) {
@@ -25499,7 +25499,7 @@ function buildSelectedPilotVoiceContext(p) {
             const stable = basicPosStability.pendingStablePos;
             pendingPosChange = {
               pos: stable,
-              opts: { key: 'pos_basic_' + stable, priority: 75, cooldownMs: 1200, dedupe: true },
+              opts: { key: 'pos_basic_' + stable + '_' + (isManga ? 'manga' : 'race'), priority: 75, cooldownMs: 1200, dedupe: true },
               expLap: lapsNow + 2
             };
             basicPosStability.lastAnnouncedStablePos = stable;
@@ -25637,6 +25637,7 @@ function buildSelectedPilotVoiceContext(p) {
           const sp = Math.floor(pendingPosChange.pos);
           say('P' + sp, (pendingPosChange.opts || { key: 'pos_manga_' + sp + '_' + lapsNow, priority: 65, cooldownMs: 1400, dedupe: true }));
           mangaPosStability.lastAnnouncedStablePos = sp;
+          try { basicPosStability.lastAnnouncedStablePos = sp; } catch(e) {}
         } catch (e) {}
         pendingPosChange = null;
       }
