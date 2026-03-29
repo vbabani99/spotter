@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R20 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R21 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -18,7 +18,7 @@ Changelog:
 - v0.5.0.18R16: Detector de banderas rehecho. Ya no depende de un catálogo corto, ahora reconoce países por nombre, alias e ISO dentro del título.
 - v0.5.0.18R17: Práctica más limpia. Se elimina el intro genérico duplicado de práctica, se compacta la narrativa ambiental de práctica y el estimado se dice corto, sin frases largas tipo "responde con".
 - v0.5.0.18R19: Candado central para FOLLOW quieto. SÚPER BÁSICO queda realmente en solo Last Lap del piloto seguido, BÁSICO solo deja pasar posición estable/blue flag, se limpia la cola al cambiar modo o seleccionar piloto y el botón anuncia por voz SÚPER BÁSICO, BÁSICO o NORMAL.
-- v0.5.0.18R20: Fix FOLLOW móvil. La vuelta 1 ya no se pierde cuando el feed todavía no trae lastLapMs, usando fallback al tiempo total en lap 1 y prioridad esencial para anunciarla.
+- v0.5.0.18R21: FOLLOW canta bien el cambio de modo. El anuncio de SÚPER BÁSICO, BÁSICO y NORMAL ya no queda muteado por el filtro global de mensajes de sistema; además entra con allowlist explícita e interrupción corta para oírse al momento.
 - v0.5.0.18R12: Limpieza de cola TTS. Se adelanta la supersedencia antes del filtro final para que mensajes de más prioridad sí puedan sacar ruido pendiente.
 - v0.5.0.18R12: Dedupe reforzado por firma categoría+key+texto, mute de sistema por defecto salvo allowlist explícita, y límite de reintentos start-guard para no reciclar frases viejas.
 - v0.5.0.18R13: Se elimina la muletilla de sesión en narración recurrente. Final A/B/C, Manga, Clasificación y Práctica se conservan en intros y resultados, pero se limpian del arranque de frases normales del motor TTS.
@@ -103,7 +103,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R20</title>
+<title>vics_Smart_Spotter_v0.5.0.18R21</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6598,7 +6598,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R20</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R21</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7190,7 +7190,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R20";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R21";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7483,13 +7483,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R20";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R20',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R21',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R20', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R21', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -11464,7 +11464,7 @@ try{
 
     // One-time: aplicar defaults de esta versin (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R20';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R21';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -15437,6 +15437,7 @@ function __speechSystemTtsMuted(clean, key, cat, opts){
     const mutedKeys = new Set(['sys_voice_ready','sys_auto_on']);
     const mutedTexts = new Set(['voz lista','auto locutor activado.']);
     if (opts && opts.allowSystemTts === true) return false;
+    if (k.startsWith('mode_voice_')) return false;
     if (c !== 'system' && !k.startsWith('sys_')) return false;
     if (mutedKeys.has(k) || mutedTexts.has(txt)) return true;
     if (allowKeys.has(k)) return false;
@@ -16770,9 +16771,10 @@ function setVoiceMaster(on, opts = {}) {
                   textTtlMs: 0,
                   semanticDedupe: false,
                   category: 'system',
+                  allowSystemTts: true,
                   force: true,
                   user: true,
-                  interrupt: false
+                  interrupt: true
                 });
               }
             } catch(e) {}
