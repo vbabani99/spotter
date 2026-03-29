@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R18 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R19 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -17,6 +17,7 @@ Changelog:
 - v0.5.0.18R15: Versionado sincronizado. Header, APP_NAME, export metadata y claves internas quedan alineados con el nombre real del archivo para no volver a confundir la versión en pantalla.
 - v0.5.0.18R16: Detector de banderas rehecho. Ya no depende de un catálogo corto, ahora reconoce países por nombre, alias e ISO dentro del título.
 - v0.5.0.18R17: Práctica más limpia. Se elimina el intro genérico duplicado de práctica, se compacta la narrativa ambiental de práctica y el estimado se dice corto, sin frases largas tipo "responde con".
+- v0.5.0.18R19: Candado central para FOLLOW quieto. SÚPER BÁSICO queda realmente en solo Last Lap del piloto seguido, BÁSICO solo deja pasar posición estable/blue flag, se limpia la cola al cambiar modo o seleccionar piloto y el botón anuncia por voz SÚPER BÁSICO, BÁSICO o NORMAL.
 - v0.5.0.18R12: Limpieza de cola TTS. Se adelanta la supersedencia antes del filtro final para que mensajes de más prioridad sí puedan sacar ruido pendiente.
 - v0.5.0.18R12: Dedupe reforzado por firma categoría+key+texto, mute de sistema por defecto salvo allowlist explícita, y límite de reintentos start-guard para no reciclar frases viejas.
 - v0.5.0.18R13: Se elimina la muletilla de sesión en narración recurrente. Final A/B/C, Manga, Clasificación y Práctica se conservan en intros y resultados, pero se limpian del arranque de frases normales del motor TTS.
@@ -101,7 +102,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R18</title>
+<title>vics_Smart_Spotter_v0.5.0.18R19</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6596,7 +6597,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R18</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R19</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7188,7 +7189,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R18";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R19";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7481,13 +7482,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R18";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R18',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R19',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R18', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R19', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -11397,6 +11398,37 @@ try{
     function __isSuperBasicFollowMode(){
       try { return !!selectedPilotKey && __getFollowVoiceMode() === 'SUPER_BASIC'; } catch(e) { return false; }
     }
+    function __followQuietSpeechAllowed(clean, key, queueCategory, opts){
+      try {
+        const inFollow = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
+        if (!inFollow) return true;
+        const mode = __getFollowVoiceMode();
+        if (mode === 'NORMAL') return true;
+
+        const k = String(key || (opts && opts.key) || '').trim().toLowerCase();
+        if (!k) return false;
+
+        if (k.startsWith('mode_voice_') || k === 'user_voice_on') return true;
+        if (k === 'pilot-follow') return mode !== 'SUPER_BASIC';
+        if (k.startsWith('lap_')) return true;
+
+        if (mode === 'SUPER_BASIC') return false;
+
+        if (k.startsWith('pos_basic_') || k.startsWith('pos_manga_') || k.startsWith('blueflag_')) return true;
+        return false;
+      } catch(e) { return true; }
+    }
+    function __flushFollowSpeechState(reason){
+      try { speechQueue.length = 0; } catch(e) {}
+      try { speechSpeaking = false; } catch(e) {}
+      try {
+        const ss = getSpeechEngine();
+        const now = Date.now();
+        if (ss && typeof ss.cancel === 'function' && canTtsCancelNow(now)) ss.cancel();
+        __ttsLastEventAt = now;
+      } catch(e) {}
+      try { pushSpotterAudit('follow_flush', String(reason || 'follow'), { throttleMs: 0 }); } catch(e) {}
+    }
     function __setFollowVoiceMode(mode){
       followVoiceMode = __normalizeFollowVoiceMode(mode);
       __persistFollowVoiceMode();
@@ -11431,7 +11463,7 @@ try{
 
     // One-time: aplicar defaults de esta versin (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R18';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R19';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -15656,6 +15688,12 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         const interrupt = !!opts.interrupt;
         const dedupe = (opts.dedupe !== false);
         const queueCategory = __speechCatFromOpts(opts, key, clean);
+
+        if (!__followQuietSpeechAllowed(clean, key, queueCategory, opts)) {
+          try { pushSpotterAudit('suppress_follow_quiet', clean, { key, category: queueCategory, throttleMs: 600, dedupeKey:'sup_follow|' + key + '|' + clean }); } catch(e) {}
+          return;
+        }
+
         const recentSig = __speechRecentSignature(clean, key, queueCategory);
         const recentSigWindow = __speechRecentWindowFor(queueCategory, priority, opts);
 
@@ -16714,11 +16752,29 @@ function setVoiceMaster(on, opts = {}) {
             const nextMode = (curMode === 'SUPER_BASIC') ? 'BASIC' : (curMode === 'BASIC' ? 'NORMAL' : 'SUPER_BASIC');
             __setFollowVoiceMode(nextMode);
             try { applySmartProfile(currentSessionInfo || {}, 'basic-toggle'); } catch(e) {}
+            try { __flushFollowSpeechState('mode-toggle-' + nextMode.toLowerCase()); } catch(e) {}
             try { playBeep('tap'); } catch(e) {}
             try { _updateBasicBtnUI(); } catch(e) {}
 
             const toastTxt = (nextMode === 'SUPER_BASIC') ? 'SÚPER BÁSICO activado' : (nextMode === 'BASIC' ? 'BÁSICO activado' : 'NORMAL activado');
             try { showToast(toastTxt, { tone: 'info' }); } catch(e) {}
+            try {
+              if (voiceMasterEnabled) {
+                const modeVoiceTxt = (nextMode === 'SUPER_BASIC') ? 'Súper básico.' : (nextMode === 'BASIC' ? 'Básico.' : 'Normal.');
+                enqueueSpeech(modeVoiceTxt, {
+                  key: 'mode_voice_' + String(nextMode || '').toLowerCase(),
+                  priority: 98,
+                  cooldownMs: 0,
+                  dedupe: false,
+                  textTtlMs: 0,
+                  semanticDedupe: false,
+                  category: 'system',
+                  force: true,
+                  user: true,
+                  interrupt: false
+                });
+              }
+            } catch(e) {}
           } catch(e) {}
         });
       } catch(e) {}
@@ -19367,6 +19423,7 @@ function selectPilotByKey(key, opts = {}) {
           // AI Spotter: en cuanto cambia la seleccin, recalcula perfil (Seguimiento vs Auto)
           try { applySmartProfile(currentSessionInfo, 'pilot-select'); } catch(e) {}
           try { _updateBasicBtnUI(); } catch(e) {}
+          try { if (k) __flushFollowSpeechState('pilot-select'); } catch(e) {}
 
           if (!raceData || !k) {
             renderPilotCard(null);
