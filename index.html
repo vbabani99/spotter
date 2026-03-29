@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R14 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R17 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -14,6 +14,9 @@ Changelog:
 - v0.5.0.18R8: SYNC de versión + FIX seguimiento y proyección. La V1 del piloto seguido ya no se pierde si el feed tarda en poblar lastLapMs, y la proyección de qualy queda estrictamente solo en P1 en todas las ramas de locución.
 - v0.5.0.18R9: Auto Locutor más útil por sesión. Se refuerza la práctica con referencias, ritmo y estimado; la qualy canta mejor la tabla general real sin meter proyección al P2; y la final trae más contexto de parrilla, líder y pelea por podio.
 - v0.5.0.18R14: OBS/desktop recupera auto-VOZ al detectar carrera nueva. En OBS Browser Source la voz vuelve a prenderse sola y se limpia cualquier needs-unlock colgado sin pedir tap.
+- v0.5.0.18R15: Versionado sincronizado. Header, APP_NAME, export metadata y claves internas quedan alineados con el nombre real del archivo para no volver a confundir la versión en pantalla.
+- v0.5.0.18R16: Detector de banderas rehecho. Ya no depende de un catálogo corto, ahora reconoce países por nombre, alias e ISO dentro del título.
+- v0.5.0.18R17: Práctica más limpia. Se elimina el intro genérico duplicado de práctica, se compacta la narrativa ambiental de práctica y el estimado se dice corto, sin frases largas tipo "responde con".
 - v0.5.0.18R12: Limpieza de cola TTS. Se adelanta la supersedencia antes del filtro final para que mensajes de más prioridad sí puedan sacar ruido pendiente.
 - v0.5.0.18R12: Dedupe reforzado por firma categoría+key+texto, mute de sistema por defecto salvo allowlist explícita, y límite de reintentos start-guard para no reciclar frases viejas.
 - v0.5.0.18R13: Se elimina la muletilla de sesión en narración recurrente. Final A/B/C, Manga, Clasificación y Práctica se conservan en intros y resultados, pero se limpian del arranque de frases normales del motor TTS.
@@ -98,7 +101,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R14</title>
+<title>vics_Smart_Spotter_v0.5.0.18R17</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6593,7 +6596,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R13</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R17</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7185,7 +7188,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R13";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R17";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7478,13 +7481,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R13";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R13',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R17',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R13', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R17', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -7785,6 +7788,10 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R13";
           [/^Pr[aá]ctica\s+viva\.\s*/i, ''],
           [/^Pr[aá]ctica\s+con\s+ritmo\.\s*/i, ''],
           [/^Pr[aá]ctica\s+comparada\.\s*/i, ''],
+          [/^Pr[aá]ctica\s+con\s+tres\s+autos\s+metidos\.\s*/i, ''],
+          [/^Se\s+aprieta\s+la\s+pr[aá]ctica\.\s*/i, ''],
+          [/^Entrenamiento\s+en\s+marcha\.\s*/i, ''],
+          [/^Hora\s+de\s+afinar\s+ritmo\s+y\s+trazada\.\s*/i, ''],
           [/^Manga\s*[:.,-]\s*/i, ''],
           [/^Manga\s+/i, ''],
           [/^Clasificaci[oó]n\s*[:.,-]\s*/i, ''],
@@ -10109,7 +10116,7 @@ function msgv2DecimasTxt(ms) {
         const now = Date.now();
         const rn = String(r.raceName || '');
         const ambientSig = rn + '|' + sess;
-        const gapNeed = (sess === 'TRAIN') ? 5600 : ((sess === 'FINAL') ? 6800 : 6100);
+        const gapNeed = (sess === 'TRAIN') ? 7600 : ((sess === 'FINAL') ? 6800 : 6100);
         if (__ambientSessionSig === ambientSig && (now - (__ambientSessionLastAt || 0)) < gapNeed) return;
         const rows = __topRowsByPos(r, 5);
         if (!rows.length) return;
@@ -10147,14 +10154,16 @@ function msgv2DecimasTxt(ms) {
         if (sess === 'TRAIN') {
           const variants = [];
           category = 'train';
-          priority = 60;
-          if (b1 > 0) variants.push('Práctica viva. ' + p1Name + ' deja ' + __speechTime2(b1) + ' como referencia.');
-          if (e1 > 0 && e1Txt) variants.push('Práctica con ritmo. ' + p1Name + ' trae estimado de ' + e1Txt + '.');
-          if (p2Name && e2 > 0 && e2Txt) variants.push('Práctica comparada. ' + p1Name + ' proyecta ' + e1Txt + ' y ' + p2Name + ' responde con ' + e2Txt + '.');
-          if (p2Name && gap12Ms > 0 && gap12Ms <= 350) variants.push('Se aprieta la práctica. ' + p1Name + ' y ' + p2Name + ' están a ' + __speechTime2(gap12Ms) + '.');
-          if (p2Name && b1 > 0 && b2 > 0) variants.push('Hay dos referencias fuertes. ' + p1Name + ' en ' + __speechTime2(b1) + ' y ' + p2Name + ' en ' + __speechTime2(b2) + '.');
-          if (p3Name && b3 > 0) variants.push('Práctica con tres autos metidos. ' + p1Name + ', ' + p2Name + ' y ' + p3Name + ' ya están marcando tiempos.');
-          variants.push('Entrenamiento en marcha. Aquí toca afinar trazada, ritmo y estimado.');
+          priority = 58;
+          const e1Short = __speechPracticeProjectionShort(e1Lap, e1);
+          const e2Short = __speechPracticeProjectionShort(e2Lap, e2);
+          if (b1 > 0) variants.push(p1Name + ' deja ' + __speechTime2(b1) + ' de referencia.');
+          if (e1 > 0 && e1Short) variants.push(p1Name + ' pinta para ' + e1Short + '.');
+          if (p2Name && e1 > 0 && e1Short && e2 > 0 && e2Short) variants.push(p1Name + ' pinta para ' + e1Short + ', ' + p2Name + ' para ' + e2Short + '.');
+          if (p2Name && gap12Ms > 0 && gap12Ms <= 350) variants.push(p1Name + ' y ' + p2Name + ' van a ' + __speechTime2(gap12Ms) + '.');
+          if (p2Name && b1 > 0 && b2 > 0) variants.push('Dos referencias: ' + p1Name + ' ' + __speechTime2(b1) + ' y ' + p2Name + ' ' + __speechTime2(b2) + '.');
+          if (p3Name && b3 > 0) variants.push('Ya hay tres marcando: ' + p1Name + ', ' + p2Name + ' y ' + p3Name + '.');
+          variants.push('Hora de afinar ritmo y trazada.');
           msg = variants[Math.floor((now / gapNeed)) % variants.length];
         } else if (sess === 'MANGA' || sess === 'QUALI') {
           const variants = [];
@@ -10444,16 +10453,14 @@ function msgv2DecimasTxt(ms) {
         const parsedRaceType = String(parsedRaceTitleInfo.type || '').toUpperCase();
 
         if (type === 'TRAIN') {
-          // En practica no anunciamos solo "Practica"; anunciamos el titulo real de la sesion que acaba de llegar.
-          // Ejemplos: "Clasificacion, Q1, Manga, B, Serie 1" o "Final A".
+          // En práctica solo anunciamos si el raceName ya trae la próxima sesión real (manga/final).
+          // Si es práctica/libre puro, evitamos el intro genérico para no duplicar con el lifecycle.
           if (parsedRaceType === 'MANGA') {
             introText = __buildMangaTitleTts2(parsedRaceTitleInfo);
           } else if (parsedRaceType === 'FINAL') {
             introText = __pickFinalIntro(parsedRaceTitleInfo.main || '', r);
           } else {
-            const label = String(parsedRaceTitleInfo.label || info.label || '').trim();
-            const spokenTitle = String(parsedRaceTitleInfo.spokenTitle || info.spokenTitle || '').trim() || (label ? label.replace('MODO ', '').trim() : '');
-            introText = (spokenTitle ? spokenTitle : 'Nueva carrera');
+            introText = '';
           }
         } else if (type === 'MANGA') {
           introText = __buildMangaTitleTts2(info);
@@ -10466,6 +10473,8 @@ function msgv2DecimasTxt(ms) {
           const spokenTitle = String(info.spokenTitle || '').trim() || (label ? label.replace('MODO ', '').trim() : '');
           introText = (spokenTitle ? spokenTitle : 'Nueva carrera');
         }
+
+        if (!String(introText || '').trim()) return;
 
         enqueueSpeech(introText, {
           key: introKey,
@@ -11422,7 +11431,7 @@ try{
 
     // One-time: aplicar defaults de esta versin (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R13';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R17';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -26722,40 +26731,103 @@ function checkSessionFinishOnLap() {
         const s = (str==null) ? '' : String(str);
         return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       }
+      const __FLAG_REGION_CODES = ['AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW'];
+      let __countryAliasEntriesCache = null;
+
+      function __escapeRegex(str){
+        return String(str || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
       function __normForCountry(str){
         let s = (str==null) ? '' : String(str);
-        try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-]/g,''); } catch(e) {}
+        try { s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); } catch(e) {}
         s = s.toUpperCase();
-        // homogeniza guiones y separadores
-        s = s.replace(/[-]/g,'-');
+        s = s.replace(/[^A-Z0-9]+/g,' ');
+        s = s.replace(/\s{2,}/g,' ').trim();
         return s;
+      }
+      function __pushCountryAlias(bucket, alias, code, prio){
+        const norm = __normForCountry(alias);
+        if (!norm || !code || !/^[A-Z]{2}$/.test(code)) return;
+        if (norm.length <= 1) return;
+        bucket.push({ alias:norm, code:String(code).toUpperCase(), prio:Number(prio)||0 });
+      }
+      function __codeToFlagSvg(code){
+        const cc = String(code || '').toUpperCase().trim();
+        if (!/^[A-Z]{2}$/.test(cc)) return '';
+        const parts = [];
+        for (const ch of cc) {
+          const cp = 0x1F1E6 + (ch.charCodeAt(0) - 65);
+          parts.push(cp.toString(16));
+        }
+        return parts.join('-');
+      }
+      function __buildCountryAliasEntries(){
+        if (__countryAliasEntriesCache) return __countryAliasEntriesCache;
+        const out = [];
+        const dnList = [];
+        const locales = ['es', 'en', 'pt', 'fr', 'de', 'it'];
+        for (const loc of locales){
+          try {
+            if (typeof Intl !== 'undefined' && Intl && typeof Intl.DisplayNames === 'function') {
+              dnList.push(new Intl.DisplayNames([loc], { type:'region' }));
+            }
+          } catch(e) {}
+        }
+        for (const code of __FLAG_REGION_CODES){
+          __pushCountryAlias(out, code, code, 1);
+          for (const dn of dnList){
+            try {
+              const nm = dn.of(code);
+              if (nm && nm !== code) __pushCountryAlias(out, nm, code, 4);
+            } catch(e) {}
+          }
+        }
+        const manual = {
+          'EUA':'US', 'EEUU':'US', 'EE UU':'US', 'ESTADOS UNIDOS':'US', 'UNITED STATES':'US', 'USA':'US',
+          'REINO UNIDO':'GB', 'GRAN BRETANA':'GB', 'GREAT BRITAIN':'GB', 'UK':'GB', 'INGLATERRA':'GB',
+          'ESPANA':'ES', 'MEXICO':'MX', 'COSTA RICA':'CR', 'ITALIA':'IT', 'POLONIA':'PL', 'SUIZA':'CH',
+          'ALEMANIA':'DE', 'FRANCIA':'FR', 'PORTUGAL':'PT', 'JAPON':'JP', 'JAPAN':'JP',
+          'COREA DEL SUR':'KR', 'SOUTH KOREA':'KR', 'COREA':'KR', 'NUEVA ZELANDA':'NZ', 'NEW ZEALAND':'NZ',
+          'EMIRATOS ARABES UNIDOS':'AE', 'UAE':'AE', 'TAIWAN':'TW', 'HONG KONG':'HK', 'HOLANDA':'NL',
+          'PAISES BAJOS':'NL', 'CHEQUIA':'CZ', 'REPUBLICA CHECA':'CZ', 'DINAMARCA':'DK', 'NORUEGA':'NO',
+          'SUECIA':'SE', 'FINLANDIA':'FI', 'BELGICA':'BE', 'IRLANDA':'IE', 'ESCOCIA':'GB', 'GALES':'GB',
+          'MONACO':'MC', 'LUXEMBURGO':'LU', 'AUSTRIA':'AT', 'GRECIA':'GR', 'TURQUIA':'TR', 'TURKEY':'TR',
+          'RUSIA':'RU', 'CANADA':'CA', 'AUSTRALIA':'AU', 'ARGENTINA':'AR', 'COLOMBIA':'CO', 'CHILE':'CL',
+          'PERU':'PE', 'BRASIL':'BR', 'BRAZIL':'BR', 'URUGUAY':'UY', 'PARAGUAY':'PY', 'BOLIVIA':'BO',
+          'ECUADOR':'EC', 'VENEZUELA':'VE', 'GUATEMALA':'GT', 'PANAMA':'PA', 'EL SALVADOR':'SV',
+          'HONDURAS':'HN', 'NICARAGUA':'NI', 'CUBA':'CU', 'PUERTO RICO':'PR', 'MARRUECOS':'MA',
+          'SUDAFRICA':'ZA', 'SOUTH AFRICA':'ZA', 'INDIA':'IN', 'CHINA':'CN', 'SINGAPUR':'SG',
+          'MALASIA':'MY', 'FILIPINAS':'PH', 'THAILANDIA':'TH', 'TAILANDIA':'TH', 'VIETNAM':'VN',
+          'INDONESIA':'ID', 'ISRAEL':'IL', 'ARABIA SAUDITA':'SA', 'QATAR':'QA', 'KUWAIT':'KW',
+          'MEX':'MX', 'GBR':'GB', 'ESP':'ES', 'ITA':'IT', 'FRA':'FR', 'DEU':'DE', 'GER':'DE',
+          'BRA':'BR', 'ARG':'AR', 'COL':'CO', 'PER':'PE', 'CHI':'CL', 'JPN':'JP', 'AUS':'AU',
+          'CZE':'CZ', 'NED':'NL', 'SUI':'CH', 'AUT':'AT', 'POR':'PT', 'CRO':'HR', 'HUN':'HU',
+          'CKA':'MX', 'MEXICO CITY':'MX', 'OVALO DE MEXICO':'MX', 'MEXICO OVAL':'MX'
+        };
+        Object.keys(manual).forEach(k => __pushCountryAlias(out, k, manual[k], 10));
+        const best = new Map();
+        for (const item of out){
+          const prev = best.get(item.alias);
+          if (!prev || item.prio > prev.prio) best.set(item.alias, item);
+        }
+        const arr = Array.from(best.values());
+        arr.sort((a,b) => (b.alias.length - a.alias.length) || (b.prio - a.prio) || a.alias.localeCompare(b.alias));
+        __countryAliasEntriesCache = arr;
+        return arr;
       }
       function __detectFlagSvgCode(title){
         const n = __normForCountry(title);
-        // Twemoji SVG codes (regional indicators)
-        const pairs = [
-          ['REINO UNIDO','1f1ec-1f1e7'], ['UK','1f1ec-1f1e7'], ['UNITED KINGDOM','1f1ec-1f1e7'],
-          ['MEXICO','1f1f2-1f1fd'], ['CKA','1f1f2-1f1fd'],
-          ['COSTA RICA','1f1e8-1f1f7'],
-          ['ITALIA','1f1ee-1f1f9'],
-          ['EUA','1f1fa-1f1f8'], ['USA','1f1fa-1f1f8'], ['ESTADOS UNIDOS','1f1fa-1f1f8'], ['UNITED STATES','1f1fa-1f1f8'],
-          ['BRASIL','1f1e7-1f1f7'], ['BRAZIL','1f1e7-1f1f7'],
-          ['PERU','1f1f5-1f1ea'],
-          ['POLONIA','1f1f5-1f1f1'], ['POLAND','1f1f5-1f1f1'],
-          ['SUIZA','1f1e8-1f1ed'], ['SWITZERLAND','1f1e8-1f1ed'],
-          ['ESPANA','1f1ea-1f1f8'], ['SPAIN','1f1ea-1f1f8'],
-          ['FRANCIA','1f1eb-1f1f7'], ['FRANCE','1f1eb-1f1f7'],
-          ['ALEMANIA','1f1e9-1f1ea'], ['GERMANY','1f1e9-1f1ea'],
-          ['ARGENTINA','1f1e6-1f1f7'],
-          ['COLOMBIA','1f1e8-1f1f4'],
-          ['CHILE','1f1e8-1f1f1']
-        ];
-        for (const [k,code] of pairs){
-          if (n.includes(k)) return code;
+        if (!n) return '';
+        const entries = __buildCountryAliasEntries();
+        let fallbackCode = '';
+        for (const item of entries){
+          const pattern = new RegExp('(?:^|\\b)' + __escapeRegex(item.alias).replace(/\s+/g,'\\s+') + '(?:\\b|$)');
+          if (!pattern.test(n)) continue;
+          if (item.alias.length >= 4 || item.alias.includes(' ')) return __codeToFlagSvg(item.code);
+          if (!fallbackCode) fallbackCode = item.code;
         }
-        return '';
+        return fallbackCode ? __codeToFlagSvg(fallbackCode) : '';
       }
-
       const rawTitle = r.raceName || 'Spotter_5.0.1';
       const fmtTitle = __formatRaceTitleForHeader(rawTitle) || rawTitle;
       const flagSvg = __detectFlagSvgCode(rawTitle);
@@ -27392,7 +27464,7 @@ raceData = normalizeRaceData(rawRace);
               try { __clearSessionIntroGuard(); } catch(e) {}
               __armSessionIntroGuard(1400, 'PRACTICE_ACTIVITY_START');
               __forceCancelSpotterSpeech('Lifecycle: práctica', true);
-              speakLifecycle('PRACTICE_ACTIVITY_START', 'Práctica en marcha. Calentando.', { priority: 96, interrupt: false, deferMs: 160 });
+              speakLifecycle('PRACTICE_ACTIVITY_START', 'Calentando.', { priority: 96, interrupt: false, deferMs: 160 });
             }
             __sessionDirector.lastEvent = evt;
             __sessionDirectorStateSwitch('PRACTICE_RUNNING', src, 'practice_start');
@@ -27680,6 +27752,18 @@ raceData = normalizeRaceData(rawRace);
         const lapTxt = __speechLapCountText(l);
         const lapWord = (l === 1) ? 'vuelta' : 'vueltas';
         if (l > 0 && t > 0) return lapTxt + ' ' + lapWord + ' en ' + __speechTimeQualiProjection(t);
+        if (l > 0) return lapTxt + ' ' + lapWord;
+        if (t > 0) return __speechTimeQualiProjection(t);
+        return '';
+      }catch(e){ return ''; }
+    }
+
+    function __speechPracticeProjectionShort(laps, timeMs){
+      try{
+        const l = Math.max(0, Number(laps || 0) || 0);
+        const t = Math.max(0, Number(timeMs || 0) || 0);
+        const lapTxt = __speechLapCountText(l);
+        const lapWord = (l === 1) ? 'vuelta' : 'vueltas';
         if (l > 0) return lapTxt + ' ' + lapWord;
         if (t > 0) return __speechTimeQualiProjection(t);
         return '';
