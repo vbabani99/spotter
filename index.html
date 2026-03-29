@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R13 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R14 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -13,6 +13,7 @@ Changelog:
 - v0.5.0.18R5: FIX voz práctica/qualy/final. Se corrigen fallas que dejaban muda la práctica y la pelea por pole, se abre el heartbeat de sesión para práctica, clasificación y finales, se afloja el Speech Arbiter para mensajes útiles, se corrige el resumen de qualy para tomar P2/P3 de la tabla general real y se sube la cadencia del Auto Locutor.
 - v0.5.0.18R8: SYNC de versión + FIX seguimiento y proyección. La V1 del piloto seguido ya no se pierde si el feed tarda en poblar lastLapMs, y la proyección de qualy queda estrictamente solo en P1 en todas las ramas de locución.
 - v0.5.0.18R9: Auto Locutor más útil por sesión. Se refuerza la práctica con referencias, ritmo y estimado; la qualy canta mejor la tabla general real sin meter proyección al P2; y la final trae más contexto de parrilla, líder y pelea por podio.
+- v0.5.0.18R14: OBS/desktop recupera auto-VOZ al detectar carrera nueva. En OBS Browser Source la voz vuelve a prenderse sola y se limpia cualquier needs-unlock colgado sin pedir tap.
 - v0.5.0.18R12: Limpieza de cola TTS. Se adelanta la supersedencia antes del filtro final para que mensajes de más prioridad sí puedan sacar ruido pendiente.
 - v0.5.0.18R12: Dedupe reforzado por firma categoría+key+texto, mute de sistema por defecto salvo allowlist explícita, y límite de reintentos start-guard para no reciclar frases viejas.
 - v0.5.0.18R13: Se elimina la muletilla de sesión en narración recurrente. Final A/B/C, Manga, Clasificación y Práctica se conservan en intros y resultados, pero se limpian del arranque de frases normales del motor TTS.
@@ -97,7 +98,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R13</title>
+<title>vics_Smart_Spotter_v0.5.0.18R14</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -10214,7 +10215,7 @@ function msgv2DecimasTxt(ms) {
 
         // En Auto Locutor, si el usuario no ha tocado VOZ, la activamos en silencio para poder anunciar el titulo
         if (!voiceMasterEnabled) {
-          try { if (!userVoiceOverride) setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
+          try { if (!userVoiceOverride || __shouldForceObsAutoVoice()) setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
         }
         if (!voiceMasterEnabled) return;
 
@@ -16528,10 +16529,21 @@ function setVoiceMaster(on, opts = {}) {
       } catch(e) { return false; }
     }
 
+    function __shouldForceObsAutoVoice() {
+      try {
+        return __isDesktopChromeContext() && __isObsBrowserContext();
+      } catch(e) { return false; }
+    }
+
     function __autoEnsureVoiceReadyOnNewRace(raceSig = '') {
       try {
         if (!__isDesktopChromeContext()) return false;
-        // Limpieza R13: carrera nueva ya no puede prender VOZ sola.
+        // R14: en OBS Browser Source sí permitimos auto-VOZ aunque haya quedado OFF.
+        if (!voiceMasterEnabled) {
+          const canForceAutoVoice = __shouldForceObsAutoVoice() || !userVoiceOverride;
+          if (!canForceAutoVoice) return false;
+          try { setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
+        }
         if (!voiceMasterEnabled) return false;
 
         // Desktop Chrome no deberia pedir tap. Si quedo atascado, limpiamos estado.
@@ -24951,7 +24963,7 @@ function handleAutoCommentator() {
         if (selectedPilotKey) return; // modo espectador
         // AI: en Auto Locutor, si el usuario no ha tocado VOZ, activamos voz automticamente
         if (!voiceMasterEnabled) {
-          try { if (!userVoiceOverride) setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
+          try { if (!userVoiceOverride || __shouldForceObsAutoVoice()) setVoiceMaster(true, { silent:true, auto:true }); } catch(e) {}
         }
         if (!voiceMasterEnabled) return;
 
