@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R22 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R24 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -20,6 +20,7 @@ Changelog:
 - v0.5.0.18R19: Candado central para FOLLOW quieto. SÚPER BÁSICO queda realmente en solo Last Lap del piloto seguido, BÁSICO solo deja pasar posición estable/blue flag, se limpia la cola al cambiar modo o seleccionar piloto y el botón anuncia por voz SÚPER BÁSICO, BÁSICO o NORMAL.
 - v0.5.0.18R21: FOLLOW canta bien el cambio de modo. El anuncio de SÚPER BÁSICO, BÁSICO y NORMAL ya no queda muteado por el filtro global de mensajes de sistema; además entra con allowlist explícita e interrupción corta para oírse al momento.
 - v0.5.0.18R22: FOLLOW ya anuncia la selección del piloto también en móvil y en SÚPER BÁSICO. "Siguiendo a X" sale con permiso explícito en quiet modes e interrupción corta para no perderse tras el tap.
+- v0.5.0.18R23: FIX narración premium. OBS/desktop arma VOZ antes del título de sesión para no perder la primera Q, los títulos de Final ya jalan contexto real de Q tabla, el watchdog TTS se vuelve dinámico para no cortar frases largas y el Auto Locutor mezcla más estilos con anti-repeat más duro para sonar menos plantilla.
 - v0.5.0.18R12: Limpieza de cola TTS. Se adelanta la supersedencia antes del filtro final para que mensajes de más prioridad sí puedan sacar ruido pendiente.
 - v0.5.0.18R12: Dedupe reforzado por firma categoría+key+texto, mute de sistema por defecto salvo allowlist explícita, y límite de reintentos start-guard para no reciclar frases viejas.
 - v0.5.0.18R13: Se elimina la muletilla de sesión en narración recurrente. Final A/B/C, Manga, Clasificación y Práctica se conservan en intros y resultados, pero se limpian del arranque de frases normales del motor TTS.
@@ -104,7 +105,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R22</title>
+<title>vics_Smart_Spotter_v0.5.0.18R24</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6599,7 +6600,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R22</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R24</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -6979,7 +6980,7 @@ html, body{
 <div class="manual-top">
 <div>
 <div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-<div class="manual-sub">Guía rápida (v0.3.60). Activa voz, elige piloto y corre. El resto es opcional.</div>
+<div class="manual-sub">Guía rápida (v0.5.0.18R23). Activa voz, elige piloto y corre. El resto es opcional.</div>
 </div>
 <button aria-label="Cerrar" class="manual-close" id="manualCloseBtn" type="button">✕</button>
 </div>
@@ -7191,7 +7192,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R22";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R24";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7484,13 +7485,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R22";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R22',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R24',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R22', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R24', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -8622,8 +8623,15 @@ function msgv2DecimasTxt(ms) {
         const rd = raceData || {};
         const leader = (rd.classification || []).find(r => Number(r && r.pos) === 1) || (rd.classification || [])[0];
         const lap = Number(leader && leader.lapcount) || 0;
-        const clk = Number(rd.clockMs || rd.clock || 0) || 0;
+        const clk = __getCanonicalSessionElapsedMs(rd);
+        const dur = __getCanonicalSessionDurationMs(rd);
+        const pct = Number(rd.sessionProgressPct || 0) || (dur > 0 ? ((clk / dur) * 100) : 0);
         if (clk > 0 && clk < 70000) return 'start';
+        if (dur > 0){
+          if (pct >= 80) return 'late';
+          if (pct >= 45) return 'mid';
+          if (pct > 0) return 'start';
+        }
         if (lap <= 2) return 'start';
         if (lap >= 18) return 'late';
         if (lap >= 10) return 'mid';
@@ -10181,6 +10189,8 @@ function msgv2DecimasTxt(ms) {
             qTop3 = safeRacerName(qList[2] && qList[2].racerName) || '';
           } catch(e) {}
           if (e1 > 0 && e1Txt) variants.push('Clasificación viva. ' + p1Name + ' proyecta ' + e1Txt + '.');
+          if (qTop1 && p1Name && normalizeNameKey(qTop1) === normalizeNameKey(p1Name)) variants.push(p1Name + ' está empujando para sostener la referencia general.');
+          if (p2Name && gap12Ms > 0 && gap12Ms <= 400) variants.push('La manga viene con filo. ' + p1Name + ' y ' + p2Name + ' están separados por ' + __speechTime2(gap12Ms) + '.');
           if (b1 > 0) variants.push('La referencia de esta manga la trae ' + p1Name + ' con ' + __speechTime2(b1) + '.');
           if (p2Name && gap12Ms > 0 && gap12Ms <= 250) variants.push('Qualy muy cerrada. ' + p2Name + ' está a ' + __speechTime2(gap12Ms) + ' de la referencia de la manga.');
           if (qTop1 && qTop2 && qTop3) variants.push('Tabla general provisional real: ' + qTop1 + ' primero, ' + qTop2 + ' segundo y ' + qTop3 + ' tercero.');
@@ -10195,6 +10205,7 @@ function msgv2DecimasTxt(ms) {
           priority = 64;
           const variants = [];
           if (p2Name && gap12Ms > 0 && gap12Ms <= 1200) variants.push(p1Name + ' lidera, pero ' + p2Name + ' lo trae a ' + __speechTime2(gap12Ms) + '.');
+          if (p2Name && gap12Ms > 0 && gap12Ms <= 650) variants.push('La punta de ' + finalLabel + ' viene caliente. ' + p2Name + ' ya se metió al rango de presión sobre ' + p1Name + '.');
           if (p2Name && p3Name && gap23Ms > 0 && gap23Ms <= 900) variants.push('Batalla por podio. ' + p2Name + ' y ' + p3Name + ' van separados por ' + __speechTime2(gap23Ms) + '.');
           if (p3Name && p4Name && gap34Ms > 0 && gap34Ms <= 850) variants.push('La pelea no acaba en el podio. ' + p3Name + ' y ' + p4Name + ' vienen pegados a ' + __speechTime2(gap34Ms) + '.');
           if (p2Name && p3Name) variants.push(p1Name + ' primero, ' + p2Name + ' segundo y ' + p3Name + ' tercero.');
@@ -10399,24 +10410,28 @@ function msgv2DecimasTxt(ms) {
 
             const A = [
               label + '. Pole para ' + p1 + '. Detras salen ' + (p2 || 'el resto de la primera fila') + (p3 ? (' y ' + p3) : '') + '. Aqui esta la crema del ' + qTag + '. ' + tail,
+              label + '. ' + p1 + ' parte con la referencia más fuerte de la clasificación y atrás vienen ' + (front3Txt || p1) + '. Esta salida trae contexto pesado de Q tabla. ' + tail,
               label + '. ' + p1 + ' abre desde la uno; ' + (front2Txt || p1) + (p3 ? (', con ' + p3 + ' respirando atras') : '') + '. Esta parrilla viene cargada de nivel ' + qTag + '. ' + tail,
               label + '. Primera referencia para ' + p1 + '. Detras vienen ' + (front3Txt || p1) + '. Esto ya es la mesa grande del ' + qTag + '. ' + tail,
               label + '. ' + p1 + ' manda la salida y ' + (p2 || 'la primera fila') + (p3 ? (' junto con ' + p3) : '') + ' van encima. Aqui se corre con bisturi, ' + qTag + '. ' + tail
             ];
             const B = [
               label + '. ' + p1 + ' encabeza a los que tocaron la puerta de la A ' + qTag + '. Detras salen ' + (p2 || 'todos bien pegados') + (p3 ? (' y ' + p3) : '') + '. ' + tail,
+              label + '. ' + p1 + ' abre una final con sabor a revancha. Detrás cargan ' + (front3Txt || p1) + ' y la Q tabla dejó cuentas pendientes. ' + tail,
               label + '. ' + p1 + (justMissedA ? ' se quedo a una casilla de la A' : (nearA ? ' se quedo rozando la A' : ' abre el siguiente bloque fuerte del ' + qTag)) + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'compania') + ' van atras') : 'Esta parrilla viene cerrada') + '. ' + tail,
               label + '. Punta para ' + p1 + ', con ' + (front3Txt || p1) + ' al frente del grupo. Aqui nadie viene de paseo; todos llegaron con cuentas pendientes del ' + qTag + '. ' + tail,
               label + '. ' + p1 + ' sale desde la uno de esta final. ' + (p2 ? (p2 + ' y ' + (p3 || 'el resto') + ' vienen oliendo la A') : 'Hay hambre de subir') + '. ' + tail
             ];
             const C = [
               label + '. ' + p1 + ' abre este bloque ' + qTag + ', con ' + (p2 || 'el grupo') + (p3 ? (' y ' + p3) : '') + ' detras. Aqui toca correr fino y subir escalones. ' + tail,
+              label + '. ' + p1 + ' sale primero en una parrilla que también cuenta historia desde la Q tabla. ' + (p2 ? (p2 + ' y ' + (p3 || 'compañía') + ' quieren subir desde ya. ') : '') + tail,
               label + '. Punta para ' + p1 + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'compania') + ' van pegados') : 'La parrilla viene apretada') + '. Esto tambien tiene lectura en la Q tabla y nada esta regalado. ' + tail,
               label + '. ' + p1 + ' lidera la salida de esta final ' + qTag + '. Detras vienen ' + (front3Txt || p1) + '. Aqui se corre por orgullo, ritmo y progreso. ' + tail,
               label + '. ' + p1 + ' abre la puerta. ' + (p2 ? (p2 + ' y ' + (p3 || 'el resto') + ' van a morder desde temprano') : 'No hay margen para regalar nada') + '. ' + tail
             ];
             const O = [
               label + '. ' + p1 + ' sale al frente ' + qTag + '. ' + (p2 ? (p2 + ' y ' + (p3 || 'el resto') + ' vienen detras') : 'Parrilla apretada desde el arranque') + '. ' + tail,
+              label + '. Parrilla acomodada por la clasificación. ' + p1 + ' manda la salida y detrás vienen ' + (front3Txt || 'todos cerrados') + '. ' + tail,
               label + '. Punta para ' + p1 + ', con ' + (front3Txt || p1) + ' como referencia del grupo. ' + tail,
               label + '. ' + p1 + ' abre la formacion y esto viene acomodado por ' + qTag + '. ' + tail
             ];
@@ -11465,7 +11480,7 @@ try{
 
     // One-time: aplicar defaults de esta versin (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R22';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R24';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -14682,12 +14697,33 @@ return s;
     let __sessClockLive = false;
     let __sessClockLastPredictedMs = 0;
 
+    function __getCanonicalSessionElapsedMs(rawRace){
+      try{
+        const candidates = [
+          rawRace && rawRace.sessionElapsedMs,
+          rawRace && rawRace.clockShowMs,
+          rawRace && rawRace.clockMs,
+          rawRace && rawRace.clock
+        ];
+        for (const v of candidates){
+          const n = Number(v);
+          if (isFinite(n) && n >= 0 && n <= (6 * 60 * 60 * 1000)) return Math.floor(n);
+        }
+      } catch(e){}
+      return 0;
+    }
+
+    function __getCanonicalSessionDurationMs(raceData){
+      try{
+        const direct = Number(raceData && raceData.raceDurationMs);
+        if (isFinite(direct) && direct > 0) return Math.floor(direct);
+      } catch(e){}
+      return 0;
+    }
+
     function __pickElapsedClockMs(rawRace){
       try{
-        const a = (rawRace && typeof rawRace.clockMs === 'number') ? rawRace.clockMs : null;
-        const b = (rawRace && typeof rawRace.clock === 'number') ? rawRace.clock : null;
-        const v = (a != null) ? a : (b != null ? b : 0);
-        const n = Number(v);
+        const n = __getCanonicalSessionElapsedMs(rawRace);
         if (!isFinite(n) || n < 0) return 0;
         // Guard rail: si viene en micro/milis raras (muy grande), no lo usamos.
         if (n > 60 * 60 * 1000 * 6) return 0; // >6h elapsed es sospechoso
@@ -14743,17 +14779,22 @@ return s;
 
     function __inferTargetMsFromEst(raceData){
       try{
+        const durMs = __getCanonicalSessionDurationMs(raceData);
+        if (durMs > 0) return durMs;
+      } catch(e) {}
+
+      try{
         const cls = (raceData && Array.isArray(raceData.classification)) ? raceData.classification : [];
         let mx = 0;
         for (const r of cls){
-          const est = Number(r && r.estTime) || 0;
+          const est = Number(r && r.estTime) || Number(r && r.estTimeMs) || 0;
           if (est > mx) mx = est;
         }
         // plausible: 30s .. 20min
         if (mx >= 30000 && mx <= 20*60*1000) return Math.floor(mx);
       } catch(e) {}
 
-      // Fallback por tipo de sesion (si el feed aun no trae est)
+      // Fallback por tipo de sesion (si el feed aun no trae duracion)
       try{
         const rn = String((raceData && raceData.raceName) || '').toLowerCase();
         if (rn.includes('final a') || rn.includes('a-main') || rn.includes('main a')) return 6*60*1000;
@@ -15605,6 +15646,38 @@ function scheduleSpeechPump(delayMs = 0){
   } catch(e) { return 0; }
 }
 
+function __calcSpeechWatchdogMs(text = '', key = '', opts = {}) {
+  try {
+    const words = String(text || '').trim().split(/\s+/).filter(Boolean).length;
+    let waitMs = 15000 + Math.min(8500, Math.max(0, words - 8) * 340);
+    const k = String(key || '').toLowerCase();
+    const isLifecycle = k.indexOf('watcher_life_') === 0;
+    const isIntro = (k.indexOf('auto_intro_title_') === 0) || (k.indexOf('session_title') >= 0);
+    if (isLifecycle) waitMs += 1800;
+    if (isIntro) waitMs += 2600;
+    try { if (__shouldForceObsAutoVoice() || __isObsBrowserContext()) waitMs += 2600; } catch(e) {}
+    if (opts && opts.priority != null && Number(opts.priority) >= 95) waitMs += 1200;
+    return Math.max(12000, Math.min(30000, Math.round(waitMs)));
+  } catch(e) {
+    return Math.max(1200, Number(15000) || 15000);
+  }
+}
+
+function __calcGhostTtsThreshold(kind = 'speaking', text = '', key = '') {
+  try {
+    const words = String(text || '').trim().split(/\s+/).filter(Boolean).length;
+    let thr = (String(kind || '').toLowerCase() === 'pending') ? 2800 : 6500;
+    if (words > 10) thr += Math.min(4200, (words - 10) * 180);
+    const k = String(key || '').toLowerCase();
+    if (k.indexOf('watcher_life_') === 0) thr += 1500;
+    if (k.indexOf('auto_intro_title_') === 0 || k.indexOf('session_title') >= 0) thr += 2200;
+    try { if (__shouldForceObsAutoVoice() || __isObsBrowserContext()) thr += (String(kind || '').toLowerCase() === 'pending') ? 1400 : 2800; } catch(e) {}
+    return Math.max((String(kind || '').toLowerCase() === 'pending') ? 2200 : 5000, Math.min(16000, Math.round(thr)));
+  } catch(e) {
+    return (String(kind || '').toLowerCase() === 'pending') ? 2800 : 6500;
+  }
+}
+
 function scheduleSpeechWatchdog(ms = 15000){
   clearSpeechWatchdog();
   try {
@@ -15838,7 +15911,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         if (__ss && (__ss.speaking || __ss.pending)){
           const now = Date.now();
           const lastEv = (__ttsLastEventAt || 0);
-          const thr = __ss.speaking ? 6500 : 2800;
+          const thr = __ss.speaking ? __calcGhostTtsThreshold('speaking', __ttsCurrentText || '', __ttsCurrentKey || '') : __calcGhostTtsThreshold('pending', __ttsCurrentText || '', __ttsCurrentKey || '');
           // Si no hay actividad reciente, es speaking/pending fantasma: cancela y reintenta
           if (lastEv && (now - lastEv) > thr) {
             try { __setTtsRuntimeState('RECOVERING'); } catch(e) {}
@@ -15944,7 +16017,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
         speechSpeaking = true;
 
         clearSpeechWatchdog();
-        scheduleSpeechWatchdog(15000);
+        scheduleSpeechWatchdog(__calcSpeechWatchdogMs(next.text || '', next.key || '', next));
 
         u.onend = () => {
         try { __ttsLastEndAt = Date.now(); __ttsLastEventAt = __ttsLastEndAt; } catch(e) {}
@@ -18566,6 +18639,7 @@ function drawLapChartTop3Auto(){
         clockFmt: (rawRace.clockFmt != null) ? String(rawRace.clockFmt) : '',
         clockShowMs: (typeof rawRace.clockShowMs === 'number') ? rawRace.clockShowMs : 0,
         clockShowFmt: (rawRace.clockShowFmt != null) ? String(rawRace.clockShowFmt) : '',
+        clockSrc: (rawRace.clockSrc != null) ? String(rawRace.clockSrc) : '',
         practice: (rawRace.practice != null) ? Number(rawRace.practice) : null,
         mode: (rawRace.mode != null) ? String(rawRace.mode) : '',
         sessionType: (rawRace.sessionType != null) ? String(rawRace.sessionType) : '',
@@ -18584,15 +18658,21 @@ function drawLapChartTop3Auto(){
         raceDurationMs: (typeof rawRace.raceDurationMs === 'number') ? rawRace.raceDurationMs : 0,
         raceDurationFmt: (rawRace.raceDurationFmt != null) ? String(rawRace.raceDurationFmt) : '',
         sessionElapsedMs: (typeof rawRace.sessionElapsedMs === 'number') ? rawRace.sessionElapsedMs : 0,
+        sessionElapsedFmt: (rawRace.sessionElapsedFmt != null) ? String(rawRace.sessionElapsedFmt) : '',
         sessionRemainingMs: (typeof rawRace.sessionRemainingMs === 'number') ? rawRace.sessionRemainingMs : 0,
+        sessionRemainingFmt: (rawRace.sessionRemainingFmt != null) ? String(rawRace.sessionRemainingFmt) : '',
         sessionProgressPct: (rawRace.sessionProgressPct != null) ? Number(rawRace.sessionProgressPct) : 0,
         extraTopLevelPreview: rawRace.extraTopLevelPreview || {},
         bestLapMs: (typeof rawRace.bestLapMs === 'number') ? rawRace.bestLapMs : 0,
         bestLapMsRaw: (typeof rawRace.bestLapMsRaw === 'number') ? rawRace.bestLapMsRaw : 0,
         bestLapResidualSuppressed: !!rawRace.bestLapResidualSuppressed,
         bestLapTime: parseTimeToMs(rawRace.bestLapTime),
+        activeSessionClockMs: 0,
+        activeSessionDurationMs: 0,
         classification: []
       };
+      result.activeSessionClockMs = __getCanonicalSessionElapsedMs(result);
+      result.activeSessionDurationMs = __getCanonicalSessionDurationMs(result);
 
       const passEvents = [];
       const prevByKey = new Map();
@@ -21478,42 +21558,43 @@ function autoDecorate(text, type, style) {
 
 
     
+const __autoLastStyleByType = new Map();
 function autoPickStyleForType(type) {
   const lock = (autoCommentatorMode === 'pro' || autoCommentatorMode === 'picante' || autoCommentatorMode === 'engineer' || autoCommentatorMode === 'narrativo')
     ? autoCommentatorMode : 'pro';
 
-  // Mapeo por evento: usa TODOS los estilos de forma inteligente (sin perder tu modo base)
+  const session = (typeof ttsGenV2GetSessionTag === 'function') ? ttsGenV2GetSessionTag() : 'other';
   const map = {
-    leaderChange: 'pro',
-    top3: 'pro',
-    pass: 'pro',
-    battle: 'pro',
-    battlePodium: 'pro',
+    leaderChange: session === 'final' ? 'picante' : 'pro',
+    top3: session === 'final' ? 'narrativo' : 'pro',
+    pass: 'picante',
+    battle: session === 'final' ? 'narrativo' : 'pro',
+    battlePodium: session === 'final' ? 'narrativo' : 'pro',
     closing: 'engineer',
     pressure: 'engineer',
     gap: 'engineer',
-    train: 'engineer',
+    train: session === 'manga' ? 'narrativo' : 'engineer',
     record: 'pro',
-    qualiBest: 'pro',
+    qualiBest: 'narrativo',
     qualiPole: 'engineer'
   };
 
   const preferred = map[type] || lock;
+  let ring = [preferred, lock, 'narrativo', 'picante', 'engineer', 'pro'].filter((v, i, arr) => arr.indexOf(v) === i);
+  if (session === 'final') ring = [preferred, 'narrativo', lock, 'picante', 'engineer', 'pro'].filter((v, i, arr) => arr.indexOf(v) === i);
+  else if (session === 'manga') ring = [preferred, 'engineer', lock, 'narrativo', 'picante', 'pro'].filter((v, i, arr) => arr.indexOf(v) === i);
 
-  // Mezcla más conservadora: 80% preferido por evento, 20% modo fijo.
-  const r = Math.random();
-  if (lock !== preferred && r < 0.20) return lock;
-
-  // Rotación más lenta para no romper el tono de cabina.
-  try {
-    autoStyleMixCounter = (Number(autoStyleMixCounter) || 0) + 1;
-    if ((autoStyleMixCounter % 9) === 0) {
-      const ring = ['pro','engineer','picante','narrativo'];
-      const i = ring.indexOf(preferred);
-      if (i >= 0) return ring[(i + 1) % ring.length];
-    }
-  } catch(e) {}
-  return preferred;
+  autoStyleMixCounter = (Number(autoStyleMixCounter) || 0) + 1;
+  const roll = Math.random();
+  let chosen = ring[0] || preferred;
+  if (ring.length > 1 && roll >= 0.58) chosen = ring[1];
+  if (ring.length > 2 && roll >= 0.82) chosen = ring[2];
+  if (ring.length > 3 && roll >= 0.93) chosen = ring[3];
+  if (ring.length > 1 && (autoStyleMixCounter % 5) === 0) chosen = ring[Math.min(1, ring.length - 1)];
+  const last = String(__autoLastStyleByType.get(String(type || '')) || '');
+  if (ring.length > 1 && last && chosen === last) chosen = ring[(autoStyleMixCounter % (ring.length - 1)) + 1] || chosen;
+  __autoLastStyleByType.set(String(type || ''), chosen);
+  return chosen;
 }
 let autoStyleMixCounter = 0;
 
@@ -21543,7 +21624,7 @@ function autoBuildMessage(type, ctx) {
       const keyBase = style + ':' + type;
 
       // Intento 1 + re-roll 1 vez si la frase queda incompleta (sin datos)
-      for (let attempt = 0; attempt < 2; attempt++) {
+      for (let attempt = 0; attempt < 4; attempt++) {
         const fn = autoRandPick(bank, keyBase);
         if (typeof fn !== 'function') break;
         const out = String(fn(ctx) || '').trim();
@@ -21718,9 +21799,9 @@ const TTS_GEN_V2_RULES = {
   },
   defaultCooldownMs: 3200,
   defaultTtlMs: 2500,
-  antiRepeatWindow: 4,
-  repeatPenaltyMs: 28000,
-  samePairPenaltyMs: 15000
+  antiRepeatWindow: 6,
+  repeatPenaltyMs: 42000,
+  samePairPenaltyMs: 24000
 };
 
 function createTtsGenV2Runtime() {
@@ -23566,6 +23647,125 @@ function buildTtsGenV2Banks() {
   }
   return out;
 }
+
+const TTS_GEN_V2_STYLE_PHASE4 = {
+  pro: {
+    top3: {
+      open: [
+        { id:'pro.top3.open.6', text:'Panorama del Top 3.', weight:2 },
+        { id:'pro.top3.open.7', text:'Lectura rápida de la punta.', weight:1 }
+      ],
+      state: [
+        { id:'pro.top3.state.6', text:'La presión sigue viva arriba.', weight:2 },
+        { id:'pro.top3.state.7', text:'La punta todavía no se acomoda del todo.', weight:1 }
+      ],
+      end: [
+        { id:'pro.top3.end.3b', text:'Ojo porque esto no está planchado.', weight:1 }
+      ]
+    },
+    pass: {
+      impact: [
+        { id:'pro.pass.impact.4', text:'Movimiento limpio y con timing.', weight:2 },
+        { id:'pro.pass.impact.5', text:'Así se gana pista de verdad.', weight:1 }
+      ],
+      end: [
+        { id:'pro.pass.end.4', text:'Ahora toca cerrar la puerta.', weight:2 },
+        { id:'pro.pass.end.5', text:'La maniobra ya quedó firmada.', weight:1 }
+      ]
+    },
+    battle: {
+      action: [
+        { id:'pro.battle.action.5', text:'La próxima referencia puede decidirlo.', weight:2 },
+        { id:'pro.battle.action.6', text:'Esto ya está en zona de ataque.', weight:1 }
+      ]
+    },
+    record: {
+      impact: [
+        { id:'pro.record.impact.4', text:'Ese tiempo ya pesa en la sesión.', weight:2 },
+        { id:'pro.record.impact.5', text:'Ahora la vara queda más alta.', weight:1 }
+      ]
+    },
+    qualiPole: {
+      impact: [
+        { id:'pro.qualiPole.impact.4', text:'La pole sigue completamente abierta.', weight:2 },
+        { id:'pro.qualiPole.impact.5', text:'Esto se mueve con una sola vuelta.', weight:1 }
+      ]
+    }
+  },
+  engineer: {
+    gap: {
+      state: [
+        { id:'eng.gap.state.3', text:'Gap todavía dentro de ventana de presión.', weight:2 },
+        { id:'eng.gap.state.4', text:'Diferencia operativa corta.', weight:1 }
+      ]
+    },
+    closing: {
+      mirror: [
+        { id:'eng.closing.mirror.4', text:'La próxima pasada por meta será clave.', weight:2 },
+        { id:'eng.closing.mirror.5', text:'Ya entran en rango crítico.', weight:1 }
+      ]
+    },
+    pressure: {
+      advice: [
+        { id:'eng.pressure.advice.7', text:'Defiende sin abrir la salida.', weight:2 },
+        { id:'eng.pressure.advice.8', text:'Aquí cuenta más la tracción que la bravura.', weight:1 }
+      ]
+    },
+    qualiBest: {
+      impact: [
+        { id:'eng.qualiBest.impact.4', text:'Referencia fuerte para el resto de la manga.', weight:2 },
+        { id:'eng.qualiBest.impact.5', text:'Tiempo serio en términos de proyección.', weight:1 }
+      ]
+    }
+  },
+  picante: {
+    battle: {
+      end: [
+        { id:'pic.battle.end.4', text:'Aquí nadie viene de paseo.', weight:2 },
+        { id:'pic.battle.end.5', text:'Ya huele a cuchillos.', weight:1 }
+      ]
+    },
+    leaderChange: {
+      impact: [
+        { id:'pic.leader.impact.4', text:'Se volteó la tortilla en la punta.', weight:2 },
+        { id:'pic.leader.impact.5', text:'Golpe directo al tablero.', weight:1 }
+      ]
+    },
+    pass: {
+      move: [
+        { id:'pic.pass.move.4', text:'{winner} se metió con autoridad sobre {loser}.', weight:2 },
+        { id:'pic.pass.move.5', text:'{winner} ya le comió la posición a {loser}.', weight:1 }
+      ]
+    }
+  },
+  narrativo: {
+    top3: {
+      state: [
+        { id:'nar.top3.state.4', text:'Arriba se sigue escribiendo la historia grande.', weight:2 },
+        { id:'nar.top3.state.5', text:'La punta todavía guarda capítulos pendientes.', weight:1 }
+      ]
+    },
+    closing: {
+      end: [
+        { id:'nar.closing.end.4', text:'La escena se viene cargando vuelta a vuelta.', weight:2 },
+        { id:'nar.closing.end.5', text:'Esto ya pide desenlace.', weight:1 }
+      ]
+    },
+    train: {
+      impact: [
+        { id:'nar.train.impact.4', text:'Una sola falla puede romper toda la fila.', weight:2 },
+        { id:'nar.train.impact.5', text:'Ese tren viene respirando en el mismo metro.', weight:1 }
+      ]
+    },
+    qualiPole: {
+      impact: [
+        { id:'nar.qualiPole.impact.4', text:'La pole sigue temblando.', weight:2 },
+        { id:'nar.qualiPole.impact.5', text:'Todavía no existe palabra final en esa pelea.', weight:1 }
+      ]
+    }
+  }
+};
+ttsGenV2MergeLexiconAdditions(TTS_GEN_V2_STYLE_PRESETS, TTS_GEN_V2_STYLE_PHASE4);
 const TTS_GEN_V2_BANKS = buildTtsGenV2Banks();
 
 function ttsGenV2ExtendBanksPhase2(banks) {
@@ -24022,11 +24222,89 @@ function __ttsGenV2ShouldSuppressEvent(eventType, sessionTag) {
   } catch(e) { return false; }
 }
 
+let __ttsGenAutoMixCounter = 0;
+const __ttsGenAutoLastModeByType = new Map();
+
+function ttsGenV2PickAutoMode(eventType, session, opts) {
+  try {
+    const options = opts || {};
+    const explicitMode = String(options.mode || '').toLowerCase();
+    if (explicitMode === 'pro' || explicitMode === 'picante' || explicitMode === 'engineer' || explicitMode === 'narrativo') {
+      return ttsGenV2NormalizeMode(explicitMode);
+    }
+    const base = ttsGenV2NormalizeMode(autoCommentatorMode);
+    const evt = String(eventType || '').toLowerCase();
+    const sess = String(session || 'other').toLowerCase();
+    const rings = {
+      final: {
+        top3:['pro','narrativo','engineer','picante'],
+        battle:['pro','narrativo','picante','engineer'],
+        battlepodium:['narrativo','pro','picante','engineer'],
+        closing:['engineer','narrativo','pro','picante'],
+        pressure:['engineer','pro','narrativo','picante'],
+        gap:['engineer','pro','narrativo','picante'],
+        pass:['pro','picante','narrativo','engineer'],
+        leaderchange:['pro','picante','narrativo','engineer'],
+        train:['narrativo','pro','engineer','picante'],
+        record:['pro','narrativo','engineer','picante']
+      },
+      manga: {
+        top3:['pro','engineer','narrativo','picante'],
+        battle:['pro','engineer','picante','narrativo'],
+        battlepodium:['pro','engineer','picante','narrativo'],
+        closing:['engineer','pro','narrativo','picante'],
+        pressure:['engineer','pro','picante','narrativo'],
+        gap:['engineer','pro','narrativo','picante'],
+        pass:['pro','picante','engineer','narrativo'],
+        leaderchange:['pro','picante','engineer','narrativo'],
+        qualibest:['pro','narrativo','engineer','picante'],
+        qualipole:['engineer','pro','narrativo','picante'],
+        train:['narrativo','engineer','pro','picante'],
+        record:['pro','engineer','narrativo','picante']
+      },
+      other: {
+        top3:['pro','engineer','narrativo','picante'],
+        battle:['pro','narrativo','engineer','picante'],
+        closing:['engineer','pro','narrativo','picante'],
+        pass:['pro','picante','engineer','narrativo'],
+        leaderchange:['pro','picante','engineer','narrativo'],
+        train:['narrativo','engineer','pro','picante'],
+        record:['pro','engineer','narrativo','picante']
+      }
+    };
+    let ring = ((rings[sess] && rings[sess][evt]) || (rings.other && rings.other[evt]) || [base,'pro','engineer','narrativo','picante']);
+    ring = ring.filter((v, i, arr) => arr.indexOf(v) === i);
+    if (!ring.includes(base)) ring.unshift(base);
+    ring = ring.filter((v, i, arr) => arr.indexOf(v) === i);
+
+    __ttsGenAutoMixCounter = (Number(__ttsGenAutoMixCounter) || 0) + 1;
+    const roll = Math.random();
+    let chosen = ring[0] || base;
+    if (ring.length > 1 && roll >= 0.52) chosen = ring[1];
+    if (ring.length > 2 && roll >= 0.78) chosen = ring[2];
+    if (ring.length > 3 && roll >= 0.92) chosen = ring[3];
+
+    if (ring.length > 1 && (__ttsGenAutoMixCounter % 4) === 0) chosen = ring[Math.min(1, ring.length - 1)];
+    if (ring.length > 2 && (__ttsGenAutoMixCounter % 7) === 0) chosen = ring[Math.min(2, ring.length - 1)];
+
+    const last = String(__ttsGenAutoLastModeByType.get(evt) || '');
+    if (ring.length > 1 && last && chosen === last) {
+      const altIdx = (__ttsGenAutoMixCounter % (ring.length - 1)) + 1;
+      chosen = ring[Math.min(altIdx, ring.length - 1)] || chosen;
+    }
+
+    __ttsGenAutoLastModeByType.set(evt, chosen);
+    return ttsGenV2NormalizeMode(chosen);
+  } catch(e) {
+    return ttsGenV2NormalizeMode(autoCommentatorMode);
+  }
+}
+
 function ttsGenV2ComposeAutoEvent(eventType, ctx, opts) {
   try {
     const options = opts || {};
-    const mode = ttsGenV2NormalizeMode(options.mode || autoCommentatorMode);
     const session = options.session || ttsGenV2GetSessionTag();
+    const mode = ttsGenV2PickAutoMode(eventType, session, options);
     if (__ttsGenV2ShouldSuppressEvent(eventType, session)) return '';
     const event = {
       type: String(eventType || ''),
@@ -26489,6 +26767,12 @@ let label = 'MODO -';
           return parts.join(', ');
         }
         if (pType === 'FINAL') {
+          try {
+            if (isObj) {
+              const smartFinal = __buildFinalIntroFromQTable(rawOrRace, String(parsed.main || '').trim().toUpperCase());
+              if (smartFinal) return smartFinal;
+            }
+          } catch(e) {}
           const spoken = String(parsed.spokenTitle || '').trim();
           if (spoken) return spoken;
           const main = String(parsed.main || '').trim();
@@ -27015,7 +27299,7 @@ function checkSessionFinishOnLap() {
         }
 
         if (!rawRace || !Array.isArray(rawRace.classification)) {
-          try { if (raceInfo) raceInfo.textContent = 'Sin datos (feed sin parsed/rawJson valido)'; } catch(e) {}
+          try { if (raceInfo) raceInfo.textContent = 'Sin datos (feed sin parsed valido)'; } catch(e) {}
           isLoading = false;
           return;
         }
@@ -27511,10 +27795,12 @@ raceData = normalizeRaceData(rawRace);
           __sessionDirector.raceStarted = false;
           __sessionDirector.raceFinished = false;
           __sessionDirector.lastEvent = 'NEW_RACE_NAME';
+          let autoVoiceReady = false;
+          try { autoVoiceReady = !!__autoEnsureVoiceReadyOnNewRace(sessionSig); } catch(e) {}
           __sessionDirectorStateSwitch('SESSION_ANNOUNCED', src, 'new_race');
           if (titleText && !__sessionDirector.titleAnnounced) {
             __sessionDirector.titleAnnounced = true;
-            speakLifecycle('SESSION_TITLE', titleText, { priority: 97, interrupt: false, deferMs: 180, force: true, cooldownMs: 0, dedupe: true, maxAgeMs: 12000 });
+            speakLifecycle('SESSION_TITLE', titleText, { priority: 97, interrupt: false, deferMs: autoVoiceReady ? 360 : 180, force: true, cooldownMs: 0, dedupe: true, maxAgeMs: 14000, postDelayMs: 160 });
           }
         }
 
@@ -27917,7 +28203,7 @@ raceData = normalizeRaceData(rawRace);
         const lT = __qualiRankTuple(leader);
         const lLaps = lT.laps;
         const lTimeMs = lT.timeMs;
-        const sessionElapsed = Number(raw.clockMs || raw.clock || 0) || 0;
+        const sessionElapsed = __getCanonicalSessionElapsedMs(raw);
         if (sessionElapsed < 20000 || lLaps < 2 || lTimeMs <= 0) return;
 
         const now = Date.now();
