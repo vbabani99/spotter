@@ -1,7 +1,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R25 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R27 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -20,6 +20,8 @@ Changelog:
 - v0.5.0.18R19: Candado central para FOLLOW quieto. SÚPER BÁSICO queda realmente en solo Last Lap del piloto seguido, BÁSICO solo deja pasar posición estable/blue flag, se limpia la cola al cambiar modo o seleccionar piloto y el botón anuncia por voz SÚPER BÁSICO, BÁSICO o NORMAL.
 - v0.5.0.18R21: FOLLOW canta bien el cambio de modo. El anuncio de SÚPER BÁSICO, BÁSICO y NORMAL ya no queda muteado por el filtro global de mensajes de sistema; además entra con allowlist explícita e interrupción corta para oírse al momento.
 - v0.5.0.18R25: FIX bootstrap silencioso del feed (no lee resultados viejos al abrir), VOZ se arma y desbloquea al primer toque en FOLLOW/AUTO, FOLLOW recupera contexto por modo y se refuerza narrativa de práctica, Q y finales.
+- v0.5.0.18R27: FIX VOZ móvil a primer toque. Si VOZ está ON pero pendiente de unlock, el tap ya no apaga: reintenta desbloqueo. Refuerza unlock inmediato en gesto móvil, carga voces antes de hablar y marca READY al arrancar el primer utterance.
+- v0.5.0.18R26: AUDIT QTABLE. La Q TABLA ya no se reinicia al entrar a Final/Práctica, conserva la última clasificación del evento, normaliza selección de store por fecha/evento, protege orden vueltas/tiempo y corrige render de tiempos inválidos en vista Por Q.
 - v0.5.0.18R22: FOLLOW ya anuncia la selección del piloto también en móvil y en SÚPER BÁSICO. "Siguiendo a X" sale con permiso explícito en quiet modes e interrupción corta para no perderse tras el tap.
 - v0.5.0.18R23: FIX narración premium. OBS/desktop arma VOZ antes del título de sesión para no perder la primera Q, los títulos de Final ya jalan contexto real de Q tabla, el watchdog TTS se vuelve dinámico para no cortar frases largas y el Auto Locutor mezcla más estilos con anti-repeat más duro para sonar menos plantilla.
 - v0.5.0.18R12: Limpieza de cola TTS. Se adelanta la supersedencia antes del filtro final para que mensajes de más prioridad sí puedan sacar ruido pendiente.
@@ -106,7 +108,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R25</title>
+<title>vics_Smart_Spotter_v0.5.0.18R27</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6601,7 +6603,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R27</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7193,7 +7195,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R27";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7486,13 +7488,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R25',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R27',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R25', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R27', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -11489,7 +11491,7 @@ try{
 
     // One-time: aplicar defaults de esta versin (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R25';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R27';
     try{
       if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
         localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
@@ -16417,15 +16419,25 @@ function unlockTTSOnce(reason = '') {
           return false;
         }
 
-        // Watchdog: si no arranca rapido, marcamos bloqueo y pedimos otro tap.
+        // Watchdog R27: en móvil el primer utterance puede tardar más en disparar onstart.
+        // No castigamos el primer toque con un LOCKED prematuro.
         try {
           setManagedTimeout('__ttsUnlockWatchdog', () => {
             try {
               if (__ttsUnlockedOnce) return;
               if (didStart) return;
+              // Primer intento de usuario: mantener READY provisional y bombear cola.
+              if (reason === 'voice-btn' || reason === 'user-toggle') {
+                try { __ttsUnlockedOnce = true; pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+                try { __setTtsRuntimeState('READY'); } catch(e) {}
+                try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+                try { updateVoiceStatusDot(); } catch(e) {}
+                try { pumpSpeechQueue(); } catch(e) {}
+                return;
+              }
               finishFail();
             } catch(e) {}
-          }, 900);
+          }, 1800);
         } catch(e) {}
 
         return true;
@@ -16470,10 +16482,10 @@ function setVoiceMaster(on, opts = {}) {
           const __isMob = isMobileDevice();
           if (__isIOS) {
             if (!__ttsUnlockedOnce) {
-              pendingAutoVoiceUnlock = true;
-              try { __setTtsRuntimeState('LOCKED'); } catch(e) {}
-              try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(_e) {}
-              try { scheduleOneTapUnlock(); } catch(_e) {}
+              pendingAutoVoiceUnlock = !isUserAction;
+              try { __setTtsRuntimeState(isUserAction ? 'RECOVERING' : 'LOCKED'); } catch(e) {}
+              try { voiceToggleBtns.forEach(b => b.classList.toggle('needs-unlock', !isUserAction)); } catch(_e) {}
+              try { if (!isUserAction) scheduleOneTapUnlock(); } catch(_e) {}
             } else {
               try { __setTtsRuntimeState('READY'); } catch(e) {}
             }
@@ -16751,11 +16763,17 @@ function setVoiceMaster(on, opts = {}) {
 
               try{ __userGestureUnlocked = true; }catch(e){}
               try{ if (!__audioCtxReady) ensureAudioCtxOnce(); }catch(e){}
+              try{ ensureAudioCtx(); }catch(e){}
+              try{ hardUnlockAudioPipe(); }catch(e){}
+              try{ if (window.speechSynthesis && typeof window.speechSynthesis.getVoices === 'function') window.speechSynthesis.getVoices(); }catch(e){}
               try{ playBeep('tap'); }catch(e){}
 
-              const next = !voiceMasterEnabled;
+              const needsUnlockNow = __voiceBtnNeedsUnlock();
+              // R27: si VOZ ya está ON pero el navegador sigue pidiendo unlock,
+              // este tap NO debe apagar. Debe reintentar el desbloqueo en el mismo gesto.
+              const next = (voiceMasterEnabled && needsUnlockNow) ? true : !voiceMasterEnabled;
 
-              // OFF: corta TODO y limpia cola
+              // OFF: corta TODO y limpia cola. Solo apaga si NO estamos en needs-unlock.
               if (!next){
                 try { setVoiceMaster(false, { user:true }); } catch(e) {}
                 try { showToast('VOZ OFF', 700); } catch(e) {}
@@ -16807,13 +16825,13 @@ function setVoiceMaster(on, opts = {}) {
             } catch(e) { return false; }
           })();
 
-          const evName = (isIOS ? 'click' : (window.PointerEvent ? 'pointerdown' : 'touchstart'));
+          // R27: móvil necesita que el unlock ocurra dentro del primer gesto real.
+          // iOS usa touchstart/pointerdown para armar audio; el click fantasma queda neutralizado.
+          const evName = (window.PointerEvent ? 'pointerdown' : 'touchstart');
           btn.addEventListener(evName, __onVoiceToggle, { passive:false });
 
-          // Evita doble toggle por click fantasma SOLO cuando el handler principal no es click
-          if (evName !== 'click') {
-            try { btn.addEventListener('click', (ev)=>{ try{ev.preventDefault();}catch(e){} }, { passive:false }); } catch(e) {}
-          }
+          // Evita doble toggle por click fantasma. Si el usuario solo dispara click, deja pasar tras el guard.
+          try { btn.addEventListener('click', (ev)=>{ try{ev.preventDefault(); ev.stopPropagation();}catch(e){} }, { passive:false }); } catch(e) {}
         } catch(e) {
           try { btn.addEventListener('click', __onVoiceToggle, { passive:false }); } catch(e2) {}
         }
@@ -28550,11 +28568,22 @@ function checkSessionFinishOnLap() {
 
     function loadQualiStoreFor(raceName){
       const today = getLocalDateKey();
-      const raceBase = getRaceBaseFromRaceName(raceName);
+      const incomingRaceName = String(raceName || '').trim();
+      const incomingRaceBase = getRaceBaseFromRaceName(incomingRaceName);
+      const incomingIsManga = isMangaRaceName(incomingRaceName);
       let store = qSafeJsonParse((typeof lsGet === 'function' ? lsGet(QUALI_STORE_KEY) : localStorage.getItem(QUALI_STORE_KEY)) || '');
       if (!store || typeof store !== 'object') store = null;
 
-      if (!store || store.date !== today || store.raceBase !== raceBase) {
+      // R26: no reiniciar QTABLE cuando el feed cambia a FINAL/PRACTICA.
+      // La clasificación vive por día + evento base; una Final debe leer la última Q guardada,
+      // no crear un store nuevo con raceBase = "Final A...". Ese era el pecado: bonito en teoría, inútil en parrilla.
+      let raceBase = incomingRaceBase;
+      if (store && store.date === today && !incomingIsManga) {
+        raceBase = String(store.raceBase || incomingRaceBase || '').trim();
+      }
+
+      const shouldResetStore = (!store || store.date !== today || (incomingIsManga && String(store.raceBase || '') !== String(raceBase || '')));
+      if (shouldResetStore) {
         store = { date: today, raceBase, sessions: {}, bestByPilot: {}, aliasByName: {}, _pilotKeyMode: 'name' };
         try {
           if (typeof lsSet === 'function') lsSet(QUALI_STORE_KEY, JSON.stringify(store));
@@ -28564,6 +28593,7 @@ function checkSessionFinishOnLap() {
         if (!store.sessions || typeof store.sessions !== 'object') store.sessions = {};
         if (!store.bestByPilot || typeof store.bestByPilot !== 'object') store.bestByPilot = {};
         if (!store.aliasByName || typeof store.aliasByName !== 'object') store.aliasByName = {};
+        if (!store.raceBase && raceBase) store.raceBase = raceBase;
 
 // SANITIZA legacy: Best Lap absurdos guardados por versiones viejas (ej. 0:00.007)
 try{
@@ -29073,8 +29103,10 @@ grouped[gk] = __pickG;
           for (const qid of sessionKeys){
             const r = p.byQ[qid];
             if (!r) continue;
-            bestRow = pickBetterQuali(bestRow, { laps:r.laps, timeMs:r.timeMs, racerName:r.racerName, racerNumber:r.racerNumber, bestMs:r.bestMs });
-            if (bestRow && bestRow.timeMs === r.timeMs && Number(bestRow.laps||0) === Number(r.laps||0)) bestQ = qid;
+            const candRow = { q: qid, laps:r.laps, timeMs:r.timeMs, racerName:r.racerName, racerNumber:r.racerNumber, bestMs:r.bestMs, bestRaw:r.bestRaw, bestKey:r.bestKey };
+            const pickedRow = pickBetterQuali(bestRow, candRow);
+            bestRow = pickedRow;
+            if (pickedRow === candRow) bestQ = qid;
           }
           p.bestRow = bestRow;
           p.bestQ = bestQ;
@@ -29107,7 +29139,9 @@ grouped[gk] = __pickG;
           const p = list[i];
           const bestQ = p.bestQ || '';
           const br = p.bestRow || null;
-          const bestMain = br ? `${Number(br.laps||0)}v - ${msToMinSec(Number(br.timeMs||0))}` : '-';
+          const brTime = br ? Number(br.timeMs || 0) : 0;
+          const brTimeTxt = (isFinite(brTime) && brTime > 0 && brTime < Number.MAX_SAFE_INTEGER) ? msToMinSec(brTime) : '-';
+          const bestMain = br ? `${Number(br.laps||0)}v - ${brTimeTxt}` : '-';
 
           const tr = document.createElement('tr');
           appendQualiTextCell(tr, 'td', String(i + 1));
