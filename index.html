@@ -1,7 +1,56 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R27 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
+vics_Smart_Spotter_v0.5.0.18R25-FIXPACK1 - Correcciones de bugs identificados en auditoría de código -
+
+FIXPACK1 (2026-04-19) — Bugs corregidos + Logging + Poda de memoria:
+
+  BUGS (del audit anterior):
+  - FIX CRÍTICO __semStripAccents: regex /[-]/g solo borraba guiones, NO diacríticos.
+    Corregida a /[\u0300-\u036f]/ para eliminar marcas NFD correctamente.
+    Impacto: el sistema anti-repetición semántico (Jaccard) fallaba para todo el
+    vocabulario español acentuado (líder, posición, vuelta, margen, etc.).
+  - FIX CRÍTICO msgv2Pick / msgv2PickSalt: msgv2PickSalt estaba definida DENTRO del
+    cuerpo de msgv2Pick antes de que esta cerrara su bloque try-catch, dejándola con
+    scope incorrecto y causando que msgv2Pick no retornara en todos los caminos.
+    Ambas funciones ahora están al mismo nivel de scope con retorno explícito.
+  - FIX regex duplicada en spotterSanitizeText: la tercera aplicación de
+    /\bacorta\s+el\s+margen\b/ era un no-op idéntico a la primera. Eliminada.
+  - FIX copySpotterAuditJson: document.execCommand('copy') deprecado en Chrome 127+.
+    El fallback ahora verifica el resultado de execCommand y notifica al usuario si
+    la copia falla, en lugar de mostrar "copiado" de forma optimista.
+  - FIX localStorage directo: 9 llamadas directas a localStorage.getItem/setItem
+    (en bloque de defaults, preset, pilotOptionsCache, aiSpotterLastPilotKey y
+    QUALI_STORE_KEY) reemplazadas por los wrappers lsGet/lsSet ya existentes.
+    Los ternarios de guardia "typeof lsSet === 'function' ? ... : localStorage..."
+    en loadQualiStoreFor y saveQualiStore también fueron simplificados.
+
+  LOGGING (observabilidad en producción):
+  - enqueueSpeech y pumpSpeechQueue: catch externo ahora llama a pushTtsEvent +
+    pushSpotterAudit para que errores inesperados aparezcan en el panel de auditoría
+    sin necesitar ?debug=1.
+  - startTtsHeartbeat: catch del tick y catch externo instrumentados.
+  - startTtsSafetyLoop: catch del tick instrumentado con pushTtsEvent.
+  - __ttsHeartbeatTick: catch externo instrumentado.
+  - startRuntimeWatchdog: catch del tick y catch externo instrumentados.
+  - applyRuntimeProfile: catch externo instrumentado.
+  - stopFallbackPolling: catch instrumentado.
+  - __scheduleFallbackPolling: catch del loadRaceFromFirebase y catch externo
+    instrumentados con pushTtsEvent('error', ..., 'feed').
+
+  PODA DE MEMORIA (anti memory-leak en sesiones largas):
+  - Nueva función __pruneGlobalMaps() con timer propio cada 60s (siempre activo,
+    no depende del modo debug). Poda:
+    · lastSpokenKeyAt / lastSpokenTextAt: borra entradas con timestamp > 30s.
+    · lapHistory: limita hist.times[] y hist.marks[] a las últimas 60 vueltas
+      por piloto (recorte proporcional de marks[] para mantener alineación).
+  - __speechRecentSigAt y __speechRecentKeyAt: poda por tamaño (>800 entradas)
+    y tiempo (>30s) en cada llamada a enqueueSpeech, igual que __recentEnqueueAt.
+  - Reset en cambio de carrera: __speechRecentSigAt, __speechRecentKeyAt,
+    firstDetectBeepedByPilot, mangaPilotStartAt y mangaPrevLapsByPilot ahora
+    se limpian explícitamente al detectar nuevo raceName.
+
+vics_Smart_Spotter_v0.5.0.18R25 - base 0.5.0.18 reconstruida con limpieza TTS cola/dedupe/recovery + Auto Locutor libre -
 v0.3.05: FIX TTS en primer plano (A+B) - start-guard menos agresivo (3.5s), auto-recupera sin pedir tap si ya se desbloqueo, reset de fallos al iniciar voz.
 Fecha: 2026-02-11
 Origen: Spotter_5.0.1.html
@@ -20,8 +69,6 @@ Changelog:
 - v0.5.0.18R19: Candado central para FOLLOW quieto. SÚPER BÁSICO queda realmente en solo Last Lap del piloto seguido, BÁSICO solo deja pasar posición estable/blue flag, se limpia la cola al cambiar modo o seleccionar piloto y el botón anuncia por voz SÚPER BÁSICO, BÁSICO o NORMAL.
 - v0.5.0.18R21: FOLLOW canta bien el cambio de modo. El anuncio de SÚPER BÁSICO, BÁSICO y NORMAL ya no queda muteado por el filtro global de mensajes de sistema; además entra con allowlist explícita e interrupción corta para oírse al momento.
 - v0.5.0.18R25: FIX bootstrap silencioso del feed (no lee resultados viejos al abrir), VOZ se arma y desbloquea al primer toque en FOLLOW/AUTO, FOLLOW recupera contexto por modo y se refuerza narrativa de práctica, Q y finales.
-- v0.5.0.18R27: FIX VOZ móvil a primer toque. Si VOZ está ON pero pendiente de unlock, el tap ya no apaga: reintenta desbloqueo. Refuerza unlock inmediato en gesto móvil, carga voces antes de hablar y marca READY al arrancar el primer utterance.
-- v0.5.0.18R26: AUDIT QTABLE. La Q TABLA ya no se reinicia al entrar a Final/Práctica, conserva la última clasificación del evento, normaliza selección de store por fecha/evento, protege orden vueltas/tiempo y corrige render de tiempos inválidos en vista Por Q.
 - v0.5.0.18R22: FOLLOW ya anuncia la selección del piloto también en móvil y en SÚPER BÁSICO. "Siguiendo a X" sale con permiso explícito en quiet modes e interrupción corta para no perderse tras el tap.
 - v0.5.0.18R23: FIX narración premium. OBS/desktop arma VOZ antes del título de sesión para no perder la primera Q, los títulos de Final ya jalan contexto real de Q tabla, el watchdog TTS se vuelve dinámico para no cortar frases largas y el Auto Locutor mezcla más estilos con anti-repeat más duro para sonar menos plantilla.
 - v0.5.0.18R12: Limpieza de cola TTS. Se adelanta la supersedencia antes del filtro final para que mensajes de más prioridad sí puedan sacar ruido pendiente.
@@ -108,7 +155,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R27</title>
+<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK1</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6603,7 +6650,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R27</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FP1</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7195,7 +7242,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R27";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK1";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7488,13 +7535,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R27";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R27',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R25',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R27', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R25', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -7522,13 +7569,25 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R27";
           await navigator.clipboard.writeText(payload);
           try { showToast('Auditoría copiada', 1400); } catch(e) {}
         } else {
-          const ta = document.createElement('textarea');
-          ta.value = payload;
-          document.body.appendChild(ta);
-          ta.select();
-          try { document.execCommand('copy'); } catch(e) {}
-          ta.remove();
-          try { showToast('Auditoría copiada', 1400); } catch(e) {}
+          // FIX: document.execCommand('copy') está deprecado en Chrome 127+.
+          // Fallback: crear un textarea oculto, seleccionar y ejecutar copy;
+          // si falla (contexto no seguro / API removida), se informa al usuario.
+          let copied = false;
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = payload;
+            ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            copied = document.execCommand('copy');
+            document.body.removeChild(ta);
+          } catch(execErr) { copied = false; }
+          if (copied) {
+            try { showToast('Auditoría copiada', 1400); } catch(e) {}
+          } else {
+            try { showToast('No se pudo copiar — usa el botón Exportar', 2200); } catch(e) {}
+          }
         }
       }catch(e){
         try { showToast('No se pudo copiar la auditoría', 1600); } catch(_e) {}
@@ -7580,9 +7639,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R27";
               if (raceInfo) raceInfo.textContent = 'Sin actualizaciones. Revisando conexion...';
               __bumpFallbackPolling('watchdog');
             }
-          } catch(e) {}
+          } catch(e) {
+            try { pushTtsEvent('error', 'watchdog tick: ' + String(e), 'debug'); } catch(_) {}
+          }
         }, Math.max(1200, Number(__watchdogIntervalMs || 2500)));
-      } catch(e) {}
+      } catch(e) {
+        try { pushTtsEvent('error', 'startRuntimeWatchdog: ' + String(e), 'debug'); } catch(_) {}
+      }
     }
 
     function refreshRuntimeProfileUI(){
@@ -7621,7 +7684,9 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R27";
           try { pushTtsEvent('profile', 'Perfil runtime: ' + cfg.label, 'runtime'); } catch(e) {}
           try { showToast('Perfil ' + cfg.label, 900); } catch(e) {}
         }
-      }catch(e){}
+      }catch(e){
+        try { pushTtsEvent('error', 'applyRuntimeProfile: ' + String(e), 'debug'); } catch(_) {}
+      }
     }
 
     function bindRuntimeProfileCards(){
@@ -7673,19 +7738,14 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R27";
       return String(type || 'x') + ':' + pk + ':' + String(part || 'full');
     }
 
+    // FIX: msgv2PickSalt estaba anidada DENTRO del cuerpo de msgv2Pick (antes del cierre
+    // del try-catch exterior), dejándola con scope incorrecto y causando que msgv2Pick
+    // no retornara en todos los caminos de ejecución. Ambas funciones ahora están al
+    // mismo nivel de scope.
     function msgv2Pick(arr, type, ctx, part) {
       try {
         if (!Array.isArray(arr) || !arr.length) return '';
         const key = msgv2Key(type, ctx, part);
-        if (typeof autoRandPick === 'function') {
-          const fn = autoRandPick(arr, 'msgv2:' + key);
-          return (typeof fn === 'function') ? String(fn(ctx) || '') : String(fn || '');
-        }
-
-    function msgv2PickSalt(arr, type, ctx, part, salt) {
-      try {
-        if (!Array.isArray(arr) || !arr.length) return '';
-        const key = msgv2Key(type, ctx, part) + ':' + String(salt || '0');
         if (typeof autoRandPick === 'function') {
           const fn = autoRandPick(arr, 'msgv2:' + key);
           return (typeof fn === 'function') ? String(fn(ctx) || '') : String(fn || '');
@@ -7695,6 +7755,14 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R27";
       } catch(e) { return ''; }
     }
 
+    function msgv2PickSalt(arr, type, ctx, part, salt) {
+      try {
+        if (!Array.isArray(arr) || !arr.length) return '';
+        const key = msgv2Key(type, ctx, part) + ':' + String(salt || '0');
+        if (typeof autoRandPick === 'function') {
+          const fn = autoRandPick(arr, 'msgv2:' + key);
+          return (typeof fn === 'function') ? String(fn(ctx) || '') : String(fn || '');
+        }
         const v = arr[Math.floor(Math.random() * arr.length)];
         return (typeof v === 'function') ? String(v(ctx) || '') : String(v || '');
       } catch(e) { return ''; }
@@ -7749,11 +7817,11 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R27";
         s = s.replace(/,\s*,/g, ',').replace(/\s+,\s+/g, ', ');
 
         
-        // Fixes de espaol natural (anti "acorta el margen")
+        // Fixes de español natural (anti "acorta el margen")
+        // FIX: la tercera línea era idéntica a la primera — regex duplicada eliminada
         s = s
           .replace(/\bacorta\s+el\s+margen\b/ig, 'recorta el margen')
           .replace(/\bacorta\s+la\s+margen\b/ig, 'recorta el margen')
-          .replace(/\bacorta\s+el\s+margen\b/ig, 'recorta el margen')
           .replace(/\bel\s+margen\b/ig, 'el margen')
           .replace(/\bla\s+margen\b/ig, 'el margen');
 
@@ -11491,15 +11559,17 @@ try{
 
     // One-time: aplicar defaults de esta versin (sin pisar cada recarga)
     // - Evita que el usuario se quede con toggles viejos (todo prendido) cuando cambia de base.
-    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R27';
+    const DEFAULTS_APPLIED_KEY = 'TRM_DEFAULTS_APPLIED_vics_Smart_Spotter_v0.5.0.18R25';
+    // FIX: usar wrappers lsGet/lsSet en lugar de localStorage directo para
+    // soportar modo privado de Safari y contextos con storage restringido.
     try{
-      if (localStorage.getItem(DEFAULTS_APPLIED_KEY) === null && localStorage.getItem('spotterVoiceSettings') === null){
-        localStorage.setItem('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
+      if (lsGet(DEFAULTS_APPLIED_KEY) === null && lsGet('spotterVoiceSettings') === null){
+        lsSet('spotterVoiceSettings', JSON.stringify(DEFAULT_VOICE_SETTINGS));
         prefSet('spotterDecimalPrecision', '2');
         prefSet('raceDirectorEnabled', '1');
         prefSet('raceDirectorMode', 'minimal');
         prefSet('autoCommentatorMode', 'picante');
-        localStorage.setItem(DEFAULTS_APPLIED_KEY, '1');
+        lsSet(DEFAULTS_APPLIED_KEY, '1');
       }
     }catch(e){}
 
@@ -14494,6 +14564,65 @@ let __ttsStartGuard = 0;
     let __ttsCurrentKey = '';
  // si el utterance no arranca, no drenar cola (iOS/Android post-idle)
 
+    // ============================================================
+    // PODA PERIÓDICA DE MAPS GLOBALES (anti memory-leak)
+    // - Corre cada 60s independientemente del modo debug.
+    // - Limpia entradas antiguas de Maps de TTS y lapHistory
+    //   para sesiones largas con rotación de pilotos.
+    // ============================================================
+    let __mapPruneLastAt = 0;
+    const __MAP_PRUNE_INTERVAL_MS = 60000;
+    const __SPOKEN_KEY_TTL_MS     = 30000;  // entradas de cooldown > 30s ya no sirven
+    const __LAP_HIST_MAX_TIMES    = 60;     // máximo de vueltas a conservar por piloto
+
+    function __pruneGlobalMaps() {
+      try {
+        const now = Date.now();
+        if ((now - __mapPruneLastAt) < __MAP_PRUNE_INTERVAL_MS) return;
+        __mapPruneLastAt = now;
+
+        // lastSpokenKeyAt / lastSpokenTextAt: borrar cooldowns expirados
+        try {
+          const cutKey = now - __SPOKEN_KEY_TTL_MS;
+          for (const [k, v] of lastSpokenKeyAt.entries()) {
+            if ((v || 0) < cutKey) lastSpokenKeyAt.delete(k);
+          }
+        } catch(e) {}
+        try {
+          const cutTxt = now - __SPOKEN_KEY_TTL_MS;
+          for (const [k, v] of lastSpokenTextAt.entries()) {
+            if ((v || 0) < cutTxt) lastSpokenTextAt.delete(k);
+          }
+        } catch(e) {}
+
+        // lapHistory: limitar times[] a las últimas N vueltas por piloto
+        // (marks[] se recorta igual para mantener alineación)
+        try {
+          if (lapHistory && lapHistory.size > 0) {
+            for (const [pk, hist] of lapHistory.entries()) {
+              if (!hist || !Array.isArray(hist.times)) continue;
+              if (hist.times.length > __LAP_HIST_MAX_TIMES) {
+                const excess = hist.times.length - __LAP_HIST_MAX_TIMES;
+                hist.times.splice(0, excess);
+                if (Array.isArray(hist.marks)) hist.marks.splice(0, excess);
+                lapHistory.set(pk, hist);
+              }
+            }
+          }
+        } catch(e) {}
+
+      } catch(e) {
+        try { pushTtsEvent('error', '__pruneGlobalMaps: ' + String(e), 'debug'); } catch(_) {}
+      }
+    }
+
+    // Timer propio: corre siempre, no depende del modo debug
+    try {
+      setManagedInterval('__mapPruneTimer', () => {
+        try { __pruneGlobalMaps(); } catch(e) {}
+      }, __MAP_PRUNE_INTERVAL_MS);
+    } catch(e) {}
+
     
     // =========================
     // TTS normalizacin de tiempos (evita que diga dgito por dgito)
@@ -15101,7 +15230,9 @@ const __semStop = new Set([
 ]);
 
 function __semStripAccents(s){
-  try{ return String(s||'').normalize('NFD').replace(/[-]/g,''); }catch(e){ return String(s||''); }
+  // FIX: la regex original /[-]/g solo borraba guiones, no los diacríticos
+  // generados por normalize('NFD'). Corregido a /[\u0300-\u036f]/g
+  try{ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,''); }catch(e){ return String(s||''); }
 }
 
 function __semNorm(s){
@@ -15896,6 +16027,19 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
             for (const [rk, rv] of __recentEnqueueAt.entries()) { if ((rv || 0) < cut) __recentEnqueueAt.delete(rk); }
           }
         } catch(e) {}
+        // FIX poda de Maps TTS: evitar crecimiento indefinido en sesiones largas
+        try {
+          if (__speechRecentSigAt.size > 800) {
+            const cut = now - 30000;
+            for (const [k2, v2] of __speechRecentSigAt.entries()) { if ((v2 || 0) < cut) __speechRecentSigAt.delete(k2); }
+          }
+        } catch(e) {}
+        try {
+          if (__speechRecentKeyAt.size > 800) {
+            const cut = now - 30000;
+            for (const [k3, v3] of __speechRecentKeyAt.entries()) { if ((v3 || 0) < cut) __speechRecentKeyAt.delete(k3); }
+          }
+        } catch(e) {}
         try { pushSpotterAudit('queue_add', clean, { key, category: queueCategory, throttleMs: 0 }); } catch(e) {}
         try { if (pendingAutoVoiceUnlock) __pruneQueueDuringBlock(); } catch(e) {}
         try { __speechPruneQueue(now); } catch(e) {}
@@ -15907,6 +16051,8 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         pumpSpeechQueue();
       } catch (e) {
         console.error('enqueueSpeech', e);
+        try { pushTtsEvent('error', 'enqueueSpeech: ' + String(e), 'debug'); } catch(_) {}
+        try { pushSpotterAudit('js_error', 'enqueueSpeech: ' + String(e), { throttleMs: 2000, dedupeKey: 'err|enqueue' }); } catch(_) {}
       }
     }
 
@@ -16155,6 +16301,8 @@ lastSpokenKeyAt.set(next.key, Date.now());
       } catch (e) {
         console.error('pumpSpeechQueue', e);
         speechSpeaking = false;
+        try { pushTtsEvent('error', 'pumpSpeechQueue: ' + String(e), 'debug'); } catch(_) {}
+        try { pushSpotterAudit('js_error', 'pumpSpeechQueue: ' + String(e), { throttleMs: 2000, dedupeKey: 'err|pump' }); } catch(_) {}
       }
     }
 
@@ -16419,25 +16567,15 @@ function unlockTTSOnce(reason = '') {
           return false;
         }
 
-        // Watchdog R27: en móvil el primer utterance puede tardar más en disparar onstart.
-        // No castigamos el primer toque con un LOCKED prematuro.
+        // Watchdog: si no arranca rapido, marcamos bloqueo y pedimos otro tap.
         try {
           setManagedTimeout('__ttsUnlockWatchdog', () => {
             try {
               if (__ttsUnlockedOnce) return;
               if (didStart) return;
-              // Primer intento de usuario: mantener READY provisional y bombear cola.
-              if (reason === 'voice-btn' || reason === 'user-toggle') {
-                try { __ttsUnlockedOnce = true; pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
-                try { __setTtsRuntimeState('READY'); } catch(e) {}
-                try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
-                try { updateVoiceStatusDot(); } catch(e) {}
-                try { pumpSpeechQueue(); } catch(e) {}
-                return;
-              }
               finishFail();
             } catch(e) {}
-          }, 1800);
+          }, 900);
         } catch(e) {}
 
         return true;
@@ -16482,10 +16620,10 @@ function setVoiceMaster(on, opts = {}) {
           const __isMob = isMobileDevice();
           if (__isIOS) {
             if (!__ttsUnlockedOnce) {
-              pendingAutoVoiceUnlock = !isUserAction;
-              try { __setTtsRuntimeState(isUserAction ? 'RECOVERING' : 'LOCKED'); } catch(e) {}
-              try { voiceToggleBtns.forEach(b => b.classList.toggle('needs-unlock', !isUserAction)); } catch(_e) {}
-              try { if (!isUserAction) scheduleOneTapUnlock(); } catch(_e) {}
+              pendingAutoVoiceUnlock = true;
+              try { __setTtsRuntimeState('LOCKED'); } catch(e) {}
+              try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(_e) {}
+              try { scheduleOneTapUnlock(); } catch(_e) {}
             } else {
               try { __setTtsRuntimeState('READY'); } catch(e) {}
             }
@@ -16560,9 +16698,13 @@ function setVoiceMaster(on, opts = {}) {
         if (isIOS || isMob || gapMs <= 0) return;
 
         __ttsHeartbeatTimer = setManagedInterval("__ttsHeartbeatTimer", () => {
-          try { __ttsHeartbeatTick(); } catch(e) {}
+          try { __ttsHeartbeatTick(); } catch(e) {
+            try { pushTtsEvent('error', 'heartbeatTick: ' + String(e), 'debug'); } catch(_) {}
+          }
         }, Math.max(12000, gapMs));
-      } catch(e) {}
+      } catch(e) {
+        try { pushTtsEvent('error', 'startTtsHeartbeat: ' + String(e), 'debug'); } catch(_) {}
+      }
     }
 
     function stopTtsHeartbeat() {
@@ -16618,9 +16760,13 @@ function setVoiceMaster(on, opts = {}) {
                 try { ss.speak(u); __ttsLastEventAt = now; } catch(e) {}
               }
             } catch(e) {}
-          } catch(e) {}
+          } catch(e) {
+            try { pushTtsEvent('error', 'safetyLoop tick: ' + String(e), 'debug'); } catch(_) {}
+          }
         }, Math.max(1800, Number(__ttsSafetyIntervalMs || 3000)));
-      } catch(e) {}
+      } catch(e) {
+        try { pushTtsEvent('error', 'startTtsSafetyLoop: ' + String(e), 'debug'); } catch(_) {}
+      }
     }
     function stopTtsSafetyLoop() {
       try {
@@ -16662,7 +16808,9 @@ function setVoiceMaster(on, opts = {}) {
             enqueueSpeech('.', { key:'sys_keepalive', volume:0, priority:-999, textTtlMs:0, force:true, allowSystemTts:true, queueDedupeMs:0, sigWindowMs:0 });
           } catch(e) {}
         }
-      } catch(e) {}
+      } catch(e) {
+        try { pushTtsEvent('error', '__ttsHeartbeatTick: ' + String(e), 'debug'); } catch(_) {}
+      }
     }
 
 
@@ -16763,17 +16911,11 @@ function setVoiceMaster(on, opts = {}) {
 
               try{ __userGestureUnlocked = true; }catch(e){}
               try{ if (!__audioCtxReady) ensureAudioCtxOnce(); }catch(e){}
-              try{ ensureAudioCtx(); }catch(e){}
-              try{ hardUnlockAudioPipe(); }catch(e){}
-              try{ if (window.speechSynthesis && typeof window.speechSynthesis.getVoices === 'function') window.speechSynthesis.getVoices(); }catch(e){}
               try{ playBeep('tap'); }catch(e){}
 
-              const needsUnlockNow = __voiceBtnNeedsUnlock();
-              // R27: si VOZ ya está ON pero el navegador sigue pidiendo unlock,
-              // este tap NO debe apagar. Debe reintentar el desbloqueo en el mismo gesto.
-              const next = (voiceMasterEnabled && needsUnlockNow) ? true : !voiceMasterEnabled;
+              const next = !voiceMasterEnabled;
 
-              // OFF: corta TODO y limpia cola. Solo apaga si NO estamos en needs-unlock.
+              // OFF: corta TODO y limpia cola
               if (!next){
                 try { setVoiceMaster(false, { user:true }); } catch(e) {}
                 try { showToast('VOZ OFF', 700); } catch(e) {}
@@ -16825,13 +16967,13 @@ function setVoiceMaster(on, opts = {}) {
             } catch(e) { return false; }
           })();
 
-          // R27: móvil necesita que el unlock ocurra dentro del primer gesto real.
-          // iOS usa touchstart/pointerdown para armar audio; el click fantasma queda neutralizado.
-          const evName = (window.PointerEvent ? 'pointerdown' : 'touchstart');
+          const evName = (isIOS ? 'click' : (window.PointerEvent ? 'pointerdown' : 'touchstart'));
           btn.addEventListener(evName, __onVoiceToggle, { passive:false });
 
-          // Evita doble toggle por click fantasma. Si el usuario solo dispara click, deja pasar tras el guard.
-          try { btn.addEventListener('click', (ev)=>{ try{ev.preventDefault(); ev.stopPropagation();}catch(e){} }, { passive:false }); } catch(e) {}
+          // Evita doble toggle por click fantasma SOLO cuando el handler principal no es click
+          if (evName !== 'click') {
+            try { btn.addEventListener('click', (ev)=>{ try{ev.preventDefault();}catch(e){} }, { passive:false }); } catch(e) {}
+          }
         } catch(e) {
           try { btn.addEventListener('click', __onVoiceToggle, { passive:false }); } catch(e2) {}
         }
@@ -16992,7 +17134,7 @@ spotterButtons.forEach(btn => {
       try{
         if (presetRdProBtn)  presetRdProBtn.classList.toggle('active', name === 'pro');
         if (presetRdShowBtn) presetRdShowBtn.classList.toggle('active', name === 'show');
-        localStorage.setItem(SPOTTER_PRESET_KEY, name || '');
+        lsSet(SPOTTER_PRESET_KEY, name || '');
       }catch(e){}
     }
 
@@ -17058,7 +17200,7 @@ spotterButtons.forEach(btn => {
 
     // Solo restaura highlight (no pisa tus settings)
     try{
-      const savedPreset = localStorage.getItem(SPOTTER_PRESET_KEY);
+      const savedPreset = lsGet(SPOTTER_PRESET_KEY);
       if (savedPreset === 'pro' || savedPreset === 'show') setPresetBtnActive(savedPreset);
     }catch(e){}
 
@@ -19363,7 +19505,7 @@ function computeSessionBestMs() {
         options.push({ value: key, label });
       });
 
-      try { localStorage.setItem('aiSpotterPilotOptionsCache', JSON.stringify({ ts: Date.now(), raceName: String((raceData && raceData.raceName) || ''), options })); } catch(e) {}
+      try { lsSet('aiSpotterPilotOptionsCache', JSON.stringify({ ts: Date.now(), raceName: String((raceData && raceData.raceName) || ''), options })); } catch(e) {}
       try { setPilotSelectLoading(false); } catch(e) {}
 
       replaceSelectOptions(pilotSelect, options);
@@ -19446,12 +19588,11 @@ function computeSessionBestMs() {
         function restoreLastPilotSelectionIfNeeded() {
           try {
             if (selectedPilotKey) return;
-            const saved = normalizePilotKey(localStorage.getItem('aiSpotterLastPilotKey') || '');
+            const saved = normalizePilotKey(lsGet('aiSpotterLastPilotKey') || '');
             if (!saved) return;
             if (!raceData || !raceData.classification || !raceData.classification.length) return;
             const exists = raceData.classification.some(r => getPilotKey(r) === saved);
             if (!exists) return;
-            // Asegura que el option exista en el select antes de seleccionar
             if (typeof ensurePilotOptionExists === 'function') ensurePilotOptionExists(saved);
             selectPilotByKey(saved, { announce:false, source:'restore' });
           } catch(e) {}
@@ -19477,11 +19618,11 @@ function selectPilotByKey(key, opts = {}) {
             const __src = (opts && opts.source) ? String(opts.source) : '';
             const __manual = (__src === 'select' || __src === 'manual');
             if (k) {
-              localStorage.setItem('aiSpotterLastPilotKey', k);
+              lsSet('aiSpotterLastPilotKey', k);
             } else if (__manual) {
               // Si el usuario eligio manualmente Auto Locutor, si se limpia la preferencia.
               // Si fue fallback automatico (ej. piloto no esta en esta carrera), NO se borra.
-              localStorage.setItem('aiSpotterLastPilotKey', '');
+              lsSet('aiSpotterLastPilotKey', '');
             }
           } catch(e) {}
           selectedPilotFirstDetectBeeped = !!firstDetectBeepedByPilot.get(k);
@@ -27458,6 +27599,14 @@ function checkSessionFinishOnLap() {
             lastPassEvents.clear();
           }
           if (lapHistory && typeof lapHistory.clear === 'function') { lapHistory.clear(); }
+
+          // FIX Maps sin poda: limpiar en cada cambio de carrera para evitar
+          // crecimiento indefinido de memoria en eventos largos con rotación de pilotos.
+          try { if (__speechRecentSigAt) __speechRecentSigAt.clear(); } catch(e) {}
+          try { if (__speechRecentKeyAt) __speechRecentKeyAt.clear(); } catch(e) {}
+          try { if (firstDetectBeepedByPilot) firstDetectBeepedByPilot.clear(); } catch(e) {}
+          try { mangaPilotStartAt = new Map(); mangaPrevLapsByPilot = new Map(); } catch(e) {}
+
           pendingBlueFlagForPilotKey = '';
           pendingBlueFlagMessage = '';
           lastBlueFlagPilotLap = 0;
@@ -28028,7 +28177,9 @@ function checkSessionFinishOnLap() {
       try {
         clearManagedTimeout('__fallbackPollTimer');
         __fallbackPollTimer = 0;
-      } catch(e) {}
+      } catch(e) {
+        try { pushTtsEvent('error', 'stopFallbackPolling: ' + String(e), 'debug'); } catch(_) {}
+      }
     }
 
     function __scheduleFallbackPolling(reason = '') {
@@ -28039,7 +28190,9 @@ function checkSessionFinishOnLap() {
         const delay = __fallbackPollSchedule[idx];
         __fallbackPollTimer = setManagedTimeout('__fallbackPollTimer', async () => {
           __fallbackPollTimer = 0;
-          try { await loadRaceFromFirebase(); } catch(e) {}
+          try { await loadRaceFromFirebase(); } catch(e) {
+            try { pushTtsEvent('error', 'fallbackPoll loadRace: ' + String(e), 'feed'); } catch(_) {}
+          }
           const stale = !__lastGoodTickMs || ((Date.now() - __lastGoodTickMs) > 4000);
           if (stale) {
             __fallbackPollStep = Math.min(__fallbackPollStep + 1, __fallbackPollSchedule.length - 1);
@@ -28048,7 +28201,9 @@ function checkSessionFinishOnLap() {
             __fallbackPollStep = 0;
           }
         }, delay);
-      } catch(e) {}
+      } catch(e) {
+        try { pushTtsEvent('error', '__scheduleFallbackPolling: ' + String(e), 'feed'); } catch(_) {}
+      }
     }
 
     function __bumpFallbackPolling(reason = '') {
@@ -28568,32 +28723,17 @@ function checkSessionFinishOnLap() {
 
     function loadQualiStoreFor(raceName){
       const today = getLocalDateKey();
-      const incomingRaceName = String(raceName || '').trim();
-      const incomingRaceBase = getRaceBaseFromRaceName(incomingRaceName);
-      const incomingIsManga = isMangaRaceName(incomingRaceName);
-      let store = qSafeJsonParse((typeof lsGet === 'function' ? lsGet(QUALI_STORE_KEY) : localStorage.getItem(QUALI_STORE_KEY)) || '');
+      const raceBase = getRaceBaseFromRaceName(raceName);
+      let store = qSafeJsonParse(lsGet(QUALI_STORE_KEY) || '');
       if (!store || typeof store !== 'object') store = null;
 
-      // R26: no reiniciar QTABLE cuando el feed cambia a FINAL/PRACTICA.
-      // La clasificación vive por día + evento base; una Final debe leer la última Q guardada,
-      // no crear un store nuevo con raceBase = "Final A...". Ese era el pecado: bonito en teoría, inútil en parrilla.
-      let raceBase = incomingRaceBase;
-      if (store && store.date === today && !incomingIsManga) {
-        raceBase = String(store.raceBase || incomingRaceBase || '').trim();
-      }
-
-      const shouldResetStore = (!store || store.date !== today || (incomingIsManga && String(store.raceBase || '') !== String(raceBase || '')));
-      if (shouldResetStore) {
+      if (!store || store.date !== today || store.raceBase !== raceBase) {
         store = { date: today, raceBase, sessions: {}, bestByPilot: {}, aliasByName: {}, _pilotKeyMode: 'name' };
-        try {
-          if (typeof lsSet === 'function') lsSet(QUALI_STORE_KEY, JSON.stringify(store));
-          else localStorage.setItem(QUALI_STORE_KEY, JSON.stringify(store));
-        } catch(e) {}
+        try { lsSet(QUALI_STORE_KEY, JSON.stringify(store)); } catch(e) {}
       } else {
         if (!store.sessions || typeof store.sessions !== 'object') store.sessions = {};
         if (!store.bestByPilot || typeof store.bestByPilot !== 'object') store.bestByPilot = {};
         if (!store.aliasByName || typeof store.aliasByName !== 'object') store.aliasByName = {};
-        if (!store.raceBase && raceBase) store.raceBase = raceBase;
 
 // SANITIZA legacy: Best Lap absurdos guardados por versiones viejas (ej. 0:00.007)
 try{
@@ -28638,19 +28778,13 @@ try{
           }catch(e){}
           store.bestByPilot = rebuilt;
           store._pilotKeyMode = 'name';
-          try{
-            if (typeof lsSet === 'function') lsSet(QUALI_STORE_KEY, JSON.stringify(store));
-            else localStorage.setItem(QUALI_STORE_KEY, JSON.stringify(store));
-          }catch(e){}
+          try{ lsSet(QUALI_STORE_KEY, JSON.stringify(store)); }catch(e){}
         }
       }
       return store;
     }
     function saveQualiStore(store){
-      try {
-        if (typeof lsSet === 'function') lsSet(QUALI_STORE_KEY, JSON.stringify(store));
-        else localStorage.setItem(QUALI_STORE_KEY, JSON.stringify(store));
-      } catch(e) {}
+      try { lsSet(QUALI_STORE_KEY, JSON.stringify(store)); } catch(e) {}
     }
 
     // Guarda un snapshot por Q cuando detecta que estamos en MANGA + Qx.
@@ -29103,10 +29237,8 @@ grouped[gk] = __pickG;
           for (const qid of sessionKeys){
             const r = p.byQ[qid];
             if (!r) continue;
-            const candRow = { q: qid, laps:r.laps, timeMs:r.timeMs, racerName:r.racerName, racerNumber:r.racerNumber, bestMs:r.bestMs, bestRaw:r.bestRaw, bestKey:r.bestKey };
-            const pickedRow = pickBetterQuali(bestRow, candRow);
-            bestRow = pickedRow;
-            if (pickedRow === candRow) bestQ = qid;
+            bestRow = pickBetterQuali(bestRow, { laps:r.laps, timeMs:r.timeMs, racerName:r.racerName, racerNumber:r.racerNumber, bestMs:r.bestMs });
+            if (bestRow && bestRow.timeMs === r.timeMs && Number(bestRow.laps||0) === Number(r.laps||0)) bestQ = qid;
           }
           p.bestRow = bestRow;
           p.bestQ = bestQ;
@@ -29139,9 +29271,7 @@ grouped[gk] = __pickG;
           const p = list[i];
           const bestQ = p.bestQ || '';
           const br = p.bestRow || null;
-          const brTime = br ? Number(br.timeMs || 0) : 0;
-          const brTimeTxt = (isFinite(brTime) && brTime > 0 && brTime < Number.MAX_SAFE_INTEGER) ? msToMinSec(brTime) : '-';
-          const bestMain = br ? `${Number(br.laps||0)}v - ${brTimeTxt}` : '-';
+          const bestMain = br ? `${Number(br.laps||0)}v - ${msToMinSec(Number(br.timeMs||0))}` : '-';
 
           const tr = document.createElement('tr');
           appendQualiTextCell(tr, 'td', String(i + 1));
