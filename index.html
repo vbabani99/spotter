@@ -2,7 +2,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R25-FIXPACK5-FOLLOW-DEBRIEF - Debrief personal de Qualy + métricas Watcher + SELF-HEAL + FIX primera vuelta -
+vics_Smart_Spotter_v0.5.0.18R25-FIXPACK6-FOLLOW-LAP-SPEECH - FOLLOW 2 decimales truncados + FLAT + Debrief + SELF-HEAL + FIX primera vuelta -
 - NEW FOLLOW DEBRIEF: al terminar Qualy/Manga, el piloto seguido recibe un resumen personal corto y motivador.
 - NEW Q GENERAL: el debrief usa Q TABLA para reportar posición general provisional, no solo la posición de la manga.
 - NEW WATCHER KPIs: conserva analytics/spotter del feed y usa tendencia, consistencia, sigma y eventos PERSONAL_BEST cuando están disponibles.
@@ -173,7 +173,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK3-FIRST-LAP</title>
+<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK6-FOLLOW-LAP-SPEECH</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6668,7 +6668,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK3-FIRST-LAP</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK6-FOLLOW-LAP-SPEECH</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7242,6 +7242,7 @@ html, body{
 </div>
 </div>
 </div>
+<!-- FIXPACK6: FOLLOW lap speech = 2 decimales truncados; .00 => flat. -->
 <script id="appScript">
 
 
@@ -7260,7 +7261,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK5-FOLLOW-DEBRIEF";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK6-FOLLOW-LAP-SPEECH";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -18872,6 +18873,28 @@ function drawLapChartTop3Auto(){
       return `${secInt} punto ${numeroATexto0a999(decN)}`;
           }
 
+
+    // ========================================================
+    // FOLLOW - lectura ultracorta del tiempo vuelta a vuelta
+    // - Siempre 2 decimales TRUNCADOS (nunca redondea).
+    // - 9.586 -> "nueve punto cincuenta y ocho".
+    // - 9.039 -> "nueve punto cero tres".
+    // - Si las dos cifras audibles son 00 -> "nueve flat".
+    // Esta función es SOLO para el crono vuelta-a-vuelta del piloto.
+    // ========================================================
+    function tiempoVueltaFollowTexto(ms) {
+      try {
+        const v = Math.max(0, Math.floor(Number(ms) || 0));
+        if (!v) return '';
+        const secInt = Math.floor(v / 1000);
+        const cent = Math.floor((v % 1000) / 10); // 0..99, truncado
+        const secTxt = numeroATexto0a999(secInt) || String(secInt);
+        if (cent === 0) return `${secTxt} flat`;
+        if (cent < 10) return `${secTxt} punto cero ${numeroATexto0a999(cent)}`;
+        return `${secTxt} punto ${numeroATexto0a999(cent)}`;
+      } catch(e) { return ''; }
+    }
+
     function formatoGapVueltas(raw) {
       if (!raw) return '';
       const trimmed = raw.toString().trim();
@@ -26321,7 +26344,7 @@ function buildSelectedPilotVoiceContext(p) {
       if (voiceSettings.laps && pendingFirstLapTimeForSelected && !firstLapTimeSpokenForSelected && pendingFirstLapMsForSelected > 0) {
         const speakMs = pendingFirstLapMsForSelected;
         try { __flushFollowSpeechState('first-lap-reliable'); } catch (e) {}
-        const queued = !!say(tiempoATexto(speakMs), {
+        const queued = !!say(tiempoVueltaFollowTexto(speakMs), {
           key: 'lap_1_first_reliable',
           priority: 100,
           cooldownMs: 0,
@@ -26344,7 +26367,7 @@ function buildSelectedPilotVoiceContext(p) {
           pendingFirstLapMsForSelected = 0;
           pendingFirstLapCapturedAt = 0;
           lastAnnouncedLapcount = Math.max(Number(lastAnnouncedLapcount || 0), 1);
-          try { pushSpotterAudit('lap1_queued', tiempoATexto(speakMs), { key:'lap_1_first_reliable', throttleMs:0 }); } catch(e) {}
+          try { pushSpotterAudit('lap1_queued', tiempoVueltaFollowTexto(speakMs), { key:'lap_1_first_reliable', throttleMs:0 }); } catch(e) {}
           // Si el feed ya avanzó a vuelta 2+, seguimos abajo y anunciamos también la vuelta actual.
           if (lapsNow === 1) {
             try { __maybeQueueFollowLapContext(p, lapsNow, isManga); } catch (e) {}
@@ -26353,7 +26376,7 @@ function buildSelectedPilotVoiceContext(p) {
           }
         } else {
           // NO marcar como anunciada. El siguiente tick vuelve a intentarlo.
-          try { pushSpotterAudit('lap1_retry_pending', tiempoATexto(speakMs), { key:'lap_1_first_reliable', throttleMs:700, dedupeKey:'lap1_retry_pending' }); } catch(e) {}
+          try { pushSpotterAudit('lap1_retry_pending', tiempoVueltaFollowTexto(speakMs), { key:'lap_1_first_reliable', throttleMs:700, dedupeKey:'lap1_retry_pending' }); } catch(e) {}
           return { lapCrossed: false, shouldReturn: false };
         }
       }
@@ -26368,7 +26391,7 @@ function buildSelectedPilotVoiceContext(p) {
             if (lapSpeakMs < (lastSpokenLastTime - 20)) { try { playBeep('lapUp'); } catch(e) {} didLapBeep = true; }
             else if (lapSpeakMs > (lastSpokenLastTime + 20)) { try { playBeep('lapDown'); } catch(e) {} didLapBeep = true; }
           }
-          const queued = !!say(tiempoATexto(lapSpeakMs), {
+          const queued = !!say(tiempoVueltaFollowTexto(lapSpeakMs), {
             key: 'lap_' + lapsNow,
             priority: 90,
             cooldownMs: 0,
@@ -26380,7 +26403,7 @@ function buildSelectedPilotVoiceContext(p) {
           });
           if (!queued) {
             // FIX: si no entró a la cola, NO quemes la vuelta. Reintenta con el siguiente paquete.
-            try { pushSpotterAudit('lap_retry_pending', tiempoATexto(lapSpeakMs), { key:'lap_' + lapsNow, throttleMs:700, dedupeKey:'lap_retry|' + lapsNow }); } catch(e) {}
+            try { pushSpotterAudit('lap_retry_pending', tiempoVueltaFollowTexto(lapSpeakMs), { key:'lap_' + lapsNow, throttleMs:700, dedupeKey:'lap_retry|' + lapsNow }); } catch(e) {}
             return { lapCrossed: false, shouldReturn: false };
           }
           if (!didLapBeep) { try { playBeep('lapUp'); } catch (e) {} }
