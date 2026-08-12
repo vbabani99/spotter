@@ -2,7 +2,24 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R25-FIXPACK2-PROD - Correcciones de bugs identificados en auditoría de código -
+vics_Smart_Spotter_v0.5.0.18R25-FIXPACK5-FOLLOW-DEBRIEF - Debrief personal de Qualy + métricas Watcher + SELF-HEAL + FIX primera vuelta -
+- NEW FOLLOW DEBRIEF: al terminar Qualy/Manga, el piloto seguido recibe un resumen personal corto y motivador.
+- NEW Q GENERAL: el debrief usa Q TABLA para reportar posición general provisional, no solo la posición de la manga.
+- NEW WATCHER KPIs: conserva analytics/spotter del feed y usa tendencia, consistencia, sigma y eventos PERSONAL_BEST cuando están disponibles.
+- NEW DEBRIEF MEMORY: durante la manga acumula mejor posición general, cambios de tendencia y mejoras reales observadas.
+- FIX FOLLOW FINISH: el resumen general P1/P2/P3 queda solo para Auto Locutor; en FOLLOW no compite con el debrief del piloto.
+- FALLBACK: si Watcher analytics no está disponible, el debrief usa lapHistory/mean/best sin inventar métricas.
+- FIX CONEXIÓN: pagehide ya no mata todos los timers internos al mandar la app a background.
+- FIX REALTIME: se libera __snapScheduled si un apply de snapshot quedó huérfano; ya no congela el feed hasta refrescar.
+- FIX RESUME: visibility/pageshow/resume rearman watchdog/TTS y reinician la suscripción realtime.
+- FIX FIREBASE: si el SDK/runtime falla al arrancar, reintenta automáticamente con backoff; ya no queda muerto hasta F5.
+- FIX RED: eventos online/offline fuerzan estado correcto y reconexión automática al volver Wi-Fi/datos.
+- FIX BACKGROUND: se implementa startBgKeepAlive(), que estaba siendo llamado pero no existía.
+- FIX LAP1: la primera vuelta ya no se marca como anunciada si TTS/intro-guard la rechaza.
+- FIX LAP1: se memoriza el tiempo de la vuelta 1 y se reintenta aunque el siguiente feed ya venga en vuelta 2+.
+- FIX LAP1: bootstrap silencioso puede capturar la vuelta 1 sin hablar resultados viejos.
+- FIX LAPS: vueltas idénticas consecutivas ya no se pierden por dedupe/TTL de texto.
+- FIX LAP1: mensajes lap_* atraviesan el intro-guard de salida; la vuelta tiene prioridad sobre la intro.
 
 FIXPACK1 (2026-04-19) — Bugs corregidos + Logging + Poda de memoria:
 
@@ -156,7 +173,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK2-PROD</title>
+<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK3-FIRST-LAP</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6651,7 +6668,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK2-PROD</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK3-FIRST-LAP</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7243,7 +7260,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK1";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK5-FOLLOW-DEBRIEF";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7344,7 +7361,9 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK1";
     }
 
     try { window.addEventListener('beforeunload', cleanupManagedTimers); } catch(e) {}
-    try { window.addEventListener('pagehide', cleanupManagedTimers, { passive:true }); } catch(e) {}
+    // FIXPACK4: NO limpiar todos los timers en pagehide. En iOS/Android pagehide puede
+    // formar parte del ciclo background/BFCache; limpiar aqui dejaba watchdog/TTS/feed
+    // con IDs "vivos" pero timers muertos hasta refrescar la pagina.
 
     function __resolveRuntimeProfileKey(key){
       const k = String(key || runtimeProfileKey || 'AUTO').toUpperCase();
@@ -7639,6 +7658,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK1";
               setLiveStatus(false);
               if (raceInfo) raceInfo.textContent = 'Sin actualizaciones. Revisando conexion...';
               __bumpFallbackPolling('watchdog');
+              try { __recoverFeedConnection('watchdog', { forceRealtime:false }); } catch(e) {}
             }
           } catch(e) {
             try { pushTtsEvent('error', 'watchdog tick: ' + String(e), 'debug'); } catch(_) {}
@@ -9998,6 +10018,8 @@ function msgv2DecimasTxt(ms) {
     function __maybeAnnounceSessionSummary(r) {
       try {
         if (!r || !Array.isArray(r.classification) || !r.classification.length) return;
+        // En FOLLOW manda el debrief personal. El cierre general P1/P2/P3 es solo Auto Locutor.
+        if (typeof selectedPilotKey !== 'undefined' && selectedPilotKey) return;
         const life = String((r.lifecycleEventName || r.sessionEventName || '')).toUpperCase();
         const dirState = String((__sessionDirector && __sessionDirector.state) || '').toUpperCase();
         const phase = String(__autoPhase || '').toUpperCase();
@@ -10818,13 +10840,16 @@ function msgv2DecimasTxt(ms) {
         if (!initializeApp || !initializeFirestore || !doc || !getDoc) {
           throw new Error("Firebase SDK incompleto");
         }
-        appFB = initializeApp(firebaseConfig);
-        db = initializeFirestore(appFB, {
-          experimentalForceLongPolling: true,
-          useFetchStreams: false
-        });
-        __firebaseOk = true;
-        return true;
+        // Retry-safe: si una inicializacion previa alcanzo a crear appFB/db, reutilizalos.
+        if (!appFB) appFB = initializeApp(firebaseConfig);
+        if (!db) {
+          db = initializeFirestore(appFB, {
+            experimentalForceLongPolling: true,
+            useFetchStreams: false
+          });
+        }
+        __firebaseOk = !!db;
+        return __firebaseOk;
       } catch (e) {
         __firebaseOk = false;
         console.error("Firebase init fall", e);
@@ -15701,6 +15726,8 @@ function __speechIntroGuardBlocks(cat, key, now){
     const c = String(cat || '').trim().toLowerCase();
     const k = String(key || '').trim().toLowerCase();
     if (c === 'lifecycle' || k.indexOf('watcher_life_') === 0) return false;
+    // FIX LAP1: una vuelta real nunca debe perderse por la intro de salida.
+    if (c === 'lap' || k.indexOf('lap_') === 0 || k.indexOf('lastlap') >= 0) return false;
     return true;
   }catch(e){ return false; }
 }
@@ -16059,10 +16086,12 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
 
         pumpSpeechQueue();
+        return true;
       } catch (e) {
         console.error('enqueueSpeech', e);
         try { pushTtsEvent('error', 'enqueueSpeech: ' + String(e), 'debug'); } catch(_) {}
         try { pushSpotterAudit('js_error', 'enqueueSpeech: ' + String(e), { throttleMs: 2000, dedupeKey: 'err|enqueue' }); } catch(_) {}
+        return false;
       }
     }
 
@@ -16317,7 +16346,7 @@ lastSpokenKeyAt.set(next.key, Date.now());
     }
 
     function speakText(text, opts) {
-      enqueueSpeech(text, opts || {});
+      return !!enqueueSpeech(text, opts || {});
     }
 
     // LAPS prefix latch: evita repetir "X vueltas" dos veces en la misma vuelta
@@ -16331,8 +16360,7 @@ function speakWithLaps(_laps, message, opts) {
       const allowPrefix = !!(voiceSettings && voiceSettings.saylaps) || (getSayLapsOverride() && inFollow && !__isFollowQuietMode());
 
       if (!allowPrefix) {
-        if (msg) speakText(msg, opts || {});
-        return;
+        return msg ? !!speakText(msg, opts || {}) : false;
       }
 
       // Regla: no decir "Vuelta X" ni el nmero de vuelta.
@@ -16351,7 +16379,7 @@ function speakWithLaps(_laps, message, opts) {
       }
 
       const finalText = prefix ? (msg ? (prefix + ', ' + msg) : (prefix + '.')) : msg;
-      if (finalText) speakText(finalText, opts || {});
+      return finalText ? !!speakText(finalText, opts || {}) : false;
     }
 
     function formatAnnouncer(msg) {
@@ -17502,6 +17530,30 @@ function toFixedFloor(value, decimals = 0) {
       });
     }
 
+    // FIXPACK4: helper que varias rutas de resume ya llamaban, pero no existia.
+    function startBgKeepAlive() {
+      try {
+        const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : __isIOSLike();
+        if (!backgroundModeEnabled || !voiceMasterEnabled || isIOS) return false;
+        startSilentAudioKeepAlive();
+        return true;
+      } catch(e) { return false; }
+    }
+
+    function __rearmRuntimeLoopsAfterResume(reason = '') {
+      try { startRuntimeWatchdog(); } catch(e) {}
+      try { if (isDebugModeActive()) startRuntimeDiagTicker(); } catch(e) {}
+      try {
+        if (voiceMasterEnabled) {
+          stopTtsSafetyLoop();
+          startTtsSafetyLoop();
+          stopTtsHeartbeat();
+          startTtsHeartbeat();
+        }
+      } catch(e) {}
+      try { pushSpotterAudit('runtime_rearm', String(reason || 'resume'), { throttleMs: 500, dedupeKey:'runtime_rearm|' + String(reason || 'resume') }); } catch(e) {}
+    }
+
     // Reenganche al volver al tab (Chrome puede soltar wake lock)
     let __visHiddenAt = 0;
     document.addEventListener('visibilitychange', async () => {
@@ -17529,7 +17581,15 @@ function toFixedFloor(value, decimals = 0) {
         if (document.visibilityState === 'visible') {
           const awayMs = __visHiddenAt ? (Date.now() - __visHiddenAt) : 0;
 
-          try { loadRaceFromFirebase(); } catch(e) {}
+          try { __rearmRuntimeLoopsAfterResume('visibility-visible'); } catch(e) {}
+          try {
+            if (typeof __recoverFeedConnection === 'function') {
+              __recoverFeedConnection('visibility-visible', { forceRealtime:true });
+            } else {
+              loadRaceFromFirebase();
+              if (typeof startRaceRealtime === 'function') startRaceRealtime();
+            }
+          } catch(e) {}
 
           try {
             if (wakeLockWanted) {
@@ -17575,8 +17635,8 @@ function toFixedFloor(value, decimals = 0) {
         } catch(e) {}
         try { if (wakeLockWanted) requestWakeLock(true).catch(()=>{}); } catch(e) {}
         try { startBgKeepAlive(); } catch(e) {}
-        try { loadRaceFromFirebase(); } catch(e) {}
-        try { if (typeof startRaceRealtime === 'function') startRaceRealtime(); } catch(e) {}
+        try { __rearmRuntimeLoopsAfterResume('pageshow'); } catch(e) {}
+        try { if (typeof __recoverFeedConnection === 'function') __recoverFeedConnection('pageshow', { forceRealtime:true }); } catch(e) {}
       }, { passive:true });
 
       window.addEventListener('pagehide', () => {
@@ -17592,8 +17652,19 @@ function toFixedFloor(value, decimals = 0) {
       // (Opcional) Eventos tipo app-wrapper (Cordova/Capacitor). En web normal no dispara, pero no estorba.
       window.addEventListener('resume', () => {
         try { startBgKeepAlive(); } catch(e) {}
-        try { loadRaceFromFirebase(); } catch(e) {}
-        try { if (typeof startRaceRealtime === 'function') startRaceRealtime(); } catch(e) {}
+        try { __rearmRuntimeLoopsAfterResume('app-resume'); } catch(e) {}
+        try { if (typeof __recoverFeedConnection === 'function') __recoverFeedConnection('app-resume', { forceRealtime:true }); } catch(e) {}
+      }, { passive:true });
+
+      // Red movil/Wi-Fi: no depender solamente de que Firestore se recupere solo.
+      window.addEventListener('online', () => {
+        try { __rearmRuntimeLoopsAfterResume('network-online'); } catch(e) {}
+        try { if (typeof __recoverFeedConnection === 'function') __recoverFeedConnection('network-online', { forceRealtime:true }); } catch(e) {}
+      }, { passive:true });
+      window.addEventListener('offline', () => {
+        try { setLiveStatus(false); } catch(e) {}
+        try { if (raceInfo) raceInfo.textContent = 'Sin red. Reconexion automatica activa...'; } catch(e) {}
+        try { stopFallbackPolling(); } catch(e) {}
       }, { passive:true });
 
     } catch(e) {}
@@ -18846,6 +18917,13 @@ function drawLapChartTop3Auto(){
         sessionRemainingMs: (typeof rawRace.sessionRemainingMs === 'number') ? rawRace.sessionRemainingMs : 0,
         sessionRemainingFmt: (rawRace.sessionRemainingFmt != null) ? String(rawRace.sessionRemainingFmt) : '',
         sessionProgressPct: (rawRace.sessionProgressPct != null) ? Number(rawRace.sessionProgressPct) : 0,
+        // Watcher intelligence: conservar el análisis ya calculado en origen.
+        watcherVersion: (rawRace.watcherVersion != null) ? String(rawRace.watcherVersion) : '',
+        rawSha1: (rawRace.rawSha1 != null) ? String(rawRace.rawSha1) : '',
+        analyticsSchemaVersion: (rawRace.analyticsSchemaVersion != null) ? Number(rawRace.analyticsSchemaVersion) : 0,
+        spotterSchemaVersion: (rawRace.spotterSchemaVersion != null) ? Number(rawRace.spotterSchemaVersion) : 0,
+        analytics: (rawRace.analytics && typeof rawRace.analytics === 'object') ? rawRace.analytics : null,
+        spotter: (rawRace.spotter && typeof rawRace.spotter === 'object') ? rawRace.spotter : null,
         extraTopLevelPreview: rawRace.extraTopLevelPreview || {},
         bestLapMs: (typeof rawRace.bestLapMs === 'number') ? rawRace.bestLapMs : 0,
         bestLapMsRaw: (typeof rawRace.bestLapMsRaw === 'number') ? rawRace.bestLapMsRaw : 0,
@@ -18991,6 +19069,8 @@ let meanMs = parseTimeToMs(meanTimeRaw);
     let lastSpokenLastTime = null;
     let lastAnnouncedLapcount = 0;
     let pendingFirstLapTimeForSelected = false;
+    let pendingFirstLapMsForSelected = 0;
+    let pendingFirstLapCapturedAt = 0;
     let firstLapTimeSpokenForSelected = false;
     let lastKnownPos = null;
     let lastTotalTimeAnnouncedSeconds = 0;
@@ -19549,6 +19629,8 @@ function computeSessionBestMs() {
       lastSpokenLastTime = null;
           lastAnnouncedLapcount = 0;
           pendingFirstLapTimeForSelected = false;
+          pendingFirstLapMsForSelected = 0;
+          pendingFirstLapCapturedAt = 0;
           firstLapTimeSpokenForSelected = false;
           lastKnownPos = null;
           lastTotalTimeAnnouncedSeconds = 0;
@@ -25859,7 +25941,32 @@ function handleSelectedPilotFirstDetect() {
       try { if (voiceMasterEnabled) playBeep('soft'); } catch(e) {}
     }
 
-function syncSelectedPilotSessionModeFromRace() {
+function __captureSelectedPilotFirstLapCandidate() {
+      try {
+        if (!selectedPilotKey || firstLapTimeSpokenForSelected) return false;
+        if (!raceData || !Array.isArray(raceData.classification)) return false;
+        const p = raceData.classification.find(r => getPilotKey(r) === selectedPilotKey);
+        if (!p) return false;
+        const lapsNow = Number(p.lapcount ?? p.laps ?? 0) || 0;
+        if (lapsNow !== 1) return false;
+        const lapMs = normalizeLapMs(Number(p.lastTime || p.lastLapMs || p.lapMs || 0) || parseTimeToMs(p.lastLapTime || p.lastLap || 0));
+        const totalMs = Number(p.time || p.totalMs || 0) || parseTimeToMs(p.timeStr || p.totalTime || 0);
+        const candidateMs = lapMs || normalizeLapMs(totalMs);
+        if (!candidateMs) {
+          pendingFirstLapTimeForSelected = true;
+          return false;
+        }
+        if (!pendingFirstLapMsForSelected || pendingFirstLapMsForSelected !== candidateMs) {
+          pendingFirstLapMsForSelected = candidateMs;
+          pendingFirstLapCapturedAt = Date.now();
+          try { pushSpotterAudit('lap1_capture', tiempoATexto(candidateMs), { key:'lap_1_capture', throttleMs:0 }); } catch(e) {}
+        }
+        pendingFirstLapTimeForSelected = true;
+        return true;
+      } catch(e) { return false; }
+    }
+
+    function syncSelectedPilotSessionModeFromRace() {
       if (!(raceData && raceData.raceName)) return;
       currentSessionInfo = resolveSessionInfo(raceData);
       try { applyLapChartPreset(); } catch(e) {}
@@ -26187,54 +26294,111 @@ function buildSelectedPilotVoiceContext(p) {
 
     function handleSelectedPilotLapFlow(ctx, posState) {
       const { p, lapsNow, lapMsNow, totalMsNow, isManga, say } = ctx;
-      const lapCrossed = (voiceSettings.laps && lapsNow > 0 && lapsNow !== lastAnnouncedLapcount);
-      const firstLapFallbackMs = (lapsNow === 1 && !lapMsNow && totalMsNow > 0) ? totalMsNow : 0;
-      const shouldForcePendingFirstLapTime = !!(voiceSettings.laps && pendingFirstLapTimeForSelected && !firstLapTimeSpokenForSelected && lapsNow === 1 && (lapMsNow || firstLapFallbackMs));
 
-      if (shouldForcePendingFirstLapTime) {
-        const speakMs = lapMsNow || firstLapFallbackMs;
-        try { playBeep('lapUp'); } catch (e) {}
-        try { __flushFollowSpeechState('first-lap-delayed'); } catch (e) {}
-        say(tiempoATexto(speakMs), { key: 'lap_1_first_delayed', priority: 100, cooldownMs: 0, dedupe: false, semanticCategory: 'ess', interrupt: true });
-        flashLastLap();
-        lastSpokenLastTime = speakMs;
-        firstLapTimeSpokenForSelected = true;
-        pendingFirstLapTimeForSelected = false;
-        return { lapCrossed: false, shouldReturn: false };
+      // Voz apagada por decisión del usuario: toma baseline y NO acumula vueltas viejas para cuando se reactive.
+      if (!voiceMasterEnabled) {
+        lastAnnouncedLapcount = Math.max(Number(lastAnnouncedLapcount || 0), Number(lapsNow || 0));
+        if (lapsNow >= 1) {
+          firstLapTimeSpokenForSelected = true;
+          pendingFirstLapTimeForSelected = false;
+          pendingFirstLapMsForSelected = 0;
+          pendingFirstLapCapturedAt = 0;
+        }
+        return { lapCrossed: false, shouldReturn: true };
       }
 
-      if (lapCrossed) {
-        const isFirstFollowLap = (lapsNow === 1 && Number(lastAnnouncedLapcount || 0) === 0);
-        let didLapBeep = false;
-        const lapSpeakMs = (lapMsNow || (isFirstFollowLap ? firstLapFallbackMs : 0));
-        if (lapSpeakMs) {
-          if (lastSpokenLastTime && lastSpokenLastTime > 0) {
-            if (lapSpeakMs < (lastSpokenLastTime - 20)) { playBeep('lapUp'); didLapBeep = true; }
-            else if (lapSpeakMs > (lastSpokenLastTime + 20)) { playBeep('lapDown'); didLapBeep = true; }
-          }
-          if (!didLapBeep) { try { playBeep('lapUp'); } catch (e) {} }
-          const lapSpeakOpts = isFirstFollowLap
-            ? { key: 'lap_' + lapsNow + '_first', priority: 100, cooldownMs: 0, dedupe: false, semanticCategory: 'ess', interrupt: true }
-            : { key: 'lap_' + lapsNow, priority: 90, dedupe: true };
-          if (isFirstFollowLap) { try { __flushFollowSpeechState('first-lap'); } catch (e) {} }
-          say(tiempoATexto(lapSpeakMs), lapSpeakOpts);
+      // FIX LAP1: captura el tiempo real de la primera vuelta antes de intentar TTS.
+      // Si la intro, el bootstrap o el motor TTS bloquean el mensaje, conservamos el tiempo y reintentamos.
+      if (voiceSettings.laps && !firstLapTimeSpokenForSelected && lapsNow === 1) {
+        const firstLapCandidateMs = lapMsNow || (totalMsNow > 0 ? totalMsNow : 0);
+        if (firstLapCandidateMs > 0) {
+          pendingFirstLapMsForSelected = firstLapCandidateMs;
+          pendingFirstLapCapturedAt = pendingFirstLapCapturedAt || Date.now();
+        }
+        pendingFirstLapTimeForSelected = true;
+      }
+
+      if (voiceSettings.laps && pendingFirstLapTimeForSelected && !firstLapTimeSpokenForSelected && pendingFirstLapMsForSelected > 0) {
+        const speakMs = pendingFirstLapMsForSelected;
+        try { __flushFollowSpeechState('first-lap-reliable'); } catch (e) {}
+        const queued = !!say(tiempoATexto(speakMs), {
+          key: 'lap_1_first_reliable',
+          priority: 100,
+          cooldownMs: 0,
+          dedupe: false,
+          textTtlMs: 0,
+          queueDedupeMs: 0,
+          semanticDedupe: false,
+          semanticCategory: 'ess',
+          queueCategory: 'lap',
+          interrupt: true,
+          force: true
+        });
+
+        if (queued) {
+          try { playBeep('lapUp'); } catch (e) {}
           flashLastLap();
-          lastSpokenLastTime = lapSpeakMs;
-          if (isFirstFollowLap) {
-            firstLapTimeSpokenForSelected = true;
-            pendingFirstLapTimeForSelected = false;
+          lastSpokenLastTime = speakMs;
+          firstLapTimeSpokenForSelected = true;
+          pendingFirstLapTimeForSelected = false;
+          pendingFirstLapMsForSelected = 0;
+          pendingFirstLapCapturedAt = 0;
+          lastAnnouncedLapcount = Math.max(Number(lastAnnouncedLapcount || 0), 1);
+          try { pushSpotterAudit('lap1_queued', tiempoATexto(speakMs), { key:'lap_1_first_reliable', throttleMs:0 }); } catch(e) {}
+          // Si el feed ya avanzó a vuelta 2+, seguimos abajo y anunciamos también la vuelta actual.
+          if (lapsNow === 1) {
+            try { __maybeQueueFollowLapContext(p, lapsNow, isManga); } catch (e) {}
+            if (isManga && voiceSettings.pos) startMangaPosSettle(lapsNow, p && p.pos != null ? p.pos : null);
+            return { lapCrossed: true, shouldReturn: false };
           }
         } else {
-          try { playBeep('lapUp'); } catch (e) {}
-          if (isFirstFollowLap) {
+          // NO marcar como anunciada. El siguiente tick vuelve a intentarlo.
+          try { pushSpotterAudit('lap1_retry_pending', tiempoATexto(speakMs), { key:'lap_1_first_reliable', throttleMs:700, dedupeKey:'lap1_retry_pending' }); } catch(e) {}
+          return { lapCrossed: false, shouldReturn: false };
+        }
+      }
+
+      const lapCrossed = !!(voiceSettings.laps && lapsNow > 0 && lapsNow > Number(lastAnnouncedLapcount || 0));
+
+      if (lapCrossed) {
+        const lapSpeakMs = lapMsNow || ((lapsNow === 1 && totalMsNow > 0) ? totalMsNow : 0);
+        if (lapSpeakMs > 0) {
+          let didLapBeep = false;
+          if (lastSpokenLastTime && lastSpokenLastTime > 0) {
+            if (lapSpeakMs < (lastSpokenLastTime - 20)) { try { playBeep('lapUp'); } catch(e) {} didLapBeep = true; }
+            else if (lapSpeakMs > (lastSpokenLastTime + 20)) { try { playBeep('lapDown'); } catch(e) {} didLapBeep = true; }
+          }
+          const queued = !!say(tiempoATexto(lapSpeakMs), {
+            key: 'lap_' + lapsNow,
+            priority: 90,
+            cooldownMs: 0,
+            dedupe: false,
+            textTtlMs: 0,
+            queueDedupeMs: 0,
+            semanticDedupe: false,
+            queueCategory: 'lap'
+          });
+          if (!queued) {
+            // FIX: si no entró a la cola, NO quemes la vuelta. Reintenta con el siguiente paquete.
+            try { pushSpotterAudit('lap_retry_pending', tiempoATexto(lapSpeakMs), { key:'lap_' + lapsNow, throttleMs:700, dedupeKey:'lap_retry|' + lapsNow }); } catch(e) {}
+            return { lapCrossed: false, shouldReturn: false };
+          }
+          if (!didLapBeep) { try { playBeep('lapUp'); } catch (e) {} }
+          flashLastLap();
+          lastSpokenLastTime = lapSpeakMs;
+          lastAnnouncedLapcount = lapsNow;
+        } else {
+          // No hay tiempo todavía: no marcar la vuelta como anunciada.
+          if (lapsNow === 1) {
             pendingFirstLapTimeForSelected = true;
             firstLapTimeSpokenForSelected = false;
           }
+          return { lapCrossed: false, shouldReturn: false };
         }
-        lastAnnouncedLapcount = lapsNow;
+
         try { __maybeQueueFollowLapContext(p, lapsNow, isManga); } catch (e) {}
         if (isManga && voiceSettings.pos) startMangaPosSettle(lapsNow, p && p.pos != null ? p.pos : null);
-        return { lapCrossed, shouldReturn: false };
+        return { lapCrossed: true, shouldReturn: false };
       }
 
       if (isManga && voiceSettings.pos && pendingPosChange && pendingPosChange.pos) {
@@ -26250,7 +26414,7 @@ function buildSelectedPilotVoiceContext(p) {
       if (!isManga && !__isFollowQuietMode() && posState.posChangedTick && voiceSettings.pos) {
         handlePositionChangeNoLap(posState.posFrom, posState.posTo, posState.posDelta);
       }
-      return { lapCrossed, shouldReturn: true };
+      return { lapCrossed: false, shouldReturn: true };
     }
 
     function markSelectedPilotLapChartBattle(ctx, lapCrossed) {
@@ -27216,26 +27380,242 @@ function getBestMsForRow(row) {
   return bestMs || 0;
 }
 
+// =========================
+// FOLLOW QUALY DEBRIEF v1
+// - Se arma durante la manga; habla UNA vez al terminar.
+// - Prioriza datos objetivos: Q general, vueltas, best, tendencia y consistencia.
+// =========================
+let __followDebriefState = {
+  sessionSig:'', pilotKey:'', lastLap:0,
+  qRankStart:0, qRankBest:0, qRankLast:0,
+  bestSeenMs:0, pbCount:0, pbGainMaxMs:0,
+  trendLast:'', improvingLaps:0, fadingLaps:0, stableLaps:0,
+  consistencyPct:null, sigmaMs:0, meanMs:0, bestToMeanPct:null,
+  seenEventSigs:new Set()
+};
+
+function __newFollowDebriefState(sessionSig, pilotKey){
+  __followDebriefState = {
+    sessionSig:String(sessionSig||''), pilotKey:String(pilotKey||''), lastLap:0,
+    qRankStart:0, qRankBest:0, qRankLast:0,
+    bestSeenMs:0, pbCount:0, pbGainMaxMs:0,
+    trendLast:'', improvingLaps:0, fadingLaps:0, stableLaps:0,
+    consistencyPct:null, sigmaMs:0, meanMs:0, bestToMeanPct:null,
+    seenEventSigs:new Set()
+  };
+}
+
+function __followQualiGeneralRank(row){
+  try {
+    if (!row || !raceData) return 0;
+    const store = loadQualiStoreFor(String(raceData.raceName || ''));
+    const list = computeQualiList(store);
+    if (!Array.isArray(list) || !list.length) return 0;
+    const nm = normalizeNameKey(row.racerName || row.driverName || '');
+    const num = String(row.racerNumber || row.driverNumber || '').trim();
+    let ix = -1;
+    if (nm) ix = list.findIndex(x => normalizeNameKey((x && x.racerName) || '') === nm);
+    if (ix < 0 && num) ix = list.findIndex(x => String((x && x.racerNumber) || '').trim() === num);
+    return ix >= 0 ? ix + 1 : 0;
+  } catch(e) { return 0; }
+}
+
+function __followWatcherDriver(row){
+  try {
+    const an = raceData && raceData.analytics;
+    const drivers = an && Array.isArray(an.drivers) ? an.drivers : [];
+    if (!drivers.length || !row) return null;
+    const pk = String(getPilotKey(row) || selectedPilotKey || '').trim().toLowerCase();
+    const num = String(row.racerNumber || row.driverNumber || '').trim().toLowerCase();
+    const nm = normalizeNameKey(row.racerName || row.driverName || '');
+    return drivers.find(d => {
+      if (!d) return false;
+      const dk = String(d.key || '').trim().toLowerCase();
+      const dn = String(d.driverNumber || '').trim().toLowerCase();
+      const dnm = normalizeNameKey(d.driverName || '');
+      return (!!pk && dk === pk) || (!!num && (dk === num || dn === num)) || (!!nm && dnm === nm);
+    }) || null;
+  } catch(e) { return null; }
+}
+
+function __followSelectedSpotterEvents(row){
+  try {
+    const sp = raceData && raceData.spotter;
+    const evs = sp && Array.isArray(sp.eventCandidates) ? sp.eventCandidates : [];
+    if (!evs.length || !row) return [];
+    const pk = String(getPilotKey(row) || selectedPilotKey || '').trim().toLowerCase();
+    const num = String(row.racerNumber || row.driverNumber || '').trim().toLowerCase();
+    return evs.filter(ev => {
+      const dk = String(ev && ev.driverKey || '').trim().toLowerCase();
+      return (!!pk && dk === pk) || (!!num && dk === num);
+    });
+  } catch(e) { return []; }
+}
+
+function __updateFollowDebriefState(row){
+  try {
+    if (!row || !selectedPilotKey || !raceData) return;
+    const info = currentSessionInfo || {};
+    const typ = String(info.type || '').toUpperCase();
+    if (!(typ === 'MANGA' || typ === 'QUALI')) return;
+    const sig = getSessionSignature(raceData);
+    const pk = String(getPilotKey(row) || selectedPilotKey || '');
+    if (__followDebriefState.sessionSig !== String(sig||'') || __followDebriefState.pilotKey !== pk) {
+      __newFollowDebriefState(sig, pk);
+    }
+    const st = __followDebriefState;
+    const qRank = __followQualiGeneralRank(row);
+    if (qRank > 0) {
+      if (!st.qRankStart) st.qRankStart = qRank;
+      st.qRankLast = qRank;
+      if (!st.qRankBest || qRank < st.qRankBest) st.qRankBest = qRank;
+    }
+
+    const lap = Number(row.lapcount ?? row.laps ?? 0) || 0;
+    const drv = __followWatcherDriver(row);
+    const best = Number((drv && drv.bestMs) || getBestMsForRow(row) || 0) || 0;
+    const mean = Number((drv && drv.meanMs) || row.mean || 0) || 0;
+    const sigma = Number((drv && drv.sigmaMs) || row.sigmaMs || 0) || 0;
+    let cons = Number((drv && drv.consistencyPct) ?? row.consistency);
+    if (!isFinite(cons) || cons <= 0) cons = null;
+    let btm = Number(drv && drv.bestToMeanPct);
+    if (!isFinite(btm) && best > 0 && mean > 0 && mean >= best) btm = ((mean-best)/mean)*100;
+    if (isFinite(btm)) st.bestToMeanPct = btm;
+    if (mean > 0) st.meanMs = mean;
+    if (sigma > 0) st.sigmaMs = sigma;
+    if (cons != null) st.consistencyPct = cons;
+    if (best > 0 && (!st.bestSeenMs || best < st.bestSeenMs)) st.bestSeenMs = best;
+
+    // Eventos del Watcher: PERSONAL_BEST se cuenta una sola vez por firma.
+    for (const ev of __followSelectedSpotterEvents(row)) {
+      const typEv = String(ev && ev.type || '').toUpperCase();
+      const sigEv = [typEv, ev && ev.driverKey, ev && ev.valueMs, ev && ev.improvementMs].join('|');
+      if (st.seenEventSigs.has(sigEv)) continue;
+      st.seenEventSigs.add(sigEv);
+      if (typEv === 'PERSONAL_BEST') {
+        st.pbCount += 1;
+        const g = Number(ev && ev.improvementMs) || 0;
+        if (g > st.pbGainMaxMs) st.pbGainMaxMs = g;
+      }
+    }
+
+    // La tendencia se muestrea una vez por nueva vuelta para no inflar ticks.
+    if (lap > 0 && lap !== st.lastLap) {
+      st.lastLap = lap;
+      const tr = String((drv && drv.trend && drv.trend.trend) || '').toUpperCase();
+      if (tr) {
+        st.trendLast = tr;
+        if (tr === 'IMPROVING') st.improvingLaps += 1;
+        else if (tr === 'FADING') st.fadingLaps += 1;
+        else if (tr === 'STABLE') st.stableLaps += 1;
+      }
+    }
+  } catch(e) {}
+}
+
+function __followDebriefLocalStats(row){
+  try {
+    const k = getPilotKey(row);
+    const hist = k ? lapHistory.get(k) : null;
+    const times = (hist && Array.isArray(hist.times)) ? hist.times.filter(isLapPlausible) : [];
+    const st = times.length ? statsFromTimes(times) : null;
+    return st || null;
+  } catch(e) { return null; }
+}
+
+function __followFormatShortLap(ms){
+  try { return tiempoATexto(Number(ms)||0); } catch(e) { return ''; }
+}
+
+function buildFollowQualiDebrief(row){
+  try {
+    __updateFollowDebriefState(row);
+    const st = __followDebriefState;
+    const mode = (typeof __getFollowVoiceMode === 'function') ? __getFollowVoiceMode() : 'SUPER_BASIC';
+    const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
+    const qRank = st.qRankLast || __followQualiGeneralRank(row) || 0;
+    const best = st.bestSeenMs || getBestMsForRow(row) || 0;
+    const local = __followDebriefLocalStats(row);
+    const mean = st.meanMs || Number(row && row.mean || 0) || Number(local && local.mean || 0) || 0;
+    const sigma = st.sigmaMs || Number(local && local.sigma || 0) || 0;
+    let cons = st.consistencyPct;
+    let btm = st.bestToMeanPct;
+    if ((!isFinite(btm) || btm == null) && best > 0 && mean > 0 && mean >= best) btm = ((mean-best)/mean)*100;
+    const sigmaPct = (sigma > 0 && mean > 0) ? (sigma/mean*100) : null;
+
+    const parts = ['Clasificación terminada.'];
+    if (qRank > 0) parts.push('P' + qRank + ' general provisional.');
+    else if (row && Number(row.pos)>0) parts.push('P' + Math.floor(Number(row.pos)) + '.');
+    if (laps > 0 && mode !== 'SUPER_BASIC') parts.push(laps + ' vueltas.');
+    if (best > 0) parts.push('Mejor ' + __followFormatShortLap(best) + '.');
+
+    // SÚPER BÁSICO: dato duro + una palmada, nada más.
+    if (mode === 'SUPER_BASIC') {
+      if (qRank > 0 && qRank <= 3) parts.push('Muy buena manga.');
+      else parts.push('Buen trabajo.');
+      return parts.join(' ');
+    }
+
+    // Una sola observación positiva y una sola clave de mejora.
+    let positive = '';
+    let coach = '';
+    if (st.pbCount > 0) {
+      positive = (st.pbGainMaxMs >= 50) ? ('Mejoraste ' + (st.pbGainMaxMs/1000).toFixed(2).replace('.', ' punto ') + ' segundos.') : 'Encontraste una mejor vuelta.';
+    } else if (st.trendLast === 'IMPROVING' || st.improvingLaps > st.fadingLaps) {
+      positive = 'Buen cierre, venías mejorando.';
+    } else if (qRank > 0 && qRank <= 3) {
+      positive = 'Muy buena manga.';
+    } else if ((cons != null && cons >= 96) || (sigmaPct != null && sigmaPct <= 3.0)) {
+      positive = 'Ritmo muy parejo.';
+    }
+
+    if (st.trendLast === 'FADING' && st.fadingLaps > 0) {
+      coach = 'Clave: sostener el ritmo.';
+    } else if ((isFinite(btm) && btm >= 4.0) || (sigmaPct != null && sigmaPct >= 6.0)) {
+      coach = 'La velocidad está; falta repetirla.';
+    } else if ((cons != null && cons >= 96) || (sigmaPct != null && sigmaPct <= 3.0)) {
+      coach = 'Sigue así: consistencia.';
+    } else if (st.trendLast === 'IMPROVING') {
+      coach = 'Sigue construyendo ese ritmo.';
+    }
+
+    if (positive) parts.push(positive);
+    if (coach && coach !== positive) parts.push(coach);
+
+    // NORMAL puede dar UN KPI extra si Watcher lo considera confiable.
+    if (mode === 'NORMAL') {
+      const drv = __followWatcherDriver(row);
+      const reliable = !!(drv && drv.consistencyReliable);
+      if (reliable && cons != null && cons > 0) parts.splice(Math.min(parts.length,4), 0, 'Consistencia ' + Math.round(cons) + ' por ciento.');
+      else if (mean > 0 && best > 0 && mean >= best) parts.splice(Math.min(parts.length,4), 0, 'Promedio ' + __followFormatShortLap(mean) + '.');
+    }
+
+    return parts.join(' ');
+  } catch(e) {
+    return buildSessionFinishMessage.__fallback ? buildSessionFinishMessage.__fallback(row) : 'Clasificación terminada.';
+  }
+}
+
 function buildSessionFinishMessage(row) {
   const info = currentSessionInfo || {};
   const type = String(info.type || '').toUpperCase();
-  const isManga = (type === 'MANGA');
-  const isFinal = (type === 'FINAL');
+  const isQuali = (type === 'MANGA' || type === 'QUALI');
+  const isFinal = (type === 'FINAL' || type.startsWith('FINAL'));
+
+  // FOLLOW en Qualy: debrief personal, corto y basado en datos.
+  if (isQuali && typeof selectedPilotKey !== 'undefined' && selectedPilotKey) {
+    return buildFollowQualiDebrief(row);
+  }
 
   const posNum = row && row.pos ? Number(row.pos) : 0;
   const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
   const totalMs = getRowTotalMs(row) || 0;
 
-  let msg = isManga ? 'Termin la clasificacin.' : 'Carrera terminada.';
-
-  // Resultado (si sabemos posición)
+  let msg = isQuali ? 'Clasificación terminada.' : 'Carrera terminada.';
   if (posNum > 0) msg += ' P' + posNum + '.';
-
-  // Vueltas y tiempo total (si existen)
   if (laps > 0) msg += ' ' + laps + ' vueltas.';
   if (totalMs > 0) msg += ' Tiempo total ' + formatClockMs(totalMs) + '.';
 
-  // Resumen extra para finales cuando hay podio
   if (isFinal && posNum > 0) {
     if (posNum === 1) msg += ' Felicidades, campeón.';
     else if (posNum === 2) msg += ' Segundo lugar. Podio.';
@@ -27243,10 +27623,8 @@ function buildSessionFinishMessage(row) {
     else if (posNum <= 10) msg += ' Top 10. Buen cierre.';
   }
 
-  // Best lap si existe
   const bestMs = getBestMsForRow(row);
   if (bestMs) msg += ' Mejor vuelta ' + tiempoATexto(bestMs) + '.';
-
   return msg;
 }
 
@@ -27260,6 +27638,7 @@ function checkSessionFinishOnLap() {
       sessionFinishSig = sessionSig;
       sessionFinishAnnounced = false;
       sessionFinishPrevByKey = new Map();
+      try { __newFollowDebriefState(sessionSig, selectedPilotKey || ''); } catch(e) {}
     }
 
     const info = currentSessionInfo || {};
@@ -27273,6 +27652,8 @@ function checkSessionFinishOnLap() {
     }
     if (!row) row = raceData.classification.find(r => r.pos === 1) || raceData.classification[0];
     if (!row) return;
+
+    try { if (selectedPilotKey) __updateFollowDebriefState(row); } catch(e) {}
 
     const key = getPilotKey(row) || '__';
     const laps = Number(row.lapcount) || 0;
@@ -27292,11 +27673,17 @@ function checkSessionFinishOnLap() {
 
     const msg = buildSessionFinishMessage(row);
     try { __purgeSpeechForPhase('FINISHED'); } catch(e) {}
+    const __isFollowQualiFinish = !!(selectedPilotKey && currentSessionInfo && ['MANGA','QUALI'].includes(String(currentSessionInfo.type||'').toUpperCase()));
     enqueueSpeech(msg, {
-      key: 'session_finish_' + sessionFinishSig,
-      priority: 97,
+      key: (__isFollowQualiFinish ? 'follow_debrief_' : 'session_finish_') + sessionFinishSig,
+      priority: 99,
       cooldownMs: 0,
-      dedupe: true
+      dedupe: true,
+      semanticCategory: 'finish',
+      semanticDedupe: false,
+      textTtlMs: 0,
+      queueDedupeMs: 0,
+      interrupt: false
     });
 
     sessionFinishAnnounced = true;
@@ -27574,6 +27961,8 @@ function checkSessionFinishOnLap() {
           lastSpokenLastTime = null; 
       lastAnnouncedLapcount = 0;
       pendingFirstLapTimeForSelected = false;
+      pendingFirstLapMsForSelected = 0;
+      pendingFirstLapCapturedAt = 0;
       firstLapTimeSpokenForSelected = false;
           lastKnownPos = null;
           lastTotalTimeAnnouncedSeconds = 0;
@@ -27715,6 +28104,8 @@ function checkSessionFinishOnLap() {
         } catch(e) {}
 
         try { restoreLastPilotSelectionIfNeeded(); } catch(e) {}
+        // FIX LAP1: bootstrap/reconexión puede ser silencioso, pero sí debe memorizar V1 para anunciarla después.
+        try { __captureSelectedPilotFirstLapCandidate(); } catch(e) {}
         setLastUpdateNow();
         __lastGoodTickMs = Date.now();
         __feedTickCount = (__feedTickCount||0) + 1;
@@ -27803,6 +28194,86 @@ function checkSessionFinishOnLap() {
     let __fallbackPollTimer = 0;
     let __fallbackPollStep = 0;
     let __fallbackPollSchedule = [1000, 2000, 5000, 10000];
+    let __firebaseRetryTimer = 0;
+    let __firebaseRetryStep = 0;
+    const __firebaseRetrySchedule = [1200, 2500, 5000, 10000, 15000];
+    let __feedRecoverInFlight = false;
+    let __lastFeedRecoverAt = 0;
+    let __lastRealtimeRestartAt = 0;
+
+    function __resetRealtimeCoalescer(reason = '') {
+      try { clearManagedTimeout('__snapApplyTimer'); } catch(e) {}
+      __snapScheduled = false;
+      __pendingSnapData = null;
+      try { pushSpotterAudit('realtime_coalescer_reset', String(reason || 'reset'), { throttleMs: 800, dedupeKey:'rt_reset|' + String(reason || 'reset') }); } catch(e) {}
+    }
+
+    function __scheduleFirebaseReconnect(reason = '') {
+      try {
+        if (__firebaseRetryTimer) return;
+        const idx = Math.max(0, Math.min(__firebaseRetryStep, __firebaseRetrySchedule.length - 1));
+        const delay = __firebaseRetrySchedule[idx];
+        __firebaseRetryTimer = setManagedTimeout('__firebaseRetryTimer', async () => {
+          __firebaseRetryTimer = 0;
+          const ok = await __recoverFeedConnection('firebase-retry:' + String(reason || ''), { forceRealtime:true, force:true });
+          if (!ok) {
+            __firebaseRetryStep = Math.min(__firebaseRetryStep + 1, __firebaseRetrySchedule.length - 1);
+            __scheduleFirebaseReconnect(reason || 'retry');
+          }
+        }, delay);
+      } catch(e) {}
+    }
+
+    async function __recoverFeedConnection(reason = '', opts = {}) {
+      const now = Date.now();
+      const force = !!(opts && opts.force);
+      const forceRealtime = !!(opts && opts.forceRealtime);
+      if (__feedRecoverInFlight) return false;
+      if (!force && (now - (__lastFeedRecoverAt || 0)) < 900) return true;
+      __feedRecoverInFlight = true;
+      __lastFeedRecoverAt = now;
+      try {
+        // Si quedo un apply de snapshot huérfano, no permitas que bloquee el realtime para siempre.
+        __resetRealtimeCoalescer(reason || 'recover');
+
+        // Libera una lectura que haya quedado marcada como loading demasiado tiempo.
+        try {
+          const pnow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+          if (isLoading && (!loadingSince || (pnow - loadingSince) > 4500)) isLoading = false;
+        } catch(e) {}
+
+        if (!__firebaseOk || !db) {
+          const ok = await initFirebaseRuntime();
+          if (!ok) {
+            setLiveStatus(false);
+            __scheduleFirebaseReconnect(reason || 'firebase-init');
+            return false;
+          }
+        }
+
+        __firebaseRetryStep = 0;
+        try { clearManagedTimeout('__firebaseRetryTimer'); } catch(e) {}
+        __firebaseRetryTimer = 0;
+
+        let rtOk = true;
+        if (forceRealtime || !__raceUnsub || (Date.now() - (__lastRealtimeRestartAt || 0)) > 8000) {
+          rtOk = !!startRaceRealtime();
+          __lastRealtimeRestartAt = Date.now();
+        }
+
+        try { await loadRaceFromFirebase(); } catch(e) { rtOk = false; }
+        if (!rtOk) __scheduleFallbackPolling('recover:' + String(reason || 'feed'));
+        try { pushSpotterAudit('feed_recover', String(reason || 'recover') + ' rt=' + (rtOk ? '1':'0'), { throttleMs: 500, dedupeKey:'feed_recover|' + String(reason || '') + '|' + (rtOk ? '1':'0') }); } catch(e) {}
+        return true;
+      } catch(e) {
+        try { setLiveStatus(false); } catch(_) {}
+        try { __scheduleFirebaseReconnect(reason || 'recover-error'); } catch(_) {}
+        return false;
+      } finally {
+        __feedRecoverInFlight = false;
+      }
+    }
+
     let __watcherLifeSig = '';
     let __watcherLifeSeen = new Set();
     let __watcherAuditLastSig = '';
@@ -28231,6 +28702,8 @@ function checkSessionFinishOnLap() {
         if (!__firebaseOk || !db || typeof onSnapshot !== 'function' || typeof doc !== 'function') return false;
         const ref = doc(db, 'races', 'currentRace');
         try { if (__raceUnsub) __raceUnsub(); } catch(e) {}
+        __raceUnsub = null;
+        __resetRealtimeCoalescer('start-realtime');
 
         __raceUnsub = onSnapshot(ref, (snap) => {
           try {
@@ -28244,12 +28717,19 @@ function checkSessionFinishOnLap() {
             __pendingSnapData = snap.data() || {};
             if (__snapScheduled) return;
             __snapScheduled = true;
-            setManagedTimeout('__snapApplyTimer', () => {
+            const __snapTimerId = setManagedTimeout('__snapApplyTimer', () => {
               __snapScheduled = false;
               const d = __pendingSnapData;
               __pendingSnapData = null;
               try { loadRaceFromFirebase(d); } catch(e) { __bumpFallbackPolling('snap-load-error'); }
             }, 0);
+            // Si por cualquier motivo no se pudo programar el apply, libera el latch.
+            if (!__snapTimerId) {
+              __snapScheduled = false;
+              const d = __pendingSnapData;
+              __pendingSnapData = null;
+              try { loadRaceFromFirebase(d); } catch(e) { __bumpFallbackPolling('snap-load-error-direct'); }
+            }
           } catch(e) {
             __bumpFallbackPolling('snap-handler-error');
           }
@@ -28257,7 +28737,10 @@ function checkSessionFinishOnLap() {
           try {
             console.warn('onSnapshot error', err);
           } catch(e) {}
+          __raceUnsub = null;
+          __resetRealtimeCoalescer('snapshot-error');
           __bumpFallbackPolling('snapshot-error');
+          __scheduleFirebaseReconnect('snapshot-error');
         });
 
         return true;
@@ -28275,17 +28758,6 @@ function checkSessionFinishOnLap() {
     });
 
     (async () => {
-      const ok = await initFirebaseRuntime();
-      if (!ok) {
-        setLiveStatus(false);
-        if (raceInfo) raceInfo.textContent = 'Firebase OFF - revisa conexin, CSP o bloqueadores.';
-        return;
-      }
-      loadRaceFromFirebase();
-      const __rtOk = startRaceRealtime();
-      if (!__rtOk) {
-        __scheduleFallbackPolling('bootstrap-no-realtime');
-      }
       try { bindRuntimeProfileCards(); } catch(e) {}
       try { applyRuntimeProfile(runtimeProfileKey, { silent:true }); } catch(e) {}
       try { startRuntimeWatchdog(); } catch(e) {}
@@ -28293,6 +28765,19 @@ function checkSessionFinishOnLap() {
       try { updateRuntimeDiagUI(); } catch(e) {}
       try { renderTtsEventLog(); } catch(e) {}
 
+      const ok = await initFirebaseRuntime();
+      if (!ok) {
+        setLiveStatus(false);
+        if (raceInfo) raceInfo.textContent = 'Conectando... reintento automatico activo.';
+        __scheduleFirebaseReconnect('bootstrap-init-fail');
+        return;
+      }
+      try { await loadRaceFromFirebase(); } catch(e) {}
+      const __rtOk = startRaceRealtime();
+      if (!__rtOk) {
+        __scheduleFallbackPolling('bootstrap-no-realtime');
+        __scheduleFirebaseReconnect('bootstrap-no-realtime');
+      }
     })();
 
 // Best lap global: actualizado desde raceData.classification (ver refreshSessionBestCache)
