@@ -2,7 +2,7 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R25-FIXPACK7-MANUAL-HELP-REWRITE - Manual/Ayuda nuevo + FOLLOW 2 decimales truncados + FLAT + Debrief + SELF-HEAL -
+vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF - Manual/Ayuda nuevo + FOLLOW 2 decimales truncados + FLAT + Debrief + SELF-HEAL -
 
 - NEW MANUAL/Ayuda: contenido rehecho desde cero para pilotos; elimina referencias técnicas/legacy del flujo normal.
 - NEW MANUAL: Inicio, FOLLOW, Alertas, Q TABLA, Estado y Ayuda rápida.
@@ -180,7 +180,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK7-MANUAL-HELP-REWRITE</title>
+<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6709,7 +6709,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK7-MANUAL-HELP-REWRITE</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7089,7 +7089,7 @@ html, body{
 <div class="manual-top">
 <div>
 <div class="manual-title" id="manualTitle">Vic's Smart Spotter — Manual &amp; Ayuda</div>
-<div class="manual-sub">FIXPACK7 · Guía para pilotos. Activa voz, elige piloto y corre.</div>
+<div class="manual-sub">FIXPACK8 · Guía para pilotos. Activa voz, elige piloto y corre.</div>
 </div>
 <button aria-label="Cerrar" class="manual-close" id="manualCloseBtn" type="button">✕</button>
 </div>
@@ -7373,7 +7373,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK7-MANUAL-HELP-REWRITE";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -27661,71 +27661,68 @@ function __followDebriefLocalStats(row){
 }
 
 function __followFormatShortLap(ms){
-  try { return tiempoATexto(Number(ms)||0); } catch(e) { return ''; }
+  try {
+    if (typeof tiempoVueltaFollowTexto === 'function') return tiempoVueltaFollowTexto(Number(ms)||0);
+    return tiempoATexto(Number(ms)||0);
+  } catch(e) { return ''; }
 }
 
 function buildFollowQualiDebrief(row){
   try {
     __updateFollowDebriefState(row);
     const st = __followDebriefState;
-    const mode = (typeof __getFollowVoiceMode === 'function') ? __getFollowVoiceMode() : 'SUPER_BASIC';
     const laps = Number(row && (row.lapcount ?? row.laps ?? 0)) || 0;
     const qRank = st.qRankLast || __followQualiGeneralRank(row) || 0;
     const best = st.bestSeenMs || getBestMsForRow(row) || 0;
     const local = __followDebriefLocalStats(row);
+    const drv = __followWatcherDriver(row);
     const mean = st.meanMs || Number(row && row.mean || 0) || Number(local && local.mean || 0) || 0;
     const sigma = st.sigmaMs || Number(local && local.sigma || 0) || 0;
     let cons = st.consistencyPct;
     let btm = st.bestToMeanPct;
     if ((!isFinite(btm) || btm == null) && best > 0 && mean > 0 && mean >= best) btm = ((mean-best)/mean)*100;
     const sigmaPct = (sigma > 0 && mean > 0) ? (sigma/mean*100) : null;
+    const reliableCons = !!(drv && drv.consistencyReliable && cons != null && isFinite(cons) && cons > 0);
 
+    // MISMO DEBRIEF EN SUPER_BASIC / BASIC / NORMAL.
+    // Cambia cuánto habla FOLLOW durante la manga; el cierre personal no cambia por modo.
     const parts = ['Clasificación terminada.'];
+
+    // 1) RESULTADO
     if (qRank > 0) parts.push('P' + qRank + ' general provisional.');
     else if (row && Number(row.pos)>0) parts.push('P' + Math.floor(Number(row.pos)) + '.');
-    if (laps > 0 && mode !== 'SUPER_BASIC') parts.push(laps + ' vueltas.');
+    if (laps > 0) parts.push(laps + ' vueltas.');
+
+    // 2) RENDIMIENTO: best + UN KPI confiable
     if (best > 0) parts.push('Mejor ' + __followFormatShortLap(best) + '.');
+    if (reliableCons) parts.push('Consistencia ' + Math.round(cons) + ' por ciento.');
+    else if (mean > 0 && best > 0 && mean >= best) parts.push('Promedio ' + __followFormatShortLap(mean) + '.');
 
-    // SÚPER BÁSICO: dato duro + una palmada, nada más.
-    if (mode === 'SUPER_BASIC') {
-      if (qRank > 0 && qRank <= 3) parts.push('Muy buena manga.');
-      else parts.push('Buen trabajo.');
-      return parts.join(' ');
-    }
+    // 3) TENDENCIA: una sola frase corta
+    let trendTxt = '';
+    if (st.trendLast === 'IMPROVING' || st.improvingLaps > st.fadingLaps) trendTxt = 'Terminaste mejorando.';
+    else if (st.trendLast === 'FADING' && st.fadingLaps > 0) trendTxt = 'Terminaste cayendo de ritmo.';
+    else if (st.trendLast === 'STABLE' || st.stableLaps > Math.max(st.improvingLaps, st.fadingLaps)) trendTxt = 'Ritmo estable.';
+    if (trendTxt) parts.push(trendTxt);
 
-    // Una sola observación positiva y una sola clave de mejora.
-    let positive = '';
+    // 4) SIGUIENTE PASO / ALIENTO: una sola idea, nunca discurso.
     let coach = '';
-    if (st.pbCount > 0) {
-      positive = (st.pbGainMaxMs >= 50) ? ('Mejoraste ' + (st.pbGainMaxMs/1000).toFixed(2).replace('.', ' punto ') + ' segundos.') : 'Encontraste una mejor vuelta.';
-    } else if (st.trendLast === 'IMPROVING' || st.improvingLaps > st.fadingLaps) {
-      positive = 'Buen cierre, venías mejorando.';
-    } else if (qRank > 0 && qRank <= 3) {
-      positive = 'Muy buena manga.';
-    } else if ((cons != null && cons >= 96) || (sigmaPct != null && sigmaPct <= 3.0)) {
-      positive = 'Ritmo muy parejo.';
-    }
-
-    if (st.trendLast === 'FADING' && st.fadingLaps > 0) {
-      coach = 'Clave: sostener el ritmo.';
+    if (qRank > 0 && qRank <= 3 && ((reliableCons && cons >= 96) || (sigmaPct != null && sigmaPct <= 3.0))) {
+      coach = 'Muy buena manga. Sigue así.';
+    } else if (st.trendLast === 'FADING' && st.fadingLaps > 0) {
+      coach = 'La velocidad está. Ahora hay que sostenerla.';
     } else if ((isFinite(btm) && btm >= 4.0) || (sigmaPct != null && sigmaPct >= 6.0)) {
-      coach = 'La velocidad está; falta repetirla.';
-    } else if ((cons != null && cons >= 96) || (sigmaPct != null && sigmaPct <= 3.0)) {
-      coach = 'Sigue así: consistencia.';
-    } else if (st.trendLast === 'IMPROVING') {
-      coach = 'Sigue construyendo ese ritmo.';
+      coach = 'La velocidad está. Ahora hay que repetirla.';
+    } else if (st.trendLast === 'IMPROVING' || st.improvingLaps > st.fadingLaps) {
+      coach = 'Buena base. Repite ese ritmo.';
+    } else if ((reliableCons && cons >= 96) || (sigmaPct != null && sigmaPct <= 3.0)) {
+      coach = 'Muy buen ritmo. Mantén esa consistencia.';
+    } else if (qRank > 0 && qRank <= 3) {
+      coach = 'Muy buena manga.';
+    } else {
+      coach = 'Buen trabajo. Vamos por la siguiente.';
     }
-
-    if (positive) parts.push(positive);
-    if (coach && coach !== positive) parts.push(coach);
-
-    // NORMAL puede dar UN KPI extra si Watcher lo considera confiable.
-    if (mode === 'NORMAL') {
-      const drv = __followWatcherDriver(row);
-      const reliable = !!(drv && drv.consistencyReliable);
-      if (reliable && cons != null && cons > 0) parts.splice(Math.min(parts.length,4), 0, 'Consistencia ' + Math.round(cons) + ' por ciento.');
-      else if (mean > 0 && best > 0 && mean >= best) parts.splice(Math.min(parts.length,4), 0, 'Promedio ' + __followFormatShortLap(mean) + '.');
-    }
+    parts.push(coach);
 
     return parts.join(' ');
   } catch(e) {
