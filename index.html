@@ -1,7 +1,8 @@
 
 
+
 <!--
-vics_Smart_Spotter_v0.5.0.18R25-FIXPACK1 - Correcciones de bugs identificados en auditoría de código -
+vics_Smart_Spotter_v0.5.0.18R25-FIXPACK2-PROD - Correcciones de bugs identificados en auditoría de código -
 
 FIXPACK1 (2026-04-19) — Bugs corregidos + Logging + Poda de memoria:
 
@@ -155,7 +156,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK1</title>
+<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK2-PROD</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6650,7 +6651,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FP1</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK2-PROD</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -10666,12 +10667,21 @@ function msgv2DecimasTxt(ms) {
       if (el) el.textContent = APP_LABEL;
       try { document.title = APP_LABEL; } catch(e) {}
 
+      // FIXPACK2 / PRODUCCION: debug cerrado por defecto.
+      // Unica llave valida: URL explicita ?debug=1
+      // Se elimina la preferencia heredada aiSpotterDebug para evitar que un
+      // navegador que alguna vez uso debug vuelva a mostrar paneles internos.
       try{
+        try { localStorage.removeItem('aiSpotterDebug'); } catch(e) {}
         const qs = new URLSearchParams(location.search);
-        const dbg = (qs.get('debug') === '1') || (lsGet('aiSpotterDebug') === '1');
-        document.body.classList.toggle('debug', !!dbg);
-        try { ensureSpeechLogTimer(!!dbg); } catch(e) {}
-      }catch(e){}
+        const dbg = (qs.get('debug') === '1');
+        document.body.classList.toggle('debug', dbg);
+        try { ensureSpeechLogTimer(dbg); } catch(e) {}
+      }catch(e){
+        // Fail closed: ante cualquier error de arranque, NUNCA mostrar debug.
+        try { document.body.classList.remove('debug'); } catch(_) {}
+        try { ensureSpeechLogTimer(false); } catch(_) {}
+      }
 
       try { initPilotSelectUIOnce(); } catch(e) {}
     }
