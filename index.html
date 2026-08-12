@@ -2,7 +2,14 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R25-FIXPACK6-FOLLOW-LAP-SPEECH - FOLLOW 2 decimales truncados + FLAT + Debrief + SELF-HEAL + FIX primera vuelta -
+vics_Smart_Spotter_v0.5.0.18R25-FIXPACK7-MANUAL-HELP-REWRITE - Manual/Ayuda nuevo + FOLLOW 2 decimales truncados + FLAT + Debrief + SELF-HEAL -
+
+- NEW MANUAL/Ayuda: contenido rehecho desde cero para pilotos; elimina referencias técnicas/legacy del flujo normal.
+- NEW MANUAL: Inicio, FOLLOW, Alertas, Q TABLA, Estado y Ayuda rápida.
+- DOC FOLLOW: explica SÚPER BÁSICO/BÁSICO/NORMAL según el comportamiento real de esta build.
+- DOC LAP SPEECH: documenta lectura corta a 2 decimales truncados y regla FLAT.
+- DOC SELF-HEAL: troubleshooting separa claramente fallo de datos vs fallo de voz.
+- FIX DEBRIEF QUIET: el cierre personal de Qualy puede atravesar el filtro de SÚPER BÁSICO/BÁSICO.
 - NEW FOLLOW DEBRIEF: al terminar Qualy/Manga, el piloto seguido recibe un resumen personal corto y motivador.
 - NEW Q GENERAL: el debrief usa Q TABLA para reportar posición general provisional, no solo la posición de la manga.
 - NEW WATCHER KPIs: conserva analytics/spotter del feed y usa tendencia, consistencia, sigma y eventos PERSONAL_BEST cuando están disponibles.
@@ -173,7 +180,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK6-FOLLOW-LAP-SPEECH</title>
+<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK7-MANUAL-HELP-REWRITE</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -3465,6 +3472,40 @@ body {
       color: var(--text-muted);
     }
 
+    /* FIXPACK7 - Manual/Ayuda para pilotos */
+    .manual-hero{
+      border:1px solid rgba(34,197,94,.28);
+      background:linear-gradient(145deg,rgba(34,197,94,.10),rgba(255,255,255,.035));
+      border-radius:14px;
+      padding:11px 12px;
+      margin:0 0 10px;
+    }
+    .manual-hero strong{font-size:13px;letter-spacing:.02em;}
+    .manual-hero p{margin:5px 0 0;font-size:11.5px;line-height:1.4;color:rgba(255,255,255,.84);}
+    .manual-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px;}
+    .manual-step{border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.20);border-radius:10px;padding:7px 5px;text-align:center;font-size:9px;font-weight:900;letter-spacing:.04em;}
+    .manual-step b{display:block;font-size:13px;margin-bottom:2px;color:rgba(255,255,255,.96);}
+    .manual-mode{border-left:3px solid rgba(34,197,94,.72);}
+    .manual-mode.basic{border-left-color:rgba(249,115,22,.85);}
+    .manual-mode.normal{border-left-color:rgba(59,130,246,.85);}
+    .manual-kv{display:grid;grid-template-columns:minmax(88px,.75fr) minmax(0,1.8fr);gap:7px 10px;align-items:start;font-size:11.5px;line-height:1.35;}
+    .manual-kv .k{font-weight:900;color:rgba(255,255,255,.96);}
+    .manual-kv .v{color:rgba(255,255,255,.80);}
+    .manual-hear{display:flex;gap:7px;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:11.5px;line-height:1.35;}
+    .manual-hear:last-child{border-bottom:0;}
+    .manual-hear code{flex:0 0 auto;min-width:64px;text-align:center;}
+    .manual-statusline{display:grid;grid-template-columns:auto 1fr;gap:7px 9px;align-items:center;font-size:11.5px;line-height:1.35;}
+    .manual-dot{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:0 0 8px currentColor;}
+    .manual-dot.ok{color:#22c55e;background:#22c55e;}
+    .manual-dot.bad{color:#ef4444;background:#ef4444;}
+    .manual-dot.wait{color:#94a3b8;background:#94a3b8;}
+    .manual-callout{margin-top:8px;padding:8px 10px;border-radius:11px;background:rgba(249,115,22,.10);border:1px solid rgba(249,115,22,.22);font-size:11.5px;line-height:1.38;color:rgba(255,255,255,.88);}
+    @media(max-width:420px){
+      .manual-steps{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .manual-kv{grid-template-columns:1fr;}
+      .manual-kv .k{margin-top:4px;}
+    }
+
     /* MANGA UX: flash verde en contenedor del piloto seguido */
     .pilot-card.flash-green{
       border-color: #2eea7a !important;
@@ -6668,7 +6709,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK6-FOLLOW-LAP-SPEECH</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK7-MANUAL-HELP-REWRITE</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -7047,163 +7088,234 @@ html, body{
 <div aria-labelledby="manualTitle" aria-modal="true" class="manual-panel" role="dialog">
 <div class="manual-top">
 <div>
-<div class="manual-title" id="manualTitle">Manual - Vic's Smart Spotter</div>
-<div class="manual-sub">Guía rápida (v0.5.0.18R23). Activa voz, elige piloto y corre. El resto es opcional.</div>
+<div class="manual-title" id="manualTitle">Vic's Smart Spotter — Manual &amp; Ayuda</div>
+<div class="manual-sub">FIXPACK7 · Guía para pilotos. Activa voz, elige piloto y corre.</div>
 </div>
 <button aria-label="Cerrar" class="manual-close" id="manualCloseBtn" type="button">✕</button>
 </div>
 <div aria-label="Secciones del manual" class="manual-tabs" role="tablist">
 <button aria-selected="true" class="manual-tab active" data-tab="inicio" role="tab" type="button">Inicio</button>
-<button aria-selected="false" class="manual-tab" data-tab="botones" role="tab" type="button">Botones</button>
-<button aria-selected="false" class="manual-tab" data-tab="voz" role="tab" type="button">Voz</button>
+<button aria-selected="false" class="manual-tab" data-tab="follow" role="tab" type="button">Follow</button>
+<button aria-selected="false" class="manual-tab" data-tab="alertas" role="tab" type="button">Qué oyes</button>
 <button aria-selected="false" class="manual-tab" data-tab="qtabla" role="tab" type="button">Q Tabla</button>
-<button aria-selected="false" class="manual-tab" data-tab="basico" role="tab" type="button">Básico</button>
-<button aria-selected="false" class="manual-tab" data-tab="problemas" role="tab" type="button">Problemas</button>
+<button aria-selected="false" class="manual-tab" data-tab="estado" role="tab" type="button">Estado</button>
+<button aria-selected="false" class="manual-tab" data-tab="ayuda" role="tab" type="button">Ayuda</button>
 </div>
 <div class="manual-sections">
+
 <div class="manual-section active" data-tab="inicio">
-<h3>Arranque en 60 segundos</h3>
+<div class="manual-hero">
+<strong>🏁 Para correr sólo necesitas cuatro cosas</strong>
+<p>La app está pensada para que el piloto mire poco la pantalla y escuche sólo lo necesario.</p>
+<div class="manual-steps">
+<div class="manual-step"><b>1</b>LIVE</div>
+<div class="manual-step"><b>2</b>VOZ</div>
+<div class="manual-step"><b>3</b>PILOTO</div>
+<div class="manual-step"><b>4</b>MODO</div>
+</div>
+</div>
+<h3>Arranque rápido</h3>
 <div class="manual-card">
-<ol style="margin:0; padding-left: 18px;">
-<li>Abre el Spotter y espera 2-3 segundos a que llegue el primer dato.</li>
-<li><b>PC/Mac</b>: la voz suele quedar en ON sola. Si el punto VOZ está rojo, toca <b>ACTIVAR VOZ</b>. <b>iPhone/Android</b>: toca <b>ACTIVAR VOZ</b> una vez para destrabar.</li>
-<li>Si quieres seguimiento, <b>selecciona tu piloto</b>.</li>
-<li>En <b>FOLLOW</b> puedes ciclar <b>SÚPER BÁSICO</b>, <b>BÁSICO</b> y <b>NORMAL</b>. En <b>AUTO</b> el locutor siempre va libre.</li>
-<li>En clasificación, usa <b>Q TABLA</b> (botón 📊) para ver la tabla.</li>
+<ol>
+<li>Abre el Spotter y confirma que <b>LIVE</b> tenga datos.</li>
+<li>Si <b>VOZ</b> está apagada o roja, toca <b>ACTIVAR VOZ</b>.</li>
+<li>Selecciona tu nombre en <b>Piloto seguido</b>.</li>
+<li>Elige <b>SÚPER BÁSICO</b>, <b>BÁSICO</b> o <b>NORMAL</b>.</li>
+<li>Deja el teléfono y concéntrate en manejar.</li>
 </ol>
-<div class="manual-note">El piloto seleccionado se guarda en tu navegador. Si recargas y el nombre existe, se auto-selecciona.</div>
+<div class="manual-note">Tu piloto y tu modo FOLLOW se guardan en este navegador.</div>
 </div>
-<h3>Dos formas de usarlo</h3>
+<h3>FOLLOW o Auto Locutor</h3>
 <div class="manual-card">
-<b>Auto</b>: narra lo general (carrera nueva, cambios, avisos, peleas).<br/>
-<b>Seguimiento</b>: se enfoca en tu piloto (posición, gaps, alertas).<br/><br/>
-<div class="manual-tip">Regla simple: si seleccionas piloto, el spotter debe hablar menos y más directo.</div>
+<div class="manual-kv">
+<div class="k">FOLLOW</div><div class="v">Hay un piloto seleccionado. La prioridad es su vuelta y su información.</div>
+<div class="k">Auto Locutor</div><div class="v">No hay piloto seleccionado. La app comenta el estado general de la sesión.</div>
 </div>
-<h3>Reglas de oro</h3>
+<div class="manual-callout"><b>Para correr:</b> usa FOLLOW. Auto Locutor está pensado para escuchar la carrera, no para conducir con información personal.</div>
+</div>
+<h3>Antes de la salida</h3>
 <div class="manual-card">
-<ul style="margin:0; padding-left: 18px;">
-<li>Una sola pestaña del Spotter. Dos pestañas = dos locutores peleando el micrófono.</li>
-<li>Si estás en iPhone, no bloquees pantalla al inicio (primero activa la voz).</li>
-<li>Si todo viene en ceros al arrancar, es normal: espera 1-2 vueltas reales.</li>
+<ul>
+<li>Usa una sola pestaña del Spotter.</li>
+<li>Revisa volumen, audífonos/Bluetooth y salida de audio.</li>
+<li>En iPhone/iPad activa la voz con un toque antes de correr.</li>
+<li>La pantalla muestra tres decimales; FOLLOW lee sólo dos para mantenerlo rápido.</li>
 </ul>
 </div>
 </div>
-<div class="manual-section" data-tab="botones">
-<h3>Header: lo que sí se toca</h3>
-<div class="manual-card">
-<ul style="margin:0; padding-left: 18px;">
-<li><b>🤖 AUTO</b> - modo automático (decide anuncios y ritmo de mensajes).</li>
-<li><b>VIC</b> - cambia el skin/tema visual a Vic.</li>
-<li><b>📊</b> - Q TABLA (clasificación guardada).</li>
-<li><b>📖</b> - abre/cierra este manual.</li>
-</ul>
-<div class="manual-note">El punto LIVE (verde/gris) dice si el feed está vivo. El punto VOZ (verde/rojo) te dice si la voz está OK u OFF. El badge MODO muestra la sesión detectada.</div>
-</div>
-<h3>Controles principales</h3>
-<div class="manual-card">
-<ul style="margin:0; padding-left: 18px;">
-<li><b>ACTIVAR VOZ</b> - desbloquea audio del navegador.</li>
-<li><b>BÁSICO</b> - reduce mensajes (modo concentración).</li>
-<li><b>Selector de piloto</b> - activa seguimiento.</li>
-</ul>
-<div class="manual-tip">Si algo se siente atorado, refresco controlado. Mejor eso que discutir con la app en plena final.</div>
-</div>
-</div>
-<div class="manual-section" data-tab="voz">
-<h3>Voz en iPhone (Safari/Chrome iOS)</h3>
-<div class="manual-card">
-          iOS solo permite audio si hay un gesto del usuario. Por eso existe <b>ACTIVAR VOZ</b>.
-          <ol style="margin:8px 0 0; padding-left: 18px;">
-<li>Sube volumen y quita Silencio.</li>
-<li>Toca <b>ACTIVAR VOZ</b> una vez con la pantalla despierta.</li>
-<li>Luego selecciona piloto (si aplica).</li>
-<li>No bloquees pantalla justo al arrancar.</li>
-</ol>
-<div class="manual-note">Si estás con Bluetooth, revisa que el audio no esté saliendo por otro dispositivo. El punto VOZ junto al LIVE: verde = OK, rojo = OFF (o requiere toque).</div>
-</div>
-<h3>Voz en PC (Chrome/Brave/Edge)</h3>
-<div class="manual-card">
-<ul style="margin:0; padding-left: 18px;">
-<li>Permite audio del sitio (candado del navegador).</li>
-<li>Evita suspensión del sistema durante evento.</li>
-<li>Si usas OBS, mejor cargar como Browser Source.</li>
+
+<div class="manual-section" data-tab="follow">
+<h3>Los tres modos de seguimiento</h3>
+<div class="manual-card manual-mode">
+<h3>SÚPER BÁSICO</h3>
+<p><b>Objetivo:</b> escuchar el crono y nada más durante la vuelta.</p>
+<ul>
+<li>Lee tu última vuelta en cada cruce.</li>
+<li>No mete posición, gaps, estimaciones ni narrativa durante la manga.</li>
+<li>Al terminar clasificación puede dar el cierre personal corto.</li>
 </ul>
 </div>
-<h3>Segundo plano (background)</h3>
-<div class="manual-card">
-          En web puedes mantener actividad, pero si el sistema entra en suspensión, nadie salva eso.
-          <ul style="margin:8px 0 0; padding-left: 18px;">
-<li>Para evento: desactiva sleep y deja la pestaña viva.</li>
-<li>Si sales y vuelves, dale 1 segundo para retomar.</li>
+<div class="manual-card manual-mode basic" style="margin-top:8px;">
+<h3>BÁSICO</h3>
+<p><b>Objetivo:</b> crono + pocas referencias útiles.</p>
+<ul>
+<li>Lee todas tus vueltas.</li>
+<li>Puede avisar una posición estable como <b>“P cuatro”</b>.</li>
+<li>Puede dar una estimación de vueltas cuando cambia de forma suficiente.</li>
+<li>En Final puede usar bandera azul cuando corresponde.</li>
+<li>Sin narrativa larga.</li>
 </ul>
 </div>
+<div class="manual-card manual-mode normal" style="margin-top:8px;">
+<h3>NORMAL</h3>
+<p><b>Objetivo:</b> seguimiento completo del piloto.</p>
+<ul>
+<li>Mantiene la vuelta como dato principal.</li>
+<li>Puede agregar posición, best lap, ritmo, gaps y contexto de batalla según la sesión.</li>
+<li>Es el modo con más información; úsalo si realmente quieres coaching durante la carrera.</li>
+</ul>
 </div>
+<h3>Cómo cambiar de modo</h3>
+<div class="manual-card">
+<p>Toca el botón de modo junto a <b>ACTIVAR VOZ</b>. Cicla:</p>
+<div class="manual-code">SÚPER BÁSICO → BÁSICO → NORMAL → SÚPER BÁSICO</div>
+<div class="manual-note">El botón sólo controla FOLLOW. Sin piloto seleccionado, Auto Locutor trabaja con su propia lógica.</div>
+</div>
+</div>
+
+<div class="manual-section" data-tab="alertas">
+<h3>La vuelta: siempre primero</h3>
+<div class="manual-card">
+<p>FOLLOW usa <b>dos decimales truncados</b>. No redondea.</p>
+<div class="manual-hear"><code>9.586</code><span>→ “nueve punto cincuenta y ocho”</span></div>
+<div class="manual-hear"><code>9.421</code><span>→ “nueve punto cuarenta y dos”</span></div>
+<div class="manual-hear"><code>9.039</code><span>→ “nueve punto cero tres”</span></div>
+<div class="manual-hear"><code>9.005</code><span>→ “nueve flat”</span></div>
+<div class="manual-hear"><code>9.000</code><span>→ “nueve flat”</span></div>
+<div class="manual-note"><b>Flat</b> sólo se usa cuando las dos cifras que FOLLOW va a leer son 00.</div>
+</div>
+<h3>Mensajes cortos</h3>
+<div class="manual-card">
+<div class="manual-kv">
+<div class="k">P cuatro</div><div class="v">Cambio de posición confirmado/estable cuando el modo lo permite.</div>
+<div class="k">Estimación 22 vueltas</div><div class="v">Proyección disponible en el feed; no se repite en cada vuelta.</div>
+<div class="k">Azul</div><div class="v">Aviso de bandera azul/lapeo en los contextos donde está habilitado.</div>
+<div class="k">Best / ritmo / gaps</div><div class="v">Información adicional de NORMAL según la sesión y los datos disponibles.</div>
+</div>
+</div>
+<h3>Final de clasificación</h3>
+<div class="manual-card">
+<p>Si estás en FOLLOW, el cierre se enfoca en <b>tu piloto</b>, no en contar P1/P2/P3 de toda la pista.</p>
+<p>Puede incluir posición general provisional de Q TABLA, vueltas, mejor vuelta y —si hay datos confiables— una lectura breve de ritmo o consistencia.</p>
+<div class="manual-callout">Ejemplo: <b>“Clasificación terminada. P cinco general provisional. 21 vueltas. Mejor 8.42. Buen cierre.”</b></div>
+</div>
+</div>
+
 <div class="manual-section" data-tab="qtabla">
 <h3>Qué es Q TABLA</h3>
-<p style="margin-top:8px; color: var(--text-muted);">
-          Nota: el <b>Best Lap</b> que ves en Q TABLA viene directo del feed (por piloto, <code>bestMs</code>/<code>bestLapMs</code>). No se calcula.
-        </p>
 <div class="manual-card">
-          Q TABLA es tu "race control" para <b>clasificación</b>. Guarda y muestra resultados por sesión (Q).
-          <ul style="margin:8px 0 0; padding-left: 18px;">
-<li><b>Vista: Mejor por piloto</b> - toma el mejor resultado guardado de cada piloto.</li>
-<li><b>Vista: Por Q</b> - te deja revisar cada Q guardada (Q1, Q2, etc).</li>
-</ul>
-<div class="manual-note">Los chips de arriba muestran Evento, Fecha y cuántas sesiones guardó.</div>
-</div>
-<h3>Cuándo se guarda</h3>
-<div class="manual-card">
-          Se guarda cuando hay datos reales (vueltas o tiempos válidos). Se guarda en tu navegador (localStorage).
-          <ul style="margin:8px 0 0; padding-left: 18px;">
-<li>Si borras datos del sitio o usas incógnito, arrancas con Q TABLA limpia.</li>
-<li>Si está vacía, es porque aún no llegó info válida.</li>
+<p>📊 Q TABLA guarda la clasificación del día en este navegador y reúne las distintas Q/mangas del mismo evento.</p>
+<ul>
+<li><b>Mejor por piloto:</b> conserva el mejor resultado de cada piloto.</li>
+<li><b>Por Q:</b> permite revisar cada sesión guardada.</li>
+<li>El piloto se identifica por su nombre normalizado para evitar que números reutilizados entre mangas pisen resultados.</li>
 </ul>
 </div>
-<h3>Lectura rápida</h3>
+<h3>Cómo ordena la clasificación</h3>
 <div class="manual-card">
-<ul style="margin:0; padding-left: 18px;">
-<li><b>Pos</b>: posición en clasificación.</li>
-<li><b>Best</b>: mejor vuelta del piloto.</li>
-<li><b>Gap</b>: diferencia contra el líder.</li>
+<div class="manual-kv">
+<div class="k">1. Vueltas</div><div class="v">Más vueltas = mejor resultado.</div>
+<div class="k">2. Tiempo</div><div class="v">Con las mismas vueltas, menor tiempo total = mejor posición.</div>
+<div class="k">Best Lap</div><div class="v">Se muestra como referencia, pero no decide por sí solo la posición de Q.</div>
+</div>
+</div>
+<h3>Posición general provisional</h3>
+<div class="manual-card">
+<p>Durante el evento todavía pueden faltar pilotos o mangas. Por eso FOLLOW dice <b>“general provisional”</b>.</p>
+<div class="manual-note">Q TABLA se guarda localmente. Si borras datos del sitio, cambias de navegador o usas incógnito, esa tabla local puede empezar vacía.</div>
+</div>
+</div>
+
+<div class="manual-section" data-tab="estado">
+<h3>Qué significan los indicadores</h3>
+<div class="manual-card">
+<div class="manual-statusline">
+<span class="manual-dot ok"></span><span><b>LIVE con datos:</b> el Spotter está recibiendo el feed.</span>
+<span class="manual-dot wait"></span><span><b>LIVE sin actividad:</b> espera unos segundos; la app intenta reconectar automáticamente.</span>
+<span class="manual-dot ok"></span><span><b>VOZ verde:</b> motor de voz listo.</span>
+<span class="manual-dot bad"></span><span><b>VOZ roja/OFF:</b> toca ACTIVAR VOZ o revisa la salida de audio.</span>
+</div>
+</div>
+<h3>La app intenta recuperarse sola</h3>
+<div class="manual-card">
+<ul>
+<li>Si regresas desde otra app o desbloqueas el teléfono, rearma el feed y sus watchdogs.</li>
+<li>Si se pierde Wi‑Fi/datos, intenta reconectar cuando vuelve Internet.</li>
+<li>Si realtime falla, existe un mecanismo de lectura de respaldo.</li>
+<li>No deberías refrescar como primera solución.</li>
 </ul>
-<div class="manual-tip">Si estás buscando "quién trae ritmo", mira Best y Gap. Lo demás es chisme, pero útil.</div>
+<div class="manual-note">En iPhone/iPad el navegador puede suspender la voz en segundo plano. Los datos pueden haberse recuperado aunque la voz todavía necesite un toque.</div>
 </div>
-</div>
-<div class="manual-section" data-tab="basico">
-<h3>Modo BÁSICO</h3>
+<h3>Controles que sí importan</h3>
 <div class="manual-card">
-          BÁSICO es para correr con casco puesto: menos choro, más vueltas.
-          <ul style="margin:8px 0 0; padding-left: 18px;">
-<li>En <b>AUTO</b>: solo P1 (vueltas + última vuelta). Si cambia el líder, lo dice.</li>
-<li>En <b>FOLLOW</b>: SÚPER BÁSICO = solo última vuelta, BÁSICO = sobrio, NORMAL = seguimiento completo.</li>
-<li>Sin peleas, sin gaps, sin azul, sin resúmenes largos.</li>
-</ul>
-<div class="manual-tip">Si quieres el show completo, apaga BÁSICO y deja que hable.</div>
+<div class="manual-kv">
+<div class="k">ACTIVAR VOZ</div><div class="v">Enciende/desbloquea audio.</div>
+<div class="k">Modo FOLLOW</div><div class="v">SÚPER BÁSICO / BÁSICO / NORMAL.</div>
+<div class="k">Velocidad voz</div><div class="v">Ajusta qué tan rápido habla.</div>
+<div class="k">Voz</div><div class="v">Selecciona la voz disponible en el dispositivo.</div>
+<div class="k">Test</div><div class="v">Comprueba que el audio realmente sale por donde esperas.</div>
 </div>
 </div>
-<div class="manual-section" data-tab="problemas">
-<h3>Soluciones rápidas</h3>
+</div>
+
+<div class="manual-section" data-tab="ayuda">
+<h3>Diagnóstico en 20 segundos</h3>
 <div class="manual-card">
-<ol style="margin:0; padding-left: 18px;">
-<li><b>No habla</b> - toca ACTIVAR VOZ. En iPhone, toca con la pantalla despierta.</li>
-<li><b>Habla raro o en loop</b> - refresca una vez. Si tienes dos pestañas abiertas, cierra una.</li>
-<li><b>Q TABLA sin datos</b> - espera 1-2 vueltas reales o revisa que el feed esté vivo.</li>
-<li><b>Se calla al volver del background</b> - dale 1 segundo. Si no regresa: refresco controlado.</li>
+<ol>
+<li><b>No veo datos:</b> mira LIVE. Revisa Internet y espera unos segundos para la reconexión automática.</li>
+<li><b>Veo datos pero no escucho:</b> mira VOZ, toca ACTIVAR VOZ y luego Test.</li>
+<li><b>El audio sale en otro lado:</b> revisa Bluetooth/audífonos/salida del sistema.</li>
+<li><b>No aparece mi piloto:</b> espera a que el feed publique la clasificación/lista actual.</li>
+<li><b>Q TABLA está vacía:</b> necesita una Q con datos válidos guardados en este navegador.</li>
 </ol>
-<div class="manual-note">Consejo de veterano: lo importante es que hable cuando lo necesitas, no que platique bonito.</div>
 </div>
-<h3>Buenas prácticas</h3>
+<h3>iPhone / iPad</h3>
 <div class="manual-card">
-<ul style="margin:0; padding-left: 18px;">
-<li>Antes de arrancar: piloto seleccionado + voz activa.</li>
-<li>Prueba Q TABLA en clasificación para confirmar que guardó sesiones.</li>
-<li>Si vas a grabar: haz una prueba de carrera nueva para confirmar anuncios.</li>
+<ul>
+<li>Activa la voz con la pantalla despierta antes de salir a pista.</li>
+<li>Después de bloquear pantalla o cambiar de app, iOS puede exigir otro toque para reactivar TTS.</li>
+<li>Si LIVE volvió pero VOZ sigue roja, el problema es audio, no el feed.</li>
 </ul>
 </div>
+<h3>Si sigue sin responder</h3>
+<div class="manual-card">
+<ol>
+<li>Confirma Internet.</li>
+<li>Toca <b>ACTIVAR VOZ</b> y <b>Test</b>.</li>
+<li>Espera la autorrecuperación del feed.</li>
+<li>Como último recurso, refresca una vez o cierra y vuelve a abrir.</li>
+</ol>
+<div class="manual-callout"><b>Dato útil para soporte:</b> explica si falló <u>LIVE</u>, <u>VOZ</u> o ambos. Son dos problemas distintos y se diagnostican diferente.</div>
 </div>
+<details class="manual-details">
+<summary>Qué información conviene mandar si reportas un problema</summary>
+<div class="manual-card" style="margin-top:8px;">
+<ul>
+<li>Dispositivo: iPhone / Android / PC.</li>
+<li>Navegador.</li>
+<li>Si LIVE estaba activo.</li>
+<li>Si VOZ estaba verde o roja.</li>
+<li>Sesión: práctica, clasificación o final.</li>
+<li>Modo FOLLOW usado.</li>
+<li>Qué ocurrió justo antes: cambio de app, pantalla bloqueada, pérdida de Wi‑Fi, etc.</li>
+</ul>
+</div>
+</details>
+</div>
+
 </div>
 <div class="manual-foot">
-<span class="manual-tip">Meta: 0 fricción. Un toque para voz y listo. El resto es ventaja competitiva.</span>
+<span class="manual-tip">Vic's Smart Spotter: el piloto debe escuchar información, no pelearse con la aplicación.</span>
 </div>
 </div>
 </div>
@@ -7261,7 +7373,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK6-FOLLOW-LAP-SPEECH";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK7-MANUAL-HELP-REWRITE";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -11543,6 +11655,8 @@ try{
         if (k.startsWith('mode_voice_') || k === 'user_voice_on') return true;
         if (k === 'pilot-follow') return true;
         if (k.startsWith('lap_')) return true;
+        // Cierre personal de Qualy: debe sonar incluso en SÚPER BÁSICO/BÁSICO.
+        if (k.startsWith('follow_debrief_')) return true;
 
         if (mode === 'SUPER_BASIC') return false;
 
