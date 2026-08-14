@@ -2,7 +2,46 @@
 
 
 <!--
-vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF - Manual/Ayuda nuevo + FOLLOW 2 decimales truncados + FLAT + Debrief + SELF-HEAL -
+FIXPACK12 EDITORIAL DIRECTOR (2026-08-14) — prioridad única + pacing global + TTS bounded recovery:
+- AUTO LOCUTOR: TODAS las rutas de contenido pasan por un Director Editorial central dentro de enqueueSpeech.
+- PRIORIDAD ÚNICA: normaliza escalas incompatibles entre ambiente, reloj, azul, cambios de líder, rebases, batallas, pole y cierres.
+- PREEMPT: acción real saca de cola relleno/ambiental pendiente; un comentario ambiental ya no puede formarse delante de un cambio de líder.
+- PACING GLOBAL: aplica separación después de cada frase a TODO Auto Locutor, no sólo al motor de candidatos.
+- AMBIENTE/FILLER: si hay voz/cola o actividad editorial reciente, se descarta en lugar de acumularse.
+- SESIÓN: al cambiar sesión purga contenido editorial viejo para que no se cuele en la siguiente manga/final.
+- TTS: reintentos críticos quedan acotados; un error persistente ya no puede reciclar una frase indefinidamente.
+- VOZ PC: Auto Locutor Microsoft queda en 1.7x para claridad, alineado con la selección recomendada.
+- FOLLOW/MÓVIL: el Director Editorial NO se aplica cuando hay piloto seleccionado; conserva el hardening Mobile UX de FIXPACK10/11.
+- QUALY: elimina "pole" calculada por Best Lap; la Q se narra por vueltas + tiempo/proyección comparable.
+- QUALY: desactiva duelos/gaps/closing construidos con cronómetros individuales de salida escalonada.
+- QUALY AMBIENT: usa estLap/estTime para diferencias proyectadas, no resta tiempos brutos de pilotos.
+- AUTO FINISH: checkSessionFinishOnLap queda sólo para FOLLOW; AUTO usa finalizados + settle + resumen estable.
+- AUTO BEST: elimina doble anuncio de Best Lap entre motor global y motor dedicado de Auto Locutor.
+- FIX ACTIVIDAD: corrige variable inexistente gap -> margen en activitySig; evitaba actualizar actividad del feed y fallaba en silencio dentro de try/catch.
+- QUEUE: separa "esencial" de "crítico" y respeta TTL explícito incluso en urgentes; retries conservan caducidad.
+
+FIXPACK11 VOICE QUALITY (2026-08-14) — selección de voz clara en PC + conserva hardening móvil de FIXPACK10:
+- UX móvil: seleccionar piloto arma la voz; el botón VOZ queda como respaldo/reparación.
+- NUEVO estado visible: VOZ APAGADA / LISTA / HABLANDO / RECUPERANDO / REACTIVAR, con instrucción humana.
+- MOBILE: ajustes avanzados de voz se ocultan del flujo normal; no hace falta usar Test.
+- FIX iOS lifecycle: hidden/pageshow/pagehide ya NO marcan bloqueo por anticipado.
+- FIX TTS mobile: se elimina el keepalive con utterance muda de SpeechSynthesis en teléfono.
+- FIX unlock: watchdog inicial más tolerante y al terminar el probe drena la cola real inmediatamente.
+- RECOVERY: iOS pide otro toque sólo después de fallos reales de arranque, no sólo por cambiar de app/pestaña.
+
+vics_Smart_Spotter_v0.5.0.18R25-FIXPACK12-EDITORIAL-DIRECTOR - Blue física Qualy + TTS recovery + auditoría persistente -
+
+- FIXPACK9 BLUE QUALY: el cruce físico usa timestamp de observación del feed, no el tiempo individual de carrera de cada piloto. En Qualy/Manga no compara cronómetros independientes como si fueran un reloj común.
+- FIXPACK9 BLUE QUALY: solo registra un cruce cuando lapcount realmente aumenta; un snapshot inicial ya cargado no fabrica cruces simultáneos.
+- FIXPACK9 BLUE QUALY: P1/P2/P3 deben cruzar DESPUÉS del rezagado y dentro de 1.00 s; cruces viejos caducan y no disparan azules tardías.
+- FIXPACK9 BLUE FINAL: conserva confirmación de lapeo por diferencia de vueltas en Final. En Qualy la diferencia de vueltas deja de ser requisito porque las salidas son escalonadas.
+- FIXPACK9 TTS: si VOZ está ON pero LOCKED/RECOVERING/ERROR, tocar el botón REACTIVA; ya no apaga la voz accidentalmente.
+- FIXPACK9 TTS: el botón muestra ACTIVAR / REACTIVAR / RECUPERANDO / REPARAR según estado real.
+- FIXPACK9 TTS: errores de SpeechSynthesis ya no cuentan como frase hablada; registra el código de error, intenta recovery y reintenta una vez cuando corresponde.
+- FIXPACK9 LOG: auditoría rolling persistente en localStorage; recargar o reabrir recupera el log reciente hasta que el usuario lo limpie.
+- FIXPACK9 VOICES (legacy): Google español 1.4; Microsoft 1.7. Sustituido por FIXPACK11 para la selección automática en PC.
+- FIXPACK11 VOICE QUALITY: en PC la voz automática/default prioriza Microsoft ES-MX/ES-ES y nunca auto-selecciona Google si existe una alternativa española no-Google; limpia Google guardada de sesiones anteriores. Google queda manual a 1.2x para claridad.
+- FIXPACK9 COPY: más variantes de azul para reducir sensación de plantilla.
 
 - NEW MANUAL/Ayuda: contenido rehecho desde cero para pilotos; elimina referencias técnicas/legacy del flujo normal.
 - NEW MANUAL: Inicio, FOLLOW, Alertas, Q TABLA, Estado y Ayuda rápida.
@@ -180,7 +219,7 @@ Nota: En iPhone/iOS, el sistema puede pausar TTS cuando la app se va a backgroun
 <html lang="es">
 <head>
 <meta charset="utf-8"/>
-<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF</title>
+<title>vics_Smart_Spotter_v0.5.0.18R25-FIXPACK12-EDITORIAL-DIRECTOR</title>
 <meta content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" name="viewport"/>
 <style id="appStyles">
 
@@ -6683,6 +6722,41 @@ html, body{
   filter:none !important;
   transform:none !important;
 }
+
+/* === FIXPACK10 · MOBILE VOICE UX === */
+.voice-ux-card{ display:none; }
+@media (max-width:520px){
+  .pilot-select-actions{ flex-wrap:wrap; justify-content:stretch; gap:7px; }
+  .pilot-select-actions .btn-voice-mini{
+    flex:1 1 100% !important; min-height:46px; font-size:13px; font-weight:900;
+    letter-spacing:.055em; border-radius:12px;
+  }
+  .pilot-select-actions .btn-basic-mini{ flex:1 1 calc(100% - 70px) !important; min-height:38px; }
+  .pilot-select-actions .saylaps-toggle{ flex:0 0 58px; min-height:38px; }
+  .voice-ux-card{
+    display:block; margin-top:7px; padding:9px 11px; border-radius:12px;
+    border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.24);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .voice-ux-head{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.055em;}
+  .voice-ux-led{width:9px;height:9px;border-radius:50%;background:#707784;box-shadow:0 0 0 3px rgba(112,119,132,.12);flex:0 0 auto;}
+  .voice-ux-help{margin-top:3px;font-size:11px;line-height:1.25;color:rgba(255,255,255,.72);}
+  .voice-ux-card[data-state="ready"]{border-color:rgba(55,210,120,.34);background:rgba(18,90,49,.14);}
+  .voice-ux-card[data-state="ready"] .voice-ux-led{background:#39d978;box-shadow:0 0 10px rgba(57,217,120,.65);}
+  .voice-ux-card[data-state="speaking"]{border-color:rgba(55,210,120,.50);background:rgba(18,90,49,.20);}
+  .voice-ux-card[data-state="speaking"] .voice-ux-led{background:#39d978;box-shadow:0 0 14px rgba(57,217,120,.95);animation:voiceUxPulse 1s ease-in-out infinite;}
+  .voice-ux-card[data-state="recovering"]{border-color:rgba(255,190,60,.44);background:rgba(120,75,0,.15);}
+  .voice-ux-card[data-state="recovering"] .voice-ux-led{background:#ffbf3c;box-shadow:0 0 12px rgba(255,191,60,.70);animation:voiceUxPulse .8s ease-in-out infinite;}
+  .voice-ux-card[data-state="locked"], .voice-ux-card[data-state="error"]{border-color:rgba(255,75,75,.50);background:rgba(120,20,20,.16);}
+  .voice-ux-card[data-state="locked"] .voice-ux-led, .voice-ux-card[data-state="error"] .voice-ux-led{background:#ff4b4b;box-shadow:0 0 12px rgba(255,75,75,.70);}
+  @keyframes voiceUxPulse{50%{opacity:.45;transform:scale(.82)}}
+  .voice-advanced-mobile{margin-top:4px;border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:0 7px;background:rgba(0,0,0,.16);}
+  .voice-advanced-mobile summary{cursor:pointer;list-style:none;padding:8px 2px;font-size:11px;font-weight:800;letter-spacing:.05em;color:rgba(255,255,255,.70);}
+  .voice-advanced-mobile summary::-webkit-details-marker{display:none;}
+  .voice-advanced-mobile summary::after{content:'  ▾';opacity:.65;}
+  .voice-advanced-mobile[open] summary::after{content:'  ▴';}
+}
+
 </style>
 </head>
 <body class="skin-pro skin-vicpulse">
@@ -6709,7 +6783,7 @@ html, body{
 </div>
 </div>
 <div class="header-version-row">
-<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF</div>
+<div class="header-version" id="appVersion">vics_Smart_Spotter_v0.5.0.18R25-FIXPACK12-EDITORIAL-DIRECTOR</div>
 <div class="header-version" id="lastUpdateInfo"></div>
 </div>
 </header>
@@ -6750,6 +6824,13 @@ html, body{
   <input type="checkbox" id="sayLapsChk" />
   <span>VU</span>
 </label>
+</div>
+<div class="voice-ux-card" id="voiceUxCard" data-state="off" aria-live="polite">
+  <div class="voice-ux-head">
+    <span class="voice-ux-led"></span>
+    <strong id="voiceUxTitle">VOZ APAGADA</strong>
+  </div>
+  <div class="voice-ux-help" id="voiceUxHelp">Selecciona tu piloto. Ese toque activa y prueba la voz.</div>
 </div>
 <div class="pilot-pos-row">
 <div class="pos-pill" id="posText">P -</div>
@@ -6816,6 +6897,8 @@ html, body{
 </div>
 </div>
 <div class="wake-status expert-only" id="backgroundStatus"></div>
+<details class="voice-advanced-mobile" id="voiceAdvancedDetails" open>
+<summary>AJUSTES DE VOZ · OPCIONAL</summary>
 <div class="rate-row" style="margin-top:8px;">
 <div class="rate-label">Velocidad voz</div>
 <input id="rateRange" max="2.5" min="1.0" step="0.1" type="range" value="1.5"/>
@@ -6825,9 +6908,10 @@ html, body{
 <div class="select-label">Voz</div>
 <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;">
 <select class="spotter-select" id="voiceSelect" title="Selecciona voz del sistema (depende del dispositivo)"></select>
-<button class="btn-secondary btn-hot" id="ttsTestBtn" title="Probar voz" type="button"> Test</button>
+<button class="btn-secondary btn-hot" id="ttsTestBtn" title="Prueba manual opcional" type="button">PROBAR</button>
 </div>
 </div>
+</details>
 <div class="grid-button-row">
 <button class="btn-grid" id="btnOpenGrid">
              TOP 3
@@ -7089,7 +7173,7 @@ html, body{
 <div class="manual-top">
 <div>
 <div class="manual-title" id="manualTitle">Vic's Smart Spotter — Manual &amp; Ayuda</div>
-<div class="manual-sub">FIXPACK8 · Guía para pilotos. Activa voz, elige piloto y corre.</div>
+<div class="manual-sub">FIXPACK9 · Blue física + voz autorrecuperable + log persistente.</div>
 </div>
 <button aria-label="Cerrar" class="manual-close" id="manualCloseBtn" type="button">✕</button>
 </div>
@@ -7118,7 +7202,7 @@ html, body{
 <div class="manual-card">
 <ol>
 <li>Abre el Spotter y confirma que <b>LIVE</b> tenga datos.</li>
-<li>Si <b>VOZ</b> está apagada o roja, toca <b>ACTIVAR VOZ</b>.</li>
+<li>En teléfono: elige tu piloto. Ese toque activa la voz. Usa <b>REACTIVAR VOZ</b> sólo si la pantalla te lo pide.</li>
 <li>Selecciona tu nombre en <b>Piloto seguido</b>.</li>
 <li>Elige <b>SÚPER BÁSICO</b>, <b>BÁSICO</b> o <b>NORMAL</b>.</li>
 <li>Deja el teléfono y concéntrate en manejar.</li>
@@ -7259,7 +7343,7 @@ html, body{
 <h3>Controles que sí importan</h3>
 <div class="manual-card">
 <div class="manual-kv">
-<div class="k">ACTIVAR VOZ</div><div class="v">Enciende/desbloquea audio.</div>
+<div class="k">VOZ</div><div class="v">Normalmente se arma al elegir tu piloto. El botón sirve para apagar o reparar si hace falta.</div>
 <div class="k">Modo FOLLOW</div><div class="v">SÚPER BÁSICO / BÁSICO / NORMAL.</div>
 <div class="k">Velocidad voz</div><div class="v">Ajusta qué tan rápido habla.</div>
 <div class="k">Voz</div><div class="v">Selecciona la voz disponible en el dispositivo.</div>
@@ -7273,7 +7357,7 @@ html, body{
 <div class="manual-card">
 <ol>
 <li><b>No veo datos:</b> mira LIVE. Revisa Internet y espera unos segundos para la reconexión automática.</li>
-<li><b>Veo datos pero no escucho:</b> mira VOZ, toca ACTIVAR VOZ y luego Test.</li>
+<li><b>Veo datos pero no escucho:</b> mira el estado bajo VOZ. Si dice REACTIVAR/REPARAR, toca una vez. No refresques como primer paso.</li>
 <li><b>El audio sale en otro lado:</b> revisa Bluetooth/audífonos/salida del sistema.</li>
 <li><b>No aparece mi piloto:</b> espera a que el feed publique la clasificación/lista actual.</li>
 <li><b>Q TABLA está vacía:</b> necesita una Q con datos válidos guardados en este navegador.</li>
@@ -7291,7 +7375,7 @@ html, body{
 <div class="manual-card">
 <ol>
 <li>Confirma Internet.</li>
-<li>Toca <b>ACTIVAR VOZ</b> y <b>Test</b>.</li>
+<li>Selecciona tu piloto. Si la voz pide ayuda, toca <b>REACTIVAR VOZ</b> una vez.</li>
 <li>Espera la autorrecuperación del feed.</li>
 <li>Como último recurso, refresca una vez o cierra y vuelve a abrir.</li>
 </ol>
@@ -7373,7 +7457,7 @@ if (window.__AI_SPOTTER_TRM_INIT__) {
     // =========================
     // VERSION
     // =========================
-const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF";
+const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK12-EDITORIAL-DIRECTOR";
     const APP_LABEL = APP_NAME;
 
     const RUNTIME_PROFILES = {
@@ -7396,6 +7480,9 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF";
     const __TTS_EVENT_LIMIT = 12;
     const __spotterAuditLog = [];
     const __SPOTTER_AUDIT_LIMIT = 3000;
+    const __SPOTTER_AUDIT_STORE_KEY = 'spotterAuditPersistV2';
+    const __SPOTTER_AUDIT_PERSIST_LIMIT = 1200;
+    let __spotterAuditPersistTimer = 0;
     let __spotterAuditDropped = 0;
     let __spotterAuditLastSig = '';
     let __spotterAuditLastAt = 0;
@@ -7563,6 +7650,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF";
       const sess = (extra.sessionInfo && typeof extra.sessionInfo === 'object') ? extra.sessionInfo : (currentSessionInfo || {});
       let synth = null;
       try { synth = getSpeechEngine(); } catch(e) {}
+      let edClass = '', edRank = 0, edAccepted = 0, edDropped = 0;
+      try {
+        edClass = String((__autoEditorialState && __autoEditorialState.currentClass) || '');
+        edRank = Number((__autoEditorialState && __autoEditorialState.currentRank) || 0) || 0;
+        edAccepted = Number((__autoEditorialState && __autoEditorialState.accepted) || 0) || 0;
+        edDropped = Number((__autoEditorialState && __autoEditorialState.dropped) || 0) || 0;
+      } catch(e) {}
       return {
         raceName: String((extra.raceName != null ? extra.raceName : (raw && raw.raceName)) || '').trim(),
         sessionType: String((extra.sessionType != null ? extra.sessionType : ((sess && sess.type) || (raw && raw.sessionType))) || '').trim(),
@@ -7573,11 +7667,66 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF";
         queueLength: Array.isArray(speechQueue) ? speechQueue.length : 0,
         speaking: !!speechSpeaking,
         pending: !!(synth && synth.pending),
+        ttsRuntime: String((typeof __ttsRuntimeState !== 'undefined' ? __ttsRuntimeState : '') || '').trim(),
+        ttsCurrentKey: String((typeof __ttsCurrentKey !== 'undefined' ? __ttsCurrentKey : '') || '').trim(),
+        editorialClass: edClass,
+        editorialRank: edRank,
+        editorialAccepted: edAccepted,
+        editorialDropped: edDropped,
         phase: String((typeof __autoPhase !== 'undefined' ? __autoPhase : '') || '').trim(),
         modeBadge: String((raceModeBadge && raceModeBadge.textContent) || '').trim(),
         key: String((extra.key != null ? extra.key : '') || '').trim(),
         category: String((extra.category != null ? extra.category : '') || '').trim()
       };
+    }
+
+
+    function __persistSpotterAuditNow(){
+      try{
+        if (__spotterAuditPersistTimer) {
+          try { clearTimeout(__spotterAuditPersistTimer); } catch(e) {}
+          __spotterAuditPersistTimer = 0;
+        }
+        const payload = {
+          savedAt: Date.now(),
+          droppedItems: Number(__spotterAuditDropped || 0) || 0,
+          items: __spotterAuditLog.slice(-__SPOTTER_AUDIT_PERSIST_LIMIT)
+        };
+        const raw = JSON.stringify(payload);
+        if (typeof lsSet === 'function') lsSet(__SPOTTER_AUDIT_STORE_KEY, raw);
+        else if (window.localStorage) window.localStorage.setItem(__SPOTTER_AUDIT_STORE_KEY, raw);
+      }catch(e){}
+    }
+
+    function __scheduleSpotterAuditPersist(){
+      try{
+        if (__spotterAuditPersistTimer) return;
+        __spotterAuditPersistTimer = setTimeout(() => {
+          __spotterAuditPersistTimer = 0;
+          __persistSpotterAuditNow();
+        }, 1400);
+      }catch(e){}
+    }
+
+    function __restoreSpotterAuditPersisted(){
+      try{
+        let raw = null;
+        if (typeof lsGet === 'function') raw = lsGet(__SPOTTER_AUDIT_STORE_KEY);
+        else if (window.localStorage) raw = window.localStorage.getItem(__SPOTTER_AUDIT_STORE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        const items = (parsed && Array.isArray(parsed.items)) ? parsed.items.slice(-__SPOTTER_AUDIT_PERSIST_LIMIT) : [];
+        if (!items.length) return;
+        __spotterAuditLog.push(...items);
+        __spotterAuditDropped = Number((parsed && parsed.droppedItems) || 0) || 0;
+        __spotterAuditLog.push({
+          t: Date.now(),
+          action: 'log_restored',
+          detail: 'Bitácora recuperada después de recarga/reapertura',
+          sessionType: '', raceName: '', selectedPilot: '', key: '', category: 'lifecycle'
+        });
+        while (__spotterAuditLog.length > __SPOTTER_AUDIT_LIMIT) { __spotterAuditLog.shift(); __spotterAuditDropped++; }
+      }catch(e){}
     }
 
     function pushSpotterAudit(action, detail = '', extra = {}){
@@ -7596,6 +7745,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF";
         __spotterAuditLastAt = now;
         __spotterAuditLog.push(item);
         while (__spotterAuditLog.length > __SPOTTER_AUDIT_LIMIT) { __spotterAuditLog.shift(); __spotterAuditDropped++; }
+        try { __scheduleSpotterAuditPersist(); } catch(e) {}
         if (isDebugModeActive()) {
           try { renderSpotterAuditLog(); } catch(e) {}
         }
@@ -7668,13 +7818,13 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF";
       try{
         return {
           generatedAt: new Date().toISOString(),
-          appVersion: 'vics_Smart_Spotter_v0.5.0.18R25',
+          appVersion: 'vics_Smart_Spotter_v0.5.0.18R25-FIXPACK12-EDITORIAL-DIRECTOR',
           totalItems: __spotterAuditLog.length,
           droppedItems: __spotterAuditDropped,
           items: __spotterAuditLog.slice()
         };
       }catch(e){
-        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R25', totalItems: 0, droppedItems: 0, items: [] };
+        return { generatedAt: new Date().toISOString(), appVersion: 'vics_Smart_Spotter_v0.5.0.18R25-FIXPACK12-EDITORIAL-DIRECTOR', totalItems: 0, droppedItems: 0, items: [] };
       }
     }
 
@@ -7733,6 +7883,7 @@ const APP_NAME = "vics_Smart_Spotter_v0.5.0.18R25-FIXPACK8-UNIFIED-DEBRIEF";
         __spotterAuditDropped = 0;
         __spotterAuditLastSig = '';
         __spotterAuditLastAt = 0;
+        try { if (typeof lsRemove === 'function') lsRemove(__SPOTTER_AUDIT_STORE_KEY); else if (window.localStorage) window.localStorage.removeItem(__SPOTTER_AUDIT_STORE_KEY); } catch(e) {}
         renderSpotterAuditLog();
         try { showToast('Bitácora limpia', 1200); } catch(e) {}
       }catch(e){}
@@ -9073,21 +9224,21 @@ function msgv2DecimasTxt(ms) {
           let close = [];
 
           if (isFinalCtx) {
-            open = ['Bandera azul.', 'Azul real.', 'Bandera azul, atención.'];
+            open = ['Bandera azul.', 'Azul real.', 'Bandera azul, atención.', 'Azul, sin pelear.', 'Tráfico de líder.', 'Ojo atrás, azul.'];
             core = [
               lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '. Viene ' + who + '.',
               'Viene ' + who + '. ' + lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '.',
               who + ' ya te llegó. ' + lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '.'
             ];
-            close = ['Cede el paso en la recta.', 'No pelees esa posición. Suéltalo limpio.', 'Abre pista y sigue tu carrera.'];
+            close = ['Cede el paso en la recta.', 'No pelees esa posición. Suéltalo limpio.', 'Abre pista y sigue tu carrera.', 'Mantén línea y dale la recta.', 'Déjalo pasar limpio y vuelve a tu ritmo.', 'Sin maniobras raras: recta y pista libre.'];
           } else {
-            open = ['Tráfico de punta.', 'Referencia rápida detrás.', 'Ojo con la punta detrás.'];
+            open = ['Tráfico de punta.', 'Referencia rápida detrás.', 'Ojo con la punta detrás.', 'Azul de Qualy.', 'Auto rápido atrás.', 'Punta llegando.'];
             core = [
               lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '. Viene ' + who + '.',
               'Viene ' + who + '. ' + lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '.',
               who + ' llega por detrás. ' + lapTxt.charAt(0).toUpperCase() + lapTxt.slice(1) + '.'
             ];
-            close = ['No te enganches y deja pista limpia.', 'Respeta la línea y suéltalo limpio.', 'No arruines tu vuelta ni la del rápido.'];
+            close = ['No te enganches y deja pista limpia.', 'Respeta la línea y suéltalo limpio.', 'No arruines tu vuelta ni la del rápido.', 'Mantén tu línea y dale espacio en la recta.', 'Pista limpia y sigue con tu propia vuelta.', 'Sin defender: deja pasar y vuelve al ritmo.'];
           }
 
           out = __ttsSmartJoin([
@@ -9930,6 +10081,7 @@ function msgv2DecimasTxt(ms) {
           __autoFinishSummaryDone = false;
         }
         if (__autoFinishSummaryDone) return;
+        if (__sessionSummaryDone) { __autoFinishSummaryDone = true; return; } // FIXPACK12: un solo cierre general
         if (!__finishResultsStable(r)) return;
 
         const info = currentSessionInfo || {};
@@ -10154,6 +10306,7 @@ function msgv2DecimasTxt(ms) {
           __sessionSummaryDone = false;
         }
         if (__sessionSummaryDone) return;
+        if (__autoFinishSummaryDone) { __sessionSummaryDone = true; return; } // FIXPACK12: evita doble resumen Auto
         if (!__finishResultsStable(r)) return;
 
         const rows = __topRowsByPos(r, 3);
@@ -10334,7 +10487,7 @@ function msgv2DecimasTxt(ms) {
         const now = Date.now();
         const rn = String(r.raceName || '');
         const ambientSig = rn + '|' + sess;
-        const gapNeed = (sess === 'TRAIN') ? 7600 : ((sess === 'FINAL') ? 6800 : 6100);
+        const gapNeed = (sess === 'TRAIN') ? 12000 : ((sess === 'FINAL') ? 10000 : 11500); // FIXPACK12: el ambiente ya no compite cada 6s
         if (__ambientSessionSig === ambientSig && (now - (__ambientSessionLastAt || 0)) < gapNeed) return;
         const rows = __topRowsByPos(r, 5);
         if (!rows.length) return;
@@ -10362,6 +10515,9 @@ function msgv2DecimasTxt(ms) {
         const t3 = Number(p3 && p3.time) || 0;
         const t4 = Number(p4 && p4.time) || 0;
         const gap12Ms = (p2 && lap1 > 0 && lap1 === lap2 && t2 > t1) ? (t2 - t1) : 0;
+        // FIXPACK12: en Q/Práctica los cronómetros individuales no comparten origen.
+        // Para hablar de diferencia entre P1/P2 usamos proyección comparable (estLap + estTime).
+        const projGap12Ms = (p2 && e1Lap > 0 && e1Lap === e2Lap && e1 > 0 && e2 > e1) ? (e2 - e1) : 0;
         const gap23Ms = (p3 && lap2 > 0 && lap2 === lap3 && t3 > t2) ? (t3 - t2) : 0;
         const gap34Ms = (p4 && lap3 > 0 && lap3 === lap4 && t4 > t3) ? (t4 - t3) : 0;
         const total1 = getRowTotalMs(p1) || 0;
@@ -10378,7 +10534,7 @@ function msgv2DecimasTxt(ms) {
           if (b1 > 0) variants.push(p1Name + ' deja ' + __speechTime2(b1) + ' de referencia.');
           if (e1 > 0 && e1Short) variants.push(p1Name + ' pinta para ' + e1Short + '.');
           if (p2Name && e1 > 0 && e1Short && e2 > 0 && e2Short) variants.push(p1Name + ' pinta para ' + e1Short + ', ' + p2Name + ' para ' + e2Short + '.');
-          if (p2Name && gap12Ms > 0 && gap12Ms <= 350) variants.push(p1Name + ' y ' + p2Name + ' van a ' + __speechTime2(gap12Ms) + '.');
+          if (p2Name && projGap12Ms > 0 && projGap12Ms <= 350) variants.push(p1Name + ' y ' + p2Name + ' proyectan una diferencia de ' + __speechTime2(projGap12Ms) + '.');
           if (p2Name && b1 > 0 && b2 > 0) variants.push('Dos referencias: ' + p1Name + ' ' + __speechTime2(b1) + ' y ' + p2Name + ' ' + __speechTime2(b2) + '.');
           if (p3Name && b3 > 0) variants.push('Ya hay tres marcando: ' + p1Name + ', ' + p2Name + ' y ' + p3Name + '.');
           if (e1 > 0 && e1Short) variants.push('Práctica viva. ' + p1Name + ' ya enseña una proyección de ' + e1Short + '.');
@@ -10400,9 +10556,9 @@ function msgv2DecimasTxt(ms) {
           if (e1 > 0 && e1Txt) variants.push('Clasificación viva. ' + p1Name + ' proyecta ' + e1Txt + '.');
           if (e1 > 0 && e1Txt) variants.push('Todo se mide en vueltas y tiempo. ' + p1Name + ' apunta a ' + e1Txt + '.');
           if (qTop1 && p1Name && normalizeNameKey(qTop1) === normalizeNameKey(p1Name)) variants.push(p1Name + ' está empujando para sostener la referencia general.');
-          if (p2Name && gap12Ms > 0 && gap12Ms <= 400) variants.push('La manga viene con filo. ' + p1Name + ' y ' + p2Name + ' están separados por ' + __speechTime2(gap12Ms) + '.');
-          if (b1 > 0) variants.push('La referencia de esta manga la trae ' + p1Name + ' con ' + __speechTime2(b1) + '.');
-          if (p2Name && gap12Ms > 0 && gap12Ms <= 250) variants.push('Qualy muy cerrada. ' + p2Name + ' está a ' + __speechTime2(gap12Ms) + ' de la referencia de la manga.');
+          if (p2Name && projGap12Ms > 0 && projGap12Ms <= 400) variants.push('La manga viene con filo. ' + p1Name + ' y ' + p2Name + ' proyectan una diferencia de ' + __speechTime2(projGap12Ms) + '.');
+          if (b1 > 0) variants.push('Mejor vuelta personal de ' + p1Name + ' en esta manga: ' + __speechTime2(b1) + '.');
+          if (p2Name && projGap12Ms > 0 && projGap12Ms <= 250) variants.push('Qualy muy cerrada por proyección. ' + p2Name + ' está a ' + __speechTime2(projGap12Ms) + ' de ' + p1Name + '.');
           if (qTop1 && qTop2 && qTop3) variants.push('Tabla general provisional real: ' + qTop1 + ' primero, ' + qTop2 + ' segundo y ' + qTop3 + ' tercero.');
           else if (qTop1 && qTop2) variants.push('Tabla general provisional real: ' + qTop1 + ' al frente y ' + qTop2 + ' detrás.');
           else if (qTop1) variants.push('Tabla general provisional: ' + qTop1 + ' al frente.');
@@ -10874,6 +11030,11 @@ function msgv2DecimasTxt(ms) {
     function lsRemove(key) {
       try { localStorage.removeItem(key); } catch (e) { __lsOk = false; }
     }
+
+    // FIXPACK9: restaurar la auditoría DESPUÉS de inicializar el wrapper seguro de localStorage.
+    try { __restoreSpotterAuditPersisted(); } catch(e) {}
+    try { window.addEventListener('pagehide', __persistSpotterAuditNow, { passive:true }); } catch(e) {}
+    try { window.addEventListener('beforeunload', __persistSpotterAuditNow); } catch(e) {}
 
     function groupOf(msgId) {
       const id = String(msgId || '').toLowerCase().trim();
@@ -13908,6 +14069,7 @@ function hardUnlockAudioPipe(){
 
     // TTS
     let chosenVoiceURI = '';
+    let __voiceUserSelectedThisSession = false;
 
     
 // ===== DUO voces (solo Web/desktop): Sabina + Raul =====
@@ -14450,12 +14612,41 @@ let ttsRate = detectDefaultTtsRate();
     }
 
     function pickDefaultVoice(voices) {
-      // Prioridad: es-MX, luego es (cualquier), luego lo que haya.
-      const vMx = voices.find(v => (v.lang || '').toLowerCase().startsWith('es-mx'));
-      if (vMx) return vMx;
-      const vEs = voices.find(v => (v.lang || '').toLowerCase().startsWith('es'));
-      if (vEs) return vEs;
-      return voices[0] || null;
+      // FIXPACK11: calidad primero. En PC NO auto-elegimos Google si hay alternativa española.
+      const arr = Array.isArray(voices) ? voices.filter(Boolean) : [];
+      if (!arr.length) return null;
+      const isGoogle = v => /google/i.test(String((v && v.name) || '')) || /google/i.test(String((v && v.voiceURI) || ''));
+      const isMS = v => /microsoft/i.test(String((v && v.name) || '')) || /microsoft/i.test(String((v && v.voiceURI) || ''));
+      const lang = v => String((v && v.lang) || '').toLowerCase();
+      const isDesk = !(typeof isMobileDevice === 'function' ? isMobileDevice() : (__isAndroidLike() || __isIOSLike()));
+
+      if (isDesk) {
+        // 1) Microsoft México, 2) Microsoft España/otro español.
+        let v = arr.find(x => isMS(x) && lang(x).startsWith('es-mx'));
+        if (v) return v;
+        v = arr.find(x => isMS(x) && lang(x).startsWith('es-es'));
+        if (v) return v;
+        v = arr.find(x => isMS(x) && lang(x).startsWith('es'));
+        if (v) return v;
+        // 3) Cualquier voz española NO Google.
+        v = arr.find(x => !isGoogle(x) && lang(x).startsWith('es-mx'));
+        if (v) return v;
+        v = arr.find(x => !isGoogle(x) && lang(x).startsWith('es'));
+        if (v) return v;
+        // 4) Google sólo como último recurso real.
+        v = arr.find(x => lang(x).startsWith('es-mx'));
+        if (v) return v;
+        v = arr.find(x => lang(x).startsWith('es'));
+        if (v) return v;
+        return arr[0] || null;
+      }
+
+      // Móvil: mantener la mejor voz española disponible del sistema.
+      let v = arr.find(x => lang(x).startsWith('es-mx'));
+      if (v) return v;
+      v = arr.find(x => lang(x).startsWith('es'));
+      if (v) return v;
+      return arr[0] || null;
     }
 
     function refreshVoiceList() {
@@ -14469,6 +14660,16 @@ let ttsRate = detectDefaultTtsRate();
         try {
           const storedURI = prefGet('spotterVoiceURI', null);
           if (storedURI) chosenVoiceURI = storedURI;
+          // FIXPACK11: si quedó Google guardada, no la reutilices automáticamente en PC.
+          try {
+            const __desk = !(typeof isMobileDevice === 'function' ? isMobileDevice() : (__isAndroidLike() || __isIOSLike()));
+            const __sv = raw.find(v => (v.voiceURI || v.name) === chosenVoiceURI);
+            const __isSavedGoogle = __sv && (/google/i.test(String(__sv.name || '')) || /google/i.test(String(__sv.voiceURI || '')));
+            if (__desk && __isSavedGoogle && !__voiceUserSelectedThisSession) {
+              chosenVoiceURI = '';
+              try { prefSet('spotterVoiceURI', ''); } catch(_e) {}
+            }
+          } catch(_e) {}
         } catch (e) {}
       }
 
@@ -14552,7 +14753,10 @@ __autoVoicePool = inter.map(v => (v.voiceURI || v.name)).filter(Boolean);
       voices.forEach(v => {
         const opt = document.createElement('option');
         opt.value = v.voiceURI || v.name || '';
-        opt.textContent = `${v.name} (${v.lang || 'lang'})`;
+        const __isG = /google/i.test(String(v.name || '')) || /google/i.test(String(v.voiceURI || ''));
+        const __isM = /microsoft/i.test(String(v.name || '')) || /microsoft/i.test(String(v.voiceURI || ''));
+        const __tag = __isM ? ' · RECOMENDADA' : (__isG ? ' · MANUAL' : '');
+        opt.textContent = `${v.name} (${v.lang || 'lang'})${__tag}`;
         voiceSelect.appendChild(opt);
       });
 
@@ -14565,20 +14769,27 @@ __autoVoicePool = inter.map(v => (v.voiceURI || v.name)).filter(Boolean);
 }
 
       if (chosenVoiceURI) voiceSelect.value = chosenVoiceURI;
+      try { __autoSetRateFromSelectedVoice(); } catch (e) {}
 
       if (!voiceSelect.__bound) {
         voiceSelect.__bound = true;
         voiceSelect.addEventListener('change', () => {
+          __voiceUserSelectedThisSession = true;
           chosenVoiceURI = voiceSelect.value || '';
           try { prefSet('spotterVoiceURI', chosenVoiceURI); } catch (e) {}
           try { __autoSetRateFromSelectedVoice(); } catch (e) {}
+          try {
+            const __vv = raw.find(v => (v.voiceURI || v.name) === chosenVoiceURI);
+            const __g = __vv && (/google/i.test(String(__vv.name || '')) || /google/i.test(String(__vv.voiceURI || '')));
+            if (__g) showToast('Google: modo compatibilidad · 1.2x', 1600);
+          } catch(e) {}
         });
       }
     }
 
     // Auto-rate por tipo de voz seleccionada:
     // - Microsoft: 1.7
-    // - Google: 1.2
+    // - Google: 1.2 (compatibilidad/claridad)
     // Nota: si no coincide, no tocamos el rate (respeta el slider).
     function __autoSetRateFromSelectedVoice() {
       try {
@@ -15584,6 +15795,231 @@ const __speechLastCategoryText = new Map();
 const __speechRecentSigAt = new Map();
 const __speechRecentKeyAt = new Map();
 
+// ============================================================
+// FIXPACK12 — DIRECTOR EDITORIAL GLOBAL PARA AUTO LOCUTOR
+// Problema que corrige:
+// distintos productores usaban escalas de prioridad incompatibles
+// (ej. ambiente ~64, leader change 9, blue 6), así que relleno podía
+// quedar delante de acción real. Ahora TODO contenido de AUTO pasa por
+// esta capa antes de entrar a la cola TTS.
+// FOLLOW queda fuera: con piloto seleccionado no se aplica.
+// ============================================================
+const __autoEditorialState = {
+  sessionSig: '',
+  lastAcceptedAt: 0,
+  lastStartAt: 0,
+  lastEndAt: 0,
+  lastClass: '',
+  lastRank: 0,
+  currentRank: 0,
+  currentClass: '',
+  accepted: 0,
+  dropped: 0,
+  classLastAt: new Map(),
+  keyLastAt: new Map()
+};
+
+function __autoEditorialIsActive(opts, key){
+  try {
+    // Gestos/controles de usuario y pruebas de TTS nunca pasan por pacing editorial.
+    const k = String(key || '').toLowerCase();
+    if (opts && (opts.user === true || opts.force === true)) return false;
+    if (k === 'tts_test' || k === 'user_voice_on' || k.startsWith('mode_voice_') || k.startsWith('sys_')) return false;
+    const hasPilot = (typeof selectedPilotKey !== 'undefined' && !!selectedPilotKey);
+    return !hasPilot;
+  } catch(e) { return false; }
+}
+
+function __autoEditorialSessionSig(){
+  try {
+    const rn = String((raceData && raceData.raceName) || '').trim();
+    let sess = '';
+    try { sess = String(getSessionSignature(raceData) || '').trim(); } catch(e) {}
+    const st = String((currentSessionInfo && currentSessionInfo.type) || '').trim().toUpperCase();
+    return sess || (rn + '|' + st);
+  } catch(e) { return ''; }
+}
+
+function __autoEditorialReset(sig){
+  try {
+    __autoEditorialState.sessionSig = String(sig || '');
+    __autoEditorialState.lastAcceptedAt = 0;
+    __autoEditorialState.lastStartAt = 0;
+    __autoEditorialState.lastEndAt = 0;
+    __autoEditorialState.lastClass = '';
+    __autoEditorialState.lastRank = 0;
+    __autoEditorialState.currentRank = 0;
+    __autoEditorialState.currentClass = '';
+    __autoEditorialState.accepted = 0;
+    __autoEditorialState.dropped = 0;
+    __autoEditorialState.classLastAt = new Map();
+    __autoEditorialState.keyLastAt = new Map();
+    // Al cambiar sesión, no dejes frases editoriales de la sesión vieja esperando aire.
+    if (typeof speechQueue !== 'undefined' && Array.isArray(speechQueue)) {
+      for (let i = speechQueue.length - 1; i >= 0; i--) {
+        const it = speechQueue[i];
+        if (it && it.autoEditorial) speechQueue.splice(i, 1);
+      }
+    }
+  } catch(e) {}
+}
+
+function __autoEditorialBucket(){
+  try {
+    const t = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
+    if (t === 'MANGA' || t === 'QUALI') return 'MANGA';
+    if (t === 'FINAL' || t.startsWith('FINAL')) return 'FINAL';
+    if (t === 'TRAIN' || t === 'PRACTICE') return 'TRAIN';
+  } catch(e) {}
+  return 'OTHER';
+}
+
+function __autoEditorialClassify(key, cat, rawPriority, text){
+  const k = String(key || '').toLowerCase();
+  const c = String(cat || '').toLowerCase();
+  const bucket = __autoEditorialBucket();
+  const gaps = (bucket === 'FINAL')
+    ? { action:2800, info:5200, ambient:10000, filler:14000 }
+    : (bucket === 'MANGA')
+      ? { action:3200, info:6000, ambient:11500, filler:15000 }
+      : { action:3500, info:6500, ambient:12000, filler:15000 };
+
+  let meta = { cls:'info', rank:55, priority:55, minGapMs:gaps.info, ttlMs:5200, preempt:false, critical:false };
+
+  // Cierre / título: nunca deben competir con relleno.
+  if (k.startsWith('auto_top3_finish_') || k.startsWith('auto_finalizo_') || c === 'finish' || k.includes('finish_summary')) {
+    meta = { cls:'critical', rank:100, priority:99, minGapMs:0, ttlMs:0, preempt:true, critical:true };
+  } else if (k.startsWith('auto_intro_title_') || k.includes('session_title')) {
+    meta = { cls:'critical', rank:98, priority:96, minGapMs:0, ttlMs:0, preempt:true, critical:true };
+  } else if (k.startsWith('ambient_')) {
+    meta = { cls:'ambient', rank:28, priority:28, minGapMs:gaps.ambient, ttlMs:2500, preempt:false, critical:false };
+  } else if (k.startsWith('time_mark_')) {
+    meta = { cls:'clock', rank:94, priority:89, minGapMs:500, ttlMs:5000, preempt:true, critical:false };
+  } else if (c === 'blueflag' || k.includes('auto_blue_') || k.includes('blueflag')) {
+    meta = { cls:'urgent', rank:92, priority:88, minGapMs:700, ttlMs:4500, preempt:true, critical:true };
+  } else if (k.includes('leader_change') || (c === 'leader' && k.includes('auto_'))) {
+    meta = { cls:'urgent', rank:90, priority:87, minGapMs:1000, ttlMs:4200, preempt:true, critical:false };
+  } else if (k.startsWith('auto_pass_')) {
+    meta = { cls:'action', rank:86, priority:84, minGapMs:1800, ttlMs:3800, preempt:true, critical:false };
+  } else if (k.startsWith('quali_global_') || k.startsWith('quali_pole_') || k.startsWith('auto_record') || k.startsWith('auto_quali_best') || k.startsWith('auto_quali_pole') || c === 'bestlap' || c === 'qualipole') {
+    meta = { cls:'important', rank:82, priority:80, minGapMs:2400, ttlMs:5200, preempt:true, critical:false };
+  } else if (k.startsWith('auto_story_') || k.startsWith('auto_duel_') || k.startsWith('auto_close_') || k.startsWith('auto_pressure_') || c === 'battle' || c === 'pressure') {
+    meta = { cls:'action', rank:74, priority:74, minGapMs:gaps.action, ttlMs:3600, preempt:true, critical:false };
+  } else if (k.startsWith('auto_top3') || c === 'top3' || c === 'podium') {
+    meta = { cls:'summary', rank:62, priority:62, minGapMs:gaps.info, ttlMs:5000, preempt:false, critical:false };
+  } else if (k.startsWith('auto_train_') || k.startsWith('auto_gap_') || c === 'train' || c === 'gaps') {
+    meta = { cls:'info', rank:50, priority:50, minGapMs:gaps.info, ttlMs:3800, preempt:false, critical:false };
+  } else if (k.startsWith('auto_mini') || c === 'mini') {
+    meta = { cls:'filler', rank:22, priority:22, minGapMs:gaps.filler, ttlMs:2200, preempt:false, critical:false };
+  } else if ((Number(rawPriority) || 0) >= 90) {
+    meta = { cls:'critical', rank:97, priority:95, minGapMs:0, ttlMs:0, preempt:true, critical:true };
+  }
+
+  meta.bucket = bucket;
+  meta.key = k;
+  meta.category = c;
+  meta.text = String(text || '');
+  return meta;
+}
+
+function __autoEditorialPreemptPending(meta){
+  try {
+    if (!meta || !Array.isArray(speechQueue)) return;
+    const incomingRank = Number(meta.rank || 0) || 0;
+    for (let i = speechQueue.length - 1; i >= 0; i--) {
+      const it = speechQueue[i];
+      const em = it && it.autoEditorial;
+      if (!em) continue;
+      const r = Number(em.rank || 0) || 0;
+      const lowFiller = (em.cls === 'ambient' || em.cls === 'filler');
+      const replaceableInfo = (em.cls === 'info' || em.cls === 'summary');
+      if ((meta.preempt && r < incomingRank) || (incomingRank >= 70 && lowFiller) || (incomingRank >= 82 && replaceableInfo)) {
+        try { pushSpotterAudit('editorial_preempt', it.text || '', { key:it.key || '', category:it.category || '', reason:(meta.cls || '') + '>' + (em.cls || ''), throttleMs:0 }); } catch(e) {}
+        speechQueue.splice(i, 1);
+      }
+    }
+  } catch(e) {}
+}
+
+function __autoEditorialPrepare(clean, key, cat, rawPriority, opts, now){
+  try {
+    if (!__autoEditorialIsActive(opts, key)) return null;
+    const t = Number(now || Date.now()) || Date.now();
+    const sig = __autoEditorialSessionSig();
+    if (sig && sig !== String(__autoEditorialState.sessionSig || '')) __autoEditorialReset(sig);
+
+    const meta = __autoEditorialClassify(key, cat, rawPriority, clean);
+
+    // Relleno no se almacena detrás de otra frase: si no hay aire, se descarta y se regenerará luego.
+    if (meta.cls === 'ambient' || meta.cls === 'filler') {
+      const sinceAccepted = t - (Number(__autoEditorialState.lastAcceptedAt || 0) || 0);
+      const hasEditorialPending = Array.isArray(speechQueue) && speechQueue.some(it => it && it.autoEditorial);
+      if (speechSpeaking || hasEditorialPending || (__autoEditorialState.lastAcceptedAt && sinceAccepted < meta.minGapMs)) {
+        __autoEditorialState.dropped++;
+        try { pushSpotterAudit('editorial_drop_filler', clean, { key, category:cat, reason:meta.cls, throttleMs:700, dedupeKey:'edfill|' + key }); } catch(e) {}
+        return { allow:false, meta };
+      }
+    }
+
+    // Info/resúmenes no se duplican si ya hay algo igual o más importante esperando.
+    if (meta.rank < 70 && Array.isArray(speechQueue)) {
+      const strongerPending = speechQueue.some(it => it && it.autoEditorial && Number(it.autoEditorial.rank || 0) >= Number(meta.rank || 0));
+      if (strongerPending) {
+        __autoEditorialState.dropped++;
+        try { pushSpotterAudit('editorial_drop_lower', clean, { key, category:cat, reason:meta.cls, throttleMs:700, dedupeKey:'edlow|' + key }); } catch(e) {}
+        return { allow:false, meta };
+      }
+    }
+
+    return { allow:true, meta };
+  } catch(e) {
+    return null; // fail-open: jamás dejar mudo al sistema por un error del director editorial
+  }
+}
+
+function __autoEditorialOnQueued(meta, key, at){
+  try {
+    if (!meta) return;
+    const t = Number(at || Date.now()) || Date.now();
+    __autoEditorialState.lastAcceptedAt = t;
+    __autoEditorialState.lastClass = String(meta.cls || '');
+    __autoEditorialState.lastRank = Number(meta.rank || 0) || 0;
+    __autoEditorialState.accepted++;
+    try { __autoEditorialState.classLastAt.set(String(meta.cls || ''), t); __autoEditorialState.keyLastAt.set(String(key || ''), t); } catch(e) {}
+  } catch(e) {}
+}
+
+function __autoEditorialWaitMs(next, now){
+  try {
+    const em = next && next.autoEditorial;
+    if (!em || em.critical || Number(em.minGapMs || 0) <= 0) return 0;
+    const endAt = Number(__autoEditorialState.lastEndAt || 0) || 0;
+    if (!endAt) return 0;
+    const allowedAt = endAt + Number(em.minGapMs || 0);
+    return Math.max(0, allowedAt - (Number(now || Date.now()) || Date.now()));
+  } catch(e) { return 0; }
+}
+
+function __autoEditorialOnStart(next, at){
+  try {
+    if (!next || !next.autoEditorial) return;
+    const t = Number(at || Date.now()) || Date.now();
+    __autoEditorialState.lastStartAt = t;
+    __autoEditorialState.currentRank = Number(next.autoEditorial.rank || 0) || 0;
+    __autoEditorialState.currentClass = String(next.autoEditorial.cls || '');
+  } catch(e) {}
+}
+
+function __autoEditorialOnEnd(next, at){
+  try {
+    if (!next || !next.autoEditorial) return;
+    const t = Number(at || Date.now()) || Date.now();
+    __autoEditorialState.lastEndAt = t;
+    __autoEditorialState.currentRank = 0;
+    __autoEditorialState.currentClass = '';
+  } catch(e) {}
+}
+
 function __speechCatFromOpts(opts, key, text){
   try{
     const direct = String((opts && (opts.queueCategory || opts.category || opts.semanticCategory)) || '').trim().toLowerCase();
@@ -15620,7 +16056,9 @@ function __speechIsNoisyCat(cat){
 
 function __speechIsCriticalCat(cat, priority, opts, key){
   try{
-    if (__isEssentialSpeech(opts, key, priority)) return true;
+    // FIXPACK12: "esencial para romper silencio" NO significa "inmortal en cola".
+    // Críticos reales: gesto/force, sistema, cierre, azul, podio explícito o prioridad >=90.
+    if (opts && (opts.force === true || opts.user === true)) return true;
     const c = String(cat || '').toLowerCase();
     if (c === 'system' || c === 'finish' || c === 'blueflag' || c === 'podium') return true;
     if ((Number(priority) || 0) >= 90) return true;
@@ -15648,9 +16086,11 @@ function __speechExpiryFor(cat, priority, opts){
 function __speechIsExpired(it, now){
   try{
     if (!it) return true;
-    if (__speechIsCriticalCat(it.category, it.priority, it.opts || {}, it.key)) return false;
+    // FIXPACK12: una caducidad explícita manda incluso en mensajes urgentes.
+    // Así una azul o aviso de reloj viejo no reaparece muchos segundos después.
     const exp = Number(it.expireAt || 0) || 0;
     if (exp > 0 && now > exp) return true;
+    if (__speechIsCriticalCat(it.category, it.priority, it.opts || {}, it.key)) return false;
     return false;
   }catch(e){ return false; }
 }
@@ -16054,10 +16494,22 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           const last = lastSpokenKeyAt.get(key) || 0;
           if (now - last < cooldownMs) { try { pushSpotterAudit('suppress_cooldown', clean, { key, throttleMs: 600, dedupeKey:'sup_cd|' + key + '|' + clean }); } catch(e) {} return; }
         }
-        const priority = Number.isFinite(opts.priority) ? opts.priority : 0;
+        let priority = Number.isFinite(opts.priority) ? opts.priority : 0;
         const interrupt = !!opts.interrupt;
         const dedupe = (opts.dedupe !== false);
         const queueCategory = __speechCatFromOpts(opts, key, clean);
+
+        // FIXPACK12: unifica prioridades/pacing de TODAS las capas del AUTO LOCUTOR.
+        // FOLLOW (piloto seleccionado) no entra aquí.
+        let __autoEd = null;
+        try {
+          const __edPrep = __autoEditorialPrepare(clean, key, queueCategory, priority, opts, now);
+          if (__edPrep && __edPrep.allow === false) return;
+          if (__edPrep && __edPrep.allow === true && __edPrep.meta) {
+            __autoEd = __edPrep.meta;
+            priority = Number(__autoEd.priority || priority) || priority;
+          }
+        } catch(e) {}
 
         if (!__followQuietSpeechAllowed(clean, key, queueCategory, opts)) {
           try { pushSpotterAudit('suppress_follow_quiet', clean, { key, category: queueCategory, throttleMs: 600, dedupeKey:'sup_follow|' + key + '|' + clean }); } catch(e) {}
@@ -16118,12 +16570,14 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         // - default ON en categorias narrativas
         // - se puede desactivar por mensaje: { semanticDedupe:false }
         const __semCat = String(opts.semanticCategory || opts.category || __inferSemCategoryFromKey(key) || '').trim();
+        let __semRememberPending = null;
         if (opts.semanticDedupe !== false && __semCat && !__semSkipCategory(__semCat)) {
           const thr = (opts.semanticThreshold != null) ? Number(opts.semanticThreshold) : 0.78;
           const win = (opts.semanticWindowMs != null) ? Number(opts.semanticWindowMs) : 25000;
           if (__semIsRepeat(__semCat, clean, thr, win)) { try { pushSpotterAudit('suppress_semantic', clean, { key, category: __semCat, throttleMs: 1000, dedupeKey:'sup_sem|' + __semCat + '|' + clean }); } catch(e) {} return; }
-          // solo recordamos si va a entrar a cola
-          __semRemember(__semCat, clean, win);
+          // FIXPACK12: NO memorizar todavía. Otros filtros pueden rechazar la frase.
+          // Se confirma sólo después de que el mensaje entra realmente a speechQueue.
+          __semRememberPending = { cat: __semCat, text: clean, win };
         }
 
         if (dedupe) {
@@ -16155,7 +16609,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
             const __vv = (window.speechSynthesis && window.speechSynthesis.getVoices) ? (window.speechSynthesis.getVoices() || []) : [];
             const __v = __vv.find(x => (x.voiceURI || x.name) === __voiceURI);
             const __nm = String((__v && __v.name) || '').toLowerCase();
-            if (__nm.includes('microsoft')) rate = 1.8;
+            if (__nm.includes('microsoft')) rate = 1.7;
           } catch(e) {}
         }
 
@@ -16168,8 +16622,11 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
             return;
           }
         }
-        const ttlMs = __speechExpiryFor(queueCategory, priority, opts);
-        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: __voiceURI, category: queueCategory, expireAt: ttlMs > 0 ? (now + ttlMs) : 0, retryCount: Number(opts.retryCount || 0) || 0, opts });
+        const ttlMs = (__autoEd && __autoEd.ttlMs != null) ? Math.max(0, Number(__autoEd.ttlMs) || 0) : __speechExpiryFor(queueCategory, priority, opts);
+        try { if (__autoEd) __autoEditorialPreemptPending(__autoEd); } catch(e) {}
+        speechQueue.push({ text: clean, key, priority, ts: now, rate, pitch, volume, postDelayMs, voiceURI: __voiceURI, category: queueCategory, expireAt: ttlMs > 0 ? (now + ttlMs) : 0, retryCount: Number(opts.retryCount || 0) || 0, opts, autoEditorial: __autoEd });
+        try { if (__semRememberPending) __semRemember(__semRememberPending.cat, __semRememberPending.text, __semRememberPending.win); } catch(e) {}
+        try { if (__autoEd) __autoEditorialOnQueued(__autoEd, key, now); } catch(e) {}
         try { __recentEnqueueAt.set(recentEnqKey, now); } catch(e) {}
         try { __speechRecentSigAt.set(recentSig, now); } catch(e) {}
         try { __speechRecentKeyAt.set(String(key || '').trim().toLowerCase(), now); } catch(e) {}
@@ -16270,6 +16727,19 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
         }
         if (!next) return;
 
+        // FIXPACK12: separación GLOBAL entre frases de AUTO.
+        // Si todavía no toca aire, reinsertamos el evento (sin perderlo) y esperamos.
+        try {
+          const __edWait = __autoEditorialWaitMs(next, Date.now());
+          if (__edWait > 0) {
+            speechQueue.unshift(next);
+            speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
+            try { pushSpotterAudit('editorial_wait', next.text || '', { key:next.key || '', category:next.category || '', reason:String(Math.round(__edWait)) + 'ms', throttleMs:900, dedupeKey:'edwait|' + (next.key || '') }); } catch(e) {}
+            scheduleSpeechPump(Math.min(15000, Math.max(80, __edWait)));
+            return;
+          }
+        } catch(e) {}
+
         try { __ttsLastSpeakCallAt = Date.now(); __ttsLastEventAt = __ttsLastSpeakCallAt; __ttsCurrentText = (next.text || ''); __ttsCurrentKey = (next.key || ''); } catch(e) {}
         const u = new SpeechSynthesisUtterance(normalizeTtsText(next.text));
         let __ttsDidStart = false;
@@ -16277,6 +16747,7 @@ const key = String(opts.key || '').trim() || clean; // dedupe por texto si no ha
           u.onstart = () => {
             __ttsDidStart = true;
         try { __ttsLastStartAt = Date.now(); __ttsLastEventAt = __ttsLastStartAt; } catch(e) {}
+        try { __autoEditorialOnStart(next, __ttsLastStartAt || Date.now()); } catch(e) {}
         try { __speechLastCategoryAt.set(String(next.category || 'general'), __ttsLastStartAt || Date.now()); __speechLastCategoryText.set(String(next.category || 'general'), String(next.text || '')); } catch(e) {}
         try { pushTtsEvent('start', next.text || '', next.key || 'tts'); } catch(e) {}
         try { pushSpotterAudit('tts_start', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
@@ -16309,6 +16780,13 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
           if (!v && next && next.voiceURI) {
             try { v = voices.find(x => (x.voiceURI || x.name) === next.voiceURI); } catch(e) {}
           }
+          // FIXPACK12: en AUTO LOCUTOR de escritorio, claridad manda.
+          // Aunque haya quedado una Google seleccionada manual/legacy, AUTO toma la voz recomendada (Microsoft si existe).
+          try {
+            const __pumpAuto = (typeof selectedPilotKey === 'undefined' || !selectedPilotKey);
+            const __pumpDesktop = !(typeof isMobileDevice === 'function' ? isMobileDevice() : false);
+            if (!v && __pumpAuto && __pumpDesktop) v = pickDefaultVoice(voices);
+          } catch(e) {}
           if (!v && chosenVoiceURI && !(next && next.voiceURI)) v = voices.find(x => (x.voiceURI || x.name) === chosenVoiceURI);
           if (!v) v = pickDefaultVoice(voices);
           const __pickedEs = pickDefaultVoice(voices);
@@ -16332,6 +16810,7 @@ if (__duoWebEnabled && __duoVoiceSabinaURI && __duoVoiceRaulURI) {
 
         u.onend = () => {
         try { __ttsLastEndAt = Date.now(); __ttsLastEventAt = __ttsLastEndAt; } catch(e) {}
+          try { __autoEditorialOnEnd(next, __ttsLastEndAt || Date.now()); } catch(e) {}
           try { pushTtsEvent('end', next.text || '', next.key || 'tts'); } catch(e) {}
           try { pushSpotterAudit('tts_end', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
           clearSpeechWatchdog();
@@ -16346,35 +16825,64 @@ try { if (next && typeof next.key === 'string' && next.key.indexOf('auto_intro_t
           const d = Number(next.postDelayMs || 0) || 0;
           scheduleSpeechPump(d);
         };
-        u.onerror = () => {
-        try { __ttsLastEventAt = Date.now(); } catch(e) {}
-          try { pushTtsEvent('error', next.text || '', next.key || 'tts'); } catch(e) {}
-          try { pushSpotterAudit('tts_error', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
+        u.onerror = (ev) => {
+          const errCode = String((ev && ev.error) || 'unknown').toLowerCase();
+          try { __ttsLastEventAt = Date.now(); } catch(e) {}
+          try { pushTtsEvent('error', errCode + ' | ' + (next.text || ''), next.key || 'tts'); } catch(e) {}
+          try { pushSpotterAudit('tts_error', next.text || '', { key: next.key || '', category: next.category || '', reason: errCode, throttleMs: 0 }); } catch(e) {}
           clearSpeechWatchdog();
+          try { clearTtsStartGuard(); } catch(e) {}
           speechSpeaking = false;
           try { __setTtsRuntimeState('RECOVERING'); } catch(e) {}
-                    try { __ttsStartGuardFails = 0; } catch(e) {}
+          try { __ttsStartGuardFails = 0; } catch(e) {}
           try { __ttsCurrentKey = ''; __ttsCurrentText = ''; } catch(e) {}
+          try { if (next && next.autoEditorial) { __autoEditorialState.currentRank = 0; __autoEditorialState.currentClass = ''; } } catch(e) {}
+
+          // IMPORTANTE: una frase con error NO cuenta como hablada. Antes se grababa en
+          // lastSpokenKeyAt/lastSpokenTextAt y el propio dedupe podía prolongar el silencio.
+          const intentional = (errCode === 'canceled' || errCode === 'interrupted');
+          const lockLike = (errCode === 'not-allowed');
+          let requeued = false;
           try {
+            const retryCount = (Number(next && next.retryCount || 0) || 0) + 1;
+            const critical = __speechIsCriticalCat(next.category, next.priority, next.opts || {}, next.key);
             const canRetryLifecycle = !!(next && typeof next.key === 'string' && next.key.indexOf('watcher_life_') === 0 && !(next.opts && next.opts.__criticalRetryDone));
-            if (canRetryLifecycle) {
-              const retryOpts = Object.assign({}, next.opts || {}, { __criticalRetryDone: true });
+            const __maxRetry = canRetryLifecycle ? 3 : (critical ? 3 : 1);
+            const recoverable = !intentional && (retryCount <= __maxRetry);
+            if (recoverable) {
+              const retryOpts = Object.assign({}, next.opts || {}, canRetryLifecycle ? { __criticalRetryDone: true } : {});
               const retryItem = Object.assign({}, next, {
+                retryCount,
                 ts: Date.now(),
-                priority: Math.max(Number(next.priority || 0) || 0, 96),
+                priority: canRetryLifecycle ? Math.max(Number(next.priority || 0) || 0, 96) : Number(next.priority || 0),
                 postDelayMs: Math.max(120, Number(next.postDelayMs || 0) || 0),
-                expireAt: 0,
+                expireAt: Number(next.expireAt || 0) || 0,
                 opts: retryOpts
               });
-              try { speechQueue.unshift(retryItem); } catch(e) {}
-              try { pushSpotterAudit('tts_retry', next.text || '', { key: next.key || '', category: next.category || '', throttleMs: 0 }); } catch(e) {}
-              scheduleSpeechPump(260);
-              return;
+              speechQueue.unshift(retryItem);
+              speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
+              requeued = true;
+              try { pushSpotterAudit('tts_retry', next.text || '', { key: next.key || '', category: next.category || '', reason: errCode, throttleMs: 0 }); } catch(e) {}
             }
           } catch(e) {}
-lastSpokenKeyAt.set(next.key, Date.now());
-          try { lastSpokenTextAt.set(next.text, Date.now()); } catch(e) {}
-          const d = Number(next.postDelayMs || 0) || 0;
+
+          try {
+            const __erIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false;
+            if (lockLike && __erIOS) {
+              pendingAutoVoiceUnlock = true;
+              __ttsBlockedSince = Date.now();
+              __ttsUnlockedOnce = false;
+              __setTtsRuntimeState('LOCKED');
+              try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+              try { scheduleOneTapUnlock(); } catch(e) {}
+            } else if (!intentional) {
+              try { if (typeof refreshVoiceList === 'function') refreshVoiceList(); } catch(e) {}
+              try { forceTtsRecover('error-recover:' + errCode); } catch(e) {}
+            }
+          } catch(e) {}
+
+          try { updateVoiceStatusDot(); } catch(e) {}
+          const d = intentional ? Math.max(80, Number(next.postDelayMs || 0) || 0) : (requeued ? 260 : Math.max(120, Number(next.postDelayMs || 0) || 0));
           scheduleSpeechPump(d);
         };
 
@@ -16384,9 +16892,31 @@ lastSpokenKeyAt.set(next.key, Date.now());
           clearSpeechWatchdog();
           return;
         }
-        __synth.speak(u);
+        try {
+          __synth.speak(u);
+        } catch (speakErr) {
+          // FIXPACK9: si speak() falla de forma síncrona, no perder la frase al haberla sacado ya de la cola.
+          try { clearSpeechWatchdog(); clearTtsStartGuard(); } catch(e) {}
+          speechSpeaking = false;
+          try { __setTtsRuntimeState('RECOVERING'); } catch(e) {}
+          try { pushTtsEvent('error', 'speak_throw: ' + String(speakErr), next.key || 'tts'); } catch(e) {}
+          try { pushSpotterAudit('tts_error', next.text || '', { key: next.key || '', category: next.category || '', reason:'speak_throw:' + String(speakErr), throttleMs:0 }); } catch(e) {}
+          try {
+            const retryCount = (Number(next.retryCount || 0) || 0) + 1;
+            const __throwCritical = __speechIsCriticalCat(next.category, next.priority, next.opts || {}, next.key);
+            const __throwMaxRetry = __throwCritical ? 3 : 1;
+            if (retryCount <= __throwMaxRetry) {
+              speechQueue.unshift(Object.assign({}, next, { retryCount, ts:Date.now(), expireAt:Number(next.expireAt || 0) || 0 }));
+              speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
+            }
+          } catch(e) {}
+          try { forceTtsRecover('speak-throw-recover'); } catch(e) {}
+          try { updateVoiceStatusDot(); } catch(e) {}
+          try { scheduleSpeechPump(280); } catch(e) {}
+          return;
+        }
 
-        // Start-guard: si no arranca en ~1.2s, suele ser bloqueo de TTS (iOS/Android tras auto-lock o background).
+        // Start-guard: si no arranca en ~3.5s, suele ser bloqueo de TTS (iOS/Android tras auto-lock o background).
         // Importante: NO drenamos la cola. Dejamos el mensaje en espera y pedimos un tap para reactivar.
         try {
           clearTtsStartGuard();
@@ -16406,8 +16936,10 @@ lastSpokenKeyAt.set(next.key, Date.now());
               // Reinsertar el mismo mensaje al frente, pero con tope de reintentos para no reciclar basura vieja.
               try {
                 const retryCount = (Number(next.retryCount || 0) || 0) + 1;
-                const retryItem = Object.assign({}, next, { retryCount, ts: Date.now(), expireAt: 0 });
-                if (retryCount <= 2 || __speechIsCriticalCat(next.category, next.priority, next.opts || {}, next.key)) {
+                const retryItem = Object.assign({}, next, { retryCount, ts: Date.now(), expireAt: Number(next.expireAt || 0) || 0 });
+                const __startCritical = __speechIsCriticalCat(next.category, next.priority, next.opts || {}, next.key);
+                const __startMaxRetry = __startCritical ? 3 : 2;
+                if (retryCount <= __startMaxRetry) {
                   speechQueue.unshift(retryItem);
                   speechQueue.sort((a,b) => (b.priority - a.priority) || (a.ts - b.ts));
                 } else {
@@ -16579,8 +17111,6 @@ let __ttsRuntimeState = (!voiceMasterEnabled ? 'OFF' : ((__ttsUnlockedOnce && !p
 function updateVoiceStatusDot(){
   try{
     const dot = document.getElementById('voiceStatusDot');
-    if (!dot) return;
-
     const synth = (window && window.speechSynthesis) ? window.speechSynthesis : null;
     const speaking = !!synth && (synth.speaking || synth.pending);
 
@@ -16589,27 +17119,69 @@ function updateVoiceStatusDot(){
 
     let runtime = String(__ttsRuntimeState || 'OFF').toUpperCase();
     if (!voiceMasterEnabled) runtime = 'OFF';
-    else if (speaking) runtime = 'SPEAKING';
     else if (needsUnlock) runtime = 'LOCKED';
-    else if (runtime === 'OFF' || runtime === 'LOCKED') runtime = 'READY';
+    else if (runtime === 'RECOVERING' || runtime === 'ERROR') runtime = runtime;
+    else if (speaking) runtime = 'SPEAKING';
+    else if (runtime === 'OFF' || runtime === 'LOCKED' || runtime === 'SPEAKING') runtime = 'READY';
 
     const ok = (runtime === 'READY' || runtime === 'SPEAKING');
     const warn = (runtime === 'LOCKED' || runtime === 'RECOVERING' || runtime === 'ERROR');
     const off = (runtime === 'OFF');
 
-    dot.classList.toggle('voice-on', ok);
-    dot.classList.toggle('voice-off', off);
-    dot.classList.toggle('voice-warn', warn);
-    dot.classList.toggle('voice-speaking', speaking);
-
     const title = off ? 'Voz OFF'
-      : (runtime === 'LOCKED' ? 'Voz ON - requiere toque'
+      : (runtime === 'LOCKED' ? 'Voz ON - requiere reactivación'
       : (runtime === 'RECOVERING' ? 'Voz recuperando'
       : (runtime === 'ERROR' ? 'Voz con error'
       : (speaking ? 'Voz hablando' : 'Voz OK'))));
 
-    dot.title = title;
-    dot.setAttribute('aria-label', title);
+    if (dot) {
+      dot.classList.toggle('voice-on', ok);
+      dot.classList.toggle('voice-off', off);
+      dot.classList.toggle('voice-warn', warn);
+      dot.classList.toggle('voice-speaking', speaking);
+      dot.title = title;
+      dot.setAttribute('aria-label', title);
+    }
+
+    // FIXPACK9: el usuario no debe interpretar un puntito. El botón dice qué hacer.
+    let buttonText = ' ACTIVAR VOZ';
+    if (runtime === 'LOCKED') buttonText = ' REACTIVAR VOZ';
+    else if (runtime === 'RECOVERING') buttonText = ' RECUPERANDO…';
+    else if (runtime === 'ERROR') buttonText = ' REPARAR VOZ';
+    else if (runtime === 'READY' || runtime === 'SPEAKING') buttonText = ' VOZ ACTIVA';
+    try {
+      if (typeof voiceToggleBtns !== 'undefined' && voiceToggleBtns && voiceToggleBtns.length) {
+        voiceToggleBtns.forEach(b => {
+          b.textContent = buttonText;
+          b.title = title;
+          b.setAttribute('aria-label', title);
+        });
+      }
+    } catch(e) {}
+
+    // FIXPACK10: estado de voz explicado para un piloto, no para un desarrollador.
+    try {
+      const card = document.getElementById('voiceUxCard');
+      const ttl = document.getElementById('voiceUxTitle');
+      const help = document.getElementById('voiceUxHelp');
+      if (card && ttl && help) {
+        let uxState = 'off', uxTitle = 'VOZ APAGADA', uxHelp = 'Selecciona tu piloto. Ese toque activa y prueba la voz.';
+        if (runtime === 'READY') {
+          uxState = 'ready'; uxTitle = 'VOZ LISTA'; uxHelp = 'Todo bien. No necesitas tocar nada.';
+        } else if (runtime === 'SPEAKING') {
+          uxState = 'speaking'; uxTitle = 'HABLANDO'; uxHelp = 'Todo bien. La voz está trabajando.';
+        } else if (runtime === 'RECOVERING') {
+          uxState = 'recovering'; uxTitle = 'RECUPERANDO VOZ'; uxHelp = 'La app lo está intentando sola. No refresques.';
+        } else if (runtime === 'LOCKED') {
+          uxState = 'locked'; uxTitle = 'TOCA PARA REACTIVAR'; uxHelp = 'Un toque en REACTIVAR VOZ. No hace falta refrescar.';
+        } else if (runtime === 'ERROR') {
+          uxState = 'error'; uxTitle = 'REPARAR VOZ'; uxHelp = 'Toca REPARAR VOZ. Los datos de carrera siguen conectados.';
+        }
+        card.setAttribute('data-state', uxState);
+        ttl.textContent = uxTitle;
+        help.textContent = uxHelp;
+      }
+    } catch(e) {}
   }catch(e){}
 }
 
@@ -16695,7 +17267,13 @@ function unlockTTSOnce(reason = '') {
           try { updateVoiceStatusDot(); } catch(e) {}
         };
 
-        try { u.onend = () => { if (!didStart) finishFail(); }; } catch(e) {}
+        try { u.onend = () => {
+          if (!didStart) { finishFail(); return; }
+          try { __ttsLastEventAt = Date.now(); } catch(e) {}
+          try { pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+          try { __setTtsRuntimeState('READY'); updateVoiceStatusDot(); } catch(e) {}
+          try { scheduleSpeechPump(45); } catch(e) {}
+        }; } catch(e) {}
         try { u.onerror = () => { finishFail(); }; } catch(e) {}
 
         // Respetar voz elegida (si existe)
@@ -16728,7 +17306,7 @@ function unlockTTSOnce(reason = '') {
               if (didStart) return;
               finishFail();
             } catch(e) {}
-          }, 900);
+          }, 2200);
         } catch(e) {}
 
         return true;
@@ -16761,7 +17339,30 @@ function setVoiceMaster(on, opts = {}) {
       voiceMasterEnabled = turningOn;
       try { prefSet('voiceMasterEnabled', voiceMasterEnabled ? '1' : '0'); } catch(e) {}
       try { voiceToggleBtns.forEach(b => b.classList.toggle('voice-on', voiceMasterEnabled)); } catch(e) {}
-      try { voiceToggleBtns.forEach(b => b.textContent = voiceMasterEnabled ? ' VOZ ACTIVA' : ' ACTIVAR VOZ'); } catch(e) {}
+
+      // FIXPACK9: también al encender en modo silent/auto dejamos un estado coherente.
+      // Desktop/Android no deben quedar en un limbo esperando un gesto que no necesitan.
+      if (voiceMasterEnabled) {
+        try {
+          const __smIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false;
+          if (__smIOS) {
+            if (__ttsUnlockedOnce) {
+              pendingAutoVoiceUnlock = false;
+              __setTtsRuntimeState('READY');
+            } else {
+              pendingAutoVoiceUnlock = true;
+              __setTtsRuntimeState('LOCKED');
+              try { voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(_e) {}
+            }
+          } else {
+            __ttsUnlockedOnce = true;
+            pendingAutoVoiceUnlock = false;
+            __ttsBlockedSince = 0;
+            __setTtsRuntimeState('READY');
+            try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(_e) {}
+          }
+        } catch(e) {}
+      }
       try { updateVoiceStatusDot(); } catch(e) {}
       // unlock audio (seleccionar piloto cuenta como gesto)
       try { ensureAudioCtx(); } catch(e) {}
@@ -16817,8 +17418,10 @@ function setVoiceMaster(on, opts = {}) {
         try { scheduleSpeechPump(80); } catch(e) {}
 }
     
-      // TTS Heartbeat (desktop/OBS): evita que el motor se duerma y caiga en espera de accion
+      // TTS Heartbeat (desktop/OBS) + watchdog general.
       try { if (voiceMasterEnabled) { startTtsHeartbeat(); startTtsSafetyLoop(); } else { stopTtsHeartbeat(); stopTtsSafetyLoop(); } } catch(e) {}
+      // FIXPACK10: en móvil, si ya hubo gesto, mantenemos WebAudio vivo; NO inyectamos frases mudas al TTS.
+      try { if (voiceMasterEnabled && (typeof isMobileDevice === 'function' && isMobileDevice()) && __userGestureUnlocked) startSilentAudioKeepAlive(); } catch(e) {}
 }
 
 
@@ -16902,16 +17505,12 @@ function setVoiceMaster(on, opts = {}) {
               }
             } catch(e) {}
 
+            // FIXPACK12: SpeechSynthesis queda reservado EXCLUSIVAMENTE para voz real.
+            // Nada de utterances mudas ni en móvil ni en escritorio: podían entrar en carrera
+            // con una frase recién bombeada y contaminar pending/speaking. El heartbeat sólo
+            // vigila/resume/repara; el keep-alive de audio, cuando aplica, va por WebAudio.
             try {
-              const lastEv = (__ttsLastEventAt || 0);
-              if (__ttsUnlockedOnce && (!lastEv || (now - lastEv) > Math.max(25000, Number(__ttsHeartbeatIntervalMs || 30000) + 5000))) {
-                const u = new SpeechSynthesisUtterance(' ');
-                u.volume = 0;
-                u.rate = 1;
-                u.onend = () => { try { __ttsLastEventAt = Date.now(); } catch(e) {} };
-                u.onerror = () => { try { __ttsLastEventAt = Date.now(); } catch(e) {} };
-                try { ss.speak(u); __ttsLastEventAt = now; } catch(e) {}
-              }
+              if (__userGestureUnlocked && typeof startSilentAudioKeepAlive === 'function') startSilentAudioKeepAlive();
             } catch(e) {}
           } catch(e) {
             try { pushTtsEvent('error', 'safetyLoop tick: ' + String(e), 'debug'); } catch(_) {}
@@ -17066,6 +17665,40 @@ function setVoiceMaster(on, opts = {}) {
               try{ if (!__audioCtxReady) ensureAudioCtxOnce(); }catch(e){}
               try{ playBeep('tap'); }catch(e){}
 
+              // FIXPACK9: si está ON pero el motor está bloqueado/recuperando/error,
+              // este toque es REACTIVAR, no "apagar". El usuario no debe adivinar estados internos.
+              const runtimeNow = String((typeof __ttsRuntimeState !== 'undefined' ? __ttsRuntimeState : '') || '').toUpperCase();
+              const needsRepair = !!voiceMasterEnabled && (
+                __voiceBtnNeedsUnlock() || runtimeNow === 'LOCKED' || runtimeNow === 'RECOVERING' || runtimeNow === 'ERROR'
+              );
+              if (needsRepair) {
+                try { __setTtsRuntimeState('RECOVERING'); } catch(e) {}
+                try { updateVoiceStatusDot(); } catch(e) {}
+                try { showToast('REACTIVANDO VOZ…', 1000); } catch(e) {}
+                try { pushSpotterAudit('tts_user_recover', 'Reactivación manual sin apagar VOZ', { throttleMs:0, category:'lifecycle' }); } catch(e) {}
+
+                let __vrIOS = false;
+                try { __vrIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false; } catch(e) {}
+                if (__vrIOS) {
+                  try { unlockTTSOnce('voice-recover'); } catch(e) {}
+                  setManagedTimeout('__voiceRecoverAfterUnlock', () => {
+                    try { forceTtsRecover('voice-recover'); } catch(e) {}
+                    try { scheduleSpeechPump(0); } catch(e) {}
+                    try { updateVoiceStatusDot(); } catch(e) {}
+                    try { if (!pendingAutoVoiceUnlock) __announceVoiceArmed(); } catch(e) {}
+                  }, 320);
+                } else {
+                  try { __ttsUnlockedOnce = true; pendingAutoVoiceUnlock = false; __ttsBlockedSince = 0; } catch(e) {}
+                  try { voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+                  try { const __s = getSpeechEngine(); if (__s && typeof __s.resume === 'function') __s.resume(); } catch(e) {}
+                  try { forceTtsRecover('voice-recover'); } catch(e) {}
+                  try { scheduleSpeechPump(60); } catch(e) {}
+                  try { __announceVoiceArmed(); } catch(e) {}
+                  try { updateVoiceStatusDot(); } catch(e) {}
+                }
+                return;
+              }
+
               const next = !voiceMasterEnabled;
 
               // OFF: corta TODO y limpia cola
@@ -17093,11 +17726,8 @@ function setVoiceMaster(on, opts = {}) {
                 const __isIOS = isIOSWebKit();
                 if (__isIOS){
                   try { unlockTTSOnce('voice-btn'); } catch(e) {}
-                  setManagedTimeout("__voiceBtnReadySpeak", ()=>{
-                    try { __announceVoiceArmed(); } catch(e) {}
-                    try { forceTtsRecover('voice-btn'); } catch(e) {}
-                    try { scheduleSpeechPump(0); } catch(e) {}
-                  }, 140);
+                  // La confirmación queda en cola y sale apenas termina el probe de desbloqueo.
+                  try { __announceVoiceArmed(); } catch(e) {}
                   return;
                 }
               } catch(e) {}
@@ -17137,6 +17767,16 @@ function setVoiceMaster(on, opts = {}) {
       try { setVoiceMaster(voiceMasterEnabled, { silent:true }); } catch(e) {}
       try { updateVoiceStatusDot(); } catch(e) {}
       try { setManagedInterval("__voiceStatusDotTimer", ()=>{ try{ updateVoiceStatusDot(); }catch(e){} }, 1200); } catch(e) {}
+      // FIXPACK10: ajustes técnicos disponibles, pero cerrados por defecto en teléfono.
+      try {
+        onDomReady(() => {
+          try {
+            const d = document.getElementById('voiceAdvancedDetails');
+            const mobile = (typeof isMobileDevice === 'function') ? isMobileDevice() : /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+            if (d && mobile) d.removeAttribute('open');
+          } catch(e) {}
+        });
+      } catch(e) {}
 
       // Botón BÁSICO (solo FOLLOW). Reduce el show: solo laps, última y posición.
     if (typeof basicToggleBtnMini !== 'undefined' && basicToggleBtnMini) {
@@ -17683,12 +18323,10 @@ function toFixedFloor(value, decimals = 0) {
             try { startSilentAudioKeepAlive(); } catch(e) {}
             try { const __s = getSpeechEngine(); if (__s && typeof __s.resume === 'function') __s.resume(); } catch(e) {}
           }
-          // iOS: al ir a background, el motor de voz suele "dormirse" y requiere gesto al volver.
+          // FIXPACK10 iOS: NO declarar la voz bloqueada sólo porque la pestaña quedó hidden.
+          // Conservamos el último estado bueno; si el próximo mensaje real falla, el start-guard decidirá.
           if (voiceMasterEnabled && isIOS) {
-            try { __ttsUnlockedOnce = false; } catch(e) {}
-            try { __ttsUnlockInFlight = false; __ttsUnlockStartedAt = 0; } catch(e) {}
-            try { pendingAutoVoiceUnlock = true; } catch(e) {}
-            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
+            try { pushSpotterAudit('tts_ios_hidden', 'iOS hidden: estado de voz conservado', { throttleMs:1500, dedupeKey:'tts_ios_hidden' }); } catch(e) {}
           }
           return;
         }
@@ -17717,15 +18355,15 @@ function toFixedFloor(value, decimals = 0) {
             try { confirmVoiceButtons && confirmVoiceButtons(); } catch(e) {}
 
             if (isIOS) {
-              try { pendingAutoVoiceUnlock = true; } catch(e) {}
-              try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.add('needs-unlock')); } catch(e) {}
-              try {
-                const msg = (awayMs > 3000)
-                  ? 'Volviste. Un tap y el audio revive.'
-                  : 'Si el iPhone se quedo mudo, toca una vez.';
-                showToast(msg, 2200);
-              } catch(e) {}
-              try { if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock(); } catch(e) {}
+              // FIXPACK10: regreso transparente. Primero intentamos solos; sólo pedimos tap ante fallo real posterior.
+              try { pendingAutoVoiceUnlock = false; } catch(e) {}
+              try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+              try { __setTtsRuntimeState('RECOVERING'); updateVoiceStatusDot(); } catch(e) {}
+              try { forceTtsRecover('visibility-visible-ios'); } catch(e) {}
+              try { scheduleSpeechPump(120); } catch(e) {}
+              setManagedTimeout('__iosVisibleReadyUx', () => {
+                try { if (voiceMasterEnabled && !pendingAutoVoiceUnlock && String(__ttsRuntimeState||'') === 'RECOVERING') { __setTtsRuntimeState('READY'); updateVoiceStatusDot(); } } catch(e) {}
+              }, 700);
             } else {
               try { pendingAutoVoiceUnlock = false; } catch(e) {}
               try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
@@ -17743,9 +18381,10 @@ function toFixedFloor(value, decimals = 0) {
         try {
           const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false;
           if (voiceMasterEnabled && isIOS) {
-            __ttsUnlockedOnce = false;
-            pendingAutoVoiceUnlock = true;
-            if (typeof scheduleOneTapUnlock === 'function') scheduleOneTapUnlock();
+            // FIXPACK10: pageshow no es prueba de bloqueo. Reanuda y conserva autorización previa.
+            try { pendingAutoVoiceUnlock = false; } catch(e) {}
+            try { if (voiceToggleBtns && voiceToggleBtns.length) voiceToggleBtns.forEach(b => b.classList.remove('needs-unlock')); } catch(e) {}
+            try { forceTtsRecover('pageshow-ios'); } catch(e) {}
           }
         } catch(e) {}
         try { if (wakeLockWanted) requestWakeLock(true).catch(()=>{}); } catch(e) {}
@@ -17758,8 +18397,8 @@ function toFixedFloor(value, decimals = 0) {
         try {
           const isIOS = (typeof isIOSWebKit === 'function') ? isIOSWebKit() : false;
           if (voiceMasterEnabled && isIOS) {
-            __ttsUnlockedOnce = false;
-            pendingAutoVoiceUnlock = true;
+            // FIXPACK10: pagehide tampoco condena la voz; el próximo speak confirma el estado real.
+            try { pushSpotterAudit('tts_ios_pagehide', 'iOS pagehide: estado conservado', { throttleMs:1500, dedupeKey:'tts_ios_pagehide' }); } catch(e) {}
           }
         } catch(e) {}
       }, { passive:true });
@@ -19082,6 +19721,9 @@ function drawLapChartTop3Auto(){
       }
 
       const nextPrev = [];
+      // FIXPACK9: un solo reloj físico por snapshot. No usar el tiempo individual
+      // de cada piloto para inferir separación física en una Qualy escalonada.
+      const passObservedAtMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
 
       (rawRace.classification || []).forEach(row => {
         const key = getPilotKey(row);
@@ -19134,7 +19776,11 @@ let meanMs = parseTimeToMs(meanTimeRaw);
             lastMs = 0;
           }
         }
-        if (lap > 0 && totalMs > 0) {
+        // FIXPACK9: registrar cruce SOLO cuando este snapshot confirma una vuelta nueva.
+        // `time` ahora es timestamp físico observado (mismo eje para todos), no totalMs individual.
+        // En el primer snapshot no fabricamos cruces: necesitamos un `prev` real.
+        const prevLapsForPass = prev ? (Number(prev.lapcount) || 0) : 0;
+        if (prev && lap > prevLapsForPass && lap > 0 && totalMs > 0) {
           if (!lastPassEvents || typeof lastPassEvents.set !== 'function') {
             lastPassEvents = new Map();
           }
@@ -19143,7 +19789,9 @@ let meanMs = parseTimeToMs(meanTimeRaw);
             pos: row.pos,
             name: driverName,
             lap,
-            time: totalMs
+            time: passObservedAtMs,
+            raceTimeMs: totalMs,
+            observedAtEpochMs: Date.now()
           });
         }
 
@@ -19411,11 +20059,16 @@ function resetAutoNarratorState() {
           return __bluePick([
             `Tráfico de punta. ${name}, ${lapTxt}. Viene ${who}. No te enganches y deja pista limpia.`,
             `Referencia rápida detrás. ${name}, ${lapTxt}. Viene ${who}. Respeta la línea y suéltalo limpio.`,
-            `Ojo con la punta detrás. ${name}, ${lapTxt}. Viene ${who}. No arruines tu vuelta ni la del rápido.`
+            `Ojo con la punta detrás. ${name}, ${lapTxt}. Viene ${who}. No arruines tu vuelta ni la del rápido.`,
+            `${name}, azul de Qualy. ${who} viene pegado detrás. Mantén línea y dale espacio en la recta.`,
+            `Auto rápido atrás de ${name}: ${who}. Pista limpia, sin defender.`,
+            `Punta llegando a ${name}. Viene ${who}. Déjalo pasar limpio y vuelve a tu vuelta.`,
+            `${who} ya está sobre ${name}. Azul. Recta, espacio y a seguir.`,
+            `Azul para ${name}. ${who} llega por detrás. Sin pelea: conserva línea y suelta.`
           ], 'blue:auto:manga:' + String(name || '') + ':' + String(lapDiff || 1));
         }
         if (hitCount >= 3) {
-          return `Dirección de carrera para ${name}. ${lapTxt}. Viene ${who}. Cede el paso de inmediato o se aplicarán 5 segundos de castigo.`;
+          return `Dirección de carrera para ${name}. ${lapTxt}. Viene ${who}. Bandera azul reiterada: cede el paso de inmediato y sigue tu carrera.`; // FIXPACK12: no inventar sanción fija
         }
         if (hitCount === 2) {
           return __bluePick([
@@ -19426,7 +20079,10 @@ function resetAutoNarratorState() {
         return __bluePick([
           `Bandera azul. ${name}, ${lapTxt}. Viene ${who}. Cede el paso en la recta.`,
           `Azul para ${name}. ${lapTxt}. Viene ${who}. No pelees esa posición y abre pista limpio.`,
-          `Bandera azul para ${name}. ${lapTxt}. ${who} ya te llegó. Cede el paso y sigue tu carrera.`
+          `Bandera azul para ${name}. ${lapTxt}. ${who} ya te llegó. Cede el paso y sigue tu carrera.`,
+          `${name}, azul. ${who} viene por la vuelta. Mantén línea y dale la recta.`,
+          `Tráfico de líder para ${name}. ${who} atrás. Suéltalo limpio y sigue tu carrera.`,
+          `Azul, ${name}. ${lapTxt}. ${who} ya está ahí: pista libre sin defender.`
         ], 'blue:auto:final:' + String(name || '') + ':' + String(lapDiff || 1));
       } catch(e) { return ''; }
     }
@@ -19627,7 +20283,7 @@ function refreshSessionBestCache() {
       } catch(e) {}
       const improved = cur && ((lastGlobalBestSpokenMs === 0) || (cur < (lastGlobalBestSpokenMs - 25)));
       const newHolder = hKey && (hKey !== lastGlobalBestSpokenHolderKey);
-      if (improved && (newHolder || cur < (lastGlobalBestSpokenMs - 60)) && (now - lastGlobalBestSpokenAt > 2500)) {
+      if (selectedPilotKey && improved && (newHolder || cur < (lastGlobalBestSpokenMs - 60)) && (now - lastGlobalBestSpokenAt > 2500)) { // FIXPACK12: AUTO usa su motor dedicado, evita doble Best Lap
         lastGlobalBestSpokenMs = cur;
         lastGlobalBestSpokenHolderKey = hKey;
         lastGlobalBestSpokenAt = now;
@@ -20365,12 +21021,16 @@ function updateBlueFlagFromPassEvents() {
         if (!lastPassEvents || typeof lastPassEvents.get !== 'function') return;
         if (typeof voiceSettings !== 'undefined' && voiceSettings && voiceSettings.blueflag === false) return;
 
-        // Bandera azul por proximidad real de cruce (0.8s fijo) + considera P1/P2/P3 cuando lapean.
-        // Se dispara solo cuando el lapeador (Top3) pasa MUY cerca por meta DESPUES del rezagado
-        // y ya trae al menos +1 vuelta (lapDiff>=1). Evita falsos por el salto a "+1" cuando estan lejos.
-        const BLUE_PROX_MS = 800;
+        // FIXPACK9: bandera azul por CRUCE FÍSICO observado en meta.
+        // Qualy/Manga: los cronómetros son individuales y las salidas escalonadas, por eso NO
+        // se compara totalMs entre pilotos ni se exige +1 vuelta como prueba de lapeo.
+        // Regla física: rezagado cruza y P1/P2/P3 cruza DESPUÉS dentro de 1.00 s.
+        // Final: además se conserva lapDiff>=1 porque ahí sí comparten carrera/reloj.
+        const BLUE_PROX_MS = 1000;
+        const BLUE_EVENT_FRESH_MS = 2400;
         const sessionType = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
         const isFinal = (sessionType === 'FINAL');
+        const isQualyPhysical = (sessionType === 'MANGA' || sessionType === 'TRAIN');
         if (__isFollowQuietMode() && !isFinal) return;
 
         const arr = raceData.classification.slice().filter(r => r && (r.pos != null));
@@ -20388,6 +21048,9 @@ function updateBlueFlagFromPassEvents() {
 
         const selLap = Number(selEvent.lap) || 0;
         const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        if ((now - Number(selEvent.time || 0)) > BLUE_EVENT_FRESH_MS) return;
+        // En Qualy no avisar en los primeros cruces de salida escalonada.
+        if (isQualyPhysical && selLap < 2) return;
 
         let best = null;
         for (const laper of top3) {
@@ -20396,14 +21059,16 @@ function updateBlueFlagFromPassEvents() {
           if (!lk) continue;
           const le = lastPassEvents.get(lk);
           if (!le || !isFinite(le.time)) continue;
-          if (le.time <= selEvent.time) continue; // laper paso antes o igual, no viene detras
+          if ((now - Number(le.time || 0)) > BLUE_EVENT_FRESH_MS) continue;
+          if (le.time <= selEvent.time) continue; // laper pasó antes o en el mismo snapshot: no confirmamos que venga detrás
 
           const delta = le.time - selEvent.time;
           if (delta <= 0 || delta > BLUE_PROX_MS) continue;
 
           const laperLap = Number(le.lap) || 0;
           const lapDiff = laperLap - selLap;
-          if (lapDiff < 1) continue; // no hay lapeo confirmado
+          if (isFinal && lapDiff < 1) continue; // Final: lapeo deportivo confirmado por vueltas.
+          if (isQualyPhysical && laperLap < 2) continue;
 
           if (!best || delta < best.delta) {
             best = { laper, lk, le, delta, laperLap, lapDiff };
@@ -22079,7 +22744,8 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
     if (!arr || arr.length < 2) return;
     if (!lastPassEvents || typeof lastPassEvents.get !== 'function') return;
 
-    const BLUE_PROX_MS = 800; // fijo (0.8s)
+    const BLUE_PROX_MS = 1000; // FIXPACK9: cruce físico < 1.00 s
+    const BLUE_EVENT_FRESH_MS = 2400;
     const sessionType = String((currentSessionInfo && currentSessionInfo.type) || '').toUpperCase();
     const isMangaSess = (sessionType === 'MANGA' || sessionType === 'TRAIN');
     const isFinalSess = (sessionType === 'FINAL');
@@ -22112,6 +22778,7 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
 
       const re = lastPassEvents.get(rk);
       if (!re || !isFinite(re.time)) continue;
+      if ((nowMs - Number(re.time || 0)) > BLUE_EVENT_FRESH_MS) continue;
       const rLap = Number(re.lap) || 0;
       if (rLap <= 0) continue;
 
@@ -22121,14 +22788,17 @@ function __autoBlueFlagCheck(arr, leader, nowMs, vs){
         if (!lk) continue;
         const le = lastPassEvents.get(lk);
         if (!le || !isFinite(le.time)) continue;
-        if (le.time <= re.time) continue;
+        if ((nowMs - Number(le.time || 0)) > BLUE_EVENT_FRESH_MS) continue;
+        if (le.time <= re.time) continue; // mismo snapshot = orden físico ambiguo; no inventar azul
 
         const delta = le.time - re.time;
         if (delta <= 0 || delta > BLUE_PROX_MS) continue;
 
         const laperLap = Number(le.lap) || 0;
         const lapDiff = laperLap - rLap;
-        if (lapDiff < 1) continue;
+        // Final: +1 vuelta sí confirma lapeo. Qualy/Manga: NO usar lapDiff porque cada piloto
+        // arrancó escalonado y lleva su propio tiempo; manda el cruce físico observado.
+        if (isFinalSess && lapDiff < 1) continue;
 
         if (!best || delta < best.delta) {
           best = { laper, lk, le, delta, laperLap, lapDiff };
@@ -25185,6 +25855,7 @@ function syncAutoCommentatorModeBySession(ctx) {
 }
 
 function collectAutoTop3Candidates(ctx) {
+  try { if (__autoEditorialBucket() === 'MANGA') return; } catch(e) {} // FIXPACK12: salida escalonada, no gaps raw
   try {
     const arr = (ctx && ctx.arr) || [];
     const vs = (ctx && ctx.vs) || {};
@@ -25239,6 +25910,7 @@ function collectAutoTop3Candidates(ctx) {
 }
 
 function collectAutoBattleCandidates(ctx) {
+  try { if (__autoEditorialBucket() === 'MANGA') return; } catch(e) {} // FIXPACK12: salida escalonada, no gaps raw
   try {
     const arr = (ctx && ctx.arr) || [];
     const vs = (ctx && ctx.vs) || {};
@@ -25359,6 +26031,7 @@ function collectAutoBattleCandidates(ctx) {
 }
 
 function collectAutoClosingCandidates(ctx) {
+  try { if (__autoEditorialBucket() === 'MANGA') return; } catch(e) {} // FIXPACK12: salida escalonada, no gaps raw
   try {
     const arr = (ctx && ctx.arr) || [];
     const vs = (ctx && ctx.vs) || {};
@@ -25491,7 +26164,6 @@ function collectAutoQualiCandidates(ctx) {
     const addCand = (ctx && ctx.addCand);
     if (typeof addCand !== 'function') return;
     const wantBest = !!vs.bestlap;
-    const wantPoleFight = !!(vs.bestlap || vs.pelea);
 
     if (wantBest) {
       let bestMs = null;
@@ -25531,36 +26203,15 @@ function collectAutoQualiCandidates(ctx) {
       }
     }
 
-    if (!wantPoleFight || arr.length < 2) return;
-    const r1 = arr[0], r2 = arr[1];
-    const b1 = Number(r1 && r1.best) || 0;
-    const b2 = Number(r2 && r2.best) || 0;
-    if (!(b1 > 0 && b2 > 0 && isFinite(b1) && isFinite(b2))) return;
-    const margen = Math.abs(b2 - b1) / 1000;
-    const sincePF = now - (autoQualiState.lastPoleFightSpeakMs || 0);
-    if (margen > 0.10 || sincePF <= 14000) return;
-    addCand({
-      type: 'qualiPole',
-      score: 6.1,
-      text: ttsGenV2ComposeAutoEvent('qualiPole', {
-        p1: safeRacerName(r1 && r1.racerName) || 'P1',
-        p2: safeRacerName(r2 && r2.racerName) || 'P2',
-        sec: gapToSpeech(margen, 'pole')
-      }, { priority: 54, session: 'manga' }) || autoBuildMessage('qualiPole', {
-        p1: safeRacerName(r1 && r1.racerName) || 'P1',
-        p2: safeRacerName(r2 && r2.racerName) || 'P2',
-        sec: gapToSpeech(margen, 'pole')
-      }),
-      key: 'auto_quali_pole',
-      sig: 'auto:qualiPole',
-      sigCooldownMs: 16000,
-      priority: 5,
-      onCommit: () => { autoQualiState.lastPoleFightSpeakMs = now; }
-    });
+    // FIXPACK12: NO inferir pelea por pole usando Best Lap de P1/P2.
+    // En Turbo Racing la Q se ordena por VUELTAS + TIEMPO; Best Lap es sólo dato técnico.
+    // La referencia/pole live se narra desde __maybeAnnounceQualiLeaderFromStore usando estLap/estTime.
+    return;
   } catch(e) {}
 }
 
 function collectAutoMiniSummaryCandidate(ctx) {
+  try { if (__autoEditorialBucket() === 'MANGA') return; } catch(e) {} // FIXPACK12: salida escalonada, no gaps raw
   try {
     const arr = (ctx && ctx.arr) || [];
     const vs = (ctx && ctx.vs) || {};
@@ -25989,15 +26640,13 @@ if (sessionType === 'MANGA') {
 // MANGA: reduce ruido (menos rebases, ms info til)
 if (isMangaSess && candidates && candidates.length) {
   // Top3 + cierres + trenes. Lo dems en manga suele ser "ruido" por salida escalonada.
-  const allow = new Set(['top3','closing','story','qualiBest','qualiPole','mini']);
+  const allow = new Set(['qualiBest']); // FIXPACK12: Q escalonada; no usar gaps/duelos/top3 raw como si compartieran reloj
   const filtered = [];
   for (const c of candidates) {
     if (c && c.type && allow.has(c.type)) filtered.push(c);
   }
-  if (filtered.length) {
-    candidates.length = 0;
-    for (const c of filtered) candidates.push(c);
-  }
+  candidates.length = 0;
+  for (const c of filtered) candidates.push(c);
 }
 
 // Conflict rule: pass vs battle. Prefer battle only if margen <= 0.30s, else pass.
@@ -27764,6 +28413,10 @@ function buildSessionFinishMessage(row) {
 
 function checkSessionFinishOnLap() {
   try {
+    // FIXPACK12: esta ruta queda exclusivamente para FOLLOW.
+    // AUTO LOCUTOR tiene su propio lifecycle: finalizados individuales + settle de resultados + Top3 final.
+    // Si AUTO usa esta ruta, el cruce del líder puede declarar carrera terminada antes que el resto.
+    if (!selectedPilotKey) return;
     if (!raceData || !Array.isArray(raceData.classification) || !raceData.classification.length) return;
 
     const rn = String(raceData.raceName || '');
@@ -28189,7 +28842,8 @@ function checkSessionFinishOnLap() {
         // Nuevo feed: reloj global (elapsed) para anuncios de tiempo restante (incluye practica)
         try { __updateSessionClockFromFeed(rawRace, raceData); } catch(e) {}
         if (!__silentBootstrapTick) {
-          try { __maybeAnnounceProvisionalPole(raceData); } catch(e) {}
+          // FIXPACK12: la pole live la gobierna __maybeAnnounceQualiLeaderFromStore con proyección comparable;
+          // no usar aquí el reloj bruto de pilotos con salidas escalonadas.
           try { __maybeAnnounceAmbientSessionCommentary(raceData); } catch(e) {}
           try { __maybeAnnounceSessionSummary(raceData); } catch(e) {}
         }
@@ -28213,7 +28867,7 @@ function checkSessionFinishOnLap() {
             const timeTxt = String(p.time ?? p.totalTime ?? '').trim();
             const bestTxt = String(p.bestLap ?? p.bestTime ?? '').trim();
             const lastTxt = String(p.lastLap ?? p.lastTime ?? '').trim();
-            return [pk, pos, laps, gap, totalMs, bestMs, lastMs, timeTxt, bestTxt, lastTxt];
+            return [pk, pos, laps, margen, totalMs, bestMs, lastMs, timeTxt, bestTxt, lastTxt]; // FIXPACK12: gap -> margen (evita ReferenceError silencioso)
           });
           const leader = cls[0] || null;
           const leaderLaps = leader ? (Number(leader.lapcount ?? leader.laps ?? 0) || 0) : 0;
@@ -29164,6 +29818,21 @@ function checkSessionFinishOnLap() {
         const sT = second ? __qualiRankTuple(second) : { laps: 0, timeMs: Number.MAX_SAFE_INTEGER };
         const projTxt = __speechQualiProjection(lLaps, lTimeMs);
 
+        // Comparación GLOBAL: la proyección de esta manga contra la mejor Q guardada.
+        let qTopName = '';
+        let qTopKey = '';
+        let qTopTuple = { laps:0, timeMs:0 };
+        let projectedGlobalPole = false;
+        try {
+          const qList = computeQualiList(store);
+          const qTop = qList && qList.length ? qList[0] : null;
+          qTopName = safeRacerName(qTop && qTop.racerName) || '';
+          qTopKey = normalizeNameKey(qTopName);
+          qTopTuple = __rankTupleFromStoreRow(qTop);
+          projectedGlobalPole = !qTop || __betterVueltasTiempo({ laps:lLaps, timeMs:lTimeMs }, qTopTuple) ||
+            (__sameVueltasTiempo({ laps:lLaps, timeMs:lTimeMs }, qTopTuple) && normalizeNameKey(leaderName) === qTopKey);
+        } catch(e) {}
+
         const changed = (prevKey && prevKey !== leaderKey);
         const lapGain = (lLaps > prevLaps);
         const timeDrop = (prevTime > 0 && lTimeMs < prevTime);
@@ -29172,8 +29841,11 @@ function checkSessionFinishOnLap() {
 
         if (!prevKey){
           if (projTxt && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
+            const __openTxt = projectedGlobalPole
+              ? `Proyección de pole global para ${leaderName}. Apunta a ${projTxt}.`
+              : `Referencia provisional de la manga para ${leaderName}. Proyecta ${projTxt}.`;
             enqueueSpeech(
-              `Referencia provisional de la ronda para ${leaderName}. Proyecta ${projTxt}.`,
+              __openTxt,
               { key: 'quali_pole_open_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 62 }
             );
             __qualiLeaderState.lastAnnounceTs = now;
@@ -29187,8 +29859,11 @@ function checkSessionFinishOnLap() {
         }
 
         if (changed && projTxt && (now - (Number(__qualiLeaderState.lastAnnounceTs || 0)) > changeCooldown)){
+          const __changeTxt = projectedGlobalPole
+            ? `Cambio en la proyección de pole global. ${leaderName} apunta a ${projTxt}.`
+            : `Cambio en la referencia provisional de la manga. ${leaderName} proyecta ${projTxt}.`;
           enqueueSpeech(
-            `Cambio en la pole provisional. ${leaderName} sube a la referencia con ${projTxt}.`,
+            __changeTxt,
             { key: 'quali_pole_change_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: changeCooldown, semanticCategory: 'quali', priority: 62 }
           );
           __qualiLeaderState.lastAnnounceTs = now;
@@ -29202,8 +29877,11 @@ function checkSessionFinishOnLap() {
         }
 
         if (projectionChanged && (lapGain || (dropMs >= 120)) && (now - (Number(__qualiLeaderState.lastImproveTs || 0)) > improveCooldown)){
+          const __improveTxt = projectedGlobalPole
+            ? `${leaderName} mejora su proyección de pole global. Ahora apunta a ${projTxt}.`
+            : `${leaderName} mejora la referencia proyectada de la manga. Ahora apunta a ${projTxt}.`;
           enqueueSpeech(
-            `Mejora la referencia provisional. ${leaderName} ahora proyecta ${projTxt}.`,
+            __improveTxt,
             { key: 'quali_pole_improve_' + leaderKey + '_' + lLaps + '_' + Math.round(lTimeMs/10), cooldownMs: improveCooldown, semanticCategory: 'quali', priority: 48 }
           );
           __qualiLeaderState.lastImproveTs = now;
