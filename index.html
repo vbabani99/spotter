@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>Vic's Pilot Spotter v1.0.0</title>
+  <title>Vic's Pilot Spotter v1.0.1</title>
   <style>
     :root{
       --bg:#050507;
@@ -446,7 +446,7 @@
         <img class="brandLogo" src="https://i.ibb.co/bjknVM36/vic-pulse-timing.gif" alt="Vic's Pulse Timing" />
         <div class="brandTag">
           <span class="brandLine">🎧 VIC'S PILOT SPOTTER <span id="livePill" class="liveRadio off" aria-label="Estado de conexión">OFF</span></span>
-          <small>v1.0.0 · PILOTO</small>
+          <small>v1.0.1 · PILOTO</small>
         </div>
       </div>
 
@@ -505,7 +505,7 @@
   (() => {
     'use strict';
     const APP_NAME='Vics_Pilot_Spotter';
-    const APP_VERSION='v1.0.0';
+    const APP_VERSION='v1.0.1';
     const FIREBASE_CONFIG={apiKey:'AIzaSyBaySYvIxH8JsvXCETv3XwVdNecJY1ez2c',authDomain:'turbo-racing-zround.firebaseapp.com',projectId:'turbo-racing-zround',appId:'1:628478462576:web:c2dbc45c95bbe362ce42b5'};
     const FIRESTORE_DOC_PATH='races/currentRace';
     const LS={pilot:'vps_pilot',voice:'vps_voice',voiceName:'vps_voice_name',rate:'vps_voice_rate',theme:'vps_theme'};
@@ -530,7 +530,28 @@
     function parseTimeToMs(v){if(v==null||v==='')return 0;if(typeof v==='number'&&Number.isFinite(v)){if(v<=0)return 0;return v<1000?Math.round(v*1000):Math.round(v)}const s=String(v).trim();if(!s)return 0;if(/^\d+(\.\d+)?$/.test(s)){const n=Number(s);return n>0?(n<1000?Math.round(n*1000):Math.round(n)):0}const m=s.match(/^(?:(\d+):)?(\d{1,2})(?:\.(\d{1,3}))?$/);if(!m)return 0;return Number(m[1]||0)*60000+Number(m[2]||0)*1000+Number((m[3]||'').padEnd(3,'0')||0)}
     function formatLapMs(ms){const n=Math.round(Number(ms)||0);if(n<=0)return '--.--';const min=Math.floor(n/60000),sec=Math.floor((n%60000)/1000),mil=n%1000;return min?`${min}:${String(sec).padStart(2,'0')}.${String(mil).padStart(3,'0')}`:`${sec}.${String(mil).padStart(3,'0')}`}
     function formatRemain(ms){const n=Math.max(0,Math.round(Number(ms)||0));const s=Math.ceil(n/1000);const m=Math.floor(s/60),r=s%60;return `${m}:${String(r).padStart(2,'0')}`}
-    function lapSpeech(ms){const n=Math.round(Number(ms)||0);if(n<=0)return '';const sec=Math.floor((n%60000)/1000),hund=Math.floor((n%1000)/10);const h=String(hund).padStart(2,'0');const d={'0':'cero','1':'uno','2':'dos','3':'tres','4':'cuatro','5':'cinco','6':'seis','7':'siete','8':'ocho','9':'nueve'};const dec=h[1]==='0'?`${d[h[0]]} flat`:`${d[h[0]]} ${d[h[1]]}`;return `${sec} punto ${dec}`}
+    function number0to99Speech(n){
+      const x=Math.max(0,Math.min(99,Math.floor(Number(n)||0)));
+      const units=['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+      const specials={10:'diez',11:'once',12:'doce',13:'trece',14:'catorce',15:'quince',16:'dieciséis',17:'diecisiete',18:'dieciocho',19:'diecinueve',20:'veinte',21:'veintiuno',22:'veintidós',23:'veintitrés',24:'veinticuatro',25:'veinticinco',26:'veintiséis',27:'veintisiete',28:'veintiocho',29:'veintinueve'};
+      if(x<10)return units[x];
+      if(specials[x])return specials[x];
+      const tens={30:'treinta',40:'cuarenta',50:'cincuenta',60:'sesenta',70:'setenta',80:'ochenta',90:'noventa'};
+      const base=Math.floor(x/10)*10,unit=x%10;
+      return unit?`${tens[base]} y ${units[unit]}`:tens[base];
+    }
+    function lapSpeech(ms){
+      const n=Math.round(Number(ms)||0);if(n<=0)return '';
+      const min=Math.floor(n/60000),sec=Math.floor((n%60000)/1000),hund=Math.floor((n%1000)/10);
+      // El piloto ve milésimas, pero la voz canta centésimas como un número natural.
+      // 9.546 -> "nueve punto cincuenta y cuatro"
+      // 9.050 -> "nueve punto cero cinco"
+      // 9.103 -> "nueve punto diez"
+      const dec=hund<10?`cero ${number0to99Speech(hund)}`:number0to99Speech(hund);
+      const secSpeech=number0to99Speech(sec);
+      if(min>0){const minSpeech=min===1?'un minuto':`${min} minutos`;return `${minSpeech} ${secSpeech} punto ${dec}`;}
+      return `${secSpeech} punto ${dec}`;
+    }
 
     function parsePosition(row,index){const n=Number(row.pos??row.position??row.rank??row.place??row.classificationPos??row.resultPos);return Number.isFinite(n)&&n>0?Math.round(n):index+1}
     function extractRows(payload){const raw=payload&&typeof payload==='object'?payload:{};const parsed=raw.parsed&&typeof raw.parsed==='object'?raw.parsed:null;const rows=(parsed&&Array.isArray(parsed.classification)&&parsed.classification.length)?parsed.classification:(Array.isArray(raw.classification)?raw.classification:[]);return rows.map((row,index)=>{const number=safeName(row.driverNumber||row.racerNumber||row.number||'');const name=safeName(row.driverName||row.racerName||row.name||row.pilotName||'');const lastLapMs=parseTimeToMs(row.lastLapMs??row.lastTimeMs??row.lastLapTimeMs??row.lastTime??row.lastLapTime??row.lastLap??0);const bestLapMs=parseTimeToMs(row.bestMs??row.bestLapMs??row.bestTime??row.bestLapTime??row.best??row.bestLap??0);const totalMs=parseTimeToMs(row.totalMs??row.time??row.totalTime??row.total??row.clockMs??row.clock??0);const meanMs=parseTimeToMs(row.meanMs??row.meanTime??row.averageMs??row.avgMs??row.averageLapMs??row.avgLapMs??row.avgLapTime??row.media??0);const paceMs=parseTimeToMs(row.paceMs??row.paceTime??row.ritmoMs??row.ritmo??0);const laps=Number(row.lapcount??row.laps??row.lapCount??row.lap??0)||0;return{raw:row,index,position:parsePosition(row,index),key:`${number}__${name}`,driverNumber:number,driverName:name,label:number?`${number} - ${name}`:name,lastLapMs,bestLapMs,totalMs,meanMs,paceMs,laps}}).filter(r=>r.driverName)}
