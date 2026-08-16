@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>Vic's Pilot Spotter v1.0.2</title>
+  <title>Vic's Pilot Spotter v1.0.4</title>
   <style>
     :root{
       --bg:#050507;
@@ -168,11 +168,11 @@
     }
     .controlBar{
       display:grid;
-      grid-template-columns: 1fr auto auto auto;
+      grid-template-columns: 1fr auto auto auto auto;
       gap:6px;
       align-items:center;
     }
-    .pill,.iconBtn,.voiceBtn,.pilotSelect{
+    .pill,.iconBtn,.voiceBtn,.infoBtn,.pilotSelect{
       min-height:34px;
       border-radius:13px;
       border:1px solid var(--line);
@@ -198,11 +198,12 @@
       background-position:calc(100% - 18px) 50%,calc(100% - 12px) 50%;
       background-size:5px 5px,5px 5px; background-repeat:no-repeat;
     }
-    .voiceBtn{
+    .voiceBtn,.infoBtn{
       padding:0 10px; font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; cursor:pointer;
       min-width:72px;
     }
-    .voiceBtn.on{background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; color:#fff}
+    .voiceBtn.on,.infoBtn.on{background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; color:#fff}
+    .infoBtn{min-width:68px}
     .iconBtn{
       width:34px; min-width:34px; cursor:pointer; display:flex; align-items:center; justify-content:center;
       font-size:14px; font-weight:900;
@@ -448,6 +449,17 @@
     .spotterAlert.blue{color:#e9f8ff; background:rgba(14,165,233,.18); border-color:rgba(56,189,248,.55); box-shadow:0 0 22px rgba(56,189,248,.15);}
     .spotterAlert.warn{color:#fff7d6; background:rgba(250,204,21,.12); border-color:rgba(250,204,21,.42);}
     .spotterAlert.finish{color:#ecfff1; background:rgba(34,197,94,.14); border-color:rgba(34,197,94,.46);}
+    .debriefCard{
+      margin:0 0 9px; padding:11px 12px; border-radius:16px; border:1px solid rgba(34,197,94,.38);
+      background:linear-gradient(180deg,rgba(34,197,94,.10),rgba(255,255,255,.025));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .debriefCard[hidden]{display:none}
+    .debriefHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+    .debriefTitle{font-size:11px;font-weight:1000;letter-spacing:.14em;text-transform:uppercase;color:#ecfff1}
+    .debriefTrend{font-size:10px;font-weight:1000;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+    .debriefMain{font-size:13px;font-weight:900;line-height:1.35;color:var(--text)}
+    .debriefAdvice{margin-top:6px;font-size:12px;font-weight:1000;line-height:1.3;color:var(--good)}
     .microStatus{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
     .microChip{border:1px solid var(--line);border-radius:12px;background:var(--chip);padding:7px 6px;text-align:center}
     .microChip b{display:block;font-size:12px}.microChip span{display:block;margin-top:2px;color:var(--muted);font-size:9px;font-weight:900;letter-spacing:.10em;text-transform:uppercase}
@@ -459,9 +471,10 @@
     }
 
     @media (max-width:420px){
-      .controlBar{grid-template-columns:1fr auto auto auto; gap:6px}
-      .pill,.voiceBtn,.iconBtn,.pilotSelect,.voiceSelect{min-height:36px}
+      .controlBar{grid-template-columns:1fr auto auto auto auto; gap:6px}
+      .pill,.voiceBtn,.infoBtn,.iconBtn,.pilotSelect,.voiceSelect{min-height:36px}
       .voiceBtn{min-width:74px; padding:0 10px; font-size:10px}
+      .infoBtn{min-width:66px; padding:0 8px; font-size:10px}
       .voiceSettings{grid-template-columns:1fr; gap:7px}
       .tmvSettings{grid-template-columns:1fr 1fr; gap:6px}
       .grid{gap:7px}
@@ -476,7 +489,7 @@
         <img class="brandLogo" src="https://i.ibb.co/bjknVM36/vic-pulse-timing.gif" alt="Vic's Pulse Timing" />
         <div class="brandTag">
           <span class="brandLine">🎧 VIC'S PILOT SPOTTER <span id="livePill" class="liveRadio off" aria-label="Estado de conexión">OFF</span></span>
-          <small>v1.0.2 · PILOTO</small>
+          <small>v1.0.4 · PILOTO</small>
         </div>
       </div>
 
@@ -485,6 +498,7 @@
         <button id="themeBtn" class="iconBtn" type="button" aria-label="Cambiar tema">🎨</button>
         <button id="auditBtn" class="iconBtn" type="button" aria-label="Exportar audit">📋</button>
         <button id="voiceBtn" class="voiceBtn" type="button">Voz OFF</button>
+        <button id="infoBtn" class="infoBtn" type="button" aria-pressed="false" title="Mensajes extra">INFO OFF</button>
       </div>
 
       <div class="voiceSettings">
@@ -518,6 +532,11 @@
       <div id="lastLap" class="lastLap">--.--</div>
       <div id="note" class="note">Conectando...</div>
       <div id="spotterAlert" class="spotterAlert">SPOTTER EN ESPERA</div>
+      <div id="debriefCard" class="debriefCard" hidden>
+        <div class="debriefHead"><div class="debriefTitle">🏁 RESUMEN DE MANGA</div><div id="debriefTrend" class="debriefTrend">--</div></div>
+        <div id="debriefMain" class="debriefMain">--</div>
+        <div id="debriefAdvice" class="debriefAdvice">--</div>
+      </div>
 
       <div class="grid">
         <div class="metric"><div class="metricLabel">Posición</div><div id="positionValue" class="metricValue">-</div></div>
@@ -540,7 +559,7 @@
   (() => {
     'use strict';
     const APP_NAME='Vics_Pilot_Spotter';
-    const APP_VERSION='v1.0.2';
+    const APP_VERSION='v1.0.4';
     const FIREBASE_CONFIG={apiKey:'AIzaSyBaySYvIxH8JsvXCETv3XwVdNecJY1ez2c',authDomain:'turbo-racing-zround.firebaseapp.com',projectId:'turbo-racing-zround',appId:'1:628478462576:web:c2dbc45c95bbe362ce42b5'};
     const FIRESTORE_DOC_PATH='races/currentRace';
     const LS={pilot:'vps_pilot',voice:'vps_voice',voiceName:'vps_voice_name',rate:'vps_voice_rate',theme:'vps_theme',tmv:'vps_tmv_ms',tmvMargin:'vps_tmv_margin_ms'};
@@ -549,9 +568,9 @@
       {key:'theme-neon-lime',label:'Neon Lime'},{key:'theme-sunset-orange',label:'Sunset Orange'},{key:'theme-purple-night',label:'Purple Night'}
     ];
     const $=id=>document.getElementById(id);
-    const els={pilotSelect:$('pilotSelect'),themeBtn:$('themeBtn'),auditBtn:$('auditBtn'),voiceBtn:$('voiceBtn'),voiceSelect:$('voiceSelect'),speedRange:$('speedRange'),speedValue:$('speedValue'),tmvInput:$('tmvInput'),tmvMargin:$('tmvMargin'),tmvHint:$('tmvHint'),voiceStatus:$('voiceStatus'),livePill:$('livePill'),themeHint:$('themeHint'),raceName:$('raceName'),pilotName:$('pilotName'),lastLap:$('lastLap'),note:$('note'),spotterAlert:$('spotterAlert'),positionValue:$('positionValue'),lapsValue:$('lapsValue'),gapAheadValue:$('gapAheadValue'),gapBehindValue:$('gapBehindValue'),remainingValue:$('remainingValue'),bestValue:$('bestValue'),paceValue:$('paceValue'),meanValue:$('meanValue'),totalValue:$('totalValue'),modeValue:$('modeValue'),remainingMini:$('remainingMini'),feedAge:$('feedAge')};
+    const els={pilotSelect:$('pilotSelect'),themeBtn:$('themeBtn'),auditBtn:$('auditBtn'),voiceBtn:$('voiceBtn'),infoBtn:$('infoBtn'),voiceSelect:$('voiceSelect'),speedRange:$('speedRange'),speedValue:$('speedValue'),tmvInput:$('tmvInput'),tmvMargin:$('tmvMargin'),tmvHint:$('tmvHint'),voiceStatus:$('voiceStatus'),livePill:$('livePill'),themeHint:$('themeHint'),raceName:$('raceName'),pilotName:$('pilotName'),lastLap:$('lastLap'),note:$('note'),spotterAlert:$('spotterAlert'),positionValue:$('positionValue'),lapsValue:$('lapsValue'),gapAheadValue:$('gapAheadValue'),gapBehindValue:$('gapBehindValue'),remainingValue:$('remainingValue'),bestValue:$('bestValue'),paceValue:$('paceValue'),meanValue:$('meanValue'),totalValue:$('totalValue'),modeValue:$('modeValue'),remainingMini:$('remainingMini'),feedAge:$('feedAge'),debriefCard:$('debriefCard'),debriefTrend:$('debriefTrend'),debriefMain:$('debriefMain'),debriefAdvice:$('debriefAdvice')};
 
-    const state={voiceOn:false,speechUnlocked:false,voiceName:'',voiceRate:1.2,voices:[],rows:[],selectedPilotKey:'',raceName:'',session:{type:'UNKNOWN',durationMs:0,label:'--'},snapshotSeq:0,lastSnapshotAt:0,baselineReady:false,pilotPrev:null,rowPrev:new Map(),lastPassEvents:new Map(),lastBlueAt:0,clockMarks:new Set(),finished:false,queue:[],speaking:false,current:null,speechGeneration:0,wakeLock:null,wakeTick:null,theme:'theme-purple-night',firestore:null,unsub:null,pollTimer:null,audit:[],tmvMs:0,tmvMarginMs:50,tmvNearStreak:0,tmvZoneActive:false,lastTmvAlertLap:0,lastTmvAlertAt:0};
+    const state={voiceOn:false,infoOn:false,speechUnlocked:false,voiceName:'',voiceRate:1.2,voices:[],rows:[],selectedPilotKey:'',raceName:'',session:{type:'UNKNOWN',durationMs:0,label:'--'},snapshotSeq:0,lastSnapshotAt:0,baselineReady:false,pilotPrev:null,rowPrev:new Map(),lastPassEvents:new Map(),lastBlueAt:0,clockMarks:new Set(),finished:false,queue:[],speaking:false,current:null,speechGeneration:0,wakeLock:null,wakeTick:null,theme:'theme-purple-night',firestore:null,unsub:null,pollTimer:null,audit:[],tmvMs:0,tmvMarginMs:50,tmvNearStreak:0,tmvZoneActive:false,lastTmvAlertLap:0,lastTmvAlertAt:0,lapHistory:[],debrief:null};
 
     const now=()=>Date.now();
     const safeName=v=>String(v||'').replace(/\s+/g,' ').trim();
@@ -605,6 +624,7 @@
       return {deltaMs:delta,critical:delta<=20};
     }
     function maybeTmvProximityAlert(row){
+      if(!state.infoOn){state.tmvNearStreak=0;state.tmvZoneActive=false;return false}
       const z=tmvProximity(row);
       if(!z){
         if(state.tmvZoneActive)audit('tmv_zone_exit',row?formatLapMs(row.lastLapMs):'',{lap:row?.laps||0});
@@ -615,7 +635,7 @@
       const reminder=state.tmvNearStreak>=3 && row.laps-state.lastTmvAlertLap>=2 && now()-state.lastTmvAlertAt>=12000;
       if(!entering&&!reminder){audit('tmv_zone_observed',formatLapMs(row.lastLapMs),{lap:row.laps,deltaMs:z.deltaMs,streak:state.tmvNearStreak});return false}
       state.lastTmvAlertLap=row.laps;state.lastTmvAlertAt=now();
-      const text=z.critical?'Muy al límite del tiempo mínimo. Baja el ritmo.':'Cuidado, estás al límite del tiempo mínimo. Baja un poco el ritmo.';
+      const text='Baja ritmo.';
       setAlert(`⚠️ TMV · +${z.deltaMs} ms`,'warn');
       enqueueSpeech(text,{priority:96,key:`tmv_near_${row.key}_${row.laps}`,ttl:4200,kind:'tmv',interrupt:true});
       audit('tmv_proximity_alert',text,{lap:row.laps,lapMs:row.lastLapMs,tmvMs:state.tmvMs,marginMs:state.tmvMarginMs,deltaMs:z.deltaMs,streak:state.tmvNearStreak,entering,reminder});
@@ -639,25 +659,107 @@
     function populateVoices(){const cur=state.voiceName;els.voiceSelect.innerHTML='<option value="">Voz automática</option>'+state.voices.map(v=>`<option value="${String(v.name).replaceAll('&','&amp;').replaceAll('"','&quot;')}"${v.name===cur?' selected':''}>${v.name} (${v.lang})</option>`).join('')}
     function pickVoice(){const vs=state.voices.length?state.voices:refreshVoices();return(vs.find(v=>v.name===state.voiceName)||vs.find(v=>/^es(-|_)?MX/i.test(v.lang))||vs.find(v=>/^es/i.test(v.lang))||vs[0]||null)}
     function setVoiceStatus(t,kind=''){els.voiceStatus.textContent=t;els.voiceStatus.className='voiceStatus'+(kind?` ${kind}`:'')}
-    function enqueueSpeech(text,{priority=50,key='',ttl=5000,kind='info',interrupt=false}={}){if(!text)return false;const t=now();state.queue=state.queue.filter(x=>x.expiresAt>t&&x.key!==key);const item={id:`${t}_${Math.random().toString(36).slice(2,7)}`,text,priority,key:key||text,kind,createdAt:t,expiresAt:t+ttl};if(interrupt&&state.current&&state.current.priority<priority){audit('speech_preempt',text,{preempted:state.current.text,priority});state.speechGeneration++;try{speechSynthesis.cancel()}catch{}audit('speech_cancelled',state.current.text,{key:state.current.key,priority:state.current.priority,by:text});state.speaking=false;state.current=null}state.queue.push(item);state.queue.sort((a,b)=>b.priority-a.priority||a.createdAt-b.createdAt);audit('speech_queue',text,{priority,key:item.key});pumpSpeech();return true}
+    function enqueueSpeech(text,{priority=50,key='',ttl=5000,kind='info',interrupt=false}={}){if(!text)return false;if(kind!=='lap'&&kind!=='debrief'&&!state.infoOn){audit('speech_suppressed',text,{kind,reason:'info_off'});return false}const t=now();state.queue=state.queue.filter(x=>x.expiresAt>t&&x.key!==key);const item={id:`${t}_${Math.random().toString(36).slice(2,7)}`,text,priority,key:key||text,kind,createdAt:t,expiresAt:t+ttl};if(interrupt&&state.current&&state.current.priority<priority){audit('speech_preempt',text,{preempted:state.current.text,priority});state.speechGeneration++;try{speechSynthesis.cancel()}catch{}audit('speech_cancelled',state.current.text,{key:state.current.key,priority:state.current.priority,by:text});state.speaking=false;state.current=null}state.queue.push(item);state.queue.sort((a,b)=>b.priority-a.priority||a.createdAt-b.createdAt);audit('speech_queue',text,{priority,key:item.key});pumpSpeech();return true}
     function pumpSpeech(){if(!state.voiceOn||!state.speechUnlocked||state.speaking||!speechAvailable())return;const t=now();while(state.queue.length&&state.queue[0].expiresAt<=t){const x=state.queue.shift();audit('speech_expired',x.text,{priority:x.priority,key:x.key})}const item=state.queue.shift();if(!item)return;const generation=state.speechGeneration;const u=new SpeechSynthesisUtterance(item.text),v=pickVoice();if(v)u.voice=v;u.lang=v&&v.lang?v.lang:'es-MX';u.rate=clampRate(state.voiceRate);u.pitch=1;u.volume=1;state.speaking=true;state.current=item;u.onstart=()=>{if(generation!==state.speechGeneration||!state.current||state.current.id!==item.id)return;audit('speech_start',item.text,{priority:item.priority,key:item.key});setVoiceStatus('SPOTTER HABLANDO','ok')};u.onend=()=>{if(generation!==state.speechGeneration||!state.current||state.current.id!==item.id){audit('speech_callback_stale',item.text,{callback:'end'});return}audit('speech_end',item.text,{priority:item.priority,key:item.key});state.speaking=false;state.current=null;setVoiceStatus('SPOTTER LISTO','ok');setTimeout(pumpSpeech,60)};u.onerror=e=>{if(generation!==state.speechGeneration||!state.current||state.current.id!==item.id){audit('speech_callback_stale',item.text,{callback:'error',error:String(e&&e.error||'error')});return}audit('speech_error',item.text,{error:String(e&&e.error||'error'),priority:item.priority,key:item.key});state.speaking=false;state.current=null;setTimeout(pumpSpeech,100)};try{speechSynthesis.resume();speechSynthesis.speak(u)}catch(e){if(state.current&&state.current.id===item.id){state.speaking=false;state.current=null}audit('speech_throw',item.text,{error:String(e)})}}
     async function unlockSpeech(){state.speechUnlocked=true;try{speechSynthesis.resume()}catch{}refreshVoices();return true}
-    async function toggleVoice(){state.voiceOn=!state.voiceOn;lsSet(LS.voice,state.voiceOn?'1':'0');els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);if(state.voiceOn){await unlockSpeech();requestWakeLock();enqueueSpeech('Spotter listo',{priority:100,key:'spotter_ready',ttl:2500,interrupt:true})}else{state.speechGeneration++;try{speechSynthesis.cancel()}catch{}state.queue=[];state.speaking=false;state.current=null;setVoiceStatus('VOZ APAGADA','warn')}}
+    function setInfoUi(){
+      if(!els.infoBtn)return;
+      els.infoBtn.textContent=state.infoOn?'INFO ON':'INFO OFF';
+      els.infoBtn.classList.toggle('on',state.infoOn);
+      els.infoBtn.setAttribute('aria-pressed',state.infoOn?'true':'false');
+    }
+    function toggleInfo(){
+      state.infoOn=!state.infoOn;
+      if(!state.infoOn){
+        state.queue=state.queue.filter(x=>x.kind==='lap'||x.kind==='debrief');
+        if(state.current&&state.current.kind!=='lap'&&state.current.kind!=='debrief'){
+          state.speechGeneration++;
+          try{speechSynthesis.cancel()}catch{}
+          state.speaking=false;
+          state.current=null;
+        }
+        setTimeout(pumpSpeech,0);
+      }
+      setInfoUi();
+      audit('info_mode',state.infoOn?'ON':'OFF');
+    }
+    async function toggleVoice(){state.voiceOn=!state.voiceOn;lsSet(LS.voice,state.voiceOn?'1':'0');els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);if(state.voiceOn){await unlockSpeech();requestWakeLock();if(state.infoOn)enqueueSpeech('Spotter listo.',{priority:100,key:'spotter_ready',ttl:2500,kind:'info',interrupt:true})}else{state.speechGeneration++;try{speechSynthesis.cancel()}catch{}state.queue=[];state.speaking=false;state.current=null;setVoiceStatus('VOZ APAGADA','warn')}}
     async function requestWakeLock(){if(!('wakeLock'in navigator)||document.hidden)return;try{if(!state.wakeLock)state.wakeLock=await navigator.wakeLock.request('screen')}catch{}}
 
-    function resetBaseline(reason='reset'){state.baselineReady=false;state.pilotPrev=null;state.rowPrev=new Map();state.lastPassEvents=new Map();state.clockMarks=new Set();state.finished=false;state.lastBlueAt=0;state.tmvNearStreak=0;state.tmvZoneActive=false;state.lastTmvAlertLap=0;state.lastTmvAlertAt=0;state.queue=state.queue.filter(x=>x.priority>=95);audit('baseline_reset',reason)}
+    function resetBaseline(reason='reset'){const keepDebrief=reason==='race_change'||reason==='counter_reset';state.baselineReady=false;state.pilotPrev=null;state.rowPrev=new Map();state.lastPassEvents=new Map();state.clockMarks=new Set();state.finished=false;state.lastBlueAt=0;state.tmvNearStreak=0;state.tmvZoneActive=false;state.lastTmvAlertLap=0;state.lastTmvAlertAt=0;state.lapHistory=[];state.debrief=null;if(els.debriefCard)els.debriefCard.hidden=true;state.queue=keepDebrief?state.queue.filter(x=>x.kind==='debrief'):[];audit('baseline_reset',reason,{keepDebrief})}
     function populatePilotSelect(rows){const wanted=state.selectedPilotKey||lsGet(LS.pilot,'');const html=['<option value="">Selecciona piloto</option>',...rows.map(r=>`<option value="${r.key.replaceAll('"','&quot;')}"${r.key===wanted?' selected':''}>${r.label}</option>`)].join('');els.pilotSelect.innerHTML=html;state.selectedPilotKey=els.pilotSelect.value||''}
 
     function gapText(a,b){if(!a||!b)return'-';const lapDiff=(a.laps||0)-(b.laps||0);if(lapDiff!==0)return `${Math.abs(lapDiff)}V`;const d=Math.abs((a.totalMs||0)-(b.totalMs||0));return d>0&&d<60000?`${(d/1000).toFixed(2)}s`:'-'}
     function render(row){els.pilotName.textContent=row?`${row.driverName}${row.driverNumber?` #${row.driverNumber}`:''}`:'Sin piloto';if(!row){['positionValue','lapsValue','gapAheadValue','gapBehindValue','remainingValue','bestValue','paceValue','meanValue','totalValue'].forEach(id=>$(id).textContent='-');els.lastLap.textContent='--.--';return}els.lastLap.textContent=formatLapMs(row.lastLapMs);els.positionValue.textContent=`P${row.position}`;els.lapsValue.textContent=String(row.laps||0);els.bestValue.textContent=formatLapMs(row.bestLapMs);els.paceValue.textContent=formatLapMs(row.paceMs);els.meanValue.textContent=formatLapMs(row.meanMs);els.totalValue.textContent=formatLapMs(row.totalMs);const dur=state.session.durationMs;const rem=dur>0?Math.max(0,dur-row.totalMs):0;els.remainingValue.textContent=dur>0?formatRemain(rem):'-';els.remainingMini.textContent=dur>0?formatRemain(rem):'--';els.modeValue.textContent=state.session.label;let ahead=null,behind=null;if(state.session.type==='FINAL'){ahead=state.rows.find(r=>r.position===row.position-1);behind=state.rows.find(r=>r.position===row.position+1)}els.gapAheadValue.textContent=gapText(row,ahead);els.gapBehindValue.textContent=gapText(row,behind);els.note.textContent=row.lastLapMs>0?'Datos del piloto en vivo':'Esperando primera vuelta'}
 
+    function avgMs(values){const a=values.filter(v=>Number.isFinite(v)&&v>0);return a.length?a.reduce((sum,v)=>sum+v,0)/a.length:0}
+    function sigmaMs(values){const a=values.filter(v=>Number.isFinite(v)&&v>0);if(a.length<2)return 0;const m=avgMs(a);return Math.sqrt(a.reduce((sum,v)=>sum+Math.pow(v-m,2),0)/a.length)}
+    function formatDeltaMs(ms){const n=Math.abs(Number(ms)||0);return `${(n/1000).toFixed(3)}s`}
+    function recordLap(row){if(!row||!row.lastLapMs||!row.laps)return false;const last=state.lapHistory[state.lapHistory.length-1];if(last&&last.lap===row.laps)return false;state.lapHistory.push({lap:row.laps,lapMs:row.lastLapMs,position:row.position,bestLapMs:row.bestLapMs,meanMs:row.meanMs,totalMs:row.totalMs,t:now()});if(state.lapHistory.length>300)state.lapHistory.shift();audit('lap_history',formatLapMs(row.lastLapMs),{lap:row.laps,position:row.position,history:state.lapHistory.length});return true}
+    function buildDebrief(row){
+      const times=state.lapHistory.map(x=>x.lapMs).filter(v=>v>0);
+      const localMean=avgMs(times)||row.meanMs||0;
+      const localBest=times.length?Math.min(...times):(row.bestLapMs||0);
+      const best=row.bestLapMs>0?Math.min(row.bestLapMs,localBest||row.bestLapMs):localBest;
+      const sigma=sigmaMs(times);
+      let trend='SIN DATOS',trendDelta=0,trendSpeech='Pocas vueltas para comparar.';
+      if(times.length>=6){
+        const third=Math.max(2,Math.floor(times.length/3));
+        const first=avgMs(times.slice(0,third)),last=avgMs(times.slice(-third));
+        trendDelta=last-first;
+        if(trendDelta<=-80){trend='MEJORÓ';trendSpeech=`Mejoraste ${lapSpeech(Math.abs(trendDelta))}.`;}
+        else if(trendDelta>=80){trend='PERDIÓ RITMO';trendSpeech=`Perdiste ritmo ${lapSpeech(Math.abs(trendDelta))}.`;}
+        else{trend='ESTABLE';trendSpeech='Sin mejora clara.';}
+      }
+      let consistency='SIN DATOS';
+      if(sigma>0)consistency=sigma<=150?'MUY CONSTANTE':sigma<=250?'CONSTANTE':'IRREGULAR';
+      let advice='Mantén referencias.';
+      if(trend==='MEJORÓ'){advice=sigma>250?'MEJORA: consistencia':'MANTÉN: ritmo';}
+      else if(trend==='PERDIÓ RITMO'){advice=sigma>250?'MEJORA: errores y cierre':'MEJORA: cierre';}
+      else if(trend==='ESTABLE'){advice=sigma>250?'MEJORA: consistencia':'MEJORA: velocidad';}
+      else if(sigma>250)advice='MEJORA: consistencia';
+      else if(sigma>0)advice='MANTÉN: constancia';
+      const laps=Math.max(Number(row.laps)||0,times.length);
+      const main=`P${row.position} · ${laps} vueltas · Mejor ${formatLapMs(best)} · Media ${formatLapMs(localMean)} · σ ${sigma?formatDeltaMs(sigma):'-'}`;
+      const lapsSp=laps<=99?number0to99Speech(laps):String(laps);
+      const posSp=number0to99Speech(row.position);
+      const sigmaSp=sigma?lapSpeech(sigma):'';
+      let adviceSpeech=advice.replace('MANTÉN:','Mantén').replace('MEJORA:','Mejora').replace('errores y cierre','errores y cierre').toLowerCase();
+      adviceSpeech=adviceSpeech.charAt(0).toUpperCase()+adviceSpeech.slice(1)+'.';
+      const speech=[`Terminaste P ${posSp}.`,`${lapsSp} vueltas.`,best?`Mejor ${lapSpeech(best)}.`:'',localMean?`Media ${lapSpeech(localMean)}.`:'',sigmaSp?`Consistencia ${sigmaSp}.`:'',trendSpeech,adviceSpeech].filter(Boolean).join(' ');
+      return{trend,trendDelta,consistency,advice,main,speech,laps,bestMs:best,meanMs:localMean,sigmaMs:sigma,capturedLaps:times.length};
+    }
+    function showDebrief(row){
+      const d=buildDebrief(row);state.debrief=d;
+      if(els.debriefCard){els.debriefCard.hidden=false;els.debriefTrend.textContent=d.trend;els.debriefMain.textContent=d.main;els.debriefAdvice.textContent=`${d.consistency} · ${d.advice}`;}
+      setAlert(`🏁 ${d.trend} · ${d.advice}`,'finish');
+      enqueueSpeech(d.speech,{priority:72,key:`debrief_${state.raceName}_${row.key}`,ttl:20000,kind:'debrief',interrupt:false});
+      audit('debrief',d.speech,d);
+      return d;
+    }
+
     function detectPassEvents(rows){const seq=state.snapshotSeq,obs=now(),changed=[];for(const r of rows){const p=state.rowPrev.get(r.key);if(p&&r.laps>p.laps){const ev={key:r.key,name:r.driverName,pos:r.position,lap:r.laps,time:obs,seq};state.lastPassEvents.set(r.key,ev);changed.push(ev)}}return changed}
-    function maybeBlue(selected,changed){if(!selected||selected.position<=3||state.session.type==='TRAIN')return;const selectedPass=state.lastPassEvents.get(selected.key);if(!selectedPass)return;for(const ev of changed){if(ev.key===selected.key||ev.pos>3||ev.seq===selectedPass.seq)continue;const dt=ev.time-selectedPass.time;if(dt<0||dt>1000)continue;const fast=state.rows.find(r=>r.key===ev.key);if(!fast)continue;if(state.session.type==='FINAL'&&(fast.laps-selected.laps)<1)continue;if(now()-state.lastBlueAt<14000)continue;state.lastBlueAt=now();const who=fast.position?`P${fast.position}`:'auto rápido';const text=`${selected.driverName}, azul. ${who} atrás. Mantén línea y dale paso.`;setAlert(`🔵 AZUL · ${who} ATRÁS`,'blue');enqueueSpeech(text,{priority:100,key:`blue_${selected.key}_${fast.key}_${fast.laps}`,ttl:4000,kind:'blue',interrupt:true});audit('blue_detected',text,{deltaMs:dt,fast:fast.driverName,fastPos:fast.position,lapDiff:fast.laps-selected.laps});break}}
+    function maybeBlue(selected,changed){if(!state.infoOn||!selected||selected.position<=3||state.session.type==='TRAIN')return;const selectedPass=state.lastPassEvents.get(selected.key);if(!selectedPass)return;for(const ev of changed){if(ev.key===selected.key||ev.pos>3||ev.seq===selectedPass.seq)continue;const dt=ev.time-selectedPass.time;if(dt<0||dt>1000)continue;const fast=state.rows.find(r=>r.key===ev.key);if(!fast)continue;if(state.session.type==='FINAL'&&(fast.laps-selected.laps)<1)continue;if(now()-state.lastBlueAt<14000)continue;state.lastBlueAt=now();const who=fast.position?`P${fast.position}`:'auto rápido';const text='Bandera azul.';setAlert(`🔵 AZUL · ${who} ATRÁS`,'blue');enqueueSpeech(text,{priority:100,key:`blue_${selected.key}_${fast.key}_${fast.laps}`,ttl:3000,kind:'blue',interrupt:true});audit('blue_detected',text,{deltaMs:dt,fast:fast.driverName,fastPos:fast.position,lapDiff:fast.laps-selected.laps});break}}
 
     function processPilotEvents(row){if(!row)return;const prev=state.pilotPrev;if(!state.baselineReady||!prev){state.pilotPrev={...row};state.baselineReady=true;return}const newLap=row.laps>prev.laps;const posChanged=row.position!==prev.position&&row.position>0;const pb=row.bestLapMs>0&&(prev.bestLapMs<=0||row.bestLapMs<prev.bestLapMs-5);const dur=state.session.durationMs;const rem=dur>0?dur-row.totalMs:null;
-      if(dur>0&&rem!=null){for(const mark of [60000,30000,10000]){if(dur>mark&&prev.totalMs<dur-mark&&row.totalMs>=dur-mark&&!state.clockMarks.has(mark)){state.clockMarks.add(mark);const txt=mark===60000?'Un minuto.':mark===30000?'Treinta segundos.':'Diez segundos.';const pri=mark===10000?97:mark===30000?95:94;setAlert(`⏱ ${txt.toUpperCase()}`,'warn');enqueueSpeech(txt,{priority:pri,key:`clock_${mark}_${state.raceName}`,ttl:3500,interrupt:mark===10000})}}}
-      if(dur>0&&!state.finished&&prev.totalMs<dur&&row.totalMs>=dur){state.finished=true;const txt=state.session.type==='FINAL'?`Terminaste. P${row.position}.`:'Tanda terminada.';setAlert(`🏁 ${txt.toUpperCase()}`,'finish');enqueueSpeech(txt,{priority:99,key:`finish_${state.raceName}_${row.key}`,ttl:7000,interrupt:true})}
-      if(newLap){const tmvAlerted=maybeTmvProximityAlert(row);let parts=[lapSpeech(row.lastLapMs)];if(pb)parts.push('Mejor vuelta');if(posChanged)parts.push(state.session.type==='MANGA'?`P${row.position} provisional`:`P${row.position}`);const txt=parts.filter(Boolean).join('. ')+'.';if(!tmvAlerted)setAlert(pb?'🟣 MEJOR VUELTA':`VUELTA ${row.laps}`,pb?'info':'');enqueueSpeech(txt,{priority:pb?86:80,key:`lap_${row.key}_${row.laps}`,ttl:4500,interrupt:false})}else if(posChanged){const txt=state.session.type==='MANGA'?`P${row.position} provisional.`:`P${row.position}.`;setAlert(row.position<prev.position?`⬆️ P${row.position}`:`⬇️ P${row.position}`,'info');enqueueSpeech(txt,{priority:88,key:`pos_${row.key}_${row.position}_${row.laps}`,ttl:3500,interrupt:false})}
+      if(state.infoOn&&dur>0&&rem!=null){for(const mark of [60000,30000,10000]){if(dur>mark&&prev.totalMs<dur-mark&&row.totalMs>=dur-mark&&!state.clockMarks.has(mark)){state.clockMarks.add(mark);const txt=mark===60000?'Un minuto.':mark===30000?'Treinta segundos.':'Diez segundos.';const pri=mark===10000?97:mark===30000?95:94;setAlert(`⏱ ${txt.toUpperCase()}`,'warn');enqueueSpeech(txt,{priority:pri,key:`clock_${mark}_${state.raceName}`,ttl:3500,kind:'info',interrupt:mark===10000})}}}
+      if(newLap){
+        recordLap(row);
+        const tmvAlerted=maybeTmvProximityAlert(row);
+        const lapTxt=lapSpeech(row.lastLapMs);
+        if(!tmvAlerted)setAlert(pb?'🟣 MEJOR VUELTA':`VUELTA ${row.laps}`,pb?'info':'');
+        enqueueSpeech(lapTxt?`${lapTxt}.`:'',{priority:90,key:`lap_${row.key}_${row.laps}`,ttl:4500,kind:'lap',interrupt:false});
+        if(state.infoOn&&pb){
+          enqueueSpeech('Mejor vuelta.',{priority:85,key:`pb_${row.key}_${row.laps}`,ttl:2800,kind:'info',interrupt:false});
+        }else if(state.infoOn&&posChanged){
+          enqueueSpeech(`P ${number0to99Speech(row.position)}.`,{priority:84,key:`pos_${row.key}_${row.position}_${row.laps}`,ttl:2600,kind:'info',interrupt:false});
+        }
+      }else if(posChanged&&state.infoOn){
+        const txt=`P ${number0to99Speech(row.position)}.`;
+        setAlert(row.position<prev.position?`⬆️ P${row.position}`:`⬇️ P${row.position}`,'info');
+        enqueueSpeech(txt,{priority:88,key:`pos_${row.key}_${row.position}_${row.laps}`,ttl:2600,kind:'info',interrupt:false});
+      }
+      if(dur>0&&!state.finished&&prev.totalMs<dur&&row.totalMs>=dur){state.finished=true;showDebrief(row)}
       state.pilotPrev={...row};
     }
 
@@ -667,9 +769,9 @@
     function disconnect(){try{state.unsub&&state.unsub()}catch{}state.unsub=null;if(state.pollTimer)clearInterval(state.pollTimer);state.pollTimer=null}
     async function connect(){if(!window.firebase||!firebase.apps){setLive(false,'SDK');return}disconnect();try{const appName=`pilot-spotter-${FIREBASE_CONFIG.projectId}`;let app=firebase.apps.find(a=>a.name===appName);if(!app)app=firebase.initializeApp(FIREBASE_CONFIG,appName);state.firestore=firebase.firestore(app);try{state.firestore.settings({experimentalForceLongPolling:true,useFetchStreams:false})}catch{}const ref=state.firestore.doc(FIRESTORE_DOC_PATH);state.unsub=ref.onSnapshot(s=>{if(s.exists)applySnapshot(s.data()||{});else setLive(false,'VACÍO')},async e=>{audit('firebase_snapshot_error',String(e));setLive(false,'RETRY');await pollOnce()});state.pollTimer=setInterval(()=>{if(!state.lastSnapshotAt||now()-state.lastSnapshotAt>6000)pollOnce()},3000);setLive(true);audit('firebase_connect','ok')}catch(e){audit('firebase_connect_error',String(e));setLive(false,'ERROR')}}
 
-    function bind(){els.voiceBtn.addEventListener('click',toggleVoice);els.themeBtn.addEventListener('click',cycleTheme);els.auditBtn.addEventListener('click',downloadAudit);els.tmvInput.addEventListener('change',()=>{state.tmvMs=parseTmvInput(els.tmvInput.value.trim());els.tmvInput.value=formatTmvInput(state.tmvMs);lsSet(LS.tmv,state.tmvMs||'');resetTmvProximity('tmv_change');updateTmvUi();audit('tmv_changed',state.tmvMs?formatLapMs(state.tmvMs):'OFF',{tmvMs:state.tmvMs,marginMs:state.tmvMarginMs})});els.tmvInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();els.tmvInput.blur()}});els.tmvMargin.addEventListener('change',()=>{state.tmvMarginMs=[50,75,100].includes(Number(els.tmvMargin.value))?Number(els.tmvMargin.value):50;lsSet(LS.tmvMargin,state.tmvMarginMs);resetTmvProximity('tmv_margin_change');updateTmvUi();audit('tmv_margin_changed',`${state.tmvMarginMs} ms`)});els.pilotSelect.addEventListener('change',()=>{state.selectedPilotKey=els.pilotSelect.value||'';lsSet(LS.pilot,state.selectedPilotKey);resetBaseline('pilot_change');render(state.rows.find(r=>r.key===state.selectedPilotKey)||null);if(state.voiceOn&&state.selectedPilotKey){const r=state.rows.find(x=>x.key===state.selectedPilotKey);if(r)enqueueSpeech(`Siguiendo a ${r.driverName}.`,{priority:98,key:'pilot_select',ttl:3000,interrupt:true})}});els.voiceSelect.addEventListener('change',()=>{state.voiceName=els.voiceSelect.value||'';lsSet(LS.voiceName,state.voiceName)});els.speedRange.addEventListener('input',()=>{state.voiceRate=clampRate(els.speedRange.value);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`});els.speedRange.addEventListener('change',()=>lsSet(LS.rate,state.voiceRate));document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.voiceOn)requestWakeLock()});['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,()=>{if(state.voiceOn&&!state.speechUnlocked)unlockSpeech()},{passive:true,capture:true}));if(speechAvailable()){refreshVoices();setTimeout(refreshVoices,400);setTimeout(refreshVoices,1200);try{speechSynthesis.addEventListener('voiceschanged',refreshVoices)}catch{}}setInterval(()=>{const age=state.lastSnapshotAt?now()-state.lastSnapshotAt:0;els.feedAge.textContent=age?`${(age/1000).toFixed(1)}s`:'--';if(age>7000)setLive(false,'LENTO')},1000)}
+    function bind(){els.voiceBtn.addEventListener('click',toggleVoice);els.infoBtn.addEventListener('click',toggleInfo);els.themeBtn.addEventListener('click',cycleTheme);els.auditBtn.addEventListener('click',downloadAudit);els.tmvInput.addEventListener('change',()=>{state.tmvMs=parseTmvInput(els.tmvInput.value.trim());els.tmvInput.value=formatTmvInput(state.tmvMs);lsSet(LS.tmv,state.tmvMs||'');resetTmvProximity('tmv_change');updateTmvUi();audit('tmv_changed',state.tmvMs?formatLapMs(state.tmvMs):'OFF',{tmvMs:state.tmvMs,marginMs:state.tmvMarginMs})});els.tmvInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();els.tmvInput.blur()}});els.tmvMargin.addEventListener('change',()=>{state.tmvMarginMs=[50,75,100].includes(Number(els.tmvMargin.value))?Number(els.tmvMargin.value):50;lsSet(LS.tmvMargin,state.tmvMarginMs);resetTmvProximity('tmv_margin_change');updateTmvUi();audit('tmv_margin_changed',`${state.tmvMarginMs} ms`)});els.pilotSelect.addEventListener('change',()=>{state.selectedPilotKey=els.pilotSelect.value||'';lsSet(LS.pilot,state.selectedPilotKey);resetBaseline('pilot_change');render(state.rows.find(r=>r.key===state.selectedPilotKey)||null);if(state.voiceOn&&state.selectedPilotKey){const r=state.rows.find(x=>x.key===state.selectedPilotKey);if(r)enqueueSpeech('Piloto listo.',{priority:98,key:'pilot_select',ttl:2500,kind:'info',interrupt:true})}});els.voiceSelect.addEventListener('change',()=>{state.voiceName=els.voiceSelect.value||'';lsSet(LS.voiceName,state.voiceName)});els.speedRange.addEventListener('input',()=>{state.voiceRate=clampRate(els.speedRange.value);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`});els.speedRange.addEventListener('change',()=>lsSet(LS.rate,state.voiceRate));document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.voiceOn)requestWakeLock()});['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,()=>{if(state.voiceOn&&!state.speechUnlocked)unlockSpeech()},{passive:true,capture:true}));if(speechAvailable()){refreshVoices();setTimeout(refreshVoices,400);setTimeout(refreshVoices,1200);try{speechSynthesis.addEventListener('voiceschanged',refreshVoices)}catch{}}setInterval(()=>{const age=state.lastSnapshotAt?now()-state.lastSnapshotAt:0;els.feedAge.textContent=age?`${(age/1000).toFixed(1)}s`:'--';if(age>7000)setLive(false,'LENTO')},1000)}
 
-    function init(){state.selectedPilotKey=lsGet(LS.pilot,'');state.voiceOn=lsGet(LS.voice,'0')==='1';state.voiceName=lsGet(LS.voiceName,'');state.voiceRate=clampRate(lsGet(LS.rate,'1.2'));state.tmvMs=Math.max(0,Math.round(Number(lsGet(LS.tmv,'0'))||0));state.tmvMarginMs=[50,75,100].includes(Number(lsGet(LS.tmvMargin,'50')))?Number(lsGet(LS.tmvMargin,'50')):50;applyTheme(lsGet(LS.theme,'theme-purple-night'));els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);els.speedRange.value=String(state.voiceRate);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`;els.tmvInput.value=formatTmvInput(state.tmvMs);els.tmvMargin.value=String(state.tmvMarginMs);updateTmvUi();bind();connect();if(state.voiceOn)setVoiceStatus('TOCA LA PANTALLA PARA ACTIVAR VOZ','warn');audit('app_init',APP_VERSION,{tmvMs:state.tmvMs,tmvMarginMs:state.tmvMarginMs})}
+    function init(){state.infoOn=false;state.selectedPilotKey=lsGet(LS.pilot,'');state.voiceOn=lsGet(LS.voice,'0')==='1';state.voiceName=lsGet(LS.voiceName,'');state.voiceRate=clampRate(lsGet(LS.rate,'1.2'));state.tmvMs=Math.max(0,Math.round(Number(lsGet(LS.tmv,'0'))||0));state.tmvMarginMs=[50,75,100].includes(Number(lsGet(LS.tmvMargin,'50')))?Number(lsGet(LS.tmvMargin,'50')):50;applyTheme(lsGet(LS.theme,'theme-purple-night'));els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);els.speedRange.value=String(state.voiceRate);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`;els.tmvInput.value=formatTmvInput(state.tmvMs);els.tmvMargin.value=String(state.tmvMarginMs);updateTmvUi();setInfoUi();bind();connect();if(state.voiceOn)setVoiceStatus('TOCA LA PANTALLA PARA ACTIVAR VOZ','warn');audit('app_init',APP_VERSION,{tmvMs:state.tmvMs,tmvMarginMs:state.tmvMarginMs,infoOn:state.infoOn,debrief:true})}
     init();
   })();
   </script>
