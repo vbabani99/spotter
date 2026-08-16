@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>Vic's Pilot Spotter v1.0.11</title>
+  <title>Vic's Pilot Spotter v1.0.12</title>
   <style>
     :root{
       --bg:#050507;
@@ -470,7 +470,7 @@
       100%{transform:scale(1); opacity:1}
     }
 
-    /* v1.0.11 · nuevo logo Vic's PT */
+    /* v1.0.12 · nombre de evento en dos líneas */
     .launchShell{padding:8px 10px 10px}
     .launchShell .topBrand{margin-bottom:8px}
     .launchShell .brandLogo{width:164px;height:74px}
@@ -531,6 +531,15 @@
       box-shadow:0 0 0 1px rgba(255,255,255,.18);
     }
 
+  
+    .raceSessionLine{
+      display:block;
+      margin-top:.18em;
+      font-size:.86em;
+      line-height:1.15;
+      opacity:.92;
+    }
+
   </style>
 </head>
 <body class="theme-purple-night">
@@ -540,7 +549,7 @@
         <img class="brandLogo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" />
         <div class="brandTag">
           <span class="brandLine">🎧 VIC'S PILOT SPOTTER 🐊 <span id="livePill" class="liveRadio off" aria-label="Estado de conexión">OFF</span></span>
-          <small>v1.0.11 · PILOTO</small>
+          <small>v1.0.12 · PILOTO</small>
         </div>
       </div>
 
@@ -621,7 +630,7 @@
   (() => {
     'use strict';
     const APP_NAME='Vics_Pilot_Spotter';
-    const APP_VERSION='v1.0.11';
+    const APP_VERSION='v1.0.12';
     const FIREBASE_CONFIG={apiKey:'AIzaSyBaySYvIxH8JsvXCETv3XwVdNecJY1ez2c',authDomain:'turbo-racing-zround.firebaseapp.com',projectId:'turbo-racing-zround',appId:'1:628478462576:web:c2dbc45c95bbe362ce42b5'};
     const FIRESTORE_DOC_PATH='races/currentRace';
     const LS={pilot:'vps_pilot',voice:'vps_voice',voiceName:'vps_voice_name',rate:'vps_voice_rate',theme:'vps_theme',tmv:'vps_tmv_ms',tmvMargin:'vps_tmv_margin_ms'};
@@ -907,6 +916,11 @@
         els.raceName.textContent='Sin carrera';
         return;
       }
+
+      const m=raw.match(/^(.*?)\s*-\s*(Q\d+\..*)$/i);
+      const eventPart=m?safeName(m[1]):raw;
+      const sessionPart=m?safeName(m[2]):'';
+
       const code=countryCodeFromRaceName(raw);
       if(code){
         const img=document.createElement('img');
@@ -917,7 +931,15 @@
         img.onerror=()=>{try{img.remove()}catch{}};
         els.raceName.appendChild(img);
       }
-      els.raceName.appendChild(document.createTextNode(raw));
+
+      els.raceName.appendChild(document.createTextNode(eventPart));
+
+      if(sessionPart){
+        const line2=document.createElement('span');
+        line2.className='raceSessionLine';
+        line2.textContent=sessionPart;
+        els.raceName.appendChild(line2);
+      }
     }
 
     function applySnapshot(data){state.snapshotSeq++;state.lastSnapshotAt=now();const raceName=safeName((data&&(data.raceName||(data.parsed&&data.parsed.raceName)))||'');const raceChanged=!!state.raceName&&raceName&&raceName!==state.raceName;if(raceChanged){audit('race_change',`${state.raceName} -> ${raceName}`);state.raceName=raceName;resetBaseline('race_change');setAlert('NUEVA SESIÓN','info')}else if(!state.raceName)state.raceName=raceName;state.session=inferSession(data,raceName);renderRaceName(raceName);const rows=extractRows(data||{});const oldSelected=state.selectedPilotKey;state.rows=rows;populatePilotSelect(rows);if(oldSelected&&state.selectedPilotKey!==oldSelected){state.selectedPilotKey=oldSelected;if([...els.pilotSelect.options].some(o=>o.value===oldSelected))els.pilotSelect.value=oldSelected}const changed=detectPassEvents(rows);const row=rows.find(r=>r.key===state.selectedPilotKey)||null;render(row);if(row){processPilotEvents(row);maybeBlue(row,changed)}for(const r of rows)state.rowPrev.set(r.key,{...r});setLive(true);audit('snapshot','ok',{rows:rows.length,changedLaps:changed.length,mode:state.session.type,durationMs:state.session.durationMs})}
