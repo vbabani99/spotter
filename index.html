@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>Vic's Pilot Spotter v1.0.4</title>
+  <title>Vic's Pilot Spotter v1.0.5</title>
   <style>
     :root{
       --bg:#050507;
@@ -489,14 +489,14 @@
         <img class="brandLogo" src="https://i.ibb.co/bjknVM36/vic-pulse-timing.gif" alt="Vic's Pulse Timing" />
         <div class="brandTag">
           <span class="brandLine">🎧 VIC'S PILOT SPOTTER <span id="livePill" class="liveRadio off" aria-label="Estado de conexión">OFF</span></span>
-          <small>v1.0.4 · PILOTO</small>
+          <small>v1.0.5 · PILOTO</small>
         </div>
       </div>
 
       <div class="controlBar">
         <select id="pilotSelect" class="pilotSelect"><option value="">Cargando pilotos...</option></select>
         <button id="themeBtn" class="iconBtn" type="button" aria-label="Cambiar tema">🎨</button>
-        <button id="auditBtn" class="iconBtn" type="button" aria-label="Exportar audit">📋</button>
+        <button id="auditBtn" class="iconBtn" type="button" aria-label="Exportar audit" title="Auditoría privada" hidden disabled>📋</button>
         <button id="voiceBtn" class="voiceBtn" type="button">Voz OFF</button>
         <button id="infoBtn" class="infoBtn" type="button" aria-pressed="false" title="Mensajes extra">INFO OFF</button>
       </div>
@@ -559,7 +559,7 @@
   (() => {
     'use strict';
     const APP_NAME='Vics_Pilot_Spotter';
-    const APP_VERSION='v1.0.4';
+    const APP_VERSION='v1.0.5';
     const FIREBASE_CONFIG={apiKey:'AIzaSyBaySYvIxH8JsvXCETv3XwVdNecJY1ez2c',authDomain:'turbo-racing-zround.firebaseapp.com',projectId:'turbo-racing-zround',appId:'1:628478462576:web:c2dbc45c95bbe362ce42b5'};
     const FIRESTORE_DOC_PATH='races/currentRace';
     const LS={pilot:'vps_pilot',voice:'vps_voice',voiceName:'vps_voice_name',rate:'vps_voice_rate',theme:'vps_theme',tmv:'vps_tmv_ms',tmvMargin:'vps_tmv_margin_ms'};
@@ -570,7 +570,7 @@
     const $=id=>document.getElementById(id);
     const els={pilotSelect:$('pilotSelect'),themeBtn:$('themeBtn'),auditBtn:$('auditBtn'),voiceBtn:$('voiceBtn'),infoBtn:$('infoBtn'),voiceSelect:$('voiceSelect'),speedRange:$('speedRange'),speedValue:$('speedValue'),tmvInput:$('tmvInput'),tmvMargin:$('tmvMargin'),tmvHint:$('tmvHint'),voiceStatus:$('voiceStatus'),livePill:$('livePill'),themeHint:$('themeHint'),raceName:$('raceName'),pilotName:$('pilotName'),lastLap:$('lastLap'),note:$('note'),spotterAlert:$('spotterAlert'),positionValue:$('positionValue'),lapsValue:$('lapsValue'),gapAheadValue:$('gapAheadValue'),gapBehindValue:$('gapBehindValue'),remainingValue:$('remainingValue'),bestValue:$('bestValue'),paceValue:$('paceValue'),meanValue:$('meanValue'),totalValue:$('totalValue'),modeValue:$('modeValue'),remainingMini:$('remainingMini'),feedAge:$('feedAge'),debriefCard:$('debriefCard'),debriefTrend:$('debriefTrend'),debriefMain:$('debriefMain'),debriefAdvice:$('debriefAdvice')};
 
-    const state={voiceOn:false,infoOn:false,speechUnlocked:false,voiceName:'',voiceRate:1.2,voices:[],rows:[],selectedPilotKey:'',raceName:'',session:{type:'UNKNOWN',durationMs:0,label:'--'},snapshotSeq:0,lastSnapshotAt:0,baselineReady:false,pilotPrev:null,rowPrev:new Map(),lastPassEvents:new Map(),lastBlueAt:0,clockMarks:new Set(),finished:false,queue:[],speaking:false,current:null,speechGeneration:0,wakeLock:null,wakeTick:null,theme:'theme-purple-night',firestore:null,unsub:null,pollTimer:null,audit:[],tmvMs:0,tmvMarginMs:50,tmvNearStreak:0,tmvZoneActive:false,lastTmvAlertLap:0,lastTmvAlertAt:0,lapHistory:[],debrief:null};
+    const state={voiceOn:false,infoOn:false,speechUnlocked:false,voiceName:'',voiceRate:1.2,voices:[],rows:[],selectedPilotKey:'',raceName:'',session:{type:'UNKNOWN',durationMs:0,label:'--'},snapshotSeq:0,lastSnapshotAt:0,baselineReady:false,pilotPrev:null,rowPrev:new Map(),lastPassEvents:new Map(),lastBlueAt:0,clockMarks:new Set(),finished:false,queue:[],speaking:false,current:null,speechGeneration:0,wakeLock:null,wakeTick:null,theme:'theme-purple-night',firestore:null,unsub:null,pollTimer:null,audit:[],tmvMs:0,tmvMarginMs:50,tmvNearStreak:0,tmvZoneActive:false,lastTmvAlertLap:0,lastTmvAlertAt:0,lapHistory:[],debrief:null,lastInfoLap:0,lastPositionReminderLap:0,lastTrendClass:'',lastTrendAt:0};
 
     const now=()=>Date.now();
     const safeName=v=>String(v||'').replace(/\s+/g,' ').trim();
@@ -579,7 +579,9 @@
     const lsGet=(k,d='')=>{try{const v=localStorage.getItem(k);return v==null?d:v}catch{return d}};
     const lsSet=(k,v)=>{try{localStorage.setItem(k,String(v))}catch{}};
     function audit(action,detail='',extra={}){const it={t:now(),action,detail,raceName:state.raceName,sessionType:state.session.type,pilotKey:state.selectedPilotKey,queueLength:state.queue.length,speaking:state.speaking,...extra};state.audit.push(it);if(state.audit.length>1400)state.audit.splice(0,state.audit.length-1400);}
-    function downloadAudit(){const blob=new Blob([JSON.stringify({generatedAt:new Date().toISOString(),appVersion:APP_VERSION,totalItems:state.audit.length,items:state.audit},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`pilot_spotter_audit_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+    function isVictorBabani(row){if(!row)return false;const nameOk=norm(row.driverName)==='victor babani';const number=safeName(row.driverNumber);return nameOk&&(!number||number==='99')}
+    function updatePrivateControls(row){const allowed=isVictorBabani(row);if(els.auditBtn){els.auditBtn.hidden=!allowed;els.auditBtn.disabled=!allowed;els.auditBtn.setAttribute('aria-hidden',allowed?'false':'true')}return allowed}
+    function downloadAudit(){const row=state.rows.find(r=>r.key===state.selectedPilotKey)||null;if(!isVictorBabani(row)){audit('audit_blocked','private_control');return}const blob=new Blob([JSON.stringify({generatedAt:new Date().toISOString(),appVersion:APP_VERSION,totalItems:state.audit.length,items:state.audit},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`pilot_spotter_audit_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 
     function parseTimeToMs(v){if(v==null||v==='')return 0;if(typeof v==='number'&&Number.isFinite(v)){if(v<=0)return 0;return v<1000?Math.round(v*1000):Math.round(v)}const s=String(v).trim();if(!s)return 0;if(/^\d+(\.\d+)?$/.test(s)){const n=Number(s);return n>0?(n<1000?Math.round(n*1000):Math.round(n)):0}const m=s.match(/^(?:(\d+):)?(\d{1,2})(?:\.(\d{1,3}))?$/);if(!m)return 0;return Number(m[1]||0)*60000+Number(m[2]||0)*1000+Number((m[3]||'').padEnd(3,'0')||0)}
     function formatLapMs(ms){const n=Math.round(Number(ms)||0);if(n<=0)return '--.--';const min=Math.floor(n/60000),sec=Math.floor((n%60000)/1000),mil=n%1000;return min?`${min}:${String(sec).padStart(2,'0')}.${String(mil).padStart(3,'0')}`:`${sec}.${String(mil).padStart(3,'0')}`}
@@ -681,21 +683,55 @@
         setTimeout(pumpSpeech,0);
       }
       setInfoUi();
+      if(state.infoOn&&state.voiceOn)enqueueSpeech('Info activa.',{priority:99,key:'info_on',ttl:3000,kind:'info',interrupt:true});
       audit('info_mode',state.infoOn?'ON':'OFF');
     }
     async function toggleVoice(){state.voiceOn=!state.voiceOn;lsSet(LS.voice,state.voiceOn?'1':'0');els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);if(state.voiceOn){await unlockSpeech();requestWakeLock();if(state.infoOn)enqueueSpeech('Spotter listo.',{priority:100,key:'spotter_ready',ttl:2500,kind:'info',interrupt:true})}else{state.speechGeneration++;try{speechSynthesis.cancel()}catch{}state.queue=[];state.speaking=false;state.current=null;setVoiceStatus('VOZ APAGADA','warn')}}
     async function requestWakeLock(){if(!('wakeLock'in navigator)||document.hidden)return;try{if(!state.wakeLock)state.wakeLock=await navigator.wakeLock.request('screen')}catch{}}
 
-    function resetBaseline(reason='reset'){const keepDebrief=reason==='race_change'||reason==='counter_reset';state.baselineReady=false;state.pilotPrev=null;state.rowPrev=new Map();state.lastPassEvents=new Map();state.clockMarks=new Set();state.finished=false;state.lastBlueAt=0;state.tmvNearStreak=0;state.tmvZoneActive=false;state.lastTmvAlertLap=0;state.lastTmvAlertAt=0;state.lapHistory=[];state.debrief=null;if(els.debriefCard)els.debriefCard.hidden=true;state.queue=keepDebrief?state.queue.filter(x=>x.kind==='debrief'):[];audit('baseline_reset',reason,{keepDebrief})}
+    function resetBaseline(reason='reset'){const keepDebrief=reason==='race_change'||reason==='counter_reset';state.baselineReady=false;state.pilotPrev=null;state.rowPrev=new Map();state.lastPassEvents=new Map();state.clockMarks=new Set();state.finished=false;state.lastBlueAt=0;state.tmvNearStreak=0;state.tmvZoneActive=false;state.lastTmvAlertLap=0;state.lastTmvAlertAt=0;state.lapHistory=[];state.debrief=null;state.lastInfoLap=0;state.lastPositionReminderLap=0;state.lastTrendClass='';state.lastTrendAt=0;if(els.debriefCard)els.debriefCard.hidden=true;state.queue=keepDebrief?state.queue.filter(x=>x.kind==='debrief'):[];audit('baseline_reset',reason,{keepDebrief})}
     function populatePilotSelect(rows){const wanted=state.selectedPilotKey||lsGet(LS.pilot,'');const html=['<option value="">Selecciona piloto</option>',...rows.map(r=>`<option value="${r.key.replaceAll('"','&quot;')}"${r.key===wanted?' selected':''}>${r.label}</option>`)].join('');els.pilotSelect.innerHTML=html;state.selectedPilotKey=els.pilotSelect.value||''}
 
     function gapText(a,b){if(!a||!b)return'-';const lapDiff=(a.laps||0)-(b.laps||0);if(lapDiff!==0)return `${Math.abs(lapDiff)}V`;const d=Math.abs((a.totalMs||0)-(b.totalMs||0));return d>0&&d<60000?`${(d/1000).toFixed(2)}s`:'-'}
-    function render(row){els.pilotName.textContent=row?`${row.driverName}${row.driverNumber?` #${row.driverNumber}`:''}`:'Sin piloto';if(!row){['positionValue','lapsValue','gapAheadValue','gapBehindValue','remainingValue','bestValue','paceValue','meanValue','totalValue'].forEach(id=>$(id).textContent='-');els.lastLap.textContent='--.--';return}els.lastLap.textContent=formatLapMs(row.lastLapMs);els.positionValue.textContent=`P${row.position}`;els.lapsValue.textContent=String(row.laps||0);els.bestValue.textContent=formatLapMs(row.bestLapMs);els.paceValue.textContent=formatLapMs(row.paceMs);els.meanValue.textContent=formatLapMs(row.meanMs);els.totalValue.textContent=formatLapMs(row.totalMs);const dur=state.session.durationMs;const rem=dur>0?Math.max(0,dur-row.totalMs):0;els.remainingValue.textContent=dur>0?formatRemain(rem):'-';els.remainingMini.textContent=dur>0?formatRemain(rem):'--';els.modeValue.textContent=state.session.label;let ahead=null,behind=null;if(state.session.type==='FINAL'){ahead=state.rows.find(r=>r.position===row.position-1);behind=state.rows.find(r=>r.position===row.position+1)}els.gapAheadValue.textContent=gapText(row,ahead);els.gapBehindValue.textContent=gapText(row,behind);els.note.textContent=row.lastLapMs>0?'Datos del piloto en vivo':'Esperando primera vuelta'}
+    function render(row){updatePrivateControls(row);els.pilotName.textContent=row?`${row.driverName}${row.driverNumber?` #${row.driverNumber}`:''}`:'Sin piloto';if(!row){['positionValue','lapsValue','gapAheadValue','gapBehindValue','remainingValue','bestValue','paceValue','meanValue','totalValue'].forEach(id=>$(id).textContent='-');els.lastLap.textContent='--.--';return}els.lastLap.textContent=formatLapMs(row.lastLapMs);els.positionValue.textContent=`P${row.position}`;els.lapsValue.textContent=String(row.laps||0);els.bestValue.textContent=formatLapMs(row.bestLapMs);els.paceValue.textContent=formatLapMs(row.paceMs);els.meanValue.textContent=formatLapMs(row.meanMs);els.totalValue.textContent=formatLapMs(row.totalMs);const dur=state.session.durationMs;const rem=dur>0?Math.max(0,dur-row.totalMs):0;els.remainingValue.textContent=dur>0?formatRemain(rem):'-';els.remainingMini.textContent=dur>0?formatRemain(rem):'--';els.modeValue.textContent=state.session.label;let ahead=null,behind=null;if(state.session.type==='FINAL'){ahead=state.rows.find(r=>r.position===row.position-1);behind=state.rows.find(r=>r.position===row.position+1)}els.gapAheadValue.textContent=gapText(row,ahead);els.gapBehindValue.textContent=gapText(row,behind);els.note.textContent=row.lastLapMs>0?'Datos del piloto en vivo':'Esperando primera vuelta'}
 
     function avgMs(values){const a=values.filter(v=>Number.isFinite(v)&&v>0);return a.length?a.reduce((sum,v)=>sum+v,0)/a.length:0}
     function sigmaMs(values){const a=values.filter(v=>Number.isFinite(v)&&v>0);if(a.length<2)return 0;const m=avgMs(a);return Math.sqrt(a.reduce((sum,v)=>sum+Math.pow(v-m,2),0)/a.length)}
     function formatDeltaMs(ms){const n=Math.abs(Number(ms)||0);return `${(n/1000).toFixed(3)}s`}
     function recordLap(row){if(!row||!row.lastLapMs||!row.laps)return false;const last=state.lapHistory[state.lapHistory.length-1];if(last&&last.lap===row.laps)return false;state.lapHistory.push({lap:row.laps,lapMs:row.lastLapMs,position:row.position,bestLapMs:row.bestLapMs,meanMs:row.meanMs,totalMs:row.totalMs,t:now()});if(state.lapHistory.length>300)state.lapHistory.shift();audit('lap_history',formatLapMs(row.lastLapMs),{lap:row.laps,position:row.position,history:state.lapHistory.length});return true}
+    function maybeInfoPulse(row,{pb=false,posChanged=false,tmvAlerted=false}={}){
+      if(!state.infoOn||!row||!row.laps||tmvAlerted||pb||posChanged)return false;
+      const hist=state.lapHistory;
+      if(hist.length<3)return false;
+      const lap=Number(row.laps)||0;
+      // Pulso de posición: útil, corto y no más frecuente que cada 5 vueltas.
+      if(lap-state.lastPositionReminderLap>=5){
+        state.lastPositionReminderLap=lap;
+        const txt=`P ${number0to99Speech(row.position)}.`;
+        enqueueSpeech(txt,{priority:82,key:`pulse_pos_${row.key}_${lap}`,ttl:5000,kind:'info',interrupt:false});
+        audit('info_pulse_position',txt,{lap,position:row.position});
+        return true;
+      }
+      // Tendencia: compara 3 vueltas recientes contra las 3 anteriores.
+      if(hist.length>=6&&lap-state.lastInfoLap>=3){
+        const recent=hist.slice(-3).map(x=>x.lapMs),before=hist.slice(-6,-3).map(x=>x.lapMs);
+        const recentAvg=avgMs(recent),beforeAvg=avgMs(before),delta=recentAvg-beforeAvg;
+        const recentSigma=sigmaMs(recent);
+        let cls='',txt='';
+        if(delta<=-100){cls='faster';txt='Más rápido.'}
+        else if(delta>=120){cls='slower';txt='Más lento.'}
+        else if(recentSigma>0&&recentSigma<=120){cls='steady';txt='Muy constante.'}
+        if(txt){
+          // No repetir la misma observación pegada; exige 3 vueltas entre pulsos.
+          state.lastInfoLap=lap;state.lastTrendClass=cls;state.lastTrendAt=now();
+          enqueueSpeech(txt,{priority:81,key:`pulse_${cls}_${row.key}_${lap}`,ttl:5000,kind:'info',interrupt:false});
+          audit('info_pulse_trend',txt,{lap,deltaMs:Math.round(delta),sigmaMs:Math.round(recentSigma),recentAvgMs:Math.round(recentAvg),beforeAvgMs:Math.round(beforeAvg)});
+          return true;
+        }
+      }
+      return false;
+    }
+
     function buildDebrief(row){
       const times=state.lapHistory.map(x=>x.lapMs).filter(v=>v>0);
       const localMean=avgMs(times)||row.meanMs||0;
@@ -739,7 +775,7 @@
     }
 
     function detectPassEvents(rows){const seq=state.snapshotSeq,obs=now(),changed=[];for(const r of rows){const p=state.rowPrev.get(r.key);if(p&&r.laps>p.laps){const ev={key:r.key,name:r.driverName,pos:r.position,lap:r.laps,time:obs,seq};state.lastPassEvents.set(r.key,ev);changed.push(ev)}}return changed}
-    function maybeBlue(selected,changed){if(!state.infoOn||!selected||selected.position<=3||state.session.type==='TRAIN')return;const selectedPass=state.lastPassEvents.get(selected.key);if(!selectedPass)return;for(const ev of changed){if(ev.key===selected.key||ev.pos>3||ev.seq===selectedPass.seq)continue;const dt=ev.time-selectedPass.time;if(dt<0||dt>1000)continue;const fast=state.rows.find(r=>r.key===ev.key);if(!fast)continue;if(state.session.type==='FINAL'&&(fast.laps-selected.laps)<1)continue;if(now()-state.lastBlueAt<14000)continue;state.lastBlueAt=now();const who=fast.position?`P${fast.position}`:'auto rápido';const text='Bandera azul.';setAlert(`🔵 AZUL · ${who} ATRÁS`,'blue');enqueueSpeech(text,{priority:100,key:`blue_${selected.key}_${fast.key}_${fast.laps}`,ttl:3000,kind:'blue',interrupt:true});audit('blue_detected',text,{deltaMs:dt,fast:fast.driverName,fastPos:fast.position,lapDiff:fast.laps-selected.laps});break}}
+    function maybeBlue(selected,changed){if(!state.infoOn||!selected||state.session.type!=='FINAL')return;const selectedPass=state.lastPassEvents.get(selected.key);if(!selectedPass)return;for(const ev of changed){if(ev.key===selected.key||ev.pos>3||ev.seq===selectedPass.seq)continue;const dt=ev.time-selectedPass.time;if(dt<0||dt>1000)continue;const fast=state.rows.find(r=>r.key===ev.key);if(!fast)continue;if(state.session.type==='FINAL'&&(fast.laps-selected.laps)<1)continue;if(now()-state.lastBlueAt<14000)continue;state.lastBlueAt=now();const who=fast.position?`P${fast.position}`:'auto rápido';const text='Bandera azul.';setAlert(`🔵 AZUL · ${who} ATRÁS`,'blue');enqueueSpeech(text,{priority:100,key:`blue_${selected.key}_${fast.key}_${fast.laps}`,ttl:3000,kind:'blue',interrupt:true});audit('blue_detected',text,{deltaMs:dt,fast:fast.driverName,fastPos:fast.position,lapDiff:fast.laps-selected.laps});break}}
 
     function processPilotEvents(row){if(!row)return;const prev=state.pilotPrev;if(!state.baselineReady||!prev){state.pilotPrev={...row};state.baselineReady=true;return}const newLap=row.laps>prev.laps;const posChanged=row.position!==prev.position&&row.position>0;const pb=row.bestLapMs>0&&(prev.bestLapMs<=0||row.bestLapMs<prev.bestLapMs-5);const dur=state.session.durationMs;const rem=dur>0?dur-row.totalMs:null;
       if(state.infoOn&&dur>0&&rem!=null){for(const mark of [60000,30000,10000]){if(dur>mark&&prev.totalMs<dur-mark&&row.totalMs>=dur-mark&&!state.clockMarks.has(mark)){state.clockMarks.add(mark);const txt=mark===60000?'Un minuto.':mark===30000?'Treinta segundos.':'Diez segundos.';const pri=mark===10000?97:mark===30000?95:94;setAlert(`⏱ ${txt.toUpperCase()}`,'warn');enqueueSpeech(txt,{priority:pri,key:`clock_${mark}_${state.raceName}`,ttl:3500,kind:'info',interrupt:mark===10000})}}}
@@ -750,14 +786,18 @@
         if(!tmvAlerted)setAlert(pb?'🟣 MEJOR VUELTA':`VUELTA ${row.laps}`,pb?'info':'');
         enqueueSpeech(lapTxt?`${lapTxt}.`:'',{priority:90,key:`lap_${row.key}_${row.laps}`,ttl:4500,kind:'lap',interrupt:false});
         if(state.infoOn&&pb){
-          enqueueSpeech('Mejor vuelta.',{priority:85,key:`pb_${row.key}_${row.laps}`,ttl:2800,kind:'info',interrupt:false});
+          enqueueSpeech('Mejor vuelta.',{priority:85,key:`pb_${row.key}_${row.laps}`,ttl:5000,kind:'info',interrupt:false});
         }else if(state.infoOn&&posChanged){
-          enqueueSpeech(`P ${number0to99Speech(row.position)}.`,{priority:84,key:`pos_${row.key}_${row.position}_${row.laps}`,ttl:2600,kind:'info',interrupt:false});
+          state.lastPositionReminderLap=row.laps;
+          enqueueSpeech(`P ${number0to99Speech(row.position)}.`,{priority:84,key:`pos_${row.key}_${row.position}_${row.laps}`,ttl:5000,kind:'info',interrupt:false});
+        }else{
+          maybeInfoPulse(row,{pb,posChanged,tmvAlerted});
         }
       }else if(posChanged&&state.infoOn){
         const txt=`P ${number0to99Speech(row.position)}.`;
         setAlert(row.position<prev.position?`⬆️ P${row.position}`:`⬇️ P${row.position}`,'info');
-        enqueueSpeech(txt,{priority:88,key:`pos_${row.key}_${row.position}_${row.laps}`,ttl:2600,kind:'info',interrupt:false});
+        state.lastPositionReminderLap=row.laps;
+        enqueueSpeech(txt,{priority:88,key:`pos_${row.key}_${row.position}_${row.laps}`,ttl:5000,kind:'info',interrupt:false});
       }
       if(dur>0&&!state.finished&&prev.totalMs<dur&&row.totalMs>=dur){state.finished=true;showDebrief(row)}
       state.pilotPrev={...row};
@@ -771,7 +811,7 @@
 
     function bind(){els.voiceBtn.addEventListener('click',toggleVoice);els.infoBtn.addEventListener('click',toggleInfo);els.themeBtn.addEventListener('click',cycleTheme);els.auditBtn.addEventListener('click',downloadAudit);els.tmvInput.addEventListener('change',()=>{state.tmvMs=parseTmvInput(els.tmvInput.value.trim());els.tmvInput.value=formatTmvInput(state.tmvMs);lsSet(LS.tmv,state.tmvMs||'');resetTmvProximity('tmv_change');updateTmvUi();audit('tmv_changed',state.tmvMs?formatLapMs(state.tmvMs):'OFF',{tmvMs:state.tmvMs,marginMs:state.tmvMarginMs})});els.tmvInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();els.tmvInput.blur()}});els.tmvMargin.addEventListener('change',()=>{state.tmvMarginMs=[50,75,100].includes(Number(els.tmvMargin.value))?Number(els.tmvMargin.value):50;lsSet(LS.tmvMargin,state.tmvMarginMs);resetTmvProximity('tmv_margin_change');updateTmvUi();audit('tmv_margin_changed',`${state.tmvMarginMs} ms`)});els.pilotSelect.addEventListener('change',()=>{state.selectedPilotKey=els.pilotSelect.value||'';lsSet(LS.pilot,state.selectedPilotKey);resetBaseline('pilot_change');render(state.rows.find(r=>r.key===state.selectedPilotKey)||null);if(state.voiceOn&&state.selectedPilotKey){const r=state.rows.find(x=>x.key===state.selectedPilotKey);if(r)enqueueSpeech('Piloto listo.',{priority:98,key:'pilot_select',ttl:2500,kind:'info',interrupt:true})}});els.voiceSelect.addEventListener('change',()=>{state.voiceName=els.voiceSelect.value||'';lsSet(LS.voiceName,state.voiceName)});els.speedRange.addEventListener('input',()=>{state.voiceRate=clampRate(els.speedRange.value);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`});els.speedRange.addEventListener('change',()=>lsSet(LS.rate,state.voiceRate));document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.voiceOn)requestWakeLock()});['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,()=>{if(state.voiceOn&&!state.speechUnlocked)unlockSpeech()},{passive:true,capture:true}));if(speechAvailable()){refreshVoices();setTimeout(refreshVoices,400);setTimeout(refreshVoices,1200);try{speechSynthesis.addEventListener('voiceschanged',refreshVoices)}catch{}}setInterval(()=>{const age=state.lastSnapshotAt?now()-state.lastSnapshotAt:0;els.feedAge.textContent=age?`${(age/1000).toFixed(1)}s`:'--';if(age>7000)setLive(false,'LENTO')},1000)}
 
-    function init(){state.infoOn=false;state.selectedPilotKey=lsGet(LS.pilot,'');state.voiceOn=lsGet(LS.voice,'0')==='1';state.voiceName=lsGet(LS.voiceName,'');state.voiceRate=clampRate(lsGet(LS.rate,'1.2'));state.tmvMs=Math.max(0,Math.round(Number(lsGet(LS.tmv,'0'))||0));state.tmvMarginMs=[50,75,100].includes(Number(lsGet(LS.tmvMargin,'50')))?Number(lsGet(LS.tmvMargin,'50')):50;applyTheme(lsGet(LS.theme,'theme-purple-night'));els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);els.speedRange.value=String(state.voiceRate);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`;els.tmvInput.value=formatTmvInput(state.tmvMs);els.tmvMargin.value=String(state.tmvMarginMs);updateTmvUi();setInfoUi();bind();connect();if(state.voiceOn)setVoiceStatus('TOCA LA PANTALLA PARA ACTIVAR VOZ','warn');audit('app_init',APP_VERSION,{tmvMs:state.tmvMs,tmvMarginMs:state.tmvMarginMs,infoOn:state.infoOn,debrief:true})}
+    function init(){state.infoOn=false;state.selectedPilotKey=lsGet(LS.pilot,'');state.voiceOn=lsGet(LS.voice,'0')==='1';state.voiceName=lsGet(LS.voiceName,'');state.voiceRate=clampRate(lsGet(LS.rate,'1.2'));state.tmvMs=Math.max(0,Math.round(Number(lsGet(LS.tmv,'0'))||0));state.tmvMarginMs=[50,75,100].includes(Number(lsGet(LS.tmvMargin,'50')))?Number(lsGet(LS.tmvMargin,'50')):50;applyTheme(lsGet(LS.theme,'theme-purple-night'));els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);els.speedRange.value=String(state.voiceRate);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`;els.tmvInput.value=formatTmvInput(state.tmvMs);els.tmvMargin.value=String(state.tmvMarginMs);updateTmvUi();setInfoUi();updatePrivateControls(null);bind();connect();if(state.voiceOn)setVoiceStatus('TOCA LA PANTALLA PARA ACTIVAR VOZ','warn');audit('app_init',APP_VERSION,{tmvMs:state.tmvMs,tmvMarginMs:state.tmvMarginMs,infoOn:state.infoOn,debrief:true})}
     init();
   })();
   </script>
