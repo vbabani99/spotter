@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>Vic's Pilot Spotter v1.0.12</title>
+  <title>Vic's Pilot Spotter v1.0.13</title>
   <style>
     :root{
       --bg:#050507;
@@ -130,8 +130,12 @@
     .liveRadio{
       display:inline-flex;
       align-items:center;
+      justify-content:center;
       gap:4px;
-      padding:2px 6px 2px 4px;
+      width:58px;
+      flex:0 0 58px;
+      box-sizing:border-box;
+      padding:2px 4px;
       border-radius:999px;
       border:1px solid var(--line);
       background:rgba(255,255,255,.035);
@@ -470,7 +474,7 @@
       100%{transform:scale(1); opacity:1}
     }
 
-    /* v1.0.12 · nombre de evento en dos líneas */
+    /* v1.0.13 · pill de estado con ancho fijo */
     .launchShell{padding:8px 10px 10px}
     .launchShell .topBrand{margin-bottom:8px}
     .launchShell .brandLogo{width:164px;height:74px}
@@ -549,7 +553,7 @@
         <img class="brandLogo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" />
         <div class="brandTag">
           <span class="brandLine">🎧 VIC'S PILOT SPOTTER 🐊 <span id="livePill" class="liveRadio off" aria-label="Estado de conexión">OFF</span></span>
-          <small>v1.0.12 · PILOTO</small>
+          <small>v1.0.13 · PILOTO</small>
         </div>
       </div>
 
@@ -630,7 +634,7 @@
   (() => {
     'use strict';
     const APP_NAME='Vics_Pilot_Spotter';
-    const APP_VERSION='v1.0.12';
+    const APP_VERSION='v1.0.13';
     const FIREBASE_CONFIG={apiKey:'AIzaSyBaySYvIxH8JsvXCETv3XwVdNecJY1ez2c',authDomain:'turbo-racing-zround.firebaseapp.com',projectId:'turbo-racing-zround',appId:'1:628478462576:web:c2dbc45c95bbe362ce42b5'};
     const FIRESTORE_DOC_PATH='races/currentRace';
     const LS={pilot:'vps_pilot',voice:'vps_voice',voiceName:'vps_voice_name',rate:'vps_voice_rate',theme:'vps_theme',tmv:'vps_tmv_ms',tmvMargin:'vps_tmv_margin_ms'};
