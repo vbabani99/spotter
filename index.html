@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>Vic's Pilot Spotter v1.0.5</title>
+  <title>Vic's Pilot Spotter v1.0.6</title>
   <style>
     :root{
       --bg:#050507;
@@ -470,59 +470,74 @@
       100%{transform:scale(1); opacity:1}
     }
 
+    /* v1.0.6 · interfaz enfocada al piloto */
+    .launchShell{padding:8px 10px 10px}
+    .launchShell .topBrand{margin-bottom:8px}
+    .launchShell .brandLogo{width:164px;height:74px}
+    .pilotRow{display:block;margin-bottom:7px}
+    .pilotRow .pilotSelect{min-height:44px;font-size:14px;font-weight:900}
+    .primaryActions{display:grid;grid-template-columns:1.35fr 1fr;gap:7px}
+    .primaryActions .voiceBtn,.primaryActions .infoBtn{min-height:44px;font-size:11px;border-radius:14px}
+    .primaryActions .voiceBtn{font-size:12px}
+    .main{padding:13px 12px 12px}
+    .main .raceName{font-size:clamp(16px,4.2vw,24px);margin-bottom:7px}
+    .main .pilotName{margin-bottom:4px}
+    .main .lastLap{font-size:clamp(60px,17vw,104px);padding:5px 0 1px}
+    .main .note{font-size:12px;margin-bottom:7px}
+    .main .spotterAlert{min-height:38px;margin-bottom:7px;font-size:13px}
+    .main .grid{gap:7px;margin-top:4px}
+    .main .metric{min-height:62px;padding:8px 10px;border-radius:14px}
+    .main .metricLabel{font-size:9px}
+    .main .metricValue{font-size:clamp(22px,5.5vw,30px)}
+    .main .metricValue.small{font-size:clamp(20px,5vw,27px)}
+    .metricWide{grid-column:1/-1}
+    .hiddenMetrics{display:none!important}
+    .settingsShell{padding:0;overflow:visible}
+    .settingsPanel{border-radius:var(--radius);overflow:hidden}
+    .settingsPanel>summary{list-style:none;cursor:pointer;min-height:48px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;font-weight:1000;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);user-select:none}
+    .settingsPanel>summary::-webkit-details-marker{display:none}
+    .settingsChevron{font-size:18px;line-height:1;transition:transform .18s ease}
+    .settingsPanel[open] .settingsChevron{transform:rotate(180deg)}
+    .settingsBody{padding:0 10px 11px;border-top:1px solid var(--line)}
+    .settingsTools{display:grid;grid-template-columns:1fr auto auto;gap:7px;align-items:center;margin-top:8px}
+    .settingsTools .themeHint{margin:0;text-align:left;padding-left:2px}
+    .settingsTools .iconBtn{min-height:36px}
+    .settingsBody .voiceStatus{margin-top:8px}
+    .settingsBody .microStatus{margin-top:8px}
+
     @media (max-width:420px){
       .controlBar{grid-template-columns:1fr auto auto auto auto; gap:6px}
       .pill,.voiceBtn,.infoBtn,.iconBtn,.pilotSelect,.voiceSelect{min-height:36px}
+      .primaryActions .voiceBtn,.primaryActions .infoBtn{min-height:44px}
       .voiceBtn{min-width:74px; padding:0 10px; font-size:10px}
       .infoBtn{min-width:66px; padding:0 8px; font-size:10px}
       .voiceSettings{grid-template-columns:1fr; gap:7px}
       .tmvSettings{grid-template-columns:1fr 1fr; gap:6px}
       .grid{gap:7px}
-      .metric{min-height:68px; padding:9px 10px}
+      .metric{min-height:60px; padding:8px 9px}
+      .launchShell .brandLogo{width:150px;height:66px}
+      .settingsPanel>summary{min-height:46px}
     }
   </style>
 </head>
 <body class="theme-purple-night">
   <div class="app">
-    <section class="shell">
+    <section class="shell launchShell">
       <div class="topBrand">
         <img class="brandLogo" src="https://i.ibb.co/bjknVM36/vic-pulse-timing.gif" alt="Vic's Pulse Timing" />
         <div class="brandTag">
           <span class="brandLine">🎧 VIC'S PILOT SPOTTER <span id="livePill" class="liveRadio off" aria-label="Estado de conexión">OFF</span></span>
-          <small>v1.0.5 · PILOTO</small>
+          <small>v1.0.6 · PILOTO</small>
         </div>
       </div>
 
-      <div class="controlBar">
+      <div class="pilotRow">
         <select id="pilotSelect" class="pilotSelect"><option value="">Cargando pilotos...</option></select>
-        <button id="themeBtn" class="iconBtn" type="button" aria-label="Cambiar tema">🎨</button>
-        <button id="auditBtn" class="iconBtn" type="button" aria-label="Exportar audit" title="Auditoría privada" hidden disabled>📋</button>
+      </div>
+      <div class="primaryActions">
         <button id="voiceBtn" class="voiceBtn" type="button">Voz OFF</button>
         <button id="infoBtn" class="infoBtn" type="button" aria-pressed="false" title="Mensajes extra">INFO OFF</button>
       </div>
-
-      <div class="voiceSettings">
-        <div class="voiceField">
-          <div class="voiceFieldLabel">Voz del Spotter</div>
-          <select id="voiceSelect" class="voiceSelect"><option value="">Voz automática</option></select>
-        </div>
-        <div class="speedWrap">
-          <div class="speedHead"><span>Velocidad</span><span id="speedValue" class="speedValue">1.20x</span></div>
-          <input id="speedRange" class="speedRange" type="range" min="1" max="2.5" step="0.1" value="1.2" />
-        </div>
-      </div>
-      <div class="tmvSettings">
-        <div class="tmvField"><label for="tmvInput">TMV</label><input id="tmvInput" class="tmvInput" inputmode="decimal" placeholder="OFF" aria-label="Tiempo mínimo de vuelta" /></div>
-        <div class="tmvField"><label for="tmvMargin">Alerta</label><select id="tmvMargin" class="tmvMargin" aria-label="Margen preventivo TMV"><option value="50">+50 ms</option><option value="75">+75 ms</option><option value="100">+100 ms</option></select></div>
-        <div id="tmvHint" class="tmvHint">TMV preventivo apagado</div>
-      </div>
-      <div id="voiceStatus" class="voiceStatus">Motor de voz: revisando...</div>
-      <div class="microStatus">
-        <div class="microChip"><b id="modeValue">--</b><span>Modo</span></div>
-        <div class="microChip"><b id="remainingMini">--</b><span>Restante</span></div>
-        <div class="microChip"><b id="feedAge">--</b><span>Feed</span></div>
-      </div>
-      <div id="themeHint" class="themeHint">Purple Night</div>
     </section>
 
     <section class="main">
@@ -541,14 +556,48 @@
       <div class="grid">
         <div class="metric"><div class="metricLabel">Posición</div><div id="positionValue" class="metricValue">-</div></div>
         <div class="metric"><div class="metricLabel">Vueltas</div><div id="lapsValue" class="metricValue">-</div></div>
-        <div class="metric"><div class="metricLabel">Gap adelante</div><div id="gapAheadValue" class="metricValue small">-</div></div>
-        <div class="metric"><div class="metricLabel">Gap atrás</div><div id="gapBehindValue" class="metricValue small">-</div></div>
-        <div class="metric"><div class="metricLabel">Restante</div><div id="remainingValue" class="metricValue small">-</div></div>
         <div class="metric"><div class="metricLabel">Mejor vuelta</div><div id="bestValue" class="metricValue small best">-</div></div>
-        <div class="metric"><div class="metricLabel">Ritmo</div><div id="paceValue" class="metricValue small">-</div></div>
         <div class="metric"><div class="metricLabel">Promedio</div><div id="meanValue" class="metricValue small">-</div></div>
-        <div class="metric"><div class="metricLabel">Tiempo total</div><div id="totalValue" class="metricValue small">-</div></div>
+        <div class="metric metricWide"><div class="metricLabel">Restante</div><div id="remainingValue" class="metricValue small">-</div></div>
       </div>
+
+      <div class="hiddenMetrics" aria-hidden="true">
+        <span id="gapAheadValue">-</span><span id="gapBehindValue">-</span><span id="paceValue">-</span><span id="totalValue">-</span>
+      </div>
+    </section>
+
+    <section class="shell settingsShell">
+      <details class="settingsPanel">
+        <summary><span>⚙️ Ajustes</span><span class="settingsChevron">⌄</span></summary>
+        <div class="settingsBody">
+          <div class="voiceSettings">
+            <div class="voiceField">
+              <div class="voiceFieldLabel">Voz del Spotter</div>
+              <select id="voiceSelect" class="voiceSelect"><option value="">Voz automática</option></select>
+            </div>
+            <div class="speedWrap">
+              <div class="speedHead"><span>Velocidad</span><span id="speedValue" class="speedValue">1.20x</span></div>
+              <input id="speedRange" class="speedRange" type="range" min="1" max="2.5" step="0.1" value="1.2" />
+            </div>
+          </div>
+          <div class="tmvSettings">
+            <div class="tmvField"><label for="tmvInput">TMV</label><input id="tmvInput" class="tmvInput" inputmode="decimal" placeholder="OFF" aria-label="Tiempo mínimo de vuelta" /></div>
+            <div class="tmvField"><label for="tmvMargin">Alerta</label><select id="tmvMargin" class="tmvMargin" aria-label="Margen preventivo TMV"><option value="50">+50 ms</option><option value="75">+75 ms</option><option value="100">+100 ms</option></select></div>
+            <div id="tmvHint" class="tmvHint">TMV preventivo apagado</div>
+          </div>
+          <div class="settingsTools">
+            <div id="themeHint" class="themeHint">Purple Night</div>
+            <button id="themeBtn" class="iconBtn" type="button" aria-label="Cambiar tema" title="Cambiar tema">🎨</button>
+            <button id="auditBtn" class="iconBtn" type="button" aria-label="Exportar audit" title="Auditoría privada" hidden disabled>📋</button>
+          </div>
+          <div id="voiceStatus" class="voiceStatus">Motor de voz: revisando...</div>
+          <div class="microStatus">
+            <div class="microChip"><b id="modeValue">--</b><span>Modo</span></div>
+            <div class="microChip"><b id="remainingMini">--</b><span>Restante</span></div>
+            <div class="microChip"><b id="feedAge">--</b><span>Feed</span></div>
+          </div>
+        </div>
+      </details>
     </section>
     <div class="footer">VIC'S PILOT SPOTTER · FIREBASE</div>
   </div>
@@ -559,7 +608,7 @@
   (() => {
     'use strict';
     const APP_NAME='Vics_Pilot_Spotter';
-    const APP_VERSION='v1.0.5';
+    const APP_VERSION='v1.0.6';
     const FIREBASE_CONFIG={apiKey:'AIzaSyBaySYvIxH8JsvXCETv3XwVdNecJY1ez2c',authDomain:'turbo-racing-zround.firebaseapp.com',projectId:'turbo-racing-zround',appId:'1:628478462576:web:c2dbc45c95bbe362ce42b5'};
     const FIRESTORE_DOC_PATH='races/currentRace';
     const LS={pilot:'vps_pilot',voice:'vps_voice',voiceName:'vps_voice_name',rate:'vps_voice_rate',theme:'vps_theme',tmv:'vps_tmv_ms',tmvMargin:'vps_tmv_margin_ms'};
