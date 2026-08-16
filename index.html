@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>Vic's Pilot Spotter v1.0.9</title>
+  <title>Vic's Pilot Spotter v1.0.11</title>
   <style>
     :root{
       --bg:#050507;
@@ -470,7 +470,7 @@
       100%{transform:scale(1); opacity:1}
     }
 
-    /* v1.0.9 · bandera de país antes de F0X en nombre visual del evento */
+    /* v1.0.11 · nuevo logo Vic's PT */
     .launchShell{padding:8px 10px 10px}
     .launchShell .topBrand{margin-bottom:8px}
     .launchShell .brandLogo{width:164px;height:74px}
@@ -518,16 +518,29 @@
       .launchShell .brandLogo{width:150px;height:66px}
       .settingsPanel>summary{min-height:46px}
     }
+  
+    .raceFlag{
+      display:inline-block;
+      width:1.35em;
+      height:auto;
+      max-height:0.95em;
+      object-fit:cover;
+      vertical-align:-0.08em;
+      margin-right:.42em;
+      border-radius:2px;
+      box-shadow:0 0 0 1px rgba(255,255,255,.18);
+    }
+
   </style>
 </head>
 <body class="theme-purple-night">
   <div class="app">
     <section class="shell launchShell">
       <div class="topBrand">
-        <img class="brandLogo" src="https://i.ibb.co/bjknVM36/vic-pulse-timing.gif" alt="Vic's Pulse Timing" />
+        <img class="brandLogo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" />
         <div class="brandTag">
           <span class="brandLine">🎧 VIC'S PILOT SPOTTER 🐊 <span id="livePill" class="liveRadio off" aria-label="Estado de conexión">OFF</span></span>
-          <small>v1.0.9 · PILOTO</small>
+          <small>v1.0.11 · PILOTO</small>
         </div>
       </div>
 
@@ -608,7 +621,7 @@
   (() => {
     'use strict';
     const APP_NAME='Vics_Pilot_Spotter';
-    const APP_VERSION='v1.0.9';
+    const APP_VERSION='v1.0.11';
     const FIREBASE_CONFIG={apiKey:'AIzaSyBaySYvIxH8JsvXCETv3XwVdNecJY1ez2c',authDomain:'turbo-racing-zround.firebaseapp.com',projectId:'turbo-racing-zround',appId:'1:628478462576:web:c2dbc45c95bbe362ce42b5'};
     const FIRESTORE_DOC_PATH='races/currentRace';
     const LS={pilot:'vps_pilot',voice:'vps_voice',voiceName:'vps_voice_name',rate:'vps_voice_rate',theme:'vps_theme',tmv:'vps_tmv_ms',tmvMargin:'vps_tmv_margin_ms'};
@@ -852,50 +865,62 @@
       state.pilotPrev={...row};
     }
 
-    
-    function countryFlagFromRaceName(name){
+    function countryCodeFromRaceName(name){
       const n=norm(name);
-      const flags=[
-        [['polonia','poland'],'🇵🇱'],
-        [['espana','spain'],'🇪🇸'],
-        [['brasil','brazil'],'🇧🇷'],
-        [['costa rica'],'🇨🇷'],
-        [['francia','france'],'🇫🇷'],
-        [['mexico'],'🇲🇽'],
-        [['alemania','germany'],'🇩🇪'],
-        [['italia','italy'],'🇮🇹'],
-        [['japon','japan'],'🇯🇵'],
-        [['monaco'],'🇲🇨'],
-        [['argentina'],'🇦🇷'],
-        [['estados unidos','usa','united states'],'🇺🇸'],
-        [['canada'],'🇨🇦'],
-        [['reino unido','uk','united kingdom','gran bretana'],'🇬🇧'],
-        [['australia'],'🇦🇺'],
-        [['austria'],'🇦🇹'],
-        [['belgica','belgium'],'🇧🇪'],
-        [['paises bajos','netherlands','holanda'],'🇳🇱'],
-        [['portugal'],'🇵🇹'],
-        [['hungria','hungary'],'🇭🇺'],
-        [['singapur','singapore'],'🇸🇬'],
-        [['china'],'🇨🇳'],
-        [['arabia saudita','saudi arabia'],'🇸🇦'],
-        [['emiratos arabes','united arab emirates','abu dhabi'],'🇦🇪'],
-        [['qatar'],'🇶🇦'],
-        [['bahrain','barein'],'🇧🇭']
+      const countries=[
+        [['polonia','poland'],'pl'],
+        [['espana','spain'],'es'],
+        [['brasil','brazil'],'br'],
+        [['costa rica'],'cr'],
+        [['francia','france'],'fr'],
+        [['mexico'],'mx'],
+        [['alemania','germany'],'de'],
+        [['italia','italy'],'it'],
+        [['japon','japan'],'jp'],
+        [['monaco'],'mc'],
+        [['argentina'],'ar'],
+        [['estados unidos','usa','united states'],'us'],
+        [['canada'],'ca'],
+        [['reino unido','uk','united kingdom','gran bretana'],'gb'],
+        [['australia'],'au'],
+        [['austria'],'at'],
+        [['belgica','belgium'],'be'],
+        [['paises bajos','netherlands','holanda'],'nl'],
+        [['portugal'],'pt'],
+        [['hungria','hungary'],'hu'],
+        [['singapur','singapore'],'sg'],
+        [['china'],'cn'],
+        [['arabia saudita','saudi arabia'],'sa'],
+        [['emiratos arabes','united arab emirates','abu dhabi'],'ae'],
+        [['qatar'],'qa'],
+        [['bahrain','barein'],'bh']
       ];
-      for(const [aliases,flag] of flags){
-        if(aliases.some(a=>n.includes(norm(a))))return flag;
+      for(const [aliases,code] of countries){
+        if(aliases.some(a=>n.includes(norm(a))))return code;
       }
       return '';
     }
-    function visualRaceName(name){
+    function renderRaceName(name){
       const raw=safeName(name);
-      if(!raw)return 'Sin carrera';
-      const flag=countryFlagFromRaceName(raw);
-      return flag?`${flag} ${raw}`:raw;
+      els.raceName.replaceChildren();
+      if(!raw){
+        els.raceName.textContent='Sin carrera';
+        return;
+      }
+      const code=countryCodeFromRaceName(raw);
+      if(code){
+        const img=document.createElement('img');
+        img.className='raceFlag';
+        img.alt='';
+        img.setAttribute('aria-hidden','true');
+        img.src=`https://flagcdn.com/${code}.svg`;
+        img.onerror=()=>{try{img.remove()}catch{}};
+        els.raceName.appendChild(img);
+      }
+      els.raceName.appendChild(document.createTextNode(raw));
     }
 
-    function applySnapshot(data){state.snapshotSeq++;state.lastSnapshotAt=now();const raceName=safeName((data&&(data.raceName||(data.parsed&&data.parsed.raceName)))||'');const raceChanged=!!state.raceName&&raceName&&raceName!==state.raceName;if(raceChanged){audit('race_change',`${state.raceName} -> ${raceName}`);state.raceName=raceName;resetBaseline('race_change');setAlert('NUEVA SESIÓN','info')}else if(!state.raceName)state.raceName=raceName;state.session=inferSession(data,raceName);els.raceName.textContent=visualRaceName(raceName);const rows=extractRows(data||{});const oldSelected=state.selectedPilotKey;state.rows=rows;populatePilotSelect(rows);if(oldSelected&&state.selectedPilotKey!==oldSelected){state.selectedPilotKey=oldSelected;if([...els.pilotSelect.options].some(o=>o.value===oldSelected))els.pilotSelect.value=oldSelected}const changed=detectPassEvents(rows);const row=rows.find(r=>r.key===state.selectedPilotKey)||null;render(row);if(row){processPilotEvents(row);maybeBlue(row,changed)}for(const r of rows)state.rowPrev.set(r.key,{...r});setLive(true);audit('snapshot','ok',{rows:rows.length,changedLaps:changed.length,mode:state.session.type,durationMs:state.session.durationMs})}
+    function applySnapshot(data){state.snapshotSeq++;state.lastSnapshotAt=now();const raceName=safeName((data&&(data.raceName||(data.parsed&&data.parsed.raceName)))||'');const raceChanged=!!state.raceName&&raceName&&raceName!==state.raceName;if(raceChanged){audit('race_change',`${state.raceName} -> ${raceName}`);state.raceName=raceName;resetBaseline('race_change');setAlert('NUEVA SESIÓN','info')}else if(!state.raceName)state.raceName=raceName;state.session=inferSession(data,raceName);renderRaceName(raceName);const rows=extractRows(data||{});const oldSelected=state.selectedPilotKey;state.rows=rows;populatePilotSelect(rows);if(oldSelected&&state.selectedPilotKey!==oldSelected){state.selectedPilotKey=oldSelected;if([...els.pilotSelect.options].some(o=>o.value===oldSelected))els.pilotSelect.value=oldSelected}const changed=detectPassEvents(rows);const row=rows.find(r=>r.key===state.selectedPilotKey)||null;render(row);if(row){processPilotEvents(row);maybeBlue(row,changed)}for(const r of rows)state.rowPrev.set(r.key,{...r});setLive(true);audit('snapshot','ok',{rows:rows.length,changedLaps:changed.length,mode:state.session.type,durationMs:state.session.durationMs})}
 
     async function pollOnce(){try{if(!state.firestore)return;const snap=await state.firestore.doc(FIRESTORE_DOC_PATH).get({source:'default'});if(snap.exists)applySnapshot(snap.data()||{});else setLive(false,'VACÍO')}catch(e){audit('firebase_poll_error',String(e));setLive(false,'RETRY')}}
     function disconnect(){try{state.unsub&&state.unsub()}catch{}state.unsub=null;if(state.pollTimer)clearInterval(state.pollTimer);state.pollTimer=null}
