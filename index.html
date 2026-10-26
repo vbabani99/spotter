@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>Vic's Pilot Spotter v1.0.14</title>
+  <title>Vic's Pilot Spotter V3.1.1</title>
   <style>
     :root{
       --bg:#050507;
@@ -480,9 +480,128 @@
     .launchShell .brandLogo{width:164px;height:74px}
     .pilotRow{display:block;margin-bottom:7px}
     .pilotRow .pilotSelect{min-height:44px;font-size:14px;font-weight:900}
-    .primaryActions{display:grid;grid-template-columns:1.35fr 1fr;gap:7px}
-    .primaryActions .voiceBtn,.primaryActions .infoBtn{min-height:44px;font-size:11px;border-radius:14px}
+    .primaryActions{display:grid;grid-template-columns:1.18fr .94fr .78fr;gap:7px}
+    .primaryActions .voiceBtn,.primaryActions .infoBtn,.primaryActions .giantBtn{min-height:44px;font-size:11px;border-radius:14px}
     .primaryActions .voiceBtn{font-size:12px}
+    .giantBtn{
+      padding:0 9px;min-width:0;border:1px solid var(--line);background:var(--chip);color:var(--text);
+      font-size:10px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .giantBtn.on{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff}
+
+    .giantLapOverlay{
+      position:fixed;
+      inset:0;
+      width:100vw;
+      height:100vh;
+      height:100dvh;
+      z-index:9999;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      overflow:hidden;
+      padding:
+        max(8px,env(safe-area-inset-top))
+        max(8px,env(safe-area-inset-right))
+        max(12px,env(safe-area-inset-bottom))
+        max(8px,env(safe-area-inset-left));
+      background:#111;
+      color:#fff;
+      text-align:center;
+      user-select:none;
+      touch-action:manipulation;
+    }
+    .giantLapOverlay.on{display:flex}
+    .giantLapOverlay.good{background:#16a34a}
+    .giantLapOverlay.mid{background:#d4a900;color:#111}
+    .giantLapOverlay.bad{background:#dc2626}
+    .giantLapOverlay.critical{background:#dc2626;animation:giantCriticalBlink .24s steps(1,end) infinite}
+
+    .giantLapLabel{
+      flex:0 0 auto;
+      font-size:clamp(13px,min(4vw,3.2vh),28px);
+      font-weight:1000;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      opacity:.9;
+      line-height:1;
+    }
+    .giantLapPilot{
+      flex:0 0 auto;
+      margin-top:min(1.2vh,8px);
+      max-width:96vw;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:clamp(13px,min(3.8vw,3vh),26px);
+      font-weight:1000;
+      opacity:.94;
+      line-height:1.05;
+    }
+    .giantLapTime{
+      flex:0 1 auto;
+      max-width:98vw;
+      margin-top:min(1.6vh,10px);
+      font-size:clamp(72px,min(30vw,37vh),330px);
+      line-height:.78;
+      font-weight:1000;
+      letter-spacing:-.075em;
+      font-variant-numeric:tabular-nums;
+      white-space:nowrap;
+      text-shadow:0 7px 24px rgba(0,0,0,.22);
+    }
+    .giantLapDelta{
+      flex:0 0 auto;
+      margin-top:min(2.4vh,14px);
+      max-width:96vw;
+      font-size:clamp(14px,min(5vw,3.6vh),42px);
+      font-weight:1000;
+      line-height:1.05;
+      font-variant-numeric:tabular-nums;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .giantLapHint{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:max(7px,env(safe-area-inset-bottom));
+      padding:0 8px;
+      font-size:clamp(8px,2.2vw,11px);
+      font-weight:900;
+      letter-spacing:.08em;
+      opacity:.62;
+      white-space:nowrap;
+    }
+
+    @media (orientation:landscape){
+      .giantLapLabel{font-size:clamp(11px,3.5vh,22px)}
+      .giantLapPilot{margin-top:3px;font-size:clamp(11px,3.2vh,22px)}
+      .giantLapTime{
+        margin-top:2px;
+        font-size:clamp(58px,min(24vw,54vh),300px);
+        line-height:.76;
+      }
+      .giantLapDelta{
+        margin-top:4px;
+        font-size:clamp(12px,min(3.6vw,4.5vh),34px);
+      }
+    }
+    @keyframes giantCriticalBlink{0%,49%{background:#ff0000}50%,100%{background:#650000}}
+    body.giant-lap-active{overflow:hidden}
+
+    body.is-huawei .voiceSelect{
+      -webkit-appearance:menulist!important;appearance:menulist!important;
+      background-image:none!important;padding-right:8px!important;
+    }
+    .voiceReloadBtn{
+      width:100%;min-height:34px;margin-top:7px;border-radius:13px;border:1px solid var(--line);
+      background:var(--chip);color:var(--text);font-size:10px;font-weight:1000;letter-spacing:.10em;
+      text-transform:uppercase;cursor:pointer;
+    }
     .main{padding:13px 12px 12px}
     .main .raceName{font-size:clamp(16px,4.2vw,24px);margin-bottom:7px}
     .main .pilotName{margin-bottom:4px}
@@ -512,7 +631,7 @@
     @media (max-width:420px){
       .controlBar{grid-template-columns:1fr auto auto auto auto; gap:6px}
       .pill,.voiceBtn,.infoBtn,.iconBtn,.pilotSelect,.voiceSelect{min-height:36px}
-      .primaryActions .voiceBtn,.primaryActions .infoBtn{min-height:44px}
+      .primaryActions .voiceBtn,.primaryActions .infoBtn,.primaryActions .giantBtn{min-height:44px}
       .voiceBtn{min-width:74px; padding:0 10px; font-size:10px}
       .infoBtn{min-width:66px; padding:0 8px; font-size:10px}
       .voiceSettings{grid-template-columns:1fr; gap:7px}
@@ -553,7 +672,7 @@
         <img class="brandLogo" src="https://i.ibb.co/wFx8B4mW/logo-vics-PT.gif" alt="Vic's Pulse Timing" />
         <div class="brandTag">
           <span class="brandLine">🎧 VIC'S PILOT SPOTTER 🐊 <span id="livePill" class="liveRadio off" aria-label="Estado de conexión">OFF</span></span>
-          <small>v1.0.14 · PILOTO</small>
+          <small>V3.1.1 · PILOTO</small>
         </div>
       </div>
 
@@ -563,6 +682,7 @@
       <div class="primaryActions">
         <button id="voiceBtn" class="voiceBtn" type="button">Voz OFF</button>
         <button id="infoBtn" class="infoBtn" type="button" aria-pressed="false" title="Mensajes extra">INFO OFF</button>
+        <button id="giantBtn" class="giantBtn" type="button" aria-pressed="false" title="Última vuelta a pantalla completa">GIANT</button>
       </div>
     </section>
 
@@ -600,6 +720,7 @@
             <div class="voiceField">
               <div class="voiceFieldLabel">Voz del Spotter</div>
               <select id="voiceSelect" class="voiceSelect"><option value="">Voz automática</option></select>
+              <button id="voiceReloadBtn" class="voiceReloadBtn" type="button">RECARGAR VOCES</button>
             </div>
             <div class="speedWrap">
               <div class="speedHead"><span>Velocidad</span><span id="speedValue" class="speedValue">1.20x</span></div>
@@ -628,24 +749,32 @@
     <div class="footer">VIC'S PILOT SPOTTER · FIREBASE</div>
   </div>
 
+  <div id="giantLapOverlay" class="giantLapOverlay" role="button" aria-label="Cerrar modo última vuelta gigante">
+    <div class="giantLapLabel">ÚLTIMA VUELTA</div>
+    <div id="giantLapPilot" class="giantLapPilot">SIN PILOTO</div>
+    <div id="giantLapTime" class="giantLapTime">--.--</div>
+    <div id="giantLapDelta" class="giantLapDelta">ESPERANDO VUELTA</div>
+    <div class="giantLapHint">TOCA LA PANTALLA PARA SALIR</div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script>
   (() => {
     'use strict';
-    const APP_NAME='Vics_Pilot_Spotter';
-    const APP_VERSION='v1.0.14';
+    const APP_NAME='Vics_Pilot_Spotter_V3';
+    const APP_VERSION='V3.1.1-GIANT-FIT-HUAWEI';
     const FIREBASE_CONFIG={apiKey:'AIzaSyBaySYvIxH8JsvXCETv3XwVdNecJY1ez2c',authDomain:'turbo-racing-zround.firebaseapp.com',projectId:'turbo-racing-zround',appId:'1:628478462576:web:c2dbc45c95bbe362ce42b5'};
     const FIRESTORE_DOC_PATH='races/currentRace';
-    const LS={pilot:'vps_pilot',voice:'vps_voice',voiceName:'vps_voice_name',rate:'vps_voice_rate',theme:'vps_theme',tmv:'vps_tmv_ms',tmvMargin:'vps_tmv_margin_ms'};
+    const LS={pilot:'vps3_pilot',voice:'vps3_voice',voiceName:'vps3_voice_name',rate:'vps3_voice_rate',theme:'vps3_theme',tmv:'vps3_tmv_ms',tmvMargin:'vps3_tmv_margin_ms',giant:'vps3_giant_lap'};
     const THEMES=[
       {key:'theme-oled',label:'OLED'},{key:'theme-carbon-red',label:'Carbon Red'},{key:'theme-ice-blue',label:'Ice Blue'},
       {key:'theme-neon-lime',label:'Neon Lime'},{key:'theme-sunset-orange',label:'Sunset Orange'},{key:'theme-purple-night',label:'Purple Night'}
     ];
     const $=id=>document.getElementById(id);
-    const els={pilotSelect:$('pilotSelect'),themeBtn:$('themeBtn'),auditBtn:$('auditBtn'),voiceBtn:$('voiceBtn'),infoBtn:$('infoBtn'),voiceSelect:$('voiceSelect'),speedRange:$('speedRange'),speedValue:$('speedValue'),tmvInput:$('tmvInput'),tmvMargin:$('tmvMargin'),tmvHint:$('tmvHint'),voiceStatus:$('voiceStatus'),livePill:$('livePill'),themeHint:$('themeHint'),raceName:$('raceName'),pilotName:$('pilotName'),lastLap:$('lastLap'),note:$('note'),spotterAlert:$('spotterAlert'),positionValue:$('positionValue'),lapsValue:$('lapsValue'),gapAheadValue:$('gapAheadValue'),gapBehindValue:$('gapBehindValue'),remainingValue:$('remainingValue'),bestValue:$('bestValue'),paceValue:$('paceValue'),meanValue:$('meanValue'),totalValue:$('totalValue'),modeValue:$('modeValue'),remainingMini:$('remainingMini'),feedAge:$('feedAge'),debriefCard:$('debriefCard'),debriefTrend:$('debriefTrend'),debriefMain:$('debriefMain'),debriefAdvice:$('debriefAdvice')};
+    const els={pilotSelect:$('pilotSelect'),themeBtn:$('themeBtn'),auditBtn:$('auditBtn'),voiceBtn:$('voiceBtn'),infoBtn:$('infoBtn'),giantBtn:$('giantBtn'),giantLapOverlay:$('giantLapOverlay'),giantLapPilot:$('giantLapPilot'),giantLapTime:$('giantLapTime'),giantLapDelta:$('giantLapDelta'),voiceSelect:$('voiceSelect'),voiceReloadBtn:$('voiceReloadBtn'),speedRange:$('speedRange'),speedValue:$('speedValue'),tmvInput:$('tmvInput'),tmvMargin:$('tmvMargin'),tmvHint:$('tmvHint'),voiceStatus:$('voiceStatus'),livePill:$('livePill'),themeHint:$('themeHint'),raceName:$('raceName'),pilotName:$('pilotName'),lastLap:$('lastLap'),note:$('note'),spotterAlert:$('spotterAlert'),positionValue:$('positionValue'),lapsValue:$('lapsValue'),gapAheadValue:$('gapAheadValue'),gapBehindValue:$('gapBehindValue'),remainingValue:$('remainingValue'),bestValue:$('bestValue'),paceValue:$('paceValue'),meanValue:$('meanValue'),totalValue:$('totalValue'),modeValue:$('modeValue'),remainingMini:$('remainingMini'),feedAge:$('feedAge'),debriefCard:$('debriefCard'),debriefTrend:$('debriefTrend'),debriefMain:$('debriefMain'),debriefAdvice:$('debriefAdvice')};
 
-    const state={voiceOn:false,infoOn:false,speechUnlocked:false,voiceName:'',voiceRate:1.2,voices:[],rows:[],selectedPilotKey:'',raceName:'',session:{type:'UNKNOWN',durationMs:0,label:'--'},snapshotSeq:0,lastSnapshotAt:0,baselineReady:false,pilotPrev:null,rowPrev:new Map(),lastPassEvents:new Map(),lastBlueAt:0,clockMarks:new Set(),finished:false,queue:[],speaking:false,current:null,speechGeneration:0,wakeLock:null,wakeTick:null,theme:'theme-purple-night',firestore:null,unsub:null,pollTimer:null,audit:[],tmvMs:0,tmvMarginMs:50,tmvNearStreak:0,tmvZoneActive:false,lastTmvAlertLap:0,lastTmvAlertAt:0,lapHistory:[],debrief:null,lastInfoLap:0,lastPositionReminderLap:0,lastTrendClass:'',lastTrendAt:0};
+    const state={voiceOn:false,infoOn:false,speechUnlocked:false,voiceName:'',voiceRate:1.2,voices:[],voiceSignature:'',voiceRefreshTimers:[],voiceRefreshBusy:false,rows:[],selectedPilotKey:'',raceName:'',session:{type:'UNKNOWN',durationMs:0,label:'--'},snapshotSeq:0,lastSnapshotAt:0,baselineReady:false,pilotPrev:null,rowPrev:new Map(),lastPassEvents:new Map(),lastBlueAt:0,clockMarks:new Set(),finished:false,queue:[],speaking:false,current:null,speechGeneration:0,wakeLock:null,wakeTick:null,theme:'theme-purple-night',firestore:null,unsub:null,pollTimer:null,pollInFlight:false,transportMode:'CONNECT',firstSnapshotSeen:false,audit:[],tmvMs:0,tmvMarginMs:50,tmvNearStreak:0,tmvZoneActive:false,lastTmvAlertLap:0,lastTmvAlertAt:0,lapHistory:[],debrief:null,lastInfoLap:0,lastPositionReminderLap:0,lastTrendClass:'',lastTrendAt:0,giantOn:false,giantTrend:'neutral',giantDeltaMs:0,voiceSelectActive:false,voiceRefreshPending:false,isHuawei:/HUAWEI|HONOR/i.test(navigator.userAgent||'')};
 
     const now=()=>Date.now();
     const safeName=v=>String(v||'').replace(/\s+/g,' ').trim();
@@ -726,50 +855,129 @@
     function inferSession(data,raceName){const p=(data&&data.parsed)||{};const practice=Number((data&&data.practice)??p.practice??0)===1;let type='UNKNOWN';if(practice||/practice|practica|entrenamiento|warm\s?up/i.test(raceName))type='TRAIN';else if(/final|\bmain\b/i.test(raceName))type='FINAL';else if(/manga|\bq\d|qualy|quali|clasif|heat/i.test(raceName))type='MANGA';let d=readDurationMs(data);if(!d){if(type==='FINAL')d=/final\s*a/i.test(raceName)?360000:240000;else if(type==='MANGA')d=180000}return{type,durationMs:d,label:type==='FINAL'?'FINAL':type==='MANGA'?'QUALY':type==='TRAIN'?'PRÁCTICA':'--'}}
 
     function setAlert(text,kind=''){els.spotterAlert.textContent=text||'SPOTTER EN ESPERA';els.spotterAlert.className='spotterAlert'+(kind?` ${kind}`:'')}
-    function setLive(ok,label='OFF'){els.livePill.textContent=ok?'LIVE':label;els.livePill.classList.toggle('on',ok);els.livePill.classList.toggle('off',!ok)}
-    function applyTheme(key){state.theme=THEMES.some(t=>t.key===key)?key:'theme-purple-night';document.body.className=state.theme;els.themeHint.textContent=(THEMES.find(t=>t.key===state.theme)||{}).label||'';lsSet(LS.theme,state.theme)}
+    function setLive(ok,label='OFF'){els.livePill.textContent=ok?(label&&label!=='OFF'?label:'LIVE'):label;els.livePill.classList.toggle('on',ok);els.livePill.classList.toggle('off',!ok)}
+    function applyTheme(key){state.theme=THEMES.some(t=>t.key===key)?key:'theme-purple-night';document.body.className=state.theme+(state.isHuawei?' is-huawei':'')+(state.giantOn?' giant-lap-active':'');els.themeHint.textContent=(THEMES.find(t=>t.key===state.theme)||{}).label||'';lsSet(LS.theme,state.theme)}
     function cycleTheme(){const i=THEMES.findIndex(t=>t.key===state.theme);applyTheme(THEMES[(i+1)%THEMES.length].key)}
+
+
+    const GIANT_STEADY_MS=100;
+
+    function setGiantUi(){
+      if(!els.giantBtn||!els.giantLapOverlay)return;
+      els.giantBtn.classList.toggle('on',state.giantOn);
+      els.giantBtn.setAttribute('aria-pressed',state.giantOn?'true':'false');
+      els.giantLapOverlay.classList.toggle('on',state.giantOn);
+      document.body.classList.toggle('giant-lap-active',state.giantOn);
+      if(state.giantOn){
+        const row=state.rows.find(r=>r.key===state.selectedPilotKey)||state.pilotPrev||null;
+        renderGiantLap(row,state.giantTrend,state.giantDeltaMs);
+      }
+    }
+
+    function toggleGiant(){
+      state.giantOn=!state.giantOn;
+      lsSet(LS.giant,state.giantOn?'1':'0');
+      setGiantUi();
+      audit('giant_mode',state.giantOn?'ON':'OFF');
+    }
+
+    function giantTrendFor(row,prev){
+      if(!row||!row.lastLapMs)return {kind:'neutral',deltaMs:0};
+
+      // TMV crítico tiene prioridad visual total.
+      const z=tmvProximity(row);
+      if(z&&z.critical)return {kind:'critical',deltaMs:z.deltaMs};
+
+      const prevLap=prev&&prev.lastLapMs?prev.lastLapMs:0;
+      if(!prevLap)return {kind:'neutral',deltaMs:0};
+
+      const delta=row.lastLapMs-prevLap;
+      if(Math.abs(delta)<=GIANT_STEADY_MS)return {kind:'mid',deltaMs:delta};
+      return delta<0?{kind:'good',deltaMs:delta}:{kind:'bad',deltaMs:delta};
+    }
+
+    function renderGiantLap(row,kind=state.giantTrend,deltaMs=state.giantDeltaMs){
+      if(!els.giantLapOverlay)return;
+
+      els.giantLapOverlay.classList.remove('good','mid','bad','critical');
+      if(['good','mid','bad','critical'].includes(kind))els.giantLapOverlay.classList.add(kind);
+
+      els.giantLapPilot.textContent=row?`${row.driverName}${row.driverNumber?` #${row.driverNumber}`:''}`:'SIN PILOTO';
+      els.giantLapTime.textContent=row&&row.lastLapMs?formatLapMs(row.lastLapMs):'--.--';
+
+      if(kind==='critical'){
+        const z=row?tmvProximity(row):null;
+        els.giantLapDelta.textContent=z?`⚠️ TMV +${z.deltaMs} ms`:'⚠️ TMV';
+      }else if(!row||!row.lastLapMs){
+        els.giantLapDelta.textContent='ESPERANDO VUELTA';
+      }else if(kind==='neutral'){
+        els.giantLapDelta.textContent='PRIMERA REFERENCIA';
+      }else if(kind==='mid'){
+        els.giantLapDelta.textContent=`SE MANTUVO · ${deltaMs>=0?'+':'−'}${(Math.abs(deltaMs)/1000).toFixed(3)} s`;
+      }else if(kind==='good'){
+        els.giantLapDelta.textContent=`MEJORÓ · −${(Math.abs(deltaMs)/1000).toFixed(3)} s`;
+      }else if(kind==='bad'){
+        els.giantLapDelta.textContent=`EMPEORÓ · +${(Math.abs(deltaMs)/1000).toFixed(3)} s`;
+      }
+    }
+
+    function updateGiantFromLap(row,prev){
+      const t=giantTrendFor(row,prev);
+      state.giantTrend=t.kind;
+      state.giantDeltaMs=t.deltaMs;
+      if(state.giantOn)renderGiantLap(row,t.kind,t.deltaMs);
+      audit('giant_lap',t.kind,{lap:row?.laps||0,lapMs:row?.lastLapMs||0,prevLapMs:prev?.lastLapMs||0,deltaMs:t.deltaMs});
+    }
 
     function speechAvailable(){return 'speechSynthesis'in window&&'SpeechSynthesisUtterance'in window}
     function clampRate(v){return clamp(Number(v)||1.2,1,2.5)}
-    function voiceKey(v){return v?`${v.name}|||${v.lang||''}|||${v.voiceURI||''}`:''}
-    function escHtml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('\"','&quot;')}
+    // V3: llave estable para Huawei/Android. No dependemos de voiceURI, que puede variar entre lecturas.
+    function voiceKey(v){return v?`${safeName(v.name)}|||${safeName(v.lang)}`:''}
+    function escHtml(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}
     function sortVoices(list){return list.slice().sort((a,b)=>{
       const rank=v=>/^es(-|_)?MX/i.test(v.lang)?0:/^es(-|_)?(US|419)/i.test(v.lang)?1:/^es/i.test(v.lang)?2:v.default?3:4;
       return rank(a)-rank(b)||Number(b.default)-Number(a.default)||String(a.name).localeCompare(String(b.name));
     })}
+    function voicesSignature(list){return (list||[]).map(v=>voiceKey(v)).join('||')}
+    function cancelVoiceRefreshes(){for(const t of state.voiceRefreshTimers){try{clearTimeout(t)}catch{}}state.voiceRefreshTimers=[]}
     function refreshVoices(reason='manual'){
-      if(!speechAvailable()){state.voices=[];populateVoices();setVoiceStatus('ESTE NAVEGADOR NO SOPORTA VOZ','bad');return[]}
+      if(!speechAvailable()){state.voices=[];state.voiceSignature='';populateVoices(true);setVoiceStatus('ESTE NAVEGADOR NO SOPORTA VOZ','bad');return[]}
       try{
-        const found=speechSynthesis.getVoices()||[];
-        state.voices=sortVoices(found);
-        populateVoices();
+        const found=sortVoices(speechSynthesis.getVoices()||[]);
+        const sig=voicesSignature(found);
+        const changed=sig!==state.voiceSignature;
+        // No reconstruir el selector si Huawei entrega exactamente la misma lista.
+        if(changed){
+          state.voices=found;state.voiceSignature=sig;
+          if(state.voiceSelectActive)state.voiceRefreshPending=true;
+          else populateVoices(false);
+        }
+        else state.voices=found;
         if(state.voices.length){
           const spanish=state.voices.filter(v=>/^es/i.test(v.lang)).length;
           setVoiceStatus(`${state.voices.length} VOCES · ${spanish} EN ESPAÑOL`,'ok');
-        }else{
-          setVoiceStatus('VOZ DEL SISTEMA · LISTA NO EXPUESTA','warn');
-        }
-        audit('voices_refresh',reason,{count:state.voices.length,spanish:state.voices.filter(v=>/^es/i.test(v.lang)).length});
+        }else setVoiceStatus('VOZ DEL SISTEMA · LISTA NO EXPUESTA','warn');
+        audit('voices_refresh',reason,{count:state.voices.length,spanish:state.voices.filter(v=>/^es/i.test(v.lang)).length,changed});
         return state.voices
       }catch(e){audit('voices_refresh_error',String(e),{reason});setVoiceStatus('VOZ AUTOMÁTICA DISPONIBLE','warn');return[]}
     }
-    function populateVoices(){
+    function populateVoices(force=false){
       const cur=state.voiceName;
-      let selectedFound=false;
       const options=state.voices.map(v=>{
         const key=voiceKey(v);
-        const legacy=v.name===cur;
-        const selected=key===cur||legacy;
-        if(selected)selectedFound=true;
+        const selected=key===cur||v.name===cur;
         const tags=[v.lang||'--'];
         if(v.default)tags.push('predeterminada');
         if(v.localService===false)tags.push('red');
         return `<option value="${escHtml(key)}"${selected?' selected':''}>${escHtml(v.name)} (${escHtml(tags.join(' · '))})</option>`
       }).join('');
-      els.voiceSelect.innerHTML='<option value="">Voz automática del sistema</option>'+options;
-      if(cur&&!selectedFound&&state.voices.length){state.voiceName='';lsSet(LS.voiceName,'');els.voiceSelect.value=''}
+      // Importante: si una voz desaparece temporalmente NO borramos la preferencia.
+      const autoLabel=state.voices.length?'Voz automática del sistema':'Sistema automático (sin lista de voces)';
+      els.voiceSelect.innerHTML=`<option value="">${autoLabel}</option>`+options;
+      const present=state.voices.some(v=>voiceKey(v)===cur||v.name===cur);
+      els.voiceSelect.value=present?(state.voices.find(v=>voiceKey(v)===cur||v.name===cur)?voiceKey(state.voices.find(v=>voiceKey(v)===cur||v.name===cur)):''):'';
       els.voiceSelect.disabled=false;
+      if(cur&&!present&&state.voices.length&&!force)audit('voice_preference_temporarily_missing',cur,{count:state.voices.length});
     }
     function pickVoice(){
       const vs=state.voices.length?state.voices:refreshVoices('pick');
@@ -784,26 +992,31 @@
         vs.find(v=>v.default)||vs[0]||null
       )
     }
-    function scheduleVoiceRefreshes(){
-      [0,120,350,700,1200,2000,3500,5500,8000,12000].forEach((ms,i)=>setTimeout(()=>refreshVoices(`retry_${i}`),ms));
+    function scheduleVoiceRefreshes(reason='retry'){
+      cancelVoiceRefreshes();
+      // V3.1: Huawei/HONOR puede publicar la lista varios segundos después del gesto.
+      const plan=state.isHuawei?[0,250,700,1500,3000,6000,10000,15000]:[0,350,1200,3000,6000];
+      plan.forEach((ms,i)=>{
+        const timer=setTimeout(()=>{
+          const voices=refreshVoices(`${reason}_${i}`);
+          if(voices.length&&i>=1&&!state.isHuawei)cancelVoiceRefreshes();
+        },ms);
+        state.voiceRefreshTimers.push(timer);
+      });
     }
     async function primeSpeechEngine(){
       if(!speechAvailable())return false;
       try{
+        // V3: no utterance silenciosa + cancel(). En Huawei eso puede desestabilizar la enumeración.
         speechSynthesis.resume();
-        // Algunos Android/Huawei no publican voces hasta después de la primera interacción/utterance.
-        if(!speechSynthesis.getVoices().length){
-          const u=new SpeechSynthesisUtterance(' ');u.lang='es-MX';u.volume=0;u.rate=1;
-          speechSynthesis.speak(u);
-          setTimeout(()=>{try{speechSynthesis.cancel()}catch{};refreshVoices('after_prime')},120);
-        }else refreshVoices('gesture');
+        refreshVoices('gesture');
         return true
       }catch(e){audit('speech_prime_error',String(e));return false}
     }
     function setVoiceStatus(t,kind=''){els.voiceStatus.textContent=t;els.voiceStatus.className='voiceStatus'+(kind?` ${kind}`:'')}
     function enqueueSpeech(text,{priority=50,key='',ttl=5000,kind='info',interrupt=false}={}){if(!text)return false;if(kind!=='lap'&&kind!=='debrief'&&kind!=='system'&&!state.infoOn){audit('speech_suppressed',text,{kind,reason:'info_off'});return false}const t=now();state.queue=state.queue.filter(x=>x.expiresAt>t&&x.key!==key);const item={id:`${t}_${Math.random().toString(36).slice(2,7)}`,text,priority,key:key||text,kind,createdAt:t,expiresAt:t+ttl};if(interrupt&&state.current&&state.current.priority<priority){audit('speech_preempt',text,{preempted:state.current.text,priority});state.speechGeneration++;try{speechSynthesis.cancel()}catch{}audit('speech_cancelled',state.current.text,{key:state.current.key,priority:state.current.priority,by:text});state.speaking=false;state.current=null}state.queue.push(item);state.queue.sort((a,b)=>b.priority-a.priority||a.createdAt-b.createdAt);audit('speech_queue',text,{priority,key:item.key});pumpSpeech();return true}
-    function pumpSpeech(){if(!state.voiceOn||!state.speechUnlocked||state.speaking||!speechAvailable())return;const t=now();while(state.queue.length&&state.queue[0].expiresAt<=t){const x=state.queue.shift();audit('speech_expired',x.text,{priority:x.priority,key:x.key})}const item=state.queue.shift();if(!item)return;const generation=state.speechGeneration;const u=new SpeechSynthesisUtterance(item.text),v=pickVoice();if(v)u.voice=v;u.lang=v&&v.lang?v.lang:'es-MX';u.rate=clampRate(state.voiceRate);u.pitch=1;u.volume=1;state.speaking=true;state.current=item;u.onstart=()=>{if(generation!==state.speechGeneration||!state.current||state.current.id!==item.id)return;audit('speech_start',item.text,{priority:item.priority,key:item.key});setVoiceStatus('SPOTTER HABLANDO','ok')};u.onend=()=>{if(generation!==state.speechGeneration||!state.current||state.current.id!==item.id){audit('speech_callback_stale',item.text,{callback:'end'});return}audit('speech_end',item.text,{priority:item.priority,key:item.key});state.speaking=false;state.current=null;setVoiceStatus('SPOTTER LISTO','ok');setTimeout(pumpSpeech,60)};u.onerror=e=>{if(generation!==state.speechGeneration||!state.current||state.current.id!==item.id){audit('speech_callback_stale',item.text,{callback:'error',error:String(e&&e.error||'error')});return}audit('speech_error',item.text,{error:String(e&&e.error||'error'),priority:item.priority,key:item.key});state.speaking=false;state.current=null;setTimeout(pumpSpeech,100)};try{speechSynthesis.resume();speechSynthesis.speak(u)}catch(e){if(state.current&&state.current.id===item.id){state.speaking=false;state.current=null}audit('speech_throw',item.text,{error:String(e)})}}
-    async function unlockSpeech(){state.speechUnlocked=true;await primeSpeechEngine();refreshVoices('unlock');scheduleVoiceRefreshes();return true}
+    function pumpSpeech(){if(!state.voiceOn||!state.speechUnlocked||state.speaking||!speechAvailable())return;const t=now();while(state.queue.length&&state.queue[0].expiresAt<=t){const x=state.queue.shift();audit('speech_expired',x.text,{priority:x.priority,key:x.key})}const item=state.queue.shift();if(!item)return;const generation=state.speechGeneration;const u=new SpeechSynthesisUtterance(item.text),v=pickVoice();if(v)u.voice=v;u.lang=v&&v.lang?v.lang:'es-MX';u.rate=clampRate(state.voiceRate);u.pitch=1;u.volume=1;state.speaking=true;state.current=item;u.onstart=()=>{if(generation!==state.speechGeneration||!state.current||state.current.id!==item.id)return;audit('speech_start',item.text,{priority:item.priority,key:item.key,voice:v?voiceKey(v):'auto',rate:u.rate});setVoiceStatus('SPOTTER HABLANDO','ok')};u.onend=()=>{if(generation!==state.speechGeneration||!state.current||state.current.id!==item.id){audit('speech_callback_stale',item.text,{callback:'end'});return}audit('speech_end',item.text,{priority:item.priority,key:item.key});state.speaking=false;state.current=null;setVoiceStatus('SPOTTER LISTO','ok');setTimeout(pumpSpeech,60)};u.onerror=e=>{if(generation!==state.speechGeneration||!state.current||state.current.id!==item.id){audit('speech_callback_stale',item.text,{callback:'error',error:String(e&&e.error||'error')});return}audit('speech_error',item.text,{error:String(e&&e.error||'error'),priority:item.priority,key:item.key});state.speaking=false;state.current=null;setVoiceStatus('FALLO DE VOZ · REINTENTA VOZ ON','bad');setTimeout(pumpSpeech,100)};try{speechSynthesis.resume();speechSynthesis.speak(u);setTimeout(()=>{try{speechSynthesis.resume()}catch{}},80);setTimeout(()=>{try{speechSynthesis.resume()}catch{}},320)}catch(e){if(state.current&&state.current.id===item.id){state.speaking=false;state.current=null}audit('speech_throw',item.text,{error:String(e)})}}
+    async function unlockSpeech(){state.speechUnlocked=true;await primeSpeechEngine();scheduleVoiceRefreshes('unlock');return true}
     function setInfoUi(){
       if(!els.infoBtn)return;
       els.infoBtn.textContent=state.infoOn?'INFO ON':'INFO OFF';
@@ -826,10 +1039,10 @@
       if(state.infoOn&&state.voiceOn)enqueueSpeech('Info activa.',{priority:99,key:'info_on',ttl:3000,kind:'info',interrupt:true});
       audit('info_mode',state.infoOn?'ON':'OFF');
     }
-    async function toggleVoice(){state.voiceOn=!state.voiceOn;lsSet(LS.voice,state.voiceOn?'1':'0');els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);if(state.voiceOn){await unlockSpeech();requestWakeLock();enqueueSpeech('Voz activa.',{priority:100,key:'voice_ready',ttl:3000,kind:'system',interrupt:true})}else{state.speechGeneration++;try{speechSynthesis.cancel()}catch{}state.queue=[];state.speaking=false;state.current=null;setVoiceStatus('VOZ APAGADA','warn')}}
+    async function toggleVoice(){state.voiceOn=!state.voiceOn;lsSet(LS.voice,state.voiceOn?'1':'0');els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);if(state.voiceOn){state.speechUnlocked=true;try{speechSynthesis.resume()}catch{}requestWakeLock();scheduleVoiceRefreshes('voice_on');enqueueSpeech('Spotter listo.',{priority:100,key:'voice_ready',ttl:3500,kind:'system',interrupt:true})}else{state.speechGeneration++;cancelVoiceRefreshes();try{speechSynthesis.cancel()}catch{}state.queue=[];state.speaking=false;state.current=null;setVoiceStatus('VOZ APAGADA','warn')}}
     async function requestWakeLock(){if(!('wakeLock'in navigator)||document.hidden)return;try{if(!state.wakeLock)state.wakeLock=await navigator.wakeLock.request('screen')}catch{}}
 
-    function resetBaseline(reason='reset'){const keepDebrief=reason==='race_change'||reason==='counter_reset';state.baselineReady=false;state.pilotPrev=null;state.rowPrev=new Map();state.lastPassEvents=new Map();state.clockMarks=new Set();state.finished=false;state.lastBlueAt=0;state.tmvNearStreak=0;state.tmvZoneActive=false;state.lastTmvAlertLap=0;state.lastTmvAlertAt=0;state.lapHistory=[];state.debrief=null;state.lastInfoLap=0;state.lastPositionReminderLap=0;state.lastTrendClass='';state.lastTrendAt=0;if(els.debriefCard)els.debriefCard.hidden=true;state.queue=keepDebrief?state.queue.filter(x=>x.kind==='debrief'):[];audit('baseline_reset',reason,{keepDebrief})}
+    function resetBaseline(reason='reset'){const keepDebrief=reason==='race_change'||reason==='counter_reset';state.baselineReady=false;state.pilotPrev=null;state.rowPrev=new Map();state.lastPassEvents=new Map();state.clockMarks=new Set();state.finished=false;state.lastBlueAt=0;state.tmvNearStreak=0;state.tmvZoneActive=false;state.lastTmvAlertLap=0;state.lastTmvAlertAt=0;state.lapHistory=[];state.debrief=null;state.lastInfoLap=0;state.lastPositionReminderLap=0;state.lastTrendClass='';state.lastTrendAt=0;state.giantTrend='neutral';state.giantDeltaMs=0;if(state.giantOn)renderGiantLap(null,'neutral',0);if(els.debriefCard)els.debriefCard.hidden=true;state.queue=keepDebrief?state.queue.filter(x=>x.kind==='debrief'):[];audit('baseline_reset',reason,{keepDebrief})}
     function populatePilotSelect(rows){const wanted=state.selectedPilotKey||lsGet(LS.pilot,'');const html=['<option value="">Selecciona piloto</option>',...rows.map(r=>`<option value="${r.key.replaceAll('"','&quot;')}"${r.key===wanted?' selected':''}>${r.label}</option>`)].join('');els.pilotSelect.innerHTML=html;state.selectedPilotKey=els.pilotSelect.value||''}
 
     function gapText(a,b){if(!a||!b)return'-';const lapDiff=(a.laps||0)-(b.laps||0);if(lapDiff!==0)return `${Math.abs(lapDiff)}V`;const d=Math.abs((a.totalMs||0)-(b.totalMs||0));return d>0&&d<60000?`${(d/1000).toFixed(2)}s`:'-'}
@@ -921,6 +1134,7 @@
       if(state.infoOn&&dur>0&&rem!=null){for(const mark of [60000,30000,10000]){if(dur>mark&&prev.totalMs<dur-mark&&row.totalMs>=dur-mark&&!state.clockMarks.has(mark)){state.clockMarks.add(mark);const txt=mark===60000?'Un minuto.':mark===30000?'Treinta segundos.':'Diez segundos.';const pri=mark===10000?97:mark===30000?95:94;setAlert(`⏱ ${txt.toUpperCase()}`,'warn');enqueueSpeech(txt,{priority:pri,key:`clock_${mark}_${state.raceName}`,ttl:3500,kind:'info',interrupt:mark===10000})}}}
       if(newLap){
         recordLap(row);
+        updateGiantFromLap(row,prev);
         const tmvAlerted=maybeTmvProximityAlert(row);
         const lapTxt=lapSpeech(row.lastLapMs);
         if(!tmvAlerted)setAlert(pb?'🟣 MEJOR VUELTA':`VUELTA ${row.laps}`,pb?'info':'');
@@ -1011,15 +1225,73 @@
       }
     }
 
-    function applySnapshot(data){state.snapshotSeq++;state.lastSnapshotAt=now();const raceName=safeName((data&&(data.raceName||(data.parsed&&data.parsed.raceName)))||'');const raceChanged=!!state.raceName&&raceName&&raceName!==state.raceName;if(raceChanged){audit('race_change',`${state.raceName} -> ${raceName}`);state.raceName=raceName;resetBaseline('race_change');setAlert('NUEVA SESIÓN','info')}else if(!state.raceName)state.raceName=raceName;state.session=inferSession(data,raceName);renderRaceName(raceName);const rows=extractRows(data||{});const oldSelected=state.selectedPilotKey;state.rows=rows;populatePilotSelect(rows);if(oldSelected&&state.selectedPilotKey!==oldSelected){state.selectedPilotKey=oldSelected;if([...els.pilotSelect.options].some(o=>o.value===oldSelected))els.pilotSelect.value=oldSelected}const changed=detectPassEvents(rows);const row=rows.find(r=>r.key===state.selectedPilotKey)||null;render(row);if(row){processPilotEvents(row);maybeBlue(row,changed)}for(const r of rows)state.rowPrev.set(r.key,{...r});setLive(true);audit('snapshot','ok',{rows:rows.length,changedLaps:changed.length,mode:state.session.type,durationMs:state.session.durationMs})}
+    function applySnapshot(data,source='snapshot'){state.snapshotSeq++;state.lastSnapshotAt=now();state.firstSnapshotSeen=true;state.transportMode=source==='poll'?'POLL':'LIVE';const raceName=safeName((data&&(data.raceName||(data.parsed&&data.parsed.raceName)))||'');const raceChanged=!!state.raceName&&raceName&&raceName!==state.raceName;if(raceChanged){audit('race_change',`${state.raceName} -> ${raceName}`);state.raceName=raceName;resetBaseline('race_change');setAlert('NUEVA SESIÓN','info')}else if(!state.raceName)state.raceName=raceName;state.session=inferSession(data,raceName);renderRaceName(raceName);const rows=extractRows(data||{});const oldSelected=state.selectedPilotKey;state.rows=rows;populatePilotSelect(rows);if(oldSelected&&state.selectedPilotKey!==oldSelected){state.selectedPilotKey=oldSelected;if([...els.pilotSelect.options].some(o=>o.value===oldSelected))els.pilotSelect.value=oldSelected}const changed=detectPassEvents(rows);const row=rows.find(r=>r.key===state.selectedPilotKey)||null;render(row);if(row){processPilotEvents(row);maybeBlue(row,changed)}for(const r of rows)state.rowPrev.set(r.key,{...r});setLive(true,state.transportMode);audit('snapshot','ok',{source,rows:rows.length,changedLaps:changed.length,mode:state.session.type,durationMs:state.session.durationMs})}
 
-    async function pollOnce(){try{if(!state.firestore)return;const snap=await state.firestore.doc(FIRESTORE_DOC_PATH).get({source:'default'});if(snap.exists)applySnapshot(snap.data()||{});else setLive(false,'VACÍO')}catch(e){audit('firebase_poll_error',String(e));setLive(false,'RETRY')}}
-    function disconnect(){try{state.unsub&&state.unsub()}catch{}state.unsub=null;if(state.pollTimer)clearInterval(state.pollTimer);state.pollTimer=null}
-    async function connect(){if(!window.firebase||!firebase.apps){setLive(false,'SDK');return}disconnect();try{const appName=`pilot-spotter-${FIREBASE_CONFIG.projectId}`;let app=firebase.apps.find(a=>a.name===appName);if(!app)app=firebase.initializeApp(FIREBASE_CONFIG,appName);state.firestore=firebase.firestore(app);try{state.firestore.settings({experimentalForceLongPolling:true,useFetchStreams:false})}catch{}const ref=state.firestore.doc(FIRESTORE_DOC_PATH);state.unsub=ref.onSnapshot(s=>{if(s.exists)applySnapshot(s.data()||{});else setLive(false,'VACÍO')},async e=>{audit('firebase_snapshot_error',String(e));setLive(false,'RETRY');await pollOnce()});state.pollTimer=setInterval(()=>{if(!state.lastSnapshotAt||now()-state.lastSnapshotAt>6000)pollOnce()},3000);setLive(true);audit('firebase_connect','ok')}catch(e){audit('firebase_connect_error',String(e));setLive(false,'ERROR')}}
+    async function pollOnce(reason='watchdog'){
+      if(state.pollInFlight||!state.firestore)return false;
+      state.pollInFlight=true;
+      try{
+        const snap=await state.firestore.doc(FIRESTORE_DOC_PATH).get({source:'server'});
+        if(snap.exists){applySnapshot(snap.data()||{},'poll');audit('firebase_poll_ok',reason);return true}
+        setLive(false,'VACÍO');audit('firebase_poll_empty',reason);return false
+      }catch(e){audit('firebase_poll_error',String(e),{reason});setLive(false,navigator.onLine===false?'OFFLINE':'RETRY');return false}
+      finally{state.pollInFlight=false}
+    }
+    function disconnect(){try{state.unsub&&state.unsub()}catch{}state.unsub=null;if(state.pollTimer)clearInterval(state.pollTimer);state.pollTimer=null;state.pollInFlight=false;state.firstSnapshotSeen=false;state.transportMode='CONNECT'}
+    async function connect(){
+      if(!window.firebase||!firebase.apps){setLive(false,'SDK');audit('firebase_sdk_missing','compat scripts unavailable');return}
+      disconnect();setLive(false,'CONECTA');
+      try{
+        const appName=`pilot-spotter-v3-${FIREBASE_CONFIG.projectId}`;
+        let app=firebase.apps.find(a=>a.name===appName);if(!app)app=firebase.initializeApp(FIREBASE_CONFIG,appName);
+        state.firestore=firebase.firestore(app);
+        // V3: permitir que Firestore detecte el transporte; no forzar long-polling desde el arranque.
+        try{state.firestore.settings({experimentalAutoDetectLongPolling:true,useFetchStreams:false})}catch(e){audit('firebase_settings_fallback',String(e));try{state.firestore.settings({useFetchStreams:false})}catch{}}
+        const ref=state.firestore.doc(FIRESTORE_DOC_PATH);
+        state.unsub=ref.onSnapshot(s=>{
+          if(s.exists)applySnapshot(s.data()||{},'snapshot');
+          else{setLive(false,'VACÍO');audit('firebase_snapshot_empty','document_missing')}
+        },async e=>{
+          audit('firebase_snapshot_error',String(e),{code:e&&e.code?e.code:''});
+          setLive(false,navigator.onLine===false?'OFFLINE':'POLL');
+          await pollOnce('listener_error');
+        });
+        // Watchdog: si el listener queda clavado en una red celular, probamos lectura directa.
+        state.pollTimer=setInterval(()=>{
+          const age=state.lastSnapshotAt?now()-state.lastSnapshotAt:Infinity;
+          if(!state.firstSnapshotSeen||age>6500)pollOnce(!state.firstSnapshotSeen?'first_snapshot_timeout':'stale_feed');
+        },3000);
+        setTimeout(()=>{if(!state.firstSnapshotSeen)pollOnce('startup_timeout')},4500);
+        audit('firebase_connect','started',{online:navigator.onLine!==false});
+      }catch(e){audit('firebase_connect_error',String(e));setLive(false,'ERROR')}
+    }
 
-    function bind(){els.voiceBtn.addEventListener('click',toggleVoice);els.infoBtn.addEventListener('click',toggleInfo);els.themeBtn.addEventListener('click',cycleTheme);els.auditBtn.addEventListener('click',downloadAudit);els.tmvInput.addEventListener('change',()=>{state.tmvMs=parseTmvInput(els.tmvInput.value.trim());els.tmvInput.value=formatTmvInput(state.tmvMs);lsSet(LS.tmv,state.tmvMs||'');resetTmvProximity('tmv_change');updateTmvUi();audit('tmv_changed',state.tmvMs?formatLapMs(state.tmvMs):'OFF',{tmvMs:state.tmvMs,marginMs:state.tmvMarginMs})});els.tmvInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();els.tmvInput.blur()}});els.tmvMargin.addEventListener('change',()=>{state.tmvMarginMs=[50,75,100].includes(Number(els.tmvMargin.value))?Number(els.tmvMargin.value):50;lsSet(LS.tmvMargin,state.tmvMarginMs);resetTmvProximity('tmv_margin_change');updateTmvUi();audit('tmv_margin_changed',`${state.tmvMarginMs} ms`)});els.pilotSelect.addEventListener('change',()=>{state.selectedPilotKey=els.pilotSelect.value||'';lsSet(LS.pilot,state.selectedPilotKey);resetBaseline('pilot_change');render(state.rows.find(r=>r.key===state.selectedPilotKey)||null);if(state.voiceOn&&state.selectedPilotKey){const r=state.rows.find(x=>x.key===state.selectedPilotKey);if(r)enqueueSpeech(`Piloto ${r.driverName}, listo.`,{priority:98,key:'pilot_select',ttl:3000,kind:'system',interrupt:true})}});els.voiceSelect.addEventListener('change',async()=>{state.voiceName=els.voiceSelect.value||'';lsSet(LS.voiceName,state.voiceName);await primeSpeechEngine();const v=pickVoice();setVoiceStatus(v?`VOZ: ${v.name} · ${v.lang}`:'VOZ AUTOMÁTICA DEL SISTEMA',v?'ok':'warn');if(state.voiceOn){state.speechGeneration++;try{speechSynthesis.cancel()}catch{}state.speaking=false;state.current=null;enqueueSpeech('Prueba de voz.',{priority:100,key:'voice_test',ttl:3000,kind:'system',interrupt:true})}});els.speedRange.addEventListener('input',()=>{state.voiceRate=clampRate(els.speedRange.value);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`});els.speedRange.addEventListener('change',()=>lsSet(LS.rate,state.voiceRate));document.addEventListener('visibilitychange',()=>{if(!document.hidden){refreshVoices('visible');if(state.voiceOn)requestWakeLock()}});let voiceGesturePrimed=false;['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,()=>{if(!voiceGesturePrimed){voiceGesturePrimed=true;primeSpeechEngine();scheduleVoiceRefreshes()}if(state.voiceOn&&!state.speechUnlocked)unlockSpeech()},{passive:true,capture:true}));if(speechAvailable()){scheduleVoiceRefreshes();try{speechSynthesis.addEventListener('voiceschanged',()=>refreshVoices('voiceschanged'))}catch{try{speechSynthesis.onvoiceschanged=()=>refreshVoices('voiceschanged_prop')}catch{}}}else{setVoiceStatus('ESTE NAVEGADOR NO SOPORTA VOZ','bad')}setInterval(()=>{const age=state.lastSnapshotAt?now()-state.lastSnapshotAt:0;els.feedAge.textContent=age?`${(age/1000).toFixed(1)}s`:'--';if(age>7000)setLive(false,'LENTO')},1000)}
+    function bind(){
+      els.voiceBtn.addEventListener('click',toggleVoice);
+      els.infoBtn.addEventListener('click',toggleInfo);
+      els.giantBtn.addEventListener('click',toggleGiant);
+      els.giantLapOverlay.addEventListener('click',()=>{if(state.giantOn)toggleGiant()});
 
-    function init(){state.infoOn=false;state.selectedPilotKey=lsGet(LS.pilot,'');state.voiceOn=lsGet(LS.voice,'0')==='1';state.voiceName=lsGet(LS.voiceName,'');state.voiceRate=clampRate(lsGet(LS.rate,'1.2'));state.tmvMs=Math.max(0,Math.round(Number(lsGet(LS.tmv,'0'))||0));state.tmvMarginMs=[50,75,100].includes(Number(lsGet(LS.tmvMargin,'50')))?Number(lsGet(LS.tmvMargin,'50')):50;applyTheme(lsGet(LS.theme,'theme-purple-night'));els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);els.speedRange.value=String(state.voiceRate);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`;els.tmvInput.value=formatTmvInput(state.tmvMs);els.tmvMargin.value=String(state.tmvMarginMs);updateTmvUi();setInfoUi();updatePrivateControls(null);bind();connect();if(state.voiceOn)setVoiceStatus('TOCA LA PANTALLA PARA ACTIVAR VOZ','warn');audit('app_init',APP_VERSION,{tmvMs:state.tmvMs,tmvMarginMs:state.tmvMarginMs,infoOn:state.infoOn,debrief:true})}
+      if(els.voiceReloadBtn)els.voiceReloadBtn.addEventListener('click',async()=>{
+        setVoiceStatus('BUSCANDO VOCES…','warn');
+        await primeSpeechEngine();
+        scheduleVoiceRefreshes('manual_reload');
+      });
+
+      els.voiceSelect.addEventListener('focus',()=>{state.voiceSelectActive=true});
+      els.voiceSelect.addEventListener('pointerdown',()=>{state.voiceSelectActive=true});
+      els.voiceSelect.addEventListener('touchstart',()=>{state.voiceSelectActive=true},{passive:true});
+      els.voiceSelect.addEventListener('blur',()=>{
+        state.voiceSelectActive=false;
+        if(state.voiceRefreshPending){
+          state.voiceRefreshPending=false;
+          populateVoices(false);
+        }
+      });
+
+      els.themeBtn.addEventListener('click',cycleTheme);els.auditBtn.addEventListener('click',downloadAudit);els.tmvInput.addEventListener('change',()=>{state.tmvMs=parseTmvInput(els.tmvInput.value.trim());els.tmvInput.value=formatTmvInput(state.tmvMs);lsSet(LS.tmv,state.tmvMs||'');resetTmvProximity('tmv_change');updateTmvUi();audit('tmv_changed',state.tmvMs?formatLapMs(state.tmvMs):'OFF',{tmvMs:state.tmvMs,marginMs:state.tmvMarginMs})});els.tmvInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();els.tmvInput.blur()}});els.tmvMargin.addEventListener('change',()=>{state.tmvMarginMs=[50,75,100].includes(Number(els.tmvMargin.value))?Number(els.tmvMargin.value):50;lsSet(LS.tmvMargin,state.tmvMarginMs);resetTmvProximity('tmv_margin_change');updateTmvUi();audit('tmv_margin_changed',`${state.tmvMarginMs} ms`)});els.pilotSelect.addEventListener('change',()=>{state.selectedPilotKey=els.pilotSelect.value||'';lsSet(LS.pilot,state.selectedPilotKey);resetBaseline('pilot_change');render(state.rows.find(r=>r.key===state.selectedPilotKey)||null);if(state.voiceOn&&state.selectedPilotKey){const r=state.rows.find(x=>x.key===state.selectedPilotKey);if(r)enqueueSpeech(`Piloto ${r.driverName}, listo.`,{priority:98,key:'pilot_select',ttl:3000,kind:'system',interrupt:true})}});els.voiceSelect.addEventListener('change',async()=>{state.voiceName=els.voiceSelect.value||'';lsSet(LS.voiceName,state.voiceName);await primeSpeechEngine();const v=pickVoice();setVoiceStatus(v?`VOZ: ${v.name} · ${v.lang}`:'VOZ AUTOMÁTICA DEL SISTEMA',v?'ok':'warn');if(state.voiceOn){state.speechGeneration++;try{speechSynthesis.cancel()}catch{}state.speaking=false;state.current=null;enqueueSpeech('Prueba de voz.',{priority:100,key:'voice_test',ttl:3500,kind:'system',interrupt:true})}});els.speedRange.addEventListener('input',()=>{state.voiceRate=clampRate(els.speedRange.value);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`});els.speedRange.addEventListener('change',()=>lsSet(LS.rate,state.voiceRate));document.addEventListener('visibilitychange',()=>{if(!document.hidden){refreshVoices('visible');if(state.voiceOn)requestWakeLock()}});let voiceGesturePrimed=false;['pointerdown','touchstart','click'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('#voiceBtn'))return;if(!voiceGesturePrimed){voiceGesturePrimed=true;primeSpeechEngine();scheduleVoiceRefreshes('first_gesture')}if(state.voiceOn&&!state.speechUnlocked)unlockSpeech()},{passive:true,capture:true}));if(speechAvailable()){scheduleVoiceRefreshes('startup');try{speechSynthesis.addEventListener('voiceschanged',()=>refreshVoices('voiceschanged'))}catch{try{speechSynthesis.onvoiceschanged=()=>refreshVoices('voiceschanged_prop')}catch{}}}else{setVoiceStatus('ESTE NAVEGADOR NO SOPORTA VOZ','bad')}window.addEventListener('online',()=>{audit('network_online','browser');if(!state.lastSnapshotAt||now()-state.lastSnapshotAt>3000)pollOnce('browser_online')});window.addEventListener('offline',()=>{audit('network_offline','browser');setLive(false,'OFFLINE')});setInterval(()=>{const age=state.lastSnapshotAt?now()-state.lastSnapshotAt:0;els.feedAge.textContent=age?`${(age/1000).toFixed(1)}s`:'--';if(navigator.onLine===false)setLive(false,'OFFLINE');else if(age>9000)setLive(false,'LENTO')},1000)}
+
+    function init(){state.infoOn=false;state.giantOn=lsGet(LS.giant,'0')==='1';state.selectedPilotKey=lsGet(LS.pilot,'');state.voiceOn=lsGet(LS.voice,'0')==='1';state.voiceName=lsGet(LS.voiceName,'');state.voiceRate=clampRate(lsGet(LS.rate,'1.2'));state.tmvMs=Math.max(0,Math.round(Number(lsGet(LS.tmv,'0'))||0));state.tmvMarginMs=[50,75,100].includes(Number(lsGet(LS.tmvMargin,'50')))?Number(lsGet(LS.tmvMargin,'50')):50;applyTheme(lsGet(LS.theme,'theme-purple-night'));if(state.isHuawei)document.body.classList.add('is-huawei');els.voiceBtn.textContent=state.voiceOn?'Voz ON':'Voz OFF';els.voiceBtn.classList.toggle('on',state.voiceOn);els.speedRange.value=String(state.voiceRate);els.speedValue.textContent=`${state.voiceRate.toFixed(1)}x`;els.tmvInput.value=formatTmvInput(state.tmvMs);els.tmvMargin.value=String(state.tmvMarginMs);updateTmvUi();setInfoUi();setGiantUi();updatePrivateControls(null);bind();connect();if(state.voiceOn)setVoiceStatus(state.isHuawei?'HUAWEI · TOCA RECARGAR VOCES SI NO APARECEN':'TOCA LA PANTALLA PARA ACTIVAR VOZ','warn');audit('app_init',APP_VERSION,{tmvMs:state.tmvMs,tmvMarginMs:state.tmvMarginMs,infoOn:state.infoOn,giantOn:state.giantOn,isHuawei:state.isHuawei,debrief:true})}
     init();
   })();
   </script>
